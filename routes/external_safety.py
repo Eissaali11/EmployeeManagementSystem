@@ -14,6 +14,7 @@ from sqlalchemy.orm import aliased, contains_eager
 from dotenv import load_dotenv
 import resend
 
+from whatsapp_client import WhatsAppWrapper # <-- استيراد الكلاس
 
 
 
@@ -76,7 +77,8 @@ def get_all_current_driversWithEmil():
 
 # في نفس ملف الراوت external_safety_bp
 
-from whatsapp_client import WhatsAppWrapper # <-- استيراد الكلاس
+
+
 
 # قم بإنشاء نسخة واحدة من الكلاس على مستوى الـ Blueprint أو التطبيق
 # من الأفضل وضعها في __init__.py الخاص بالتطبيق و استيرادها

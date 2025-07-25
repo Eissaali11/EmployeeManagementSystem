@@ -230,27 +230,6 @@
         text-align: center;
     }
 
-    /* Action Button Group */
-    .action-btn-group {
-        min-width: 320px;
-    }
-
-    .action-btn-group .btn {
-        white-space: nowrap;
-        min-width: 38px;
-    }
-
-    /* Enhanced Table Responsiveness */
-    .table-responsive {
-        min-height: 300px;
-    }
-
-    .table th:last-child,
-    .table td:last-child {
-        min-width: 320px;
-        white-space: nowrap;
-    }
-
     /* Color Badges */
     .color-badge {
         width: 24px;
@@ -291,56 +270,18 @@
         .share-header {
             padding: 1.5rem;
         }
-        
+
         .share-header h2 {
             font-size: 1.8rem;
         }
-        
+
         .action-btn-group {
-            min-width: auto;
             flex-direction: column;
             align-items: flex-start;
-            gap: 0.5rem !important;
         }
-        
-        .action-btn-group .btn,
-        .action-btn-group .copy-btn {
+
+        .action-btn {
             width: 100%;
-            justify-content: center;
-        }
-
-        .table th:last-child,
-        .table td:last-child {
-            min-width: 200px;
-        }
-
-        /* تحسين عرض الجدول على الموبايل */
-        .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .vehicles-table-container {
-            margin: 0 -15px;
-            border-radius: 0;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .action-btn-group {
-            gap: 0.25rem !important;
-        }
-
-        .action-btn-group .btn,
-        .action-btn-group .copy-btn {
-            font-size: 0.75rem;
-            padding: 0.375rem 0.5rem;
-        }
-
-        .table th,
-        .table td {
-            padding: 0.5rem 0.25rem;
-            font-size: 0.875rem;
         }
     }
 </style>
@@ -447,6 +388,11 @@
                             <i class="fas fa-undo"></i>
                             إعادة تعيين
                         </a>
+    <button class="btn btn-sm" style="background-color: #25D366; color: white;"
+            title="إرسال طلب الفحص عبر واتساب"
+            onclick="">
+        <i class="fab fa-whatsapp ms-1"></i> إرسال واتساب للجميع
+    </button>
                     </div>
                     <div class="col-md-6 text-end">
                         <span class="text-muted">
@@ -512,55 +458,46 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <div class="action-btn-group d-flex flex-wrap gap-2">
-                                    <!-- Copy Button -->
-                                    <button type="button" class="copy-btn" 
-                                            title="نسخ رابط النموذج"
-                                            onclick="copyToClipboard('{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}', this)">
-                                        <span class="icon-copy">
-                                            <i class="fas fa-copy"></i>
-                                        </span>
-                                        <span class="icon-success">
-                                            <i class="fas fa-check"></i>
-                                        </span>
-                                        <span class="text-original d-none d-md-inline">
-                                            نسخ
-                                        </span>
-                                        <span class="text-success">
-                                            تم النسخ
-                                        </span>
-                                    </button>
 
-                                    <!-- Share Button -->
-                                    <button class="btn btn-primary btn-sm" 
-                                           onclick="shareSafetyCheckForm('{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
-                                        <i class="fas fa-share-alt"></i>
-                                        <span class="d-none d-md-inline ms-1">مشاركة</span>
-                                    </button>
+                                <div class="action-btn-group">
+    <!-- زر النسخ (واحد فقط) -->
+    <button type="button" class="copy-btn" 
+            title="نسخ رابط النموذج"
+            onclick="copyToClipboard('{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}', this)">
+        <span class="icon-copy"><i class="fas fa-copy"></i></span>
+        <span class="icon-success"><i class="fas fa-check"></i></span>
+        <span class="text-original d-none d-md-inline">نسخ</span>
+        <span class="text-success">تم النسخ</span>
+    </button>
 
-                                    <!-- WhatsApp Button -->
-                                    <button class="btn btn-sm" style="background-color: #25D366; color: white;"
-                                            title="إرسال طلب الفحص عبر واتساب"
-                                            onclick="sendSafetyCheckWhatsApp(this, '{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
-                                        <i class="fab fa-whatsapp"></i>
-                                        <span class="d-none d-md-inline ms-1">واتساب</span>
-                                    </button>
+    <!-- زر المشاركة -->
+    <button class="btn btn-primary btn-sm" 
+            onclick="shareSafetyCheckForm('{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+        <i class="fas fa-share-alt ms-1"></i> مشاركة
+    </button>
 
-                                    <!-- Email Button -->
-                                    <button class="btn btn-info btn-sm"
-                                            title="إرسال طلب الفحص عبر البريد"
-                                            onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
-                                        <i class="fas fa-envelope"></i>
-                                        <span class="d-none d-md-inline ms-1">إيميل</span>
-                                    </button>
+    <!-- زر إرسال البريد -->
+    <button class="btn btn-outline-secondary btn-sm"
+            title="إرسال طلب الفحص عبر البريد"
+            onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+        <i class="fas fa-envelope ms-1"></i> إرسال بالبريد
+    </button>
 
-                                    <!-- Open Form Button -->
-                                    <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
-                                       class="btn btn-success btn-sm" target="_blank">
-                                        <i class="fas fa-external-link-alt"></i>
-                                        <span class="d-none d-md-inline ms-1">فتح</span>
-                                    </a>
-                                </div>
+    <!-- زر إرسال واتساب -->
+    <button class="btn btn-sm" style="background-color: #25D366; color: white;"
+            title="إرسال طلب الفحص عبر واتساب"
+            onclick="sendSafetyCheckWhatsApp(this, '{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+        <i class="fab fa-whatsapp ms-1"></i> إرسال واتساب
+    </button>
+
+    <!-- رابط فتح النموذج -->
+    <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
+        class="btn btn-success btn-sm ms-1" target="_blank">
+        <i class="fas fa-external-link-alt ms-1"></i> فتح النموذج
+    </a>
+</div>
+
+
                             </td>
                         </tr>
                         {% endfor %}
@@ -588,158 +525,63 @@
 <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 
 <script>
+    // تمرير البيانات من Flask إلى JavaScript
     const allDriversData = {{ all_current_drivers | tojson | safe }};
     const allDriversDataWithEmil = {{ all_current_drivers_with_emil | tojson | safe }};
 
-    // دالة نسخ الرابط
-    function copyUrl(inputId, button) {
-        const input = document.getElementById(inputId);
-        input.select();
-        document.execCommand('copy');
-        
-        // تغيير شكل الزر مؤقتاً
-        const originalIcon = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-check"></i>';
-        button.className = 'btn btn-success btn-sm';
-        
-        setTimeout(() => {
-            button.innerHTML = originalIcon;
-            button.className = 'btn btn-outline-secondary btn-sm';
-        }, 2000);
-        
-        showToast('تم نسخ الرابط بنجاح!', 'success');
-    }
-
-    // يمكنك وضع هذا الكود داخل وسم <script> في نهاية ملف الـ HTML
-
-// دالة عامة لعرض إشعار بسيط (Toast). يمكنك استخدام مكتبة مثل Toastify أو إنشاء واحدة بنفسك.
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast show align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>`;
-    
-    // تأكد من أن لديك حاوية للأشعارات في الـ HTML
-    const toastContainer = document.getElementById('toast-container');
-    if (toastContainer) {
-        toastContainer.appendChild(toast);
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
-        setTimeout(() => toast.remove(), 5000); // إخفاء الإشعار بعد 5 ثوان
-    } else {
-        alert(message); // بديل بسيط في حال عدم وجود حاوية
-    }
-}
-
-
-
-// أضف هذه الدالة الجديدة
-
-async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, vehicleModel) {
-    // 1. استخراج بيانات السائق. تأكد أن لديك بيانات الهاتف في قاموس مشابه
-    // يجب تعديل get_all_current_drivers في بايثون لتوفر أرقام الهواتف
-    const driver = allDriversDataWithEmil[vehicleId]; // افترض أن هذا القاموس يحتوي الآن على driver.phone
-
-    if (!driver || !driver.phone) {
-        showToast("خطأ: لا يوجد سائق أو رقم هاتف واتساب مسجل لهذه المركبة.", 'danger');
-        return;
-    }
-
-    // 2. توليد رابط النموذج (نفس الكود السابق)
-    const formUrl = vehicleFormUrls[vehicleId];
-
-    // 3. تغيير حالة الزر
-    buttonElement.disabled = true;
-    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
-    
-    try {
-        // 4. إرسال طلب إلى الـ endpoint الجديد
-        const response = await fetch('/api/send-whatsapp', { // <-- الـ endpoint الجديد
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                driver_phone: driver.phone, // <-- إرسال رقم الهاتف
-                driver_name: driver.name,
-                plate_number: plateNumber,
-                vehicle_model: vehicleModel,
-                form_url: formUrl
-            })
-        });
-        
-        const result = await response.json();
-        
-        // 5. معالجة الاستجابة
-        if (response.ok && result.success) {
-            showToast(result.message, 'success');
-        } else {
-            showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
-        }
-
-    } catch (error) {
-        console.error('فشل الاتصال بالخادم:', error);
-        showToast('فشل الاتصال بالخادم.', 'danger');
-    } finally {
-        // 6. إعادة الزر إلى حالته الأصلية
-        buttonElement.disabled = false;
-        buttonElement.innerHTML = '<i class="fab fa-whatsapp ms-1"></i> إرسال واتساب';
-    }
-}
-
-    // دالة إرسال البريد الإلكتروني
-    async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
-        const driver = allDriversDataWithEmil[vehicleId];
-        
-        if (!driver || !driver.email) {
-            showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
+    /**
+     * دالة عامة لعرض إشعارات (Toast).
+     * @param {string} message - الرسالة المراد عرضها.
+     * @param {string} type - نوع الإشعار ('success' أو 'danger').
+     */
+    function showToast(message, type = 'info') {
+        const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            alert(message); // بديل بسيط في حال عدم وجود الحاوية
             return;
         }
 
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
-        
-        try {
-            const response = await fetch('/external-safety/api/send-email', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    driver_email: driver.email,
-                    driver_name: driver.name,
-                    plate_number: plateNumber,
-                    vehicle_model: vehicleModel,
-                    form_url: vehicleFormUrls[vehicleId]
-                })
-            });
-            
-            const result = await response.json();
-            
-            if (response.ok && result.success) {
-                showToast(result.message || 'تم إرسال البريد الإلكتروني بنجاح!', 'success');
-            } else {
-                showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
-            }
+        const toastId = 'toast-' + Math.random().toString(36).substr(2, 9);
+        const bgColor = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-info');
 
-        } catch (error) {
-            console.error('فشل الاتصال بالخادم:', error);
-            showToast('فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.', 'danger');
-        } finally {
-            buttonElement.disabled = false;
-            buttonElement.innerHTML = '<i class="fas fa-envelope"></i> <span class="d-none d-md-inline ms-1">إيميل</span>';
-        }
+        const toastHTML = `
+            <div id="${toastId}" class="toast show align-items-center text-white ${bgColor} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+        const toastElement = document.getElementById(toastId);
+        const bsToast = new bootstrap.Toast(toastElement, { delay: 5000 });
+        bsToast.show();
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
     }
 
-    // دالة نسخ الرابط إلى الحافظة
+    /**
+     * [جديد] دالة نسخ النص إلى الحافظة.
+     * @param {string} textToCopy - النص الذي سيتم نسخه.
+     * @param {HTMLElement} buttonElement - عنصر الزر الذي تم النقر عليه.
+     */
     function copyToClipboard(textToCopy, buttonElement) {
+        if (!navigator.clipboard) {
+            showToast('متصفحك لا يدعم النسخ التلقائي.', 'danger');
+            return;
+        }
+
         navigator.clipboard.writeText(textToCopy)
             .then(() => {
                 buttonElement.classList.add('copied');
                 showToast('تم نسخ الرابط بنجاح!', 'success');
-                
+
                 setTimeout(() => {
                     buttonElement.classList.remove('copied');
-                }, 2000); 
+                }, 2500); // إعادة الزر لحالته الطبيعية بعد 2.5 ثانية
             })
             .catch(err => {
                 console.error('فشل في نسخ الرابط: ', err);
@@ -747,62 +589,157 @@ async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, ve
             });
     }
 
-    // جلب الروابط من قاموس مُعد مسبقاً
-    const vehicleFormUrls = {
-        {% for vehicle in vehicles %}
-        '{{ vehicle.id }}': '{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}',
-        {% endfor %}
-    };
+    /**
+     * إرسال طلب فحص السلامة عبر البريد الإلكتروني.
+     */
+    async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
+        const driver = allDriversDataWithEmil[vehicleId];
 
-    // دالة مشاركة نموذج فحص السلامة
+        if (!driver || !driver.email) {
+            showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
+            return;
+        }
+
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+
+        try {
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    driver_email: driver.email,
+                    driver_name: driver.name,
+                    plate_number: plateNumber,
+                    vehicle_model: vehicleModel,
+                    form_url: `${window.location.origin}/external-safety-check/${vehicleId}`
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+            }
+
+        } catch (error) {
+            console.error('فشل الاتصال بالخادم:', error);
+            showToast('فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.', 'danger');
+        } finally {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال بالبريد';
+        }
+    }
+
+    /**
+     * إرسال طلب فحص السلامة عبر واتساب.
+     */
+    async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, vehicleModel) {
+        const driver = allDriversDataWithEmil[vehicleId];
+
+        if (!driver || !driver.phone) {
+            showToast("خطأ: لا يوجد سائق أو رقم هاتف واتساب مسجل لهذه المركبة.", 'danger');
+            return;
+        }
+
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+
+        try {
+            const response = await fetch('/api/send-whatsapp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    driver_phone: driver.phone,
+                    driver_name: driver.name,
+                    plate_number: plateNumber,
+                    vehicle_model: vehicleModel,
+                    form_url: `${window.location.origin}/external-safety-check/${vehicleId}`
+                })
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                showToast(result.message, 'success');
+            } else {
+                showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+            }
+
+        } catch (error) {
+            console.error('فشل الاتصال بالخادم:', error);
+            showToast('فشل الاتصال بالخادم.', 'danger');
+        } finally {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = '<i class="fab fa-whatsapp ms-1"></i> إرسال واتساب';
+        }
+    }
+
+    /**
+     * دالة لمشاركة رابط نموذج فحص السلامة باستخدام Web Share API.
+     */
     function shareSafetyCheckForm(vehicleId, plateNumber, vehicleModel) {
-        const formUrl = vehicleFormUrls[vehicleId];
-        const shareText = `مرحباً 👋
+        // (الكود الخاص بهذه الدالة كان صحيحًا، يتم إدراجه هنا كما هو)
+        const formUrl = window.location.origin + '/external-safety-check/' + vehicleId;
+        const driver_name = allDriversData[vehicleId] || 'زميلنا العزيز';
 
-يرجى تعبئة نموذج فحص السلامة الخارجي للمركبة التالية بدقة وعناية:
+        const fullMessageText = `مرحباً ${driver_name} 👋
 
-🚗 المركبة: ${plateNumber} (${vehicleModel})
+يرجى تعبئة نموذج *فحص السلامة الخارجي* للمركبة التالية بدقة وعناية:
 
-👇 الرابط المباشر للنموذج:
+🚗 *المركبة:* ${plateNumber} (${vehicleModel})
+
+👇 *الرابط المباشر للنموذج:*
 ${formUrl}
 
 ---
 
-📋 التعليمات المطلوبة (مهم جداً):
+📋 *التعليمات المطلوبة (مهم جداً):*
 
-1️⃣ الصور الأساسية (إلزامية):
-   - صورة من الأمام (تظهر كامل واجهة المركبة)
-   - صورة من الخلف (تظهر كامل خلفية المركبة)
-   - صورة من الجانب الأيمن (بشكل واضح وكامل)
-   - صورة من الجانب الأيسر (بشكل واضح وكامل)
-   - صورة لسقف المركبة
-   - صورة لأسفل المركبة من الأمام
+1️⃣ *الصور الأساسية (إلزامية):*
+   - صورة من *الأمام* (تظهر كامل واجهة المركبة).
+   - صورة من *الخلف* (تظهر كامل خلفية المركبة).
+   - صورة من *الجانب الأيمن* (بشكل واضح وكامل).
+   - صورة من *الجانب الأيسر* (بشكل واضح وكامل).
+   - صورة *لسقف* المركبة.
+   - صورة لـ *أسفل المركبة من الأمام*.
 
-2️⃣ صور الملاحظات (إن وجدت):
-   - إذا وجدت أي خدوش، صدمات، أو ملاحظات أخرى، قم بتصويرها عن قرب
-   - هام: قم بالإشارة بإصبعك إلى مكان الملاحظة في الصورة
-   - اكتب وصفاً للملاحظة أسفل كل صورة تقوم برفعها
+2️⃣ *صور الملاحظات (إن وجدت):*
+   - إذا وجدت أي خدوش، صدمات، أو ملاحظات أخرى، قم بتصويرها عن قرب.
+   - *هام:* قم بالإشارة بإصبعك إلى مكان الملاحظة في الصورة.
+   - اكتب وصفاً للملاحظة أسفل كل صورة تقوم برفعها.
 
-3️⃣ قبل الإرسال:
-   - تأكد من أن جميع الصور واضحة ومقروءة
-   - راجع جميع البيانات المُدخلة
-   - لا تنس ملء جميع الحقول المطلوبة
+3️⃣ *قبل الإرسال:*
+   - تأكد من أن جميع الصور واضحة وذات جودة عالية.
+   - تأكد من رفع كل صور الملاحظات بشكل صحيح.
 
-شكراً لتعاونكم وحرصكم على السلامة 🙏`;
+---
+
+✅ *بعد إرسال النموذج:*
+
+- *إذا تم قبول الفحص:* سيتم إعلامك وتفعيل إجراءات الوقود.
+- *إذا تم رفض الفحص:* ستصلك رسالة بالسبب. يرجى الدخول على نفس الرابط مرة أخرى وتصحيح الملاحظات وإعادة إرسال النموذج.
+
+شكراً لتعاونكم وحرصكم على السلامة.
+*نظام نُظم لإدارة المركبات*`;
+
+        const shareData = {
+            title: 'نموذج فحص السلامة الخارجي - نُظم',
+            text: fullMessageText
+        };
 
         if (navigator.share) {
-            navigator.share({
-                title: `نموذج فحص السلامة - ${plateNumber}`,
-                text: shareText
-            }).then(() => {
-                showToast('تم مشاركة الرابط بنجاح!', 'success');
-            }).catch(err => {
-                console.log('فشل في المشاركة:', err);
-                copyToClipboard(shareText, document.createElement('button'));
-            });
+            navigator.share(shareData)
+                .then(() => showToast('تمت مشاركة الرابط بنجاح!', 'success'))
+                .catch((error) => console.log('خطأ في المشاركة:', error));
         } else {
-            copyToClipboard(shareText, document.createElement('button'));
+            // كبديل للمتصفحات التي لا تدعم المشاركة، يمكن نسخ النص
+            copyToClipboard(shareData.text, document.createElement('button')); // نمرر زرًا وهميًا
+            showToast('تم نسخ نص المشاركة إلى الحافظة!', 'success');
         }
     }
 </script>
+python
 {% endblock %}
