@@ -770,3 +770,41 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endblock %}
+<style>
+/* إصلاح عرض جميع السيارات - إضافة نظام تمرير للجدول */
+.vehicles-table-container {
+    overflow: visible !important;
+}
+
+.table-responsive {
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    border-radius: 0 0 12px 12px;
+}
+
+/* تحسين شريط التمرير */
+.table-responsive::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* ضمان عرض جميع الصفوف */
+.table tbody {
+    height: auto !important;
+    max-height: none !important;
+}
+</style>
