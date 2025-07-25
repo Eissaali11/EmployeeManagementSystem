@@ -251,12 +251,27 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="model" class="form-label-enhanced required">الموديل</label>
                         <input type="text" class="form-control form-control-enhanced" id="model" name="model" value="{{ vehicle.model }}" required>
                         <div class="form-text-enhanced">مثال: كامري، كورولا، إلنترا</div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label for="type_of_car" class="form-label-enhanced required">نوع السيارة</label>
+                        <select class="form-select form-select-enhanced" id="type_of_car" name="type_of_car" required>
+                            <option value="" disabled>اختر نوع السيارة</option>
+                            <option value="سيدان" {% if vehicle.type_of_car == 'سيدان' %}selected{% endif %}>سيدان</option>
+                            <option value="قاطرة" {% if vehicle.type_of_car == 'قاطرة' %}selected{% endif %}>قاطرة</option>
+                            <option value="باص" {% if vehicle.type_of_car == 'باص' %}selected{% endif %}>باص</option>
+                            <option value="مقطورة" {% if vehicle.type_of_car == 'مقطورة' %}selected{% endif %}>مقطورة</option>
+                            <option value="شاحنة" {% if vehicle.type_of_car == 'شاحنة' %}selected{% endif %}>شاحنة</option>
+                            <option value="دباب" {% if vehicle.type_of_car == 'دباب' %}selected{% endif %}>دباب</option>
+                            <option value="كرين" {% if vehicle.type_of_car == 'كرين' %}selected{% endif %}>كرين</option>
+                            <option value="حفار" {% if vehicle.type_of_car == 'حفار' %}selected{% endif %}>حفار</option>
+                        </select>
+                        <div class="form-text-enhanced">نوع المركبة (سيدان، قاطرة، باص، إلخ)</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label for="year" class="form-label-enhanced required">سنة الصنع</label>
                         <input type="number" class="form-control form-control-enhanced" id="year" name="year" min="1990" max="{{ 2030 }}" value="{{ vehicle.year }}" required>
                     </div>

@@ -1199,6 +1199,7 @@ def edit(id):
                 vehicle.driver_name = driver_name
                 vehicle.project = project
                 vehicle.notes = notes
+                vehicle.type_of_car = request.form.get('type_of_car')
                 vehicle.updated_at = datetime.utcnow()
 
                 db.session.commit()
