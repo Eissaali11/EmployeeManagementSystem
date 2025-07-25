@@ -22,8 +22,15 @@ def log_activity(action, entity_type, entity_id=None, details=None, previous_dat
     :param new_data: البيانات الجديدة (للإنشاء والتحديث)
     """
     try:
-        # التحقق من وجود current_user والتأكد من أنه مسجل دخول
-        if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated:
+        # التحقق من وجود current_user والتأكد من أنه مسجل دخول أو النماذج الخارجية
+        user_id = None
+        if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated and hasattr(current_user, 'id') and current_user.id:
+            user_id = current_user.id
+        elif 'external' in action or 'External' in entity_type:
+            # للنماذج الخارجية، استخدم user_id خاص للعمليات الخارجية
+            user_id = -1  # معرف خاص للعمليات الخارجية
+        
+        if user_id:
             print(f"تسجيل عملية: {action} - {entity_type} - {details}")  # للتشخيص
             
             # تحويل البيانات إلى JSON إذا كانت قاموس
@@ -33,7 +40,7 @@ def log_activity(action, entity_type, entity_id=None, details=None, previous_dat
                 new_data = json.dumps(new_data, ensure_ascii=False)
             
             audit_log = AuditLog()
-            audit_log.user_id = current_user.id
+            audit_log.user_id = user_id
             audit_log.action = action
             audit_log.entity_type = entity_type
             audit_log.entity_id = entity_id

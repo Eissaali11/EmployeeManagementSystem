@@ -40,7 +40,7 @@
                 </div>
                 
                 <!-- نوع الوثيقة -->
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3 mb-3">
                     <label for="document_type" class="form-label">نوع الوثيقة</label>
                     <select class="form-select" id="document_type" name="document_type">
                         <option value="">جميع الأنواع</option>
@@ -65,6 +65,42 @@
                             {% endif %}
                         </option>
                         {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- الموظف -->
+                <div class="col-md-3 mb-3">
+                    <label for="employee_id" class="form-label">الموظف</label>
+                    <select class="form-select" id="employee_id" name="employee_id">
+                        <option value="">جميع الموظفين</option>
+                        {% for employee in employees %}
+                        <option value="{{ employee.id }}" {% if selected_employee == employee.id|string %}selected{% endif %}>
+                            {{ employee.name }} ({{ employee.employee_id }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- القسم -->
+                <div class="col-md-3 mb-3">
+                    <label for="department_id" class="form-label">القسم</label>
+                    <select class="form-select" id="department_id" name="department_id">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments %}
+                        <option value="{{ department.id }}" {% if selected_department == department.id|string %}selected{% endif %}>
+                            {{ department.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- حالة الكفالة -->
+                <div class="col-md-3 mb-3">
+                    <label for="sponsorship_status" class="form-label">حالة الكفالة</label>
+                    <select class="form-select" id="sponsorship_status" name="sponsorship_status">
+                        <option value="">جميع الموظفين</option>
+                        <option value="inside" {% if selected_sponsorship == 'inside' %}selected{% endif %}>على الكفالة</option>
+                        <option value="outside" {% if selected_sponsorship == 'outside' %}selected{% endif %}>خارج الكفالة</option>
                     </select>
                 </div>
                 
@@ -153,7 +189,7 @@
             
             <!-- زر تصدير إلى إكسل -->
             {% if documents %}
-            <a href="{{ url_for('documents.export_expiring_excel', status=request.args.get('status', 'expiring'), days=days, document_type=selected_type) }}" 
+            <a href="{{ url_for('documents.export_expiring_excel', status=request.args.get('status', 'expiring'), days=days, document_type=selected_type, employee_id=selected_employee, department_id=selected_department, sponsorship_status=selected_sponsorship) }}" 
                class="btn btn-success btn-sm" title="تصدير إلى إكسل">
                 <i class="fas fa-file-excel"></i> تصدير إلى إكسل
             </a>
@@ -172,6 +208,7 @@
                             <th>تاريخ الإصدار</th>
                             <th>تاريخ الانتهاء</th>
                             <th>المدة المتبقية</th>
+                            <th>حالة الكفالة</th>
                             <th>ملاحظات</th>
                             <th>الإجراءات</th>
                         </tr>
@@ -216,6 +253,15 @@
                                     {% endif %}
                                 {% else %}
                                     <span class="badge bg-secondary">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if document.employee.sponsorship_status == 'inside' %}
+                                <span class="badge bg-success">على الكفالة</span>
+                                {% elif document.employee.sponsorship_status == 'outside' %}
+                                <span class="badge bg-warning">خارج الكفالة</span>
+                                {% else %}
+                                <span class="badge bg-secondary">غير محدد</span>
                                 {% endif %}
                             </td>
                             <td>{{ document.notes or '-' }}</td>
@@ -275,7 +321,7 @@
         });
         
         // إعادة تحميل الصفحة عند تغيير أي من حقول البحث
-        const filterFields = ['days', 'document_type', 'status'];
+        const filterFields = ['days', 'document_type', 'status', 'employee_id', 'department_id', 'sponsorship_status'];
         
         filterFields.forEach(function(field) {
             const elements = document.querySelectorAll(`[name="${field}"]`);

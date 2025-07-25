@@ -2,20 +2,21 @@
 
 {% block extra_css %}
 <style>
+     /* Modern Documents Management Styles */
     :root {
-        --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        --info-gradient: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
         --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         --glass-bg: rgba(255, 255, 255, 0.95);
         --glass-border: rgba(255, 255, 255, 0.2);
     }
 
-    /* Enhanced Page Header */
-    .documents-header {
+    /* Enhanced Header */
+    .page-header {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
@@ -28,7 +29,7 @@
         animation: slideDown 0.6s ease-out;
     }
 
-    .documents-header::before {
+    .page-header::before {
         content: '';
         position: absolute;
         top: 0;
@@ -38,7 +39,7 @@
         background: var(--primary-gradient);
     }
 
-    .documents-header h1 {
+    .page-header h1 {
         background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -48,7 +49,18 @@
         font-size: 2.5rem;
     }
 
+    .page-header .subtitle {
+        color: #6c757d;
+        font-size: 1rem;
+    }
+
     /* Enhanced Action Buttons */
+    .btn-action-group {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
     .btn-enhanced {
         position: relative;
         overflow: hidden;
@@ -92,6 +104,11 @@
         color: white;
     }
 
+    .btn-info-enhanced {
+        background: var(--info-gradient);
+        color: white;
+    }
+
     .btn-primary-enhanced {
         background: var(--primary-gradient);
         color: white;
@@ -104,16 +121,18 @@
 
     /* Enhanced Stats Cards */
     .stats-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
+        border: none;
         border-radius: 16px;
         box-shadow: var(--card-shadow);
         transition: all 0.3s ease;
-        height: 100%;
-        position: relative;
         overflow: hidden;
-        animation: slideUp 0.6s ease-out both;
+        position: relative;
+        animation: slideUp 0.6s ease-out;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
     }
 
     .stats-card::before {
@@ -122,24 +141,8 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-        transform: translateX(-100%);
-        transition: transform 0.6s ease;
-    }
-
-    .stats-card:hover::before {
-        transform: translateX(100%);
-    }
-
-    .stats-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
-    }
-
-    .stats-card .card-body {
-        padding: 1.5rem;
-        text-align: center;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.4);
     }
 
     .stats-card .counter-value {
@@ -148,20 +151,9 @@
         margin-bottom: 0.5rem;
     }
 
-    .stats-card.primary-card {
-        border-left: 4px solid #3b82f6;
-    }
-
-    .stats-card.danger-card {
-        border-left: 4px solid #ef4444;
-    }
-
-    .stats-card.warning-card {
-        border-left: 4px solid #f59e0b;
-    }
-
-    .stats-card.success-card {
-        border-left: 4px solid #10b981;
+    .stats-card .card-body {
+        padding: 1.5rem;
+        text-align: center;
     }
 
     /* Enhanced Filter Card */
@@ -172,18 +164,20 @@
         border-radius: 16px;
         box-shadow: var(--card-shadow);
         margin-bottom: 2rem;
+        overflow: hidden;
         animation: slideUp 0.6s ease-out 0.2s both;
     }
 
     .filter-card .card-header {
-        background: transparent;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        padding: 1.5rem;
+        background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-bottom: none;
     }
 
     .filter-card .card-header h5 {
-        font-weight: 600;
         margin: 0;
+        font-weight: 600;
     }
 
     .filter-card .card-body {
@@ -198,17 +192,22 @@
         border-radius: 16px;
         box-shadow: var(--card-shadow);
         overflow: hidden;
+        animation: slideUp 0.6s ease-out 0.3s both;
     }
 
     .table-card .card-header {
-        background: transparent;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        padding: 1.5rem;
+        background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-bottom: none;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
+    }
+
+    .table-card .card-header h5 {
+        margin: 0;
+        font-weight: 600;
     }
 
     .table-card .card-body {
@@ -216,102 +215,93 @@
     }
 
     /* Enhanced Table */
-    .table-enhanced {
+    .enhanced-table {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
     }
 
-    .table-enhanced thead th {
-        background: var(--primary-gradient);
-        color: white;
-        padding: 1rem;
+    .enhanced-table thead th {
+        background: rgba(102, 126, 234, 0.1);
+        color: #05122D;
         font-weight: 600;
-        border: none;
-    }
-
-    .table-enhanced tbody td {
         padding: 1rem;
-        vertical-align: middle;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-    .table-enhanced tbody tr:last-child td {
+    .enhanced-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        vertical-align: middle;
+    }
+
+    .enhanced-table tbody tr:last-child td {
         border-bottom: none;
     }
 
-    .table-enhanced .employee-info {
-        display: flex;
-        align-items: center;
+    .enhanced-table tbody tr:hover {
+        background: rgba(102, 126, 234, 0.05);
     }
 
-    .table-enhanced .employee-avatar {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        background: var(--primary-gradient);
-        color: white;
-        font-weight: 600;
-        margin-left: 0.75rem;
-    }
-
-    .table-enhanced .document-badge {
+    /* Enhanced Badges */
+    .badge-enhanced {
         padding: 0.5rem 0.75rem;
         border-radius: 20px;
         font-weight: 600;
-        font-size: 0.85rem;
-    }
-
-    .table-enhanced .status-badge {
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.85rem;
-    }
-
-    .table-enhanced .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-
-    .table-enhanced .btn-action {
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        transition: all 0.3s ease;
     }
 
-    .table-enhanced .btn-action:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    .badge-enhanced:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
-    /* Enhanced Empty State */
-    .empty-state {
-        padding: 3rem;
-        text-align: center;
-    }
-
-    .empty-state-icon {
-        font-size: 4rem;
-        color: #ccc;
-        margin-bottom: 1.5rem;
-    }
-
-    .empty-state-actions {
-        margin-top: 2rem;
+    /* Enhanced Action Buttons */
+    .action-buttons {
         display: flex;
+        gap: 0.5rem;
         justify-content: center;
-        gap: 1rem;
-        flex-wrap: wrap;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .btn-sm-enhanced {
+        border-radius: 8px;
+        padding: 0.5rem;
+        min-width: 36px;
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        color: white;
+    }
+
+    .btn-sm-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-sm-enhanced.btn-success {
+        background: var(--success-gradient);
+    }
+
+    .btn-sm-enhanced.btn-info {
+        background: var(--info-gradient);
+    }
+
+    .btn-sm-enhanced.btn-primary {
+        background: var(--primary-gradient);
     }
 
     /* Animations */
@@ -337,68 +327,95 @@
         }
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Staggered Animation for Cards */
-    .stats-card:nth-child(1) { animation-delay: 0.1s; }
-    .stats-card:nth-child(2) { animation-delay: 0.2s; }
-    .stats-card:nth-child(3) { animation-delay: 0.3s; }
-    .stats-card:nth-child(4) { animation-delay: 0.4s; }
-
     /* Responsive Design */
     @media (max-width: 768px) {
-        .documents-header {
+        .page-header {
             padding: 1.5rem;
         }
         
-        .documents-header h1 {
-            font-size: 2rem;
+        .btn-action-group {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-enhanced {
+            width: 100%;
         }
         
         .stats-card .counter-value {
             font-size: 2rem;
         }
         
-        .table-enhanced thead th,
-        .table-enhanced tbody td {
-            padding: 0.75rem;
-            font-size: 0.9rem;
+        .enhanced-table thead {
+            display: none;
         }
         
-        .table-card .card-header {
-            flex-direction: column;
-            align-items: flex-start;
+        .enhanced-table tbody tr {
+            display: block;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
         }
         
-        .empty-state-actions {
-            flex-direction: column;
+        .enhanced-table tbody td {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .enhanced-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            margin-right: 1rem;
+            color: #667eea;
+        }
+
+        /* Action buttons responsive adjustment */
+        @media (max-width: 768px) {
+            .action-buttons {
+                justify-content: flex-end;
+                margin-top: 0.5rem;
+            }
+            
+            .enhanced-table tbody td[data-label="الإجراءات"] {
+                justify-content: flex-end;
+                padding-top: 0.5rem;
+            }
+            
+            .enhanced-table tbody td[data-label="الإجراءات"]::before {
+                display: none;
+            }
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <!-- Enhanced Header -->
-    <div class="documents-header">
+    <div class="page-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h1>إدارة الوثائق</h1>
-                <p class="text-muted mb-0">نظام متكامل لإدارة وثائق الموظفين</p>
+                <p class="subtitle">نظام إدارة الوثائق والملفات الخاصة بالموظفين</p>
             </div>
-            <div class="d-flex gap-2">
+            <div class="btn-action-group">
                 <a href="{{ url_for('documents.create') }}" class="btn-enhanced btn-success-enhanced">
-                    <i class="fas fa-plus me-1"></i> إضافة وثيقة
+                    <i class="fas fa-plus"></i> إضافة وثيقة
+                </a>
+                <a href="{{ url_for('documents.department_bulk_create') }}" class="btn-enhanced btn-info-enhanced">
+                    <i class="fas fa-building"></i> إضافة وثائق قسم كامل
                 </a>
                 <a href="{{ url_for('documents.import_excel') }}" class="btn-enhanced btn-primary-enhanced">
-                    <i class="fas fa-file-import me-1"></i> استيراد
+                    <i class="fas fa-file-import"></i> استيراد من Excel
                 </a>
                 <a href="{{ url_for('documents.expiring') }}" class="btn-enhanced btn-warning-enhanced">
-                    <i class="fas fa-exclamation-triangle me-1"></i> الوثائق المنتهية
+                    <i class="fas fa-exclamation-triangle"></i> الوثائق المنتهية
+                </a>
+                <a href="#" onclick="exportToExcel()" class="btn-enhanced btn-success-enhanced">
+                    <i class="fas fa-file-excel"></i> تصدير Excel
                 </a>
             </div>
         </div>
@@ -406,48 +423,48 @@
 
     <!-- Enhanced Stats Cards -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="stats-card primary-card">
+        <div class="col-md-3 mb-4">
+            <div class="stats-card card bg-primary text-white">
                 <div class="card-body">
                     <h3 class="counter-value">{{ total_docs }}</h3>
                     <p class="mb-0">إجمالي الوثائق</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="stats-card danger-card">
+        <div class="col-md-3 mb-4">
+            <div class="stats-card card bg-danger text-white">
                 <div class="card-body">
                     <h3 class="counter-value">{{ expired_docs }}</h3>
-                    <p class="mb-0">الوثائق المنتهية</p>
+                    <p class="mb-0">وثائق منتهية</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="stats-card warning-card">
+        <div class="col-md-3 mb-4">
+            <div class="stats-card card bg-warning text-white">
                 <div class="card-body">
                     <h3 class="counter-value">{{ expiring_soon }}</h3>
-                    <p class="mb-0">تنتهي خلال 30 يوم</p>
+                    <p class="mb-0">تنتهي قريباً</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3 mb-3">
-            <div class="stats-card success-card">
+        <div class="col-md-3 mb-4">
+            <div class="stats-card card bg-success text-white">
                 <div class="card-body">
-                    <h3 class="counter-value">{{ safe_docs }}</h3>
-                    <p class="mb-0">الوثائق السارية</p>
+                    <h3 class="counter-value">{{ valid_docs }}</h3>
+                    <p class="mb-0">وثائق سارية</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Enhanced Filter Card -->
-    <div class="filter-card">
+    <!-- فلاتر البحث -->
+    <div class="card mb-4">
         <div class="card-header">
-            <h5 class="card-title mb-0 text-primary"><i class="fas fa-filter me-2"></i> خيارات البحث</h5>
+            <h5 class="card-title mb-0">خيارات البحث</h5>
         </div>
         <div class="card-body">
-            <form method="get" action="{{ url_for('documents.index') }}" class="row g-3">
-                <div class="col-md-4">
+            <form method="get" action="{{ url_for('documents.index') }}" class="row">
+                <div class="col-md-3 mb-3">
                     <label for="document_type" class="form-label">نوع الوثيقة</label>
                     <select class="form-select" id="document_type" name="document_type">
                         <option value="">جميع الأنواع</option>
@@ -461,8 +478,10 @@
                             الشهادة الصحية
                             {% elif doc_type == 'work_permit' %}
                             تصريح العمل
-                            {% elif doc_type == 'education_certificate' %}
-                            الشهادة الدراسية
+                            {% elif doc_type == 'driving_license' %}
+                            رخصة القيادة
+                            {% elif doc_type == 'residence_permit' %}
+                            الإقامة
                             {% else %}
                             {{ doc_type }}
                             {% endif %}
@@ -470,20 +489,18 @@
                         {% endfor %}
                     </select>
                 </div>
-                
-                <div class="col-md-3">
+                <div class="col-md-3 mb-3">
                     <label for="employee_id" class="form-label">الموظف</label>
                     <select class="form-select" id="employee_id" name="employee_id">
                         <option value="">جميع الموظفين</option>
                         {% for employee in employees %}
                         <option value="{{ employee.id }}" {% if selected_employee == employee.id|string %}selected{% endif %}>
-                            {{ employee.name }} ({{ employee.employee_id }})
+                            {{ employee.name }}
                         </option>
                         {% endfor %}
                     </select>
                 </div>
-                
-                <div class="col-md-3">
+                <div class="col-md-3 mb-3">
                     <label for="department_id" class="form-label">القسم</label>
                     <select class="form-select" id="department_id" name="department_id">
                         <option value="">جميع الأقسام</option>
@@ -494,143 +511,125 @@
                         {% endfor %}
                     </select>
                 </div>
-                
-                <div class="col-md-2">
-                    <label for="expiring" class="form-label">حالة الصلاحية</label>
+                <div class="col-md-3 mb-3">
+                    <label for="expiring" class="form-label">حالة الانتهاء</label>
                     <select class="form-select" id="expiring" name="expiring">
-                        <option value="">جميع الوثائق</option>
-                        <option value="30" {% if selected_expiring == '30' %}selected{% endif %}>تنتهي خلال 30 يوم</option>
-                        <option value="60" {% if selected_expiring == '60' %}selected{% endif %}>تنتهي خلال 60 يوم</option>
-                        <option value="90" {% if selected_expiring == '90' %}selected{% endif %}>تنتهي خلال 90 يوم</option>
+                        <option value="">الكل</option>
+                        <option value="expired" {% if status_filter == 'expired' %}selected{% endif %}>منتهية</option>
+                        <option value="expiring_soon" {% if status_filter == 'expiring_soon' %}selected{% endif %}>تنتهي قريباً</option>
+                        <option value="valid" {% if status_filter == 'valid' %}selected{% endif %}>سارية</option>
                     </select>
                 </div>
-                
-                <div class="col-12 text-center mt-3">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="fas fa-search me-1"></i> بحث
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> بحث
                     </button>
-                    <a href="{{ url_for('documents.index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-undo me-1"></i> إعادة تعيين
+                    <a href="{{ url_for('documents.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-refresh"></i> إعادة تعيين
                     </a>
+                    <button type="button" class="btn btn-info" onclick="printPage()">
+                        <i class="fas fa-print"></i> طباعة
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Enhanced Table Card -->
-    <div class="table-card">
+    <!-- جدول الوثائق -->
+    <div class="card">
         <div class="card-header">
-            <div>
-                <h5 class="card-title mb-0 text-primary"><i class="fas fa-clipboard-list me-2"></i> قائمة الوثائق</h5>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ url_for('documents.export_excel', 
-                     document_type=request.args.get('document_type', ''),
-                     days=request.args.get('days', '0'), 
-                     show_all=show_all) }}" 
-                   class="btn btn-sm btn-success">
-                    <i class="fas fa-file-excel me-1"></i> تصدير إلى Excel
-                </a>
-                <a href="{{ url_for('documents.index', show_all='true') }}" class="btn btn-sm {% if show_all %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    <i class="fas fa-globe me-1"></i> عرض جميع الوثائق
-                </a>
-                <a href="{{ url_for('documents.index', show_all='false') }}" class="btn btn-sm {% if not show_all %}btn-warning{% else %}btn-outline-warning{% endif %}">
-                    <i class="fas fa-filter me-1"></i> عرض الوثائق المنتهية
-                </a>
-            </div>
+            <h5 class="card-title mb-0">قائمة الوثائق ({{ documents|length }} وثيقة)</h5>
         </div>
         <div class="card-body">
             {% if documents %}
             <div class="table-responsive">
-                <table class="table table-enhanced">
+                <table class="table enhanced-table">
                     <thead>
                         <tr>
-                            <th>الموظف</th>
-                            <th>الرقم الوظيفي</th>
+                            <th>اسم الموظف</th>
+                            <th>رقم الموظف</th>
+                            <th>القسم</th>
                             <th>نوع الوثيقة</th>
-                            <th>رقم الوثيقة</th>
                             <th>تاريخ الإصدار</th>
                             <th>تاريخ الانتهاء</th>
                             <th>الحالة</th>
-                            <th>حالة الكفالة</th>
-                            <th>ملاحظات</th>
+                            <th>الملاحظات</th>
                             <th>الإجراءات</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for document in documents %}
-                        {% set days_to_expiry = (document.expiry_date - now.date()).days if document.expiry_date and now else 0 %}
                         <tr>
-                            <td>
-                                <div class="employee-info">
-                                    <span class="employee-avatar">{{ document.employee.name[0] }}</span>
-                                    <span>{{ document.employee.name }}</span>
-                                </div>
+                            <td data-label="اسم الموظف">{{ document.employee.name }}</td>
+                            <td data-label="رقم الموظف">{{ document.employee.employee_id or 'غير محدد' }}</td>
+                            <td data-label="القسم">
+                                {% if document.employee.departments %}
+                                    {% for dept in document.employee.departments %}
+                                        <span class="badge bg-secondary">{{ dept.name }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                {% endif %}
                             </td>
-                            <td>
+                            <td data-label="نوع الوثيقة">
                                 {% if document.document_type == 'national_id' %}
-                                <span class="document-badge bg-primary">الهوية الوطنية</span>
+                                الهوية الوطنية
                                 {% elif document.document_type == 'passport' %}
-                                <span class="document-badge bg-success">جواز السفر</span>
+                                جواز السفر
                                 {% elif document.document_type == 'health_certificate' %}
-                                <span class="document-badge bg-info">الشهادة الصحية</span>
+                                الشهادة الصحية
                                 {% elif document.document_type == 'work_permit' %}
-                                <span class="document-badge bg-warning">تصريح العمل</span>
-                                {% elif document.document_type == 'education_certificate' %}
-                                <span class="document-badge bg-danger">الشهادة الدراسية</span>
+                                تصريح العمل
+                                {% elif document.document_type == 'driving_license' %}
+                                رخصة القيادة
+                                {% elif document.document_type == 'residence_permit' %}
+                                الإقامة
                                 {% else %}
-                                <span class="document-badge bg-secondary">{{ document.document_type }}</span>
+                                {{ document.document_type }}
                                 {% endif %}
                             </td>
-                            <td>{{ document.document_number }}</td>
-                            <td>
-                                <span class="gregorian-date">{{ document.issue_date|display_date('%d/%m/%Y', 'لم يتم التعديل') }}</span>
-                                <span class="hijri-date" style="display: none;"></span>
-                            </td>
-                            <td>
-                                <span class="gregorian-date">{{ document.expiry_date|display_date('%d/%m/%Y', 'لم يتم التعديل') }}</span>
-                                <span class="hijri-date" style="display: none;"></span>
-                            </td>
-                            <td>
-                                {% if not document.expiry_date %}
-                                <span class="status-badge bg-secondary">غير محدد</span>
+                            <td data-label="تاريخ الإصدار">
+                                {% if document.issue_date %}
+                                {{ document.issue_date.strftime('%Y-%m-%d') }}
                                 {% else %}
-                                    {% set days_to_expiry = document.expiry_date|days_remaining %}
-                                    {% if days_to_expiry < 0 %}
-                                    <span class="status-badge bg-danger">منتهية منذ {{ -days_to_expiry }} يوم</span>
-                                    {% elif days_to_expiry < 30 %}
-                                    <span class="status-badge bg-warning">تنتهي خلال {{ days_to_expiry }} يوم</span>
+                                غير محدد
+                                {% endif %}
+                            </td>
+                            <td data-label="تاريخ الانتهاء">
+                                {% if document.expiry_date %}
+                                {{ document.expiry_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                غير محدد
+                                {% endif %}
+                            </td>
+                            <td data-label="الحالة">
+                                {% if document.expiry_date %}
+                                    {% set days_until_expiry = (document.expiry_date - today).days %}
+                                    {% if days_until_expiry < 0 %}
+                                        <span class="badge bg-danger">منتهية</span>
+                                    {% elif days_until_expiry <= 30 %}
+                                        <span class="badge bg-warning">تنتهي قريباً</span>
                                     {% else %}
-                                    <span class="status-badge bg-success">سارية</span>
+                                        <span class="badge bg-success">سارية</span>
                                     {% endif %}
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if document.employee.sponsorship_status == 'inside' %}
-                                <span class="badge bg-success">على الكفالة</span>
-                                {% elif document.employee.sponsorship_status == 'outside' %}
-                                <span class="badge bg-warning">خارج الكفالة</span>
                                 {% else %}
-                                <span class="badge bg-secondary">غير محدد</span>
+                                    <span class="badge bg-secondary">غير محدد</span>
                                 {% endif %}
                             </td>
-                            <td>{{ document.notes or '-' }}</td>
-                            <td>
+                            <td data-label="الملاحظات">{{ document.notes or 'لا توجد' }}</td>
+                            <td data-label="الإجراءات">
                                 <div class="action-buttons">
-                                    <!-- زر تحديث تاريخ انتهاء الوثيقة -->
-                                    <a href="{{ url_for('documents.update_expiry', id=document.id) }}" class="btn-action btn-info" title="تحديث تاريخ الانتهاء">
+                                    <a href="{{ url_for('documents.update_expiry', id=document.id) }}" 
+                                       class="btn btn-sm-enhanced btn-success" 
+                                       title="تحديث تاريخ الانتهاء">
                                         <i class="fas fa-calendar-alt"></i>
                                     </a>
-                                    
-                                    <!-- زر حذف الوثيقة -->
-                                    <a href="{{ url_for('documents.confirm_delete', id=document.id) }}" class="btn-action btn-danger" title="حذف الوثيقة">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                    
-                                    <!-- زر تعديل بيانات الموظف - يظهر فقط للوثائق من نوع الهوية الوطنية -->
-                                    {% if document.document_type == 'national_id' %}
-                                    <a href="{{ url_for('employees.edit', id=document.employee_id) }}" class="btn-action btn-warning" title="تعديل بيانات الموظف">
-                                        <i class="fas fa-user-edit"></i>
+                                    {% if document.file_path %}
+                                    <a href="{{ url_for('static', filename=document.file_path) }}" 
+                                       class="btn btn-sm-enhanced btn-info" 
+                                       title="عرض الملف"
+                                       target="_blank">
+                                        <i class="fas fa-eye"></i>
                                     </a>
                                     {% endif %}
                                 </div>
@@ -641,17 +640,14 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <h5>لا توجد وثائق مسجلة</h5>
-                <p class="text-muted">يمكنك البدء بإضافة وثائق جديدة أو استيرادها من ملف Excel</p>
-                <div class="empty-state-actions">
-                    <a href="{{ url_for('documents.create') }}" class="btn btn-success">
+            <div class="text-center py-4">
+                <i class="fas fa-file-alt text-muted fs-1 mb-3"></i>
+                <p>لا توجد وثائق مسجلة</p>
+                <div class="mt-3">
+                    <a href="{{ url_for('documents.create') }}" class="btn btn-success mx-2">
                         <i class="fas fa-plus me-1"></i> إضافة وثيقة
                     </a>
-                    <a href="{{ url_for('documents.import_excel') }}" class="btn btn-primary">
+                    <a href="{{ url_for('documents.import_excel') }}" class="btn btn-primary mx-2">
                         <i class="fas fa-file-import me-1"></i> استيراد من Excel
                     </a>
                 </div>
@@ -664,29 +660,121 @@
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // إعادة تحميل الصفحة عند تغيير أي من حقول البحث
-    const filterFields = ['document_type', 'employee_id', 'department_id', 'expiring'];
-    
-    filterFields.forEach(function(field) {
-        const element = document.getElementById(field);
-        if (element) {
-            element.addEventListener('change', function() {
-                const form = this.closest('form');
-                if (form) {
-                    form.submit();
-                }
+    document.addEventListener("DOMContentLoaded", function () {
+        // Enhanced filter field behavior
+        const filterFields = [
+            "document_type",
+            "employee_id",
+            "department_id",
+            "sponsorship_status",
+            "expiring",
+        ];
+
+        filterFields.forEach(function (field) {
+            const element = document.getElementById(field);
+            if (element) {
+                element.addEventListener("change", function () {
+                    // Show loading state
+                    const form = this.closest("form");
+                    if (form) {
+                        const submitButton = form.querySelector('button[type="submit"]');
+                        if (submitButton) {
+                            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> جاري التحميل...';
+                            submitButton.disabled = true;
+                        }
+                        form.submit();
+                    }
+                });
+            }
+        });
+
+        // Add data-labels for responsive table
+        document.querySelectorAll(".enhanced-table thead th").forEach((th, index) => {
+            const label = th.textContent;
+            document.querySelectorAll(`.enhanced-table tbody tr td:nth-child(${index + 1})`).forEach((td) => {
+                td.setAttribute("data-label", label);
+            });
+        });
+
+        // Initialize tooltips
+        if (typeof bootstrap !== "undefined") {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll("[title]"));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         }
     });
 
-    // Initialize tooltips
-    if (typeof bootstrap !== 'undefined') {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+    // دالة الطباعة المحسنة
+    function printPage() {
+        // إضافة تاريخ ووقت الطباعة
+        const container = document.querySelector('.container');
+        if (container) {
+            const now = new Date();
+            const currentDate = now.toLocaleDateString('ar-SA');
+            const currentTime = now.toLocaleTimeString('ar-SA');
+            container.setAttribute('data-print-date', currentDate);
+            container.setAttribute('data-print-time', currentTime);
+        }
+        
+        // إخفاء جميع العناصر غير المرغوب فيها
+        const elementsToHide = [
+            '.card:first-of-type',
+            '.navbar',
+            '.sidebar', 
+            '.btn:not(.print-btn)',
+            '.pagination',
+            '.breadcrumb'
+        ];
+        
+        const hiddenElements = [];
+        elementsToHide.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                if (element && element.style.display !== 'none') {
+                    hiddenElements.push({element, originalDisplay: element.style.display});
+                    element.style.display = 'none';
+                }
+            });
         });
+        
+        // تحسين عنوان الصفحة للطباعة
+        const originalTitle = document.title;
+        document.title = 'تقرير الوثائق - شركة نُظم';
+        
+        // بدء عملية الطباعة
+        setTimeout(() => {
+            window.print();
+            
+            // استعادة العنوان الأصلي والعناصر المخفية
+            document.title = originalTitle;
+            hiddenElements.forEach(({element, originalDisplay}) => {
+                element.style.display = originalDisplay || 'block';
+            });
+        }, 100);
     }
-});
+
+    // دالة تصدير Excel
+    function exportToExcel() {
+        // جمع الفلاتر الحالية
+        const urlParams = new URLSearchParams(window.location.search);
+        const exportUrl = '{{ url_for("documents.export_excel") }}' + '?' + urlParams.toString();
+        
+        // إظهار رسالة تأكيد
+        if (confirm('هل تريد تصدير البيانات الحالية إلى ملف Excel؟')) {
+            // إنشاء رابط للتحميل
+            const link = document.createElement('a');
+            link.href = exportUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // إظهار رسالة نجاح
+            setTimeout(() => {
+                alert('تم بدء تحميل الملف بنجاح!');
+            }, 500);
+        }
+    }
 </script>
 {% endblock %}

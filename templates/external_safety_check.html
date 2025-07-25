@@ -440,6 +440,7 @@
 <body>
     <div class="main-container">
         <div class="header">
+            
             <h1><i class="fas fa-shield-alt"></i> فحص السلامة الخارجي</h1>
             <p>السيارة {{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}</p>
         </div>
@@ -475,6 +476,7 @@
                             <i class="fas fa-search"></i> التحقق من الموظف
                         </button>
                     </div>
+                    
                     
                     <div id="employeeVerification" class="employee-verification" style="display: none;">
                         <i class="fas fa-check-circle"></i>
@@ -537,7 +539,7 @@
                                 <label class="form-label">نوع السيارة</label>
                                 <input type="text" 
                                        class="form-control" 
-                                       value="{{ vehicle.make }} {{ vehicle.model }}" 
+                                       value="{{ vehicle.model }}   {{ vehicle.type_of_car }}" 
                                        readonly>
                             </div>
                         </div>
@@ -552,51 +554,86 @@
                     </div>
                 </div>
 
-                                <!-- ### بداية قسم إرشادات التصوير (جديد) ### -->
-                <div class="section instructions-box">
-                    <h4><i class="fas fa-camera-retro"></i> طريقة التقاط صور جوانب السيارة</h4>
-                    <div class="instructions-content">
-                        <div class="instructions-text">
-                            <p>لضمان تغطية كاملة للمركبة، يرجى التقاط الصور الجانبية من الزاوية (بشكل مائل 45 درجة تقريبًا) كما هو موضح في الرسم:</p>
-                            <ul>
-                                <li>
-                                    <strong>الجانب الأيمن:</strong> قف عند الزاوية الأمامية اليمنى والتقط صورة تُظهر كامل الجانب الأيمن مع الإطارين الأمامي والخلفي.
-                                </li>
-                                <li>
-                                    <strong>الجانب الأيسر:</strong> قف عند الزاوية الأمامية اليسرى والتقط صورة تُظهر كامل الجانب الأيسر مع الإطارين الأمامي والخلفي.
-                                </li>
-                            </ul>
-                        </div>
-<div class="instructions-image">
-    <img src="{{ url_for('static', filename='images/vehicles/diagrams.png') }}" alt="طريقة تصوير السيارة من الزوايا">
-</div>
 
-                    </div>
+                <!-- view how to capture car -->
+                {% if vehicle.type_of_car == 'سيدان' %}
+                <div class="col-12 alert alert-info mt-3">
+                  <h5>تعليمات لالتقاط صور سيّدان</h5>
+                  <p>
+                    للسيّدان: تأكد من تصوير الجوانب الأربعة (أمامية، خلفية، يمين، يسار)
+                    مع لقطة داخلية للمقصورة.
+                  </p>
+                  <div class="d-flex flex-column align-items-center justify-content-center space-x-4">
+
+                      <img src="/static/images/front-car.png" alt="" width="300" height="300">
+                      <p>صورة اماميه للسيارة</p>
+                      <img src="/static/images/back-car.jpg" alt=""  width="300" height="300">
+                      <p>صورة خلفية للسيارة</p>
+
+                      <img src="/static/images/right-car.png" alt="" width="500" height="200">
+                      <p>صورة من الجانب الايمن للسيارة</p>
+
+                      <img src="/static/images/left-car.jpg" alt=""  width="500" height="200">
+                      <p>صورة من الجانب الايسر للسيارة</p>
+
                 </div>
-                <!-- ### نهاية قسم إرشادات التصوير (جديد) ### -->
+                </div>
+              
+              {% elif vehicle.type_of_car == 'باص' %}
+                <div class="col-12 alert alert-warning mt-3">
+                  <h5>تعليمات لالتقاط صور باص</h5>
+                  <ul>
+                    <li>لقطة أمامية شاملة للقاطرة والمقطورة.</li>
+                    <li>صورة للمحرك من الجانب الأيمن.</li>
+                    <li>التقط صورة للبوريث من الأعلى.</li>
+                  </ul>
+                  <div class="d-flex flex-column align-items-center justify-content-center space-x-4">
 
+                    <img src="/static/images/front-bus.png" alt="" width="300" height="300">
+                    <p>صورة اماميه للباص</p>
+                    <img src="/static/images/back-bus.png" alt=""  width="300" height="300">
+                    <p>صورة خلفية للباص</p>
+
+                    <img src="/static/images/right-bus.png" alt="" width="500" height="200">
+                    <p>صورة من الجانب الايمن للباص</p>
+
+                    <img src="/static/images/left-bus.png" alt=""  width="500" height="200">
+                    <p>صورة من الجانب الايسر للباص</p>
+
+              </div>
+                </div>
+
+                {% else %}
+                <div class="col-12 alert alert-secondary mt-3">
+                     <p>اختر نوع السيارة لعرض التعليمات المناسبة.</p>
+                                 </div>
+                {% endif %}
                 
                 <!-- رفع الصور -->
-                <div class="section">
-                    <h3><i class="fas fa-images"></i> صور فحص السلامة</h3>
+                <div class="section mb-4">
+                    <h5><i class="fas fa-video"></i> التقاط صور الفحص بالكاميرا</h5>
                     
-                    <div class="image-upload-area" onclick="document.getElementById('safety_images').click()">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>اسحب وأفلت الصور هنا أو انقر للاختيار</p>
-                        <small class="text-muted">يمكنك رفع عدة صور (PNG, JPG, JPEG)</small>
+                    <video id="cameraStream" autoplay playsinline
+                           class="w-100 mb-2" style="display:none; max-width:400px;"></video>
+                    <canvas id="snapshotCanvas" style="display:none;"></canvas>
+                    
+                    <div class="mb-3">
+                      
+                      <video id="cam" autoplay playsinline></video>
+                      <canvas id="snap" style="width: 100%; height: auto; display: none;"></canvas>
+                      <button type="button" id="captureBtn" class="btn btn-outline-primary me-2">
+                         التقاط صوره 
+                      </button>
+                      <div class="imagePreview">
+
+                          <div id="gallery"></div>
+                        </div>
+                       
                     </div>
                     
-                    <input type="file" 
-       id="safety_images" 
-       name="safety_images" 
-       multiple 
-       accept="image/*"
-       capture="environment" 
-       style="display: none;" 
-       onchange="handleImageUpload(this)">
-                    
-                    <div id="imagePreview" class="image-preview"></div>
-                </div>
+                    <div id="instantPreview" class="d-flex flex-wrap"></div>
+                    <input type="hidden" name="camera_images" id="camera_images">
+                  </div>
                 
                 <!-- ملاحظات -->
                 <div class="section">
@@ -632,6 +669,99 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let uploadedImages = [];
+
+        const videoEl = document.getElementById('cam');
+const canvasEl = document.getElementById('snap');
+const captureBtn = document.getElementById('captureBtn');
+const galleryEl = document.getElementById('gallery');
+const ctx = canvasEl.getContext('2d');
+
+// 1. Request camera
+navigator.mediaDevices.getUserMedia({
+  video: { facingMode: { ideal: "environment" } }  // Use back camera if available
+})
+  .then(stream => {
+    videoEl.srcObject = stream;
+    return videoEl.play();
+  })
+  .catch(err => {
+    alert("Camera error: " + err);
+  });
+
+// 2. Capture frame + save
+captureBtn.addEventListener('click', () => {
+  // Draw current video frame onto canvas
+  // Resize canvas to video’s actual dimensions (once stream metadata is ready)
+  if (videoEl.videoWidth && videoEl.videoHeight) {
+    canvasEl.width = videoEl.videoWidth;
+    canvasEl.height = videoEl.videoHeight;
+  }
+  ctx.drawImage(videoEl, 0, 0, canvasEl.width, canvasEl.height);
+  // Convert to data URL (PNG). For JPEG: toDataURL('image/jpeg', 0.92)
+  const dataURL = canvasEl.toDataURL('image/png');
+
+  // 2a. Download locally
+  downloadImage(dataURL);
+
+  // 2b. Show thumbnail in page
+  addThumbnail(dataURL);
+
+  // 2c. (Optional) Upload to your server
+  uploadedImages.push({
+  file: null,
+  src: dataURL,
+  id: Date.now(),
+  note: ''
+});
+displayImagePreview();
+});
+
+// ----- Helpers -----
+function downloadImage(dataURL) {
+  const a = document.createElement('a');
+  a.href = dataURL;
+  a.download = `snapshot-${Date.now()}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function addThumbnail(dataURL) {
+  const img = document.createElement('img');
+  img.src = dataURL;
+  img.alt = 'Captured snapshot';
+  img.style.maxWidth = '160px';
+  img.style.margin = '4px';
+  galleryEl.appendChild(img);
+}
+
+// Example upload: send base64 payload to server
+function uploadImage(dataURL) {
+  // Strip "data:image/png;base64," prefix
+  const base64 = dataURL.split(',')[1];
+
+  fetch('/upload-snapshot', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename: `snapshot-${Date.now()}.png`,
+      image_base64: base64
+    })
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('Upload failed');
+    return r.json();
+  })
+  .then(result => {
+    console.log('Uploaded:', result);
+  })
+  .catch(err => {
+    console.error(err);
+    alert('Upload error: ' + err.message);
+  });
+}
+
+        
         
         // التحقق من الموظف
         async function verifyEmployee() {
@@ -756,66 +886,90 @@
         
         // عرض معاينة الصور
         function displayImagePreview() {
-            const preview = document.getElementById('imagePreview');
-            preview.innerHTML = '';
+            // const preview = document.getElementById('imagePreview');
+            // preview.innerHTML = '';
             
-            uploadedImages.forEach((image, index) => {
-                const item = document.createElement('div');
-                item.className = 'image-preview-item';
+            // uploadedImages.forEach((image, index) => {
+            //     const item = document.createElement('div');
+            //     item.className = 'image-preview-item';
                 
-                // إنشاء حاوية الصورة
-                const imageContainer = document.createElement('div');
-                imageContainer.className = 'image-container';
+            //     // إنشاء حاوية الصورة
+            //     const imageContainer = document.createElement('div');
+            //     imageContainer.className = 'image-container';
                 
-                // إنشاء عنصر الصورة
-                const img = document.createElement('img');
-                img.src = image.src;
-                img.alt = `صورة ${index + 1}`;
+            //     // إنشاء عنصر الصورة
+            //     const img = document.createElement('img');
+            //     img.src = image.src;
+            //     img.alt = `صورة ${index + 1}`;
                 
-                // إنشاء زر الحذف
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'remove-btn';
-                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                removeBtn.onclick = () => removeImage(image.id);
+            //     // إنشاء زر الحذف
+            //     const removeBtn = document.createElement('button');
+            //     removeBtn.type = 'button';
+            //     removeBtn.className = 'remove-btn';
+            //     removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            //     removeBtn.onclick = () => removeImage(image.id);
                 
-                // إضافة الصورة وزر الحذف لحاوية الصورة
-                imageContainer.appendChild(img);
-                imageContainer.appendChild(removeBtn);
+            //     // إضافة الصورة وزر الحذف لحاوية الصورة
+            //     imageContainer.appendChild(img);
+            //     imageContainer.appendChild(removeBtn);
                 
-                // إنشاء حقل الوصف
-                const descInput = document.createElement('input');
-                descInput.type = 'text';
-                descInput.className = 'description-input';
-                descInput.placeholder = `وصف الصورة ${index + 1} (اختياري)`;
-                descInput.name = 'image_descriptions';
-                descInput.value = image.description || '';
-                descInput.style.display = 'block';
-                descInput.style.width = '100%';
-                descInput.style.maxWidth = '100%';
-                descInput.style.boxSizing = 'border-box';
-                descInput.style.marginTop = '15px';
-                descInput.style.marginBottom = '15px';
-                descInput.style.padding = '15px';
-                descInput.style.border = '2px solid #667eea';
-                descInput.style.borderRadius = '8px';
-                descInput.style.fontSize = '1.1rem';
-                descInput.style.backgroundColor = 'white';
-                descInput.style.color = '#333';
-                descInput.style.minHeight = '55px';
-                descInput.style.outline = 'none';
-                descInput.style.fontFamily = 'Cairo, sans-serif';
-                descInput.style.visibility = 'visible';
-                descInput.style.opacity = '1';
-                descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
-                descInput.oninput = (e) => updateImageDescription(image.id, e.target.value);
+            //     // إنشاء حقل الوصف
+            //     const descInput = document.createElement('input');
+            //     descInput.type = 'text';
+            //     descInput.className = 'description-input';
+            //     descInput.placeholder = `وصف الصورة ${index + 1} (اختياري)`;
+            //     descInput.name = 'image_descriptions';
+            //     descInput.value = image.description || '';
+            //     descInput.style.display = 'block';
+            //     descInput.style.width = '100%';
+            //     descInput.style.maxWidth = '100%';
+            //     descInput.style.boxSizing = 'border-box';
+            //     descInput.style.marginTop = '15px';
+            //     descInput.style.marginBottom = '15px';
+            //     descInput.style.padding = '15px';
+            //     descInput.style.border = '2px solid #667eea';
+            //     descInput.style.borderRadius = '8px';
+            //     descInput.style.fontSize = '1.1rem';
+            //     descInput.style.backgroundColor = 'white';
+            //     descInput.style.color = '#333';
+            //     descInput.style.minHeight = '55px';
+            //     descInput.style.outline = 'none';
+            //     descInput.style.fontFamily = 'Cairo, sans-serif';
+            //     descInput.style.visibility = 'visible';
+            //     descInput.style.opacity = '1';
+            //     descInput.onchange = (e) => updateImageDescription(image.id, e.target.value);
+            //     descInput.oninput = (e) => updateImageDescription(image.id, e.target.value);
                 
-                // إضافة العناصر للحاوية الرئيسية
-                item.appendChild(imageContainer);
-                item.appendChild(descInput);
+            //     // إضافة العناصر للحاوية الرئيسية
+            //     item.appendChild(imageContainer);
+            //     item.appendChild(descInput);
                 
-                preview.appendChild(item);
+            //     preview.appendChild(item);
+            galleryEl.innerHTML = '';
+
+  uploadedImages.forEach(image => {
+    const container = document.createElement('div');
+    container.style.margin = '6px';
+    container.style.display = 'inline-block';
+    container.style.textAlign = 'center';
+
+    const img = document.createElement('img');
+    img.src = image.src;
+    img.style.maxWidth = '160px';
+    img.style.display = 'block';
+    img.style.marginBottom = '4px';
+    img.alt = 'Captured image';
+
+    const caption = document.createElement('p');
+    caption.textContent = image.note;
+    caption.style.fontSize = '0.9em';
+    caption.style.color = '#555';
+
+    container.appendChild(img);
+    container.appendChild(caption);
+    galleryEl.appendChild(container);
             });
+            
         }
         
         // حذف صورة
@@ -946,3 +1100,120 @@
     </script>
 </body>
 </html>
+<script>
+// عرض معاينة الصور مع حقول الملاحظات
+function displayImagePreview() {
+    const instantPreview = document.getElementById('instantPreview');
+    instantPreview.innerHTML = '';
+    
+    uploadedImages.forEach((image, index) => {
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'image-preview-item';
+        imageContainer.style.cssText = `
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+            padding: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        `;
+        
+        // إنشاء عنصر الصورة
+        const img = document.createElement('img');
+        img.src = image.src;
+        img.style.cssText = `
+            width: 100%;
+            height: auto;
+            max-height: 200px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        `;
+        
+        // زر حذف الصورة
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '×';
+        removeBtn.className = 'remove-btn';
+        removeBtn.style.cssText = `
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        removeBtn.onclick = () => removeImage(index);
+        
+        // حقل إدخال الملاحظة
+        const noteInput = document.createElement('textarea');
+        noteInput.placeholder = 'أضف ملاحظة للصورة...';
+        noteInput.value = image.note || '';
+        noteInput.className = 'description-input';
+        noteInput.rows = 3;
+        noteInput.style.cssText = `
+            width: 100%;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+            font-family: 'Cairo', sans-serif;
+            resize: vertical;
+            min-height: 60px;
+        `;
+        
+        // تحديث الملاحظة عند الكتابة
+        noteInput.addEventListener('input', function() {
+            uploadedImages[index].note = this.value;
+            updateImageDescriptions();
+        });
+        
+        // تجميع العناصر
+        imageContainer.appendChild(img);
+        imageContainer.appendChild(removeBtn);
+        imageContainer.appendChild(noteInput);
+        instantPreview.appendChild(imageContainer);
+    });
+    
+    updateImageDescriptions();
+}
+
+// حذف صورة
+function removeImage(index) {
+    uploadedImages.splice(index, 1);
+    displayImagePreview();
+}
+
+// تحديث بيانات الصور والملاحظات
+function updateImageDescriptions() {
+    const descriptions = uploadedImages.map(img => img.note || '').join('|||');
+    const imageData = uploadedImages.map(img => img.src).join('|||');
+    
+    // تحديث الحقول المخفية
+    document.getElementById('camera_images').value = imageData;
+    
+    // إضافة حقل مخفي للملاحظات إذا لم يكن موجوداً
+    let notesInput = document.getElementById('image_notes');
+    if (!notesInput) {
+        notesInput = document.createElement('input');
+        notesInput.type = 'hidden';
+        notesInput.name = 'image_notes';
+        notesInput.id = 'image_notes';
+        document.querySelector('form').appendChild(notesInput);
+    }
+    notesInput.value = descriptions;
+}
+</script>

@@ -15,6 +15,12 @@ employee_departments = db.Table('employee_departments',
     db.Column('employee_id', db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), primary_key=True),
     db.Column('department_id', db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), primary_key=True)
 )
+
+# جدول الربط بين المركبات والمستخدمين - يسمح لأكثر من مستخدم الوصول للمركبة الواحدة
+vehicle_user_access = db.Table('vehicle_user_access',
+    db.Column('vehicle_id', db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
+)
 class Department(db.Model):
     """Department model for organizing employees"""
     id = db.Column(db.Integer, primary_key=True)
@@ -73,6 +79,7 @@ class Employee(db.Model):
     location = db.Column(db.String(100))
     project = db.Column(db.String(100))
     join_date = db.Column(db.Date)
+    birth_date = db.Column(db.Date, nullable=True)  # تاريخ الميلاد
     nationality = db.Column(db.String(50))  # جنسية الموظف
     nationality_id = db.Column(db.Integer, db.ForeignKey('nationalities.id', name='fk_employee_nationality_id'), nullable=True)
     contract_type = db.Column(db.String(20), default='foreign')  # سعودي / وافد - saudi / foreign
@@ -90,11 +97,17 @@ class Employee(db.Model):
     employee_type = db.Column(db.String(20), default='regular')  # 'regular' أو 'driver'
     has_mobile_custody = db.Column(db.Boolean, default=False)  # هل لديه عهدة جوال
     mobile_type = db.Column(db.String(100), nullable=True)  # نوع الجوال
+
     mobile_imei = db.Column(db.String(20), nullable=True)  # رقم IMEI
     
     # حقول الكفالة
     sponsorship_status = db.Column(db.String(20), default='inside', nullable=True)  # 'inside' = على الكفالة، 'outside' = خارج الكفالة
     current_sponsor_name = db.Column(db.String(100), nullable=True)  # اسم الكفيل الحالي
+    
+    # حقول المعلومات البنكية
+    bank_iban = db.Column(db.String(50), nullable=True)  # رقم الإيبان البنكي
+    bank_iban_image = db.Column(db.String(255), nullable=True)  # صورة الإيبان البنكي
+
 
     def to_dict(self):
         """
@@ -239,7 +252,9 @@ class User(UserMixin, db.Model):
     """User model for authentication"""
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
+    username = db.Column(db.String(100), nullable=True)  # اسم المستخدم
     name = db.Column(db.String(100))
+    phone = db.Column(db.String(20), nullable=True)  # رقم الهاتف
     firebase_uid = db.Column(db.String(128), unique=True, nullable=True)  # جعلها اختيارية للسماح بتسجيل الدخول المحلي
     password_hash = db.Column(db.String(256), nullable=True)  # حقل لتخزين هاش كلمة المرور
     profile_picture = db.Column(db.String(255))
@@ -262,6 +277,11 @@ class User(UserMixin, db.Model):
     
     # العلاقة مع صلاحيات المستخدم
     permissions = db.relationship('UserPermission', back_populates='user', cascade='all, delete-orphan')
+
+    # العلاقة مع المركبات التي يمكن للمستخدم الوصول إليها
+    accessible_vehicles = db.relationship('Vehicle',
+                                        secondary=vehicle_user_access,
+                                        back_populates='authorized_users')
 
     
     def set_password(self, password):
@@ -513,6 +533,7 @@ class Vehicle(db.Model):
     color = db.Column(db.String(30), nullable=False)  # لون السيارة
     status = db.Column(db.String(30), nullable=False, default='available')  # الحالة: متاحة، مؤجرة، في المشروع، في الورشة، حادث
     driver_name = db.Column(db.String(100), nullable=True)  # اسم السائق
+    type_of_car = db.Column(db.String(100),nullable=False)
     
     # تواريخ انتهاء الوثائق الهامة
     authorization_expiry_date = db.Column(db.Date)  # تاريخ انتهاء التفويض
@@ -545,6 +566,11 @@ class Vehicle(db.Model):
     periodic_inspections = db.relationship('VehiclePeriodicInspection', back_populates='vehicle', cascade='all, delete-orphan')
     safety_checks = db.relationship('VehicleSafetyCheck', back_populates='vehicle', cascade='all, delete-orphan')
     accidents = db.relationship('VehicleAccident', back_populates='vehicle', cascade='all, delete-orphan')
+
+    # علاقة many-to-many مع المستخدمين - المستخدمون الذين يمكنهم الوصول لهذه المركبة
+    authorized_users = db.relationship('User',
+                                      secondary=vehicle_user_access,
+                                      back_populates='accessible_vehicles')
 
     def __repr__(self):
         return f'<Vehicle {self.plate_number} {self.make} {self.model}>'
@@ -758,6 +784,68 @@ class VehicleHandover(db.Model):
     def __repr__(self):
         # استخدام البيانات المنسوخة في الـ repr لضمان عدم حدوث خطأ إذا حُذفت المركبة
         return f'<VehicleHandover {self.id} for vehicle {self.vehicle_plate_number} on {self.handover_date}>'
+
+    def to_dict(self):
+        """
+        تحويل كائن VehicleHandover إلى قاموس قابل للتحويل إلى JSON
+        """
+        return {
+            'id': self.id,
+            'vehicle_id': self.vehicle_id,
+            'handover_type': self.handover_type,
+            'handover_date': self.handover_date.strftime('%Y-%m-%d') if self.handover_date else None,
+            'handover_time': self.handover_time.strftime('%H:%M') if self.handover_time else None,
+            'mileage': self.mileage,
+            'project_name': self.project_name,
+            'city': self.city,
+            'vehicle_car_type': self.vehicle_car_type,
+            'vehicle_plate_number': self.vehicle_plate_number,
+            'vehicle_model_year': self.vehicle_model_year,
+            'employee_id': self.employee_id,
+            'person_name': self.person_name,
+            'driver_company_id': self.driver_company_id,
+            'driver_phone_number': self.driver_phone_number,
+            'driver_residency_number': self.driver_residency_number,
+            'driver_contract_status': self.driver_contract_status,
+            'driver_license_status': self.driver_license_status,
+            'driver_signature_path': self.driver_signature_path,
+            'supervisor_employee_id': self.supervisor_employee_id,
+            'supervisor_name': self.supervisor_name,
+            'supervisor_company_id': self.supervisor_company_id,
+            'supervisor_phone_number': self.supervisor_phone_number,
+            'supervisor_residency_number': self.supervisor_residency_number,
+            'supervisor_contract_status': self.supervisor_contract_status,
+            'supervisor_license_status': self.supervisor_license_status,
+            'supervisor_signature_path': self.supervisor_signature_path,
+            'reason_for_change': self.reason_for_change,
+            'vehicle_status_summary': self.vehicle_status_summary,
+            'notes': self.notes,
+            'reason_for_authorization': self.reason_for_authorization,
+            'authorization_details': self.authorization_details,
+            'fuel_level': self.fuel_level,
+            'has_spare_tire': self.has_spare_tire,
+            'has_fire_extinguisher': self.has_fire_extinguisher,
+            'has_first_aid_kit': self.has_first_aid_kit,
+            'has_warning_triangle': self.has_warning_triangle,
+            'has_tools': self.has_tools,
+            'has_oil_leaks': self.has_oil_leaks,
+            'has_gear_issue': self.has_gear_issue,
+            'has_clutch_issue': self.has_clutch_issue,
+            'has_engine_issue': self.has_engine_issue,
+            'has_windows_issue': self.has_windows_issue,
+            'has_tires_issue': self.has_tires_issue,
+            'has_body_issue': self.has_body_issue,
+            'has_electricity_issue': self.has_electricity_issue,
+            'has_lights_issue': self.has_lights_issue,
+            'has_ac_issue': self.has_ac_issue,
+            'movement_officer_name': self.movement_officer_name,
+            'movement_officer_signature_path': self.movement_officer_signature_path,
+            'damage_diagram_path': self.damage_diagram_path,
+            'form_link': self.form_link,
+            'custom_company_name': self.custom_company_name,
+            'custom_logo_path': self.custom_logo_path,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None
+        }
 
 
 
@@ -1283,4 +1371,184 @@ class SafetyInspection(db.Model):
     
     def __repr__(self):
         return f'<SafetyInspection {self.vehicle_id} by {self.driver_name}>'
+
+
+
+class OperationRequest(db.Model):
+    """نموذج لتتبع جميع العمليات التي تحتاج موافقة إدارية"""
+    __tablename__ = "operation_requests"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # نوع العملية
+    operation_type = db.Column(db.String(50), nullable=False)  # handover, workshop, external_authorization, safety_inspection
+    
+    # معرف السجل المرتبط بالعملية
+    related_record_id = db.Column(db.Integer, nullable=False)
+    
+    # معرف السيارة
+    vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicle.id", ondelete="CASCADE"), nullable=False)
+    
+    # معلومات العملية
+    title = db.Column(db.String(200), nullable=False)  # عنوان العملية
+    description = db.Column(db.Text)  # وصف العملية
+    
+    # معلومات الطالب
+    requested_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    requested_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # حالة العملية
+    status = db.Column(db.String(20), default="pending")  # pending, approved, rejected, under_review
+    
+    # معلومات المراجع
+    reviewed_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    review_notes = db.Column(db.Text)  # ملاحظات المراجع
+    
+    # أولوية العملية
+    priority = db.Column(db.String(20), default="normal")  # low, normal, high, urgent
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    vehicle = db.relationship("Vehicle", backref="operation_requests")
+    requester = db.relationship("User", foreign_keys=[requested_by], backref="operation_requests")
+    reviewer = db.relationship("User", foreign_keys=[reviewed_by], backref="reviewed_operations")
+    
+    def get_related_record(self):
+        """جلب السجل المرتبط بالعملية حسب نوعها"""
+        if self.operation_type == "handover":
+            return VehicleHandover.query.get(self.related_record_id)
+        elif self.operation_type == "workshop" or self.operation_type == "workshop_record":
+            return VehicleWorkshop.query.get(self.related_record_id)
+        elif self.operation_type == "external_authorization":
+            return ExternalAuthorization.query.get(self.related_record_id)
+        elif self.operation_type == "safety_inspection":
+            return SafetyInspection.query.get(self.related_record_id)
+        return None
+    
+    def get_operation_url(self):
+        """الحصول على رابط تعديل تواريخ الوثائق للسيارة الخاصة بالعملية"""
+        # توجيه جميع العمليات إلى صفحة تعديل تواريخ الوثائق مباشرة
+        return f"/vehicles/documents/edit/{self.vehicle_id}"
+    
+    def __repr__(self):
+        return f"<OperationRequest {self.operation_type} for Vehicle {self.vehicle_id}>"
+
+
+class OperationNotification(db.Model):
+    """نموذج للإشعارات المرتبطة بالعمليات"""
+    __tablename__ = "operation_notifications"
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # معرف العملية
+    operation_request_id = db.Column(db.Integer, db.ForeignKey("operation_requests.id", ondelete="CASCADE"), nullable=False)
+    
+    # معرف المستلم
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    
+    # نوع الإشعار
+    notification_type = db.Column(db.String(50), nullable=False)  # new_operation, status_change, reminder
+    
+    # محتوى الإشعار
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    
+    # حالة الإشعار
+    is_read = db.Column(db.Boolean, default=False)
+    is_sent = db.Column(db.Boolean, default=False)
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    read_at = db.Column(db.DateTime, nullable=True)
+    
+    # العلاقات
+    operation_request = db.relationship("OperationRequest", backref="notifications")
+    user = db.relationship("User", backref="notifications")
+    
+    def __repr__(self):
+        return f"<OperationNotification {self.title} to {self.user_id}>"
+
+
+class MobileDevice(db.Model):
+    """نموذج لإدارة الأجهزة المحمولة والهواتف"""
+    __tablename__ = 'mobile_devices'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    phone_number = db.Column(db.String(20), nullable=False)  # رقم الهاتف
+    imei = db.Column(db.String(20), unique=True, nullable=False)  # رقم الـ IMEI فريد
+    email = db.Column(db.String(100), nullable=True)  # الإيميل المرتبط بالجهاز
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)  # معرف الموظف
+    device_model = db.Column(db.String(50), nullable=True)  # نوع الجهاز
+    device_brand = db.Column(db.String(50), nullable=True)  # ماركة الجهاز
+    status = db.Column(db.String(20), default='متاح', nullable=False)  # حالة الجهاز: متاح، مرتبط، معطل
+    assigned_date = db.Column(db.DateTime, nullable=True)  # تاريخ الربط
+    notes = db.Column(db.Text, nullable=True)  # ملاحظات إضافية
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    employee = db.relationship('Employee', backref='mobile_devices', lazy=True)
+    
+    def __repr__(self):
+        return f'<MobileDevice {self.imei} - {self.phone_number}>'
+    
+    @property
+    def is_available(self):
+        """تحقق من توفر الجهاز للتخصيص"""
+        if self.status == 'معطل':
+            return False
+        if self.employee_id is None:
+            return True
+        # تحقق من حالة الموظف
+        if self.employee and self.employee.status != 'نشط':
+            return True
+        return False
+    
+    @property
+    def status_class(self):
+        """إرجاع كلاس CSS حسب الحالة"""
+        status_classes = {
+            'متاح': 'success',
+            'مرتبط': 'primary', 
+            'معطل': 'danger'
+        }
+        return status_classes.get(self.status, 'secondary')
+
+
+class ImportedPhoneNumber(db.Model):
+    """نموذج لتخزين أرقام الهواتف المستوردة من Excel"""
+    __tablename__ = 'imported_phone_numbers'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    phone_number = db.Column(db.String(20), nullable=False)  # رقم الهاتف المستورد
+    description = db.Column(db.String(100), nullable=True)  # وصف أو اسم صاحب الرقم
+    is_used = db.Column(db.Boolean, default=False, nullable=False)  # هل تم استخدام الرقم أم لا
+    imported_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)  # المستخدم الذي استورد الرقم
+    
+    # تواريخ النظام
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # العلاقات
+    user = db.relationship('User', backref='imported_phone_numbers', lazy=True)
+    
+    def __repr__(self):
+        return f'<ImportedPhoneNumber {self.phone_number}>'
+    
+    def mark_as_used(self):
+        """تحديد الرقم كمستخدم"""
+        self.is_used = True
+        self.updated_at = datetime.utcnow()
+        db.session.commit()
+    
+    @staticmethod
+    def get_available_numbers():
+        """جلب الأرقام المتاحة (غير المستخدمة)"""
+        return ImportedPhoneNumber.query.filter_by(is_used=False).order_by(ImportedPhoneNumber.phone_number).all()
 

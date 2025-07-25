@@ -107,6 +107,30 @@ def generate_handover_pdf_with_bein(handover_data):
     content.append(Paragraph(format_arabic_text(f"نموذج {title} مركبة"), styles['ArabicTitle']))
     content.append(Spacer(1, 20))
     
+    # معلومات الشركة والعمل
+    company_info = [
+        [format_arabic_text("رقم الشركة"), format_arabic_text(handover_data.get('work_order_number', ''))],
+        [format_arabic_text("حالة المركبة"), format_arabic_text(handover_data.get('vehicle', {}).get('vehicle_status', 'متاحة'))],
+        [format_arabic_text("تاريخ العملية"), format_arabic_text(handover_data.get('handover_date', ''))]
+    ]
+    
+    company_table = Table(company_info, colWidths=[2*inch, 3*inch])
+    company_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('FONTNAME', (0, 0), (-1, -1), 'beIN-Normal'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    
+    content.append(Paragraph(format_arabic_text("معلومات الشركة"), styles['ArabicSubtitle']))
+    content.append(company_table)
+    content.append(Spacer(1, 15))
+
     # معلومات المركبة
     vehicle = handover_data.get('vehicle', {})
     vehicle_info = [
@@ -137,7 +161,9 @@ def generate_handover_pdf_with_bein(handover_data):
     handover_info = [
         [format_arabic_text("التاريخ"), format_arabic_text(handover_data.get('handover_date', ''))],
         [format_arabic_text("النوع"), format_arabic_text(handover_data.get('handover_type', ''))],
-        [format_arabic_text("الاسم"), format_arabic_text(handover_data.get('person_name', ''))],
+        [format_arabic_text("اسم الشخص"), format_arabic_text(handover_data.get('person_name', ''))],
+        [format_arabic_text("اسم الموظف"), format_arabic_text(handover_data.get('employee_name', ''))],
+        [format_arabic_text("رقم الموظف"), format_arabic_text(handover_data.get('emp_id', ''))],
         [format_arabic_text("عداد الكيلومترات"), str(handover_data.get('mileage', ''))],
         [format_arabic_text("مستوى الوقود"), format_arabic_text(handover_data.get('fuel_level', ''))]
     ]
@@ -205,11 +231,13 @@ def handover_pdf_public(handover_id):
         from sqlalchemy import text
         from app import db
         
-        # جلب بيانات التسليم/الاستلام باستخدام SQL مباشر لتجنب مشاكل الاستيراد
+        # جلب بيانات التسليم/الاستلام باستخدام SQL مباشر مع جميع البيانات المطلوبة
         result = db.session.execute(text("""
-            SELECT vh.*, v.plate_number, v.make, v.model, v.year, v.color
+            SELECT vh.*, v.plate_number, v.make, v.model, v.year, v.color, v.vehicle_status,
+                   e.name as employee_name, e.employee_id as emp_id
             FROM vehicle_handover vh
             LEFT JOIN vehicle v ON vh.vehicle_id = v.id
+            LEFT JOIN employee e ON vh.employee_id = e.id
             WHERE vh.id = :handover_id
         """), {'handover_id': handover_id}).fetchone()
         
@@ -222,15 +250,19 @@ def handover_pdf_public(handover_id):
             'handover_type': result.handover_type_ar or 'تسليم',
             'handover_date': result.handover_date.strftime('%Y-%m-%d') if result.handover_date else '',
             'person_name': result.person_name or '',
+            'employee_name': result.employee_name or '',
+            'emp_id': result.emp_id or '',
             'mileage': result.mileage or 0,
             'fuel_level': result.fuel_level or '',
             'notes': result.notes or '',
+            'work_order_number': f"W{handover_id:06d}",  # رقم العمل
             'vehicle': {
                 'plate_number': result.plate_number or '',
                 'make': result.make or '',
                 'model': result.model or '',
                 'year': result.year or '',
-                'color': result.color or ''
+                'color': result.color or '',
+                'vehicle_status': result.vehicle_status or 'متاحة'  # حالة المركبة
             }
         }
         

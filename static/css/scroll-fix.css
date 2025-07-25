@@ -1,0 +1,130 @@
+/* إصلاح مشكلة عدم وجود التمرير الرأسي في الصفحات - قوة عالية */
+
+/* إعادة تعيين خصائص التمرير - قوة قصوى */
+html {
+    height: auto !important;
+    max-height: none !important;
+    overflow: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    scroll-behavior: smooth !important;
+    position: static !important;
+}
+
+body {
+    height: auto !important;
+    min-height: 100vh !important;
+    max-height: none !important;
+    overflow: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    position: relative !important;
+}
+
+/* إصلاح الحاويات الرئيسية */
+.container-fluid {
+    height: auto !important;
+    min-height: calc(100vh - 80px) !important;
+    overflow: visible !important;
+    position: relative !important;
+}
+
+.main-content,
+.content-wrapper,
+.page-wrapper {
+    height: auto !important;
+    min-height: calc(100vh - 120px) !important;
+    overflow: visible !important;
+    position: relative !important;
+}
+
+/* إصلاح الصفوف والأعمدة */
+.row {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+}
+
+.col,
+[class*="col-"] {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+}
+
+/* إصلاح القوائم الجانبية */
+.sidebar {
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+    position: fixed !important;
+}
+
+/* إضافة مساحة إضافية في الأسفل */
+.main-content::after,
+.container-fluid::after {
+    content: '';
+    display: block;
+    height: 100px;
+    clear: both;
+    visibility: hidden;
+}
+
+/* إصلاح للجداول الطويلة */
+.table-responsive {
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+}
+
+/* إصلاح للكروت والمحتوى */
+.card {
+    height: auto !important;
+    overflow: visible !important;
+}
+
+.card-body {
+    height: auto !important;
+    overflow: visible !important;
+}
+
+/* إصلاح خاص لصفحة الموظفين */
+.employees-page {
+    height: auto !important;
+    overflow: visible !important;
+}
+
+.employees-table-container {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+}
+
+/* قواعد خاصة للشاشات الصغيرة */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    .container-fluid {
+        padding-bottom: 100px !important;
+    }
+}
+
+/* إزالة أي قيود على الارتفاع */
+* {
+    max-height: none !important;
+}
+
+*:not(.fixed-height) {
+    height: auto !important;
+}
+
+/* ضمان عمل التمرير في جميع المتصفحات */
+@supports (-webkit-overflow-scrolling: touch) {
+    body {
+        -webkit-overflow-scrolling: touch !important;
+    }
+}

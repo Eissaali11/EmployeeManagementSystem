@@ -617,10 +617,10 @@
                             <i class="fas fa-eye"></i> سجل التسليم
                         </a>
                         {% if current_driver.mobile %}
-                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك"
-                           class="btn btn-sm btn-success" target="_blank" title="إرسال رسالة واتساب">
+                        <button onclick="redirectToWhatsApp('{{ current_driver.mobile }}', '{{ current_driver.name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
+                                class="btn btn-sm btn-success" title="إرسال رسالة واتساب">
                             <i class="fab fa-whatsapp"></i> واتساب
-                        </a>
+                        </button>
                         {% endif %}
                     </div>
                     {% endif %}

@@ -32,7 +32,7 @@ h6,
 .btn,
 .form-control,
 .dropdown-item {
-    font-family: "beIN-Normal", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "beIN-Normal", beIN-Normal, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Enhanced Typography */
@@ -66,11 +66,16 @@ p {
 
 /* Fix Bootstrap RTL issues */
 .dropdown-menu {
+    position: absolute;
+    top: 100%;           /* drop just below the trigger */
     right: 0;
     left: auto;
     text-align: right;
-}
-
+    z-index: 1000;       /* raised above most things */
+    background-color: #0056b3;
+    /* optional extras */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
 .form-check {
     padding-right: 1.25rem;
     padding-left: 0;
@@ -196,7 +201,7 @@ table {
 .table-hover tbody tr:hover {
     background-color: rgba(var(--bs-info-rgb), 0.06);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 4px 8px rgba(253, 242, 242, 0.03);
 }
 
 .table-striped > tbody > tr:nth-of-type(odd) {
@@ -1707,4 +1712,8 @@ table {
 
 .sidebar-nav .nav-item ul.collapse .nav-link:hover {
     background-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-label {
+    color: white;
 }

@@ -1,0 +1,497 @@
+{% extends "layout.html" %}
+
+{% block title %}ربط الأجهزة بالموظفين{% endblock %}
+
+{% block head %}
+<style>
+.employee-item {
+    border-radius: 8px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+    padding: 8px 12px;
+}
+
+.employee-item:hover {
+    background-color: #f8f9fa !important;
+    transform: translateX(-5px);
+}
+
+.dropdown-menu {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 12px;
+}
+
+.employee-list {
+    border-radius: 8px;
+}
+
+.employee-item strong {
+    color: #2c3e50;
+    font-size: 14px;
+}
+
+.employee-item small {
+    font-size: 12px;
+}
+
+.dropdown-toggle::after {
+    margin-right: 0.5rem;
+}
+
+/* تحسين المسافات في القائمة */
+.employee-item .d-flex {
+    padding: 4px 0;
+}
+
+/* تحسين شريط البحث */
+.dropdown-menu input[type="text"] {
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    transition: border-color 0.3s ease;
+}
+
+.dropdown-menu input[type="text"]:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+}
+
+/* تحسين تصميم الجدول */
+.table td {
+    vertical-align: middle;
+}
+
+/* ألوان مميزة للبيانات */
+.badge {
+    font-size: 11px;
+}
+
+/* تحسين أزرار الإجراءات */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* تحسين عرض القائمة المنسدلة */
+.dropdown-toggle {
+    text-align: right !important;
+    direction: rtl;
+}
+
+/* منع إغلاق القائمة عند النقر على حقل البحث */
+.dropdown-menu input {
+    pointer-events: auto;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رأس الصفحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="display-6 mb-0">
+                                <i class="fas fa-link me-3"></i>
+                                ربط الأجهزة بالموظفين
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">إدارة ربط الأجهزة المحمولة بالموظفين النشطين</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ملخص الأجهزة -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-mobile-alt text-info fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ available_devices|length }}</h3>
+                    <p class="text-muted mb-0">أجهزة متاحة للربط</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-users text-success fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ active_employees|length }}</h3>
+                    <p class="text-muted mb-0">
+                        {% if search or department_filter %}
+                            موظفين متاحين (مفلترة)
+                        {% else %}
+                            موظفين نشطين
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="d-flex align-items-center justify-content-center mb-3">
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-1">{{ available_devices|selectattr('employee')|list|length }}</h3>
+                    <p class="text-muted mb-0">أجهزة تحتاج إعادة ربط</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فلاتر البحث -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>فلاتر البحث والتصفية
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="search" class="form-label">البحث في الموظفين</label>
+                            <input type="text" class="form-control" id="search" name="search" 
+                                   placeholder="الاسم، الرقم الوظيفي، رقم الهوية، الهاتف" value="{{ search }}">
+                            <div class="form-text">يمكن البحث بالاسم أو الرقم الوظيفي أو رقم الهوية أو رقم الهاتف</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="department" class="form-label">فلترة حسب القسم</label>
+                            <select class="form-select" id="department" name="department">
+                                <option value="">جميع الأقسام</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" 
+                                        {% if department_filter == dept.id|string %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="device_search" class="form-label">البحث في الأجهزة</label>
+                            <input type="text" class="form-control" id="device_search" name="device_search" 
+                                   placeholder="رقم الهاتف أو IMEI أو الموديل" value="{{ device_search }}">
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>بحث وفلترة
+                            </button>
+                            <a href="{{ url_for('mobile_devices.assign') }}" class="btn btn-outline-secondary ms-2">
+                                <i class="fas fa-undo me-2"></i>إعادة تعيين
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة الأجهزة المتاحة للربط -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>الأجهزة المتاحة للربط
+                        <span class="badge bg-primary ms-2">{{ available_devices|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if available_devices %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>رقم الهاتف</th>
+                                    <th>رقم IMEI</th>
+                                    <th>الإيميل</th>
+                                    <th>نوع الجهاز</th>
+                                    <th>الحالة الحالية</th>
+                                    <th>ربط بموظف</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for device in available_devices %}
+                                <tr>
+                                    <td><strong>{{ device.phone_number }}</strong></td>
+                                    <td><code class="text-dark">{{ device.imei }}</code></td>
+                                    <td>
+                                        {% if device.email %}
+                                            <small class="text-muted">{{ device.email }}</small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.device_model %}
+                                            {{ device.device_model }}
+                                            {% if device.device_brand %}
+                                                <br><small class="text-muted">{{ device.device_brand }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.employee %}
+                                            <div class="d-flex align-items-center">
+                                                <span class="badge bg-warning me-2">مربوط</span>
+                                                <div>
+                                                    <span>{{ device.employee.name }}</span>
+                                                    {% if device.employee.status != 'نشط' %}
+                                                        <br><small class="text-danger">موظف غير نشط</small>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <span class="badge bg-secondary">غير مربوط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-primary btn-sm dropdown-toggle w-100" type="button" 
+                                                    id="employeeDropdown_{{ device.id }}" data-bs-toggle="dropdown" 
+                                                    aria-expanded="false" style="text-align: right;">
+                                                {% if device.employee %}
+                                                    {{ device.employee.name }}
+                                                {% else %}
+                                                    اختر موظف
+                                                {% endif %}
+                                            </button>
+                                            <div class="dropdown-menu p-2" style="min-width: 350px;" aria-labelledby="employeeDropdown_{{ device.id }}">
+                                                <input type="text" class="form-control form-control-sm mb-2" 
+                                                       placeholder="ابحث بالاسم، رقم الموظف، رقم الهوية..." 
+                                                       onkeyup="filterEmployees(this, {{ device.id }})"
+                                                       onclick="event.stopPropagation();">
+                                                <div class="employee-list" id="employeeList_{{ device.id }}" style="max-height: 200px; overflow-y: auto;">
+                                                    {% if active_employees %}
+                                                        {% for employee in active_employees|sort(attribute='name') %}
+                                                        <a class="dropdown-item employee-item" href="#" 
+                                                           onclick="selectEmployee({{ device.id }}, {{ employee.id }}, '{{ employee.name }}'); return false;"
+                                                           data-employee-name="{{ employee.name|lower }}"
+                                                           data-employee-id="{{ employee.employee_id or '' }}"
+                                                           data-national-id="{{ employee.national_id or '' }}">
+                                                            <div class="d-flex flex-column">
+                                                                <strong>{{ employee.name }}</strong>
+                                                                <small class="text-muted">
+                                                                    {% if employee.employee_id %}رقم الموظف: {{ employee.employee_id }}{% endif %}
+                                                                    {% if employee.national_id %} | الهوية: {{ employee.national_id }}{% endif %}
+                                                                </small>
+                                                                {% if employee.departments %}
+                                                                <small class="text-info">
+                                                                    القسم: {% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %}، {% endif %}{% endfor %}
+                                                                </small>
+                                                                {% endif %}
+                                                            </div>
+                                                        </a>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <span class="dropdown-item-text text-muted">لا يوجد موظفين متاحين</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            {% if device.employee_id %}
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="unassignDevice({{ device.id }}, '{{ device.imei }}')" 
+                                                    title="فك الربط">
+                                                <i class="fas fa-unlink"></i>
+                                            </button>
+                                            {% endif %}
+                                            <a href="{{ url_for('mobile_devices.edit', device_id=device.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="fas fa-mobile-alt fa-3x text-muted"></i>
+                        </div>
+                        <h5 class="text-muted">لا توجد أجهزة متاحة للربط</h5>
+                        <p class="text-muted">جميع الأجهزة مربوطة أو لا توجد أجهزة في النظام</p>
+                        <a href="{{ url_for('mobile_devices.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>إضافة جهاز جديد
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- إرشادات الاستخدام -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-2"></i>إرشادات الاستخدام
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-dark">ربط الأجهزة:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-check text-success me-2"></i>اختر موظف من القائمة المنسدلة</li>
+                                <li><i class="fas fa-check text-success me-2"></i>سيتم الربط تلقائياً عند الاختيار</li>
+                                <li><i class="fas fa-check text-success me-2"></i>يمكن ربط جهاز واحد فقط لكل موظف</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-dark">فك الربط:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-times text-danger me-2"></i>انقر على زر فك الربط</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>سيصبح الجهاز متاحاً للربط بموظف آخر</li>
+                                <li><i class="fas fa-times text-danger me-2"></i>لا يمكن التراجع عن هذا الإجراء</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal فك الربط -->
+<div class="modal fade" id="unassignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد فك الربط</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>هل أنت متأكد من فك ربط الجهاز <strong id="deviceImeiUnassign"></strong>؟</p>
+                <p class="text-warning"><small>سيصبح الجهاز متاحاً للربط بموظف آخر.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form method="POST" id="unassignForm" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">فك الربط</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// البحث في قائمة الموظفين
+function filterEmployees(searchInput, deviceId) {
+    const searchTerm = searchInput.value.toLowerCase();
+    const employeeList = document.getElementById(`employeeList_${deviceId}`);
+    const items = employeeList.querySelectorAll('.employee-item');
+    
+    items.forEach(item => {
+        const name = item.getAttribute('data-employee-name');
+        const employeeId = item.getAttribute('data-employee-id').toLowerCase();
+        const nationalId = item.getAttribute('data-national-id').toLowerCase();
+        
+        if (name.includes(searchTerm) || 
+            employeeId.includes(searchTerm) || 
+            nationalId.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// اختيار موظف من القائمة
+function selectEmployee(deviceId, employeeId, employeeName) {
+    // تحديث نص الزر
+    const button = document.getElementById(`employeeDropdown_${deviceId}`);
+    button.textContent = employeeName;
+    
+    // إغلاق القائمة المنسدلة
+    const dropdown = bootstrap.Dropdown.getInstance(button);
+    if (dropdown) {
+        dropdown.hide();
+    }
+    
+    // تنفيذ عملية الربط
+    assignDevice(deviceId, employeeId);
+}
+
+function assignDevice(deviceId, employeeId) {
+    if (!employeeId) return;
+    
+    // إظهار مؤشر التحميل
+    const button = document.getElementById(`employeeDropdown_${deviceId}`);
+    const originalText = button.textContent;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>جاري الربط...';
+    button.disabled = true;
+    
+    // إرسال طلب الربط
+    fetch(`/mobile-devices/${deviceId}/assign/${employeeId}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            // إعادة تحميل الصفحة لعرض التغييرات
+            window.location.reload();
+        } else {
+            throw new Error('فشل في ربط الجهاز');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ أثناء ربط الجهاز');
+        // استعادة الزر
+        button.textContent = originalText;
+        button.disabled = false;
+    });
+}
+
+function unassignDevice(deviceId, imei) {
+    document.getElementById('deviceImeiUnassign').textContent = imei;
+    document.getElementById('unassignForm').action = `/mobile-devices/${deviceId}/unassign`;
+    new bootstrap.Modal(document.getElementById('unassignModal')).show();
+}
+
+// إضافة token CSRF للطلبات
+document.addEventListener('DOMContentLoaded', function() {
+    // إنشاء meta tag للCSRF token إذا لم يكن موجوداً
+    if (!document.querySelector('meta[name=csrf-token]')) {
+        const meta = document.createElement('meta');
+        meta.name = 'csrf-token';
+        meta.content = '{{ csrf_token() }}';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+});
+</script>
+{% endblock %}

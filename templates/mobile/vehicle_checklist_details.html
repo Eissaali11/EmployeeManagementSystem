@@ -11,6 +11,16 @@
 {% endblock %}
 
 {% block content %}
+<!-- تحذير خاص بالسيارات خارج الخدمة -->
+{% if vehicle_warning %}
+<div class="mobile-alert mobile-alert-danger">
+    <i class="fas fa-exclamation-triangle"></i>
+    <div class="alert-content">
+        <strong>تحذير:</strong> {{ vehicle_warning }}
+    </div>
+</div>
+{% endif %}
+
 <!-- معلومات الفحص -->
 <div class="mobile-card">
     <div class="mobile-card-title">

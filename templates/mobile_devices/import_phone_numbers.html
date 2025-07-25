@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block title %}استيراد أرقام الهواتف{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- رأس الصفحة -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-0">
+                                <i class="fas fa-file-excel me-3"></i>
+                                استيراد أرقام الهواتف من Excel
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">قم برفع ملف Excel يحتوي على أرقام الهواتف</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.download_phone_template') }}" class="btn btn-success me-2">
+                                <i class="fas fa-download me-2"></i>تحميل النموذج
+                            </a>
+                            <a href="{{ url_for('mobile_devices.dashboard') }}" class="btn btn-light">
+                                <i class="fas fa-arrow-right me-2"></i>العودة للوحة المعلومات
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تحميل النموذج -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);">
+                <div class="card-body text-white text-center">
+                    <h5 class="mb-3">
+                        <i class="fas fa-file-download me-2"></i>تحميل نموذج Excel
+                    </h5>
+                    <p class="mb-3">قم بتحميل النموذج الجاهز الذي يحتوي على مثال لتنسيق البيانات المطلوب</p>
+                    <a href="{{ url_for('mobile_devices.download_phone_template') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-download me-2"></i>تحميل النموذج
+                    </a>
+                    <div class="mt-3">
+                        <small class="opacity-75">
+                            <i class="fas fa-info-circle me-1"></i>
+                            النموذج يحتوي على 10 أمثلة وورقة تعليمات مفصلة
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نموذج رفع الملف -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-upload me-2"></i>رفع ملف Excel
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-12 mb-4">
+                                <label for="excel_file" class="form-label">
+                                    ملف Excel <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-file-excel text-success"></i>
+                                    </span>
+                                    <input type="file" class="form-control" id="excel_file" name="excel_file" 
+                                           accept=".xlsx,.xls" required>
+                                </div>
+                                <small class="form-text text-muted">يسمح فقط بملفات Excel (.xlsx, .xls)</small>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الإجراءات -->
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-upload me-2"></i>استيراد الأرقام
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('mobile_devices.dashboard') }}" class="btn btn-outline-dark btn-lg">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- معلومات مساعدة -->
+            <div class="card border-0 shadow-sm mt-4" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-2"></i>تعليمات الاستيراد
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-dark">تنسيق الملف المطلوب:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-check text-success me-2"></i>ملف Excel (.xlsx أو .xls)</li>
+                                <li><i class="fas fa-check text-success me-2"></i>عمود يحتوي على أرقام الهواتف</li>
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>عمود اختياري للوصف أو الاسم</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-dark">أسماء الأعمدة المقبولة:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>phone, phone_number, هاتف, رقم</li>
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>name, description, اسم, وصف</li>
+                                <li><i class="fas fa-info text-warning me-2"></i>إذا لم تجد أسماء محددة، سيتم استخدام العمود الأول</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6 class="alert-heading">
+                                    <i class="fas fa-lightbulb me-2"></i>نصائح مهمة:
+                                </h6>
+                                <ul class="mb-2">
+                                    <li>تأكد من أن أرقام الهواتف في تنسيق صحيح (مثال: 966501234567)</li>
+                                    <li>سيتم تجاهل الأرقام المكررة تلقائياً</li>
+                                    <li>سيتم تنظيف الأرقام من المسافات والرموز غير المرغوبة</li>
+                                    <li>بعد الاستيراد، يمكنك استخدام الأرقام عند إضافة أجهزة جديدة</li>
+                                </ul>
+                                <hr class="my-2">
+                                <div class="text-center">
+                                    <strong>
+                                        <i class="fas fa-star text-warning me-1"></i>
+                                        ننصح بتحميل النموذج أولاً لفهم التنسيق المطلوب
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// التحقق من نوع الملف
+document.getElementById('excel_file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const fileName = file.name.toLowerCase();
+        if (!fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+            alert('يرجى اختيار ملف Excel صحيح (.xlsx أو .xls)');
+            e.target.value = '';
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -19,26 +19,7 @@
                     <form action="{{ url_for('documents.create') }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <!-- اختيار طريقة الإضافة: موظف واحد أو قسم كامل -->
-                        <div class="mb-3">
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_single" value="single" checked>
-                                <label class="form-check-label" for="add_single">
-                                    <i class="fas fa-user me-1"></i> إضافة لموظف واحد
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_department" value="department">
-                                <label class="form-check-label" for="add_department">
-                                    <i class="fas fa-building me-1"></i> إضافة وثائق قسم كامل
-                                </label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="add_type" id="add_sponsorship" value="sponsorship">
-                                <label class="form-check-label" for="add_sponsorship">
-                                    <i class="fas fa-filter me-1"></i> إضافة حسب الكفالة
-                                </label>
-                            </div>
-                        </div>
+                  
 
                         <div class="row">
                             <!-- قسم اختيار الموظف - يظهر فقط عند اختيار "إضافة لموظف واحد" -->
@@ -122,7 +103,7 @@
                         
                         <div class="mb-3" id="document_number_container">
                             <label for="document_number" class="form-label required-field">رقم الوثيقة</label>
-                            <input type="text" class="form-control" id="document_number" name="document_number" required>
+                            <input type="text" class="form-control" id="document_number" name="document_number" readonly required>
                             <small class="form-text text-muted d-none" id="department_document_number_info">
                                 <i class="fas fa-info-circle"></i>
                                 سيتم استخدام رقم الهوية الخاص بكل موظف عند إضافة الوثائق للقسم
@@ -368,6 +349,59 @@
 
 {% block extra_js %}
 <script>
+
+const empSelect       = document.getElementById('employee_id');
+    const docTypeSelect   = document.getElementById('document_type');
+    const docNumInput     = document.getElementById('document_number');
+    const deptInfoText    = document.getElementById('department_document_number_info');
+    const addForDeptRadio = document.querySelector('input[name="add_scope"][value="department"]');
+    const addForEmpRadio  = document.querySelector('input[name="add_scope"][value="employee"]');
+
+    function updateDocumentNumber() {
+      const empOption = empSelect.options[empSelect.selectedIndex];
+      const docType = docTypeSelect.value;
+        console.log(docType ,  empOption)
+      if (docType) {
+        // بناء الرقم: نوع_المستند + "_" + الرقم_الوطني
+        docNumInput.value = `${empOption}.${docType}`;
+      } else {
+        docNumInput.value = '';
+      }
+    }
+
+    // استمعي لتغيّر الموظف ونوع الوثيقة
+    empSelect.addEventListener('change', updateDocumentNumber);
+    docTypeSelect.addEventListener('change', updateDocumentNumber);
+
+    // لو عندك اختيار "إضافة لقسم كامل"، تريدين إظهار/إخفاء دليل استخدام الرقم الوطني
+    // افتراضيّاً نخفي info عند إضافة لقسم كامل:
+    if (addForDeptRadio) {
+      addForDeptRadio.addEventListener('change', () => {
+        deptInfoText.classList.remove('d-none');
+        docNumInput.readOnly = true;
+      });
+    }
+    if (addForEmpRadio) {
+      addForEmpRadio.addEventListener('change', () => {
+        deptInfoText.classList.add('d-none');
+        docNumInput.readOnly = false;
+      });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     document.addEventListener('DOMContentLoaded', function() {
         // تفعيل البحث في قائمة الموظفين باستخدام Select2
         $('#employee_id').select2({

@@ -53,7 +53,7 @@ def get_all_current_driversWithEmil():
     stmt = select(VehicleHandover).join(
         subq, VehicleHandover.id == subq.c.id
     ).join(
-        VehicleHandover.driver_employee  # الربط باستخدام العلاقة driver_employee
+        Employee, VehicleHandover.employee_id == Employee.id  # الربط باستخدام جدول Employee
     ).options(
         contains_eager(VehicleHandover.driver_employee) # جلب بيانات الموظف في نفس الاستعلام
     ).where(subq.c.row_num == 1)
@@ -428,54 +428,76 @@ def handle_safety_check_submission(vehicle):
             return jsonify({'error': 'يرجى ملء جميع الحقول المطلوبة'}), 400
         
         # إنشاء سجل فحص السلامة
-        safety_check = VehicleExternalSafetyCheck(
-            vehicle_id=vehicle.id,
-            driver_name=driver_name,
-            driver_national_id=driver_national_id,
-            driver_department=driver_department,
-            driver_city=driver_city,
-            vehicle_plate_number=vehicle_plate_number,
-            vehicle_make_model=vehicle_make_model,
-            current_delegate=current_delegate,
-            notes=notes,
-            inspection_date=datetime.now(),
-            approval_status='pending'
-        )
+        safety_check = VehicleExternalSafetyCheck()
+        safety_check.vehicle_id = vehicle.id
+        safety_check.driver_name = driver_name
+        safety_check.driver_national_id = driver_national_id
+        safety_check.driver_department = driver_department
+        safety_check.driver_city = driver_city
+        safety_check.vehicle_plate_number = vehicle_plate_number
+        safety_check.vehicle_make_model = vehicle_make_model
+        safety_check.current_delegate = current_delegate
+        safety_check.notes = notes
+        safety_check.inspection_date = datetime.now()
+        safety_check.approval_status = 'pending'
         
         db.session.add(safety_check)
         db.session.flush()  # للحصول على ID الجديد
         
-        # معالجة الصور المرفوعة
-        safety_images = request.files.getlist('safety_images')
-        descriptions = request.form.getlist('image_descriptions')
+        # معالجة الصور من الكاميرا
+        camera_images = request.form.get('camera_images', '')
+        image_notes = request.form.get('image_notes', '')
         
-        if safety_images and safety_images[0].filename:
+        if camera_images:
             # إنشاء مجلد الصور إذا لم يكن موجوداً
-            upload_dir = os.path.join(current_app.static_folder, 'uploads', 'safety_checks')
+            upload_dir = os.path.join(current_app.static_folder or 'static', 'uploads', 'safety_checks')
             os.makedirs(upload_dir, exist_ok=True)
             
-            for i, image in enumerate(safety_images):
-                if image and allowed_file(image.filename):
-                    # إنشاء اسم ملف آمن
-                    filename = secure_filename(f"{uuid.uuid4()}_{image.filename}")
-                    image_path = os.path.join(upload_dir, filename)
-                    
-                    # حفظ الصورة
-                    image.save(image_path)
-                    
-                    # ضغط الصورة
-                    compress_image(image_path)
-                    
-                    # حفظ معلومات الصورة في قاعدة البيانات
-                    description = descriptions[i] if i < len(descriptions) else None
-                    
-                    safety_image = VehicleSafetyImage(
-                        safety_check_id=safety_check.id,
-                        image_path=f'static/uploads/safety_checks/{filename}',
-                        image_description=description
-                    )
-                    
-                    db.session.add(safety_image)
+            import base64
+            
+            # تقسيم الصور والملاحظات
+            image_list = camera_images.split('|||') if camera_images else []
+            notes_list = image_notes.split('|||') if image_notes else []
+            
+            for i, image_data in enumerate(image_list):
+                if image_data and image_data.startswith('data:image'):
+                    try:
+                        # استخراج البيانات من base64
+                        header, data = image_data.split(',', 1)
+                        image_bytes = base64.b64decode(data)
+                        
+                        # تحديد امتداد الملف من header
+                        if 'png' in header:
+                            ext = 'png'
+                        elif 'jpeg' in header or 'jpg' in header:
+                            ext = 'jpg'
+                        else:
+                            ext = 'jpg'  # افتراضي
+                        
+                        # إنشاء اسم ملف آمن
+                        filename = f"{uuid.uuid4()}.{ext}"
+                        image_path = os.path.join(upload_dir, filename)
+                        
+                        # حفظ الصورة
+                        with open(image_path, 'wb') as f:
+                            f.write(image_bytes)
+                        
+                        # ضغط الصورة
+                        compress_image(image_path)
+                        
+                        # حفظ معلومات الصورة في قاعدة البيانات
+                        description = notes_list[i] if i < len(notes_list) else None
+                        
+                        safety_image = VehicleSafetyImage()
+                        safety_image.safety_check_id = safety_check.id
+                        safety_image.image_path = f'static/uploads/safety_checks/{filename}'
+                        safety_image.image_description = description
+                        
+                        db.session.add(safety_image)
+                        
+                    except Exception as e:
+                        current_app.logger.error(f"خطأ في معالجة الصورة {i}: {str(e)}")
+                        continue
         
         # حفظ جميع التغييرات
         db.session.commit()
@@ -736,7 +758,7 @@ def admin_external_safety_checks():
     # التحقق من صلاحيات الإدارة
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect('/')
     
     # جلب جميع طلبات فحص السلامة
     safety_checks = VehicleExternalSafetyCheck.query.order_by(
@@ -750,15 +772,21 @@ def admin_view_safety_check(check_id):
     """عرض تفاصيل طلب فحص السلامة"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect('/')
     
-    safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
+    # استخدام العلاقة المحددة مسبقاً لجلب الصور مع فحص السلامة
+    safety_check = VehicleExternalSafetyCheck.query.options(
+        db.selectinload(VehicleExternalSafetyCheck.safety_images)
+    ).get_or_404(check_id)
     
-    # تحديث مسار الصور المحفوظة في قاعدة البيانات
+    current_app.logger.info(f'تم جلب فحص السلامة ID={check_id} مع {len(safety_check.safety_images)} صور')
+    
+    # تحديث مسار الصور المحفوظة في قاعدة البيانات إذا لزم الأمر
     if safety_check.safety_images:
         for img in safety_check.safety_images:
             if img.image_path and not img.image_path.startswith('static/'):
                 img.image_path = 'static/' + img.image_path
+                current_app.logger.info(f'تم تحديث مسار الصورة: {img.image_path}')
     
     db.session.commit()
     
@@ -769,7 +797,7 @@ def reject_safety_check_page(check_id):
     """صفحة رفض طلب فحص السلامة"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect('/')
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
     

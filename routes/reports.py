@@ -63,8 +63,15 @@ def vehicle_checklist_pdf(checklist_id):
         # الحصول على بيانات الفحص
         checklist = VehicleChecklist.query.get_or_404(checklist_id)
         
-        # الحصول على بيانات المركبة
+        # الحصول على بيانات المركبة وفحص قيود العمليات
         vehicle = Vehicle.query.get_or_404(checklist.vehicle_id)
+        
+        # فحص حالة السيارة - عرض تحذير للسيارات خارج الخدمة
+        from routes.vehicles import check_vehicle_operation_restrictions
+        restrictions = check_vehicle_operation_restrictions(vehicle)
+        if restrictions['blocked']:
+            # إضافة تحذير في بداية التقرير ولكن السماح بعرض التشك لست التاريخي
+            print(f"تحذير: {restrictions['message']}")
         
         # جمع بيانات عناصر الفحص مرتبة حسب الفئة
         checklist_items = {}
