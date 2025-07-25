@@ -612,7 +612,7 @@
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
-                    form_url: `${window.location.origin.includes('replit.dev') ? 'https://eissa.site' : window.location.origin}/external-safety/external-safety-check/${vehicleId}`
+                    form_url: `${window.location.origin}/external-safety/external-safety-check/${vehicleId}`
                 })
             });
 
@@ -656,7 +656,7 @@
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
-                    form_url: `${window.location.origin.includes('replit.dev') ? 'https://eissa.site' : window.location.origin}/external-safety/external-safety-check/${vehicleId}`
+                    form_url: `${window.location.origin}/external-safety/external-safety-check/${vehicleId}`
                 })
             });
 
@@ -681,15 +681,8 @@
      * دالة لمشاركة رابط نموذج فحص السلامة باستخدام Web Share API.
      */
     function shareSafetyCheckForm(vehicleId, plateNumber, vehicleModel) {
-        // إنشاء رابط باستخدام النطاق الصحيح للإنتاج
-        let baseUrl = window.location.origin;
-        
-        // إذا كان الرابط يحتوي على replit.dev، استخدم النطاق المخصص
-        if (baseUrl.includes('replit.dev')) {
-            baseUrl = 'https://eissa.site';
-        }
-        
-        const formUrl = baseUrl + '/external-safety/external-safety-check/' + vehicleId;
+        // إنشاء رابط باستخدام النطاق الحالي
+        const formUrl = window.location.origin + '/external-safety/external-safety-check/' + vehicleId;
         const driver_name = allDriversData[vehicleId] || 'زميلنا العزيز';
 
         const fullMessageText = `مرحباً ${driver_name} 👋

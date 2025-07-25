@@ -2299,12 +2299,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // دالة مشاركة رابط نموذج فحص السلامة الخارجي
     function shareSafetyCheckForm(vehicleId, plateNumber) {
-        // إنشاء رابط باستخدام النطاق الصحيح للإنتاج
-        let baseUrl = window.location.origin;
-        if (baseUrl.includes('replit.dev')) {
-            baseUrl = 'https://eissa.site';
-        }
-        const formUrl = baseUrl + "/external-safety/external-safety-check/" + vehicleId;
+        // إنشاء رابط باستخدام النطاق الحالي
+        const formUrl = window.location.origin + "/external-safety/external-safety-check/" + vehicleId;
 
         const shareData = {
             title: "نموذج فحص السلامة الخارجي - نُظم",
