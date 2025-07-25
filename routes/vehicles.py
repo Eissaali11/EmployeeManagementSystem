@@ -649,6 +649,10 @@ def index():
         # الحصول على قائمة السيارات
         vehicles = query.order_by(Vehicle.status, Vehicle.plate_number).all()
 
+        
+        # تسجيل عدد السيارات للتشخيص
+        print(f"DEBUG: عدد السيارات المُرسلة للصفحة: {len(vehicles)}")
+        print(f"DEBUG: قيود الفلترة - حالة: {status_filter}, شركة: {make_filter}, مشروع: {project_filter}, رقم: {search_plate}")
         # إضافة معرف الموظف الحالي لكل سيارة
         for vehicle in vehicles:
                 try:
