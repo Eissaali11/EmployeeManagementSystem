@@ -793,8 +793,7 @@ ${formUrl}
         if (navigator.share) {
             navigator.share({
                 title: `نموذج فحص السلامة - ${plateNumber}`,
-                text: shareText,
-                url: formUrl
+                text: shareText
             }).then(() => {
                 showToast('تم مشاركة الرابط بنجاح!', 'success');
             }).catch(err => {
