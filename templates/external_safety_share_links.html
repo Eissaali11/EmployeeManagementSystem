@@ -709,7 +709,7 @@ async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, ve
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
-                    form_url: `${window.location.origin}/external-safety-check/${vehicleId}`
+                    form_url: vehicleFormUrls[vehicleId]
                 })
             });
             
@@ -747,9 +747,16 @@ async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, ve
             });
     }
 
+    // جلب الروابط من قاموس مُعد مسبقاً
+    const vehicleFormUrls = {
+        {% for vehicle in vehicles %}
+        '{{ vehicle.id }}': '{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}',
+        {% endfor %}
+    };
+
     // دالة مشاركة نموذج فحص السلامة
     function shareSafetyCheckForm(vehicleId, plateNumber, vehicleModel) {
-        const formUrl = `${window.location.origin}/external-safety-check/${vehicleId}`;
+        const formUrl = vehicleFormUrls[vehicleId];
         const shareText = `مرحباً 👋
 
 يرجى تعبئة نموذج فحص السلامة الخارجي للمركبة التالية:
