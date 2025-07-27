@@ -918,6 +918,16 @@
     color: #3498db !important;
 }
 
+.has-horizontal-scroll::before,
+.has-horizontal-scroll::after {
+  display: none !important;
+  /* or, if you still need the empty pseudo-element but want no background:
+  content: '';
+  background: none !important;
+  box-shadow: none !important;
+  */
+}
+
 </style>
 {% endblock %}
 
