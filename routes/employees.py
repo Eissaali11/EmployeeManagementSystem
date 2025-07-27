@@ -304,9 +304,12 @@ def edit(id):
             employee.national_id = new_national_id
             # معالجة رقم الجوال مع دعم الإدخال المخصص
             mobile_value = request.form.get('mobile', '')
+            print(f"DEBUG: Received mobile value from form: '{mobile_value}'")
             if mobile_value == 'custom':
                 mobile_value = request.form.get('mobile_custom', '')
+                print(f"DEBUG: Using custom mobile value: '{mobile_value}'")
             employee.mobile = mobile_value
+            print(f"DEBUG: Final mobile value set to employee: '{employee.mobile}'")
             employee.status = request.form.get('status', 'active')
             employee.job_title = request.form.get('job_title', '')
             employee.location = request.form.get('location', '')

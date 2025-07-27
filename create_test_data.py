@@ -225,75 +225,91 @@ def create_test_data():
     """إنشاء بيانات تجريبية"""
     
     with app.app_context():
-        # حذف البيانات الموجودة
-        db.drop_all()
+        # إنشاء الجداول إذا لم تكن موجودة
+        print("إنشاء الجداول...")
         db.create_all()
+        
+        # حذف البيانات الموجودة بطريقة آمنة
+        try:
+            print("حذف البيانات الموجودة...")
+            # حذف البيانات من الجداول بالترتيب الصحيح لتجنب مشاكل التبعية الدائرية
+            db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 0"))
+            db.session.execute(db.text("DELETE FROM employee_departments"))
+            db.session.execute(db.text("DELETE FROM user_accessible_departments"))
+            db.session.execute(db.text("DELETE FROM employee"))
+            db.session.execute(db.text("DELETE FROM department"))
+            db.session.execute(db.text("DELETE FROM user"))
+            db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 1"))
+            db.session.commit()
+        except Exception as e:
+            print(f"تحذير: {e}")
+            db.session.rollback()
         
         print("إنشاء البيانات التجريبية...")
         
-        # إنشاء قسم تجريبي
-        dept = Department(
-            name="قسم تقنية المعلومات",
-            description="قسم مختص بتقنية المعلومات والبرمجة"
-        )
-        db.session.add(dept)
-        db.session.flush()
-        
-        # إنشاء مستخدم إداري
-        admin_user = User(
-            email="admin@nuzum.com",
-            name="المدير العام",
-            role=UserRole.ADMIN,
-            is_active=True,
-            auth_type='local'
-        )
-        admin_user.set_password("admin123")
-        db.session.add(admin_user)
-        
-        # إنشاء موظف تجريبي
-        employee = Employee(
-            employee_id="EMP001",
-            national_id="1234567890",
-            name="أحمد محمد علي",
-            mobile="0501234567",
-            email="ahmed@nuzum.com",
-            job_title="مطور برمجيات",
-            status="active",
-            department_id=dept.id,
-            join_date=date(2024, 1, 15),
-            nationality="سعودي",
-            contract_type="saudi",
-            basic_salary=8000.0
-        )
-        db.session.add(employee)
-        
-        # إنشاء موظف آخر للاختبار
-        employee2 = Employee(
-            employee_id="EMP002",
-            national_id="0987654321",
-            name="فاطمة أحمد السالم",
-            mobile="0509876543",
-            email="fatima@nuzum.com",
-            job_title="محللة أنظمة",
-            status="active",
-            department_id=dept.id,
-            join_date=date(2024, 2, 1),
-            nationality="سعودية",
-            contract_type="saudi",
-            basic_salary=7500.0
-        )
-        db.session.add(employee2)
-        
-        # حفظ البيانات
-        db.session.commit()
-        
-        print("✓ تم إنشاء البيانات التجريبية بنجاح")
-        print("📋 بيانات تسجيل الدخول:")
-        print("   المستخدم: admin")
-        print("   كلمة المرور: admin123")
-        print("📋 بيانات الموظفين للاختبار:")
-        print("   الموظف 1: EMP001 / 1234567890")
-        print("   الموظف 2: EMP002 / 0987654321")
+        # إنشاء قسم تجريبي باستخدام SQL مباشر
+        try:
+            db.session.execute(db.text("""
+                INSERT INTO department (name, description, created_at, updated_at) 
+                VALUES ('قسم تقنية المعلومات', 'قسم مختص بتقنية المعلومات والبرمجة', NOW(), NOW())
+            """))
+            db.session.commit()
+            
+            # الحصول على معرف القسم
+            result = db.session.execute(db.text("SELECT id FROM department WHERE name = 'قسم تقنية المعلومات'"))
+            dept_id = result.fetchone()[0]
+            
+            # إنشاء مستخدم إداري
+            db.session.execute(db.text("""
+                INSERT INTO user (email, name, role, is_active, auth_type, created_at, last_login) 
+                VALUES ('admin@nuzum.com', 'المدير العام', 'ADMIN', 1, 'local', NOW(), NULL)
+            """))
+            db.session.commit()
+            
+            # الحصول على معرف المستخدم
+            result = db.session.execute(db.text("SELECT id FROM user WHERE email = 'admin@nuzum.com'"))
+            user_id = result.fetchone()[0]
+            
+            # تحديث كلمة المرور للمستخدم
+            from werkzeug.security import generate_password_hash
+            password_hash = generate_password_hash("admin123")
+            db.session.execute(db.text("""
+                UPDATE user SET password_hash = :password_hash WHERE id = :user_id
+            """), {"password_hash": password_hash, "user_id": user_id})
+            
+            # إنشاء موظف تجريبي
+            db.session.execute(db.text("""
+                INSERT INTO employee (employee_id, national_id, name, mobile, email, job_title, status, 
+                                   department_id, join_date, nationality, contract_type, basic_salary, 
+                                   created_at, updated_at, departments) 
+                VALUES ('EMP001', '1234567890', 'أحمد محمد علي', '0501234567', 'ahmed@nuzum.com', 
+                       'مطور برمجيات', 'active', :dept_id, '2024-01-15', 'سعودي', 'saudi', 8000.0, 
+                       NOW(), NOW(), :dept_id)
+            """), {"dept_id": dept_id})
+            
+            # إنشاء موظف آخر للاختبار
+            db.session.execute(db.text("""
+                INSERT INTO employee (employee_id, national_id, name, mobile, email, job_title, status, 
+                                   department_id, join_date, nationality, contract_type, basic_salary, 
+                                   created_at, updated_at, departments) 
+                VALUES ('EMP002', '0987654321', 'فاطمة أحمد السالم', '0509876543', 'fatima@nuzum.com', 
+                       'محللة أنظمة', 'active', :dept_id, '2024-02-01', 'سعودية', 'saudi', 7500.0, 
+                       NOW(), NOW(), :dept_id)
+            """), {"dept_id": dept_id})
+            
+            db.session.commit()
+            
+            print("✓ تم إنشاء البيانات التجريبية بنجاح")
+            print("📋 بيانات تسجيل الدخول:")
+            print("   المستخدم: admin")
+            print("   كلمة المرور: admin123")
+            print("📋 بيانات الموظفين للاختبار:")
+            print("   الموظف 1: EMP001 / 1234567890")
+            print("   الموظف 2: EMP002 / 0987654321")
+            
+        except Exception as e:
+            print(f"خطأ في إنشاء البيانات: {e}")
+            db.session.rollback()
 
 if __name__ == "__main__":
     create_test_data()

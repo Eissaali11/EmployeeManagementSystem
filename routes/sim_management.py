@@ -98,7 +98,7 @@ def create():
                 return render_template('sim_management/create.html')
             
             # التحقق من عدم وجود الرقم مسبقاً
-            existing_sim = ImportedPhoneNumber.query.filter_by(phone_number=phone_number).first()
+            existing_sim = SimCard.query.filter_by(phone_number=phone_number).first()
             if existing_sim:
                 flash('هذا الرقم موجود بالفعل في النظام', 'danger')
                 return render_template('sim_management/create.html')
@@ -110,14 +110,12 @@ def create():
                 monthly_cost = 0.0
             
             # إنشاء رقم جديد
-            new_sim = ImportedPhoneNumber(
+            new_sim = SimCard(
                 phone_number=phone_number,
                 carrier=carrier,
                 plan_type=plan_type if plan_type else None,
                 monthly_cost=monthly_cost,
-                description=description if description else None,
-                import_date=datetime.now(),
-                status='متاح'
+                description=description if description else None
             )
             
             db.session.add(new_sim)
@@ -146,7 +144,7 @@ def create():
 @login_required
 def edit(sim_id):
     """تعديل بيانات رقم"""
-    sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+    sim_card = SimCard.query.get_or_404(sim_id)
     
     if request.method == 'POST':
         try:
@@ -167,9 +165,9 @@ def edit(sim_id):
                 return render_template('sim_management/edit.html', sim_card=sim_card)
             
             # التحقق من عدم تكرار الرقم (باستثناء الرقم الحالي)
-            existing_sim = ImportedPhoneNumber.query.filter(
-                ImportedPhoneNumber.phone_number == phone_number,
-                ImportedPhoneNumber.id != sim_id
+            existing_sim = SimCard.query.filter(
+                SimCard.phone_number == phone_number,
+                SimCard.id != sim_id
             ).first()
             if existing_sim:
                 flash('هذا الرقم موجود بالفعل في النظام', 'danger')
@@ -181,40 +179,24 @@ def edit(sim_id):
             except ValueError:
                 monthly_cost = 0.0
             
-            # حفظ البيانات القديمة للمقارنة
-            old_data = {
-                'phone_number': sim_card.phone_number,
-                'carrier': sim_card.carrier,
-                'plan_type': sim_card.plan_type,
-                'monthly_cost': sim_card.monthly_cost
-            }
-            
             # تحديث البيانات
             sim_card.phone_number = phone_number
             sim_card.carrier = carrier
             sim_card.plan_type = plan_type if plan_type else None
             sim_card.monthly_cost = monthly_cost
             sim_card.description = description if description else None
-            sim_card.updated_at = datetime.now()
             
             db.session.commit()
             
             # تسجيل العملية
-            changes = []
-            for key, old_value in old_data.items():
-                new_value = getattr(sim_card, key)
-                if old_value != new_value:
-                    changes.append(f"{key}: {old_value} → {new_value}")
+            log_activity(
+                action="update",
+                entity_type="SIM",
+                entity_id=sim_card.id,
+                details=f"تعديل رقم SIM: {phone_number} - الشركة: {carrier}, النوع: {plan_type or 'غير محدد'}, التكلفة: {monthly_cost} ريال"
+            )
             
-            if changes:
-                log_activity(
-                    action="update",
-                    entity_type="SIM",
-                    entity_id=sim_id,
-                    details=f"تعديل رقم SIM: {phone_number} - التغييرات: {', '.join(changes)}"
-                )
-            
-            flash(f'تم تحديث بيانات الرقم {phone_number} بنجاح', 'success')
+            flash(f'تم تحديث الرقم {phone_number} بنجاح', 'success')
             return redirect(url_for('sim_management.index'))
             
         except Exception as e:
@@ -230,16 +212,13 @@ def edit(sim_id):
 def delete(sim_id):
     """حذف رقم"""
     try:
-        sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+        sim_card = SimCard.query.get_or_404(sim_id)
+        phone_number = sim_card.phone_number
         
         # التحقق من عدم ربط الرقم بموظف
         if sim_card.employee_id:
-            flash('لا يمكن حذف الرقم لأنه مربوط بموظف. يرجى فك الربط أولاً', 'danger')
+            flash('لا يمكن حذف الرقم لأنه مرتبط بموظف', 'danger')
             return redirect(url_for('sim_management.index'))
-        
-        # حفظ معلومات الرقم قبل الحذف
-        phone_number = sim_card.phone_number
-        carrier = sim_card.carrier
         
         db.session.delete(sim_card)
         db.session.commit()
@@ -249,7 +228,7 @@ def delete(sim_id):
             action="delete",
             entity_type="SIM",
             entity_id=sim_id,
-            details=f"حذف رقم SIM: {phone_number} - الشركة: {carrier}"
+            details=f"حذف رقم SIM: {phone_number}"
         )
         
         flash(f'تم حذف الرقم {phone_number} بنجاح', 'success')
@@ -266,7 +245,7 @@ def delete(sim_id):
 def assign_to_employee(sim_id):
     """ربط رقم بموظف"""
     try:
-        sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+        sim_card = SimCard.query.get_or_404(sim_id)
         employee_id = request.form.get('employee_id')
         
         if not employee_id:
@@ -309,7 +288,7 @@ def assign_to_employee(sim_id):
 def unassign_from_employee(sim_id):
     """فك ربط رقم من موظف"""
     try:
-        sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+        sim_card = SimCard.query.get_or_404(sim_id)
         
         if not sim_card.employee_id:
             flash('هذا الرقم غير مربوط بأي موظف', 'danger')
@@ -349,9 +328,9 @@ def unassign_from_employee(sim_id):
 def api_available_sims():
     """API للحصول على الأرقام المتاحة"""
     try:
-        available_sims = ImportedPhoneNumber.query.filter(
-            ImportedPhoneNumber.employee_id.is_(None)
-        ).order_by(ImportedPhoneNumber.phone_number).all()
+        available_sims = SimCard.query.filter(
+            SimCard.employee_id.is_(None)
+        ).order_by(SimCard.phone_number).all()
         
         sims_data = []
         for sim in available_sims:
@@ -382,9 +361,9 @@ def export_excel():
     """تصدير أرقام SIM إلى ملف Excel"""
     try:
         # جلب جميع أرقام SIM مع معلومات الموظفين
-        sim_cards = db.session.query(ImportedPhoneNumber, Employee).outerjoin(
-            Employee, ImportedPhoneNumber.employee_id == Employee.id
-        ).order_by(ImportedPhoneNumber.id).all()
+        sim_cards = db.session.query(SimCard, Employee).outerjoin(
+            Employee, SimCard.employee_id == Employee.id
+        ).order_by(SimCard.id).all()
         
         # إعداد البيانات للتصدير
         data = []
@@ -497,20 +476,18 @@ def import_excel():
                         continue
                     
                     # التحقق من وجود الرقم
-                    existing_sim = ImportedPhoneNumber.query.filter_by(phone_number=phone_number).first()
+                    existing_sim = SimCard.query.filter_by(phone_number=phone_number).first()
                     if existing_sim:
                         skipped_count += 1
                         continue
                     
                     # إنشاء رقم جديد
-                    new_sim = ImportedPhoneNumber(
+                    new_sim = SimCard(
                         phone_number=phone_number,
                         carrier=carrier,
                         plan_type=str(row.get('نوع الخطة', '')).strip() if pd.notna(row.get('نوع الخطة')) else None,
                         monthly_cost=float(row.get('التكلفة الشهرية', 0)) if pd.notna(row.get('التكلفة الشهرية')) else 0.0,
-                        description=str(row.get('الوصف', '')).strip() if pd.notna(row.get('الوصف')) else None,
-                        import_date=datetime.now(),
-                        status='متاح'
+                        description=str(row.get('الوصف', '')).strip() if pd.notna(row.get('الوصف')) else None
                     )
                     
                     db.session.add(new_sim)

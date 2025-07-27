@@ -467,7 +467,12 @@ function initializeMobileDropdown() {
     const hiddenInput = document.getElementById('mobile');
     const dropdownItems = document.querySelectorAll('.mobile-dropdown-item');
     
-    if (!searchInput || !dropdownList || !hiddenInput) return;
+    if (!searchInput || !dropdownList || !hiddenInput) {
+        console.error('Mobile dropdown elements not found');
+        return;
+    }
+    
+    console.log('Initializing mobile dropdown with current value:', hiddenInput.value);
     
     // إظهار القائمة عند التركيز على حقل البحث
     searchInput.addEventListener('focus', function() {
@@ -483,6 +488,7 @@ function initializeMobileDropdown() {
         
         // تحديث القيمة المخفية
         hiddenInput.value = searchTerm;
+        console.log('Updated hidden input value to:', searchTerm);
     });
     
     // إخفاء القائمة عند النقر خارجها
@@ -499,6 +505,7 @@ function initializeMobileDropdown() {
             searchInput.value = value;
             hiddenInput.value = value;
             dropdownList.style.display = 'none';
+            console.log('Selected mobile number:', value);
         });
         
         // تأثيرات التمرير
@@ -512,6 +519,17 @@ function initializeMobileDropdown() {
             this.style.color = '#333';
         });
     });
+    
+    // إضافة معالج إرسال النموذج للتأكد من حفظ القيمة
+    const form = searchInput.closest('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // التأكد من أن القيمة المخفية تحتوي على القيمة الصحيحة
+            const finalValue = searchInput.value.trim();
+            hiddenInput.value = finalValue;
+            console.log('Form submitting with mobile value:', finalValue);
+        });
+    }
     
     // دالة فلترة العناصر
     function filterDropdownItems(searchTerm) {
