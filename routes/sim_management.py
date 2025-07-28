@@ -25,22 +25,17 @@ def index():
         search_term = request.args.get('search', '')
         
         # الحصول على الأرقام المربوطة حالياً في DeviceAssignment
-        # البحث عن العلاقات النشطة في DeviceAssignment مع SimCard
-        device_assigned_query = db.session.query(DeviceAssignment).filter(
-            DeviceAssignment.is_active == True,
-            DeviceAssignment.sim_card_id.isnot(None)
-        )
+        # استعلام SQL مباشر للحصول على أرقام الهواتف المربوطة بالأجهزة
+        device_assigned_sql = db.session.execute(db.text("""
+            SELECT DISTINCT sc.phone_number 
+            FROM device_assignments da 
+            JOIN sim_cards sc ON da.sim_card_id = sc.id 
+            WHERE da.is_active = true AND da.sim_card_id IS NOT NULL
+        """))
         
-        # جلب أرقام الهواتف المربوطة بالأجهزة
         device_assigned_phone_numbers = set()
-        device_assignments = device_assigned_query.all()
-        
-        for assignment in device_assignments:
-            if assignment.sim_card_id:
-                # جلب رقم الهاتف من SimCard مباشرة
-                sim_card = SimCard.query.filter_by(id=assignment.sim_card_id).first()
-                if sim_card:
-                    device_assigned_phone_numbers.add(sim_card.phone_number)
+        for row in device_assigned_sql:
+            device_assigned_phone_numbers.add(row.phone_number)
         
         # استعلام أساسي - استخدم SimCard
         query = SimCard.query
@@ -83,16 +78,17 @@ def index():
             
             # البحث عن الموظف المربوط بالجهاز إذا كان الرقم مربوط بجهاز
             if sim.is_device_assigned:
-                # البحث عن DeviceAssignment المرتبط بهذا الرقم
-                device_assignment = DeviceAssignment.query.filter(
-                    DeviceAssignment.sim_card_id == sim.id,
-                    DeviceAssignment.is_active == True
-                ).first()
+                # استعلام SQL مباشر للحصول على اسم الموظف
+                employee_sql = db.session.execute(db.text("""
+                    SELECT e.name 
+                    FROM device_assignments da 
+                    JOIN employee e ON da.employee_id = e.id 
+                    WHERE da.sim_card_id = :sim_id AND da.is_active = true
+                """), {'sim_id': sim.id})
                 
-                if device_assignment and device_assignment.employee_id:
-                    employee = Employee.query.get(device_assignment.employee_id)
-                    if employee:
-                        sim.device_employee_name = employee.name
+                employee_row = employee_sql.fetchone()
+                if employee_row:
+                    sim.device_employee_name = employee_row.name
         
         # الحصول على قائمة الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()
