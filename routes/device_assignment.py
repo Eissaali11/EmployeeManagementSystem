@@ -136,7 +136,19 @@ def index():
             )
         
         if sim_status == 'available':
-            # الأرقام غير المربوطة
+            # فلترة الأرقام المتاحة فقط: غير مربوطة في DeviceAssignment ولا في SimCard
+            from models import SimCard
+            
+            # جلب أرقام SIM المربوطة في نظام إدارة بطاقات SIM
+            sim_card_assigned_numbers = db.session.query(SimCard.phone_number).filter(
+                SimCard.employee_id.isnot(None)
+            ).all()
+            sim_card_assigned_numbers = [num[0] for num in sim_card_assigned_numbers]
+            
+            # دمج القوائم للحصول على جميع الأرقام المربوطة
+            all_assigned_numbers = set(sim_card_assigned_numbers)
+            
+            # فلترة الأرقام المتاحة فقط
             if assigned_sim_ids:
                 available_sims_query = available_sims_query.filter(
                     ~ImportedPhoneNumber.id.in_(assigned_sim_ids),
@@ -144,6 +156,12 @@ def index():
                 )
             else:
                 available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.is_(None))
+            
+            # إزالة الأرقام المربوطة في نظام بطاقات SIM
+            if all_assigned_numbers:
+                available_sims_query = available_sims_query.filter(
+                    ~ImportedPhoneNumber.phone_number.in_(all_assigned_numbers)
+                )
         elif sim_status == 'assigned':
             # الأرقام المربوطة
             if assigned_sim_ids:
@@ -153,8 +171,29 @@ def index():
             else:
                 available_sims_query = available_sims_query.filter(False)  # لا توجد أرقام مربوطة
         else:
-            # عرض جميع الأرقام مع تمييز المربوطة
-            pass
+            # عرض الأرقام المتاحة فقط بشكل افتراضي
+            from models import SimCard
+            
+            # جلب أرقام SIM المربوطة في نظام إدارة بطاقات SIM
+            sim_card_assigned_numbers = db.session.query(SimCard.phone_number).filter(
+                SimCard.employee_id.isnot(None)
+            ).all()
+            sim_card_assigned_numbers = [num[0] for num in sim_card_assigned_numbers]
+            
+            # فلترة الأرقام المتاحة فقط (غير مربوطة في أي من النظامين)
+            if assigned_sim_ids:
+                available_sims_query = available_sims_query.filter(
+                    ~ImportedPhoneNumber.id.in_(assigned_sim_ids),
+                    ImportedPhoneNumber.employee_id.is_(None)
+                )
+            else:
+                available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.is_(None))
+            
+            # إزالة الأرقام المربوطة في نظام بطاقات SIM
+            if sim_card_assigned_numbers:
+                available_sims_query = available_sims_query.filter(
+                    ~ImportedPhoneNumber.phone_number.in_(sim_card_assigned_numbers)
+                )
             
         available_sims = available_sims_query.order_by(ImportedPhoneNumber.phone_number).all()
         
@@ -167,18 +206,26 @@ def index():
             DeviceAssignment.is_active == True
         ).order_by(DeviceAssignment.assignment_date.desc()).limit(10).all()
         
-        # إحصائيات محدثة تعتمد على DeviceAssignment و ImportedPhoneNumber
+        # إحصائيات محدثة تعتمد على DeviceAssignment و ImportedPhoneNumber مع مراعاة نظام إدارة بطاقات SIM
+        from models import SimCard
+        
+        # حساب الأرقام المتاحة الفعلية (غير مربوطة في أي من النظامين)
+        sim_card_assigned_count = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
+        device_assignment_sim_count = len(assigned_sim_ids)
+        imported_phone_employee_assigned = ImportedPhoneNumber.query.filter(
+            ImportedPhoneNumber.employee_id.isnot(None)
+        ).count()
+        
+        total_sims = ImportedPhoneNumber.query.count()
+        total_assigned_sims = device_assignment_sim_count + imported_phone_employee_assigned + sim_card_assigned_count
+        
         stats = {
             'total_devices': MobileDevice.query.count(),
             'available_devices': MobileDevice.query.count() - len(assigned_device_ids),
             'assigned_devices': len(assigned_device_ids),
-            'total_sims': ImportedPhoneNumber.query.count(),
-            'available_sims': ImportedPhoneNumber.query.filter(
-                ImportedPhoneNumber.employee_id.is_(None)
-            ).count() - len(assigned_sim_ids),
-            'assigned_sims': len(assigned_sim_ids) + ImportedPhoneNumber.query.filter(
-                ImportedPhoneNumber.employee_id.isnot(None)
-            ).count(),
+            'total_sims': total_sims,
+            'available_sims': max(0, total_sims - total_assigned_sims),
+            'assigned_sims': total_assigned_sims,
         }
         
         return render_template('device_assignment/index.html',
