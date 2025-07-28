@@ -1,0 +1,478 @@
+{% extends "layout.html" %}
+
+{% block title %}تفاصيل رقم SIM - {{ sim.phone_number }}{% endblock %}
+
+{% block content %}
+<style>
+    body {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        font-family: 'Tajawal', sans-serif;
+    }
+
+    .main-container {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px auto;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .detail-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border: none;
+    }
+
+    .detail-card .card-header {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        padding: 15px 20px;
+        margin: -25px -25px 20px -25px;
+        font-weight: 600;
+        font-size: 1.1em;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #2c3e50;
+        min-width: 120px;
+    }
+
+    .detail-value {
+        flex: 1;
+        text-align: left;
+        font-weight: 500;
+    }
+
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+    }
+
+    .status-available {
+        background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        color: white;
+    }
+
+    .status-assigned {
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+    }
+
+    .status-device-assigned {
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        color: white;
+    }
+
+    .carrier-badge {
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 0.85em;
+        font-weight: 600;
+    }
+
+    .carrier-stc {
+        background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        color: white;
+    }
+
+    .carrier-mobily {
+        background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+        color: white;
+    }
+
+    .carrier-zain {
+        background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        color: white;
+    }
+
+    .page-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+    }
+
+    .page-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 25px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+
+    .info-icon {
+        color: #3498db;
+        margin-left: 8px;
+    }
+
+    .employee-card {
+        background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        color: white;
+    }
+
+    .device-card {
+        background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+    }
+
+    .empty-state i {
+        font-size: 3em;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="main-container">
+        <!-- رأس الصفحة -->
+        <div class="page-header">
+            <h1><i class="fas fa-sim-card me-3"></i>تفاصيل رقم SIM</h1>
+            <p class="lead">{{ sim.phone_number }}</p>
+        </div>
+
+        <!-- زر العودة -->
+        <div class="mb-4">
+            <a href="{{ url_for('sim_management.index') }}" class="btn-back">
+                <i class="fas fa-arrow-right"></i>
+                العودة لقائمة SIM
+            </a>
+        </div>
+
+        <div class="row">
+            <!-- معلومات الرقم الأساسية -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="detail-card">
+                    <div class="card-header">
+                        <i class="fas fa-phone me-2"></i>معلومات الرقم
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">رقم الهاتف:</span>
+                        <span class="detail-value">
+                            <strong>{{ sim.phone_number }}</strong>
+                        </span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">شركة الاتصالات:</span>
+                        <span class="detail-value">
+                            <span class="carrier-badge carrier-{{ sim.carrier.lower() if sim.carrier else 'default' }}">
+                                {{ sim.carrier or 'غير محدد' }}
+                            </span>
+                        </span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">نوع الباقة:</span>
+                        <span class="detail-value">{{ sim.plan_type or 'غير محدد' }}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">التكلفة الشهرية:</span>
+                        <span class="detail-value">
+                            {% if sim.monthly_cost %}
+                                {{ sim.monthly_cost }} ريال
+                            {% else %}
+                                غير محدد
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">الحالة:</span>
+                        <span class="detail-value">
+                            {% if direct_employee %}
+                                <span class="status-badge status-assigned">
+                                    <i class="fas fa-user me-1"></i>مربوط بموظف
+                                </span>
+                            {% elif employee %}
+                                <span class="status-badge status-device-assigned">
+                                    <i class="fas fa-mobile-alt me-1"></i>مربوط بجهاز
+                                </span>
+                            {% else %}
+                                <span class="status-badge status-available">
+                                    <i class="fas fa-check me-1"></i>متاح
+                                </span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if sim.description %}
+                    <div class="detail-row">
+                        <span class="detail-label">الوصف:</span>
+                        <span class="detail-value">{{ sim.description }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if sim.assignment_date %}
+                    <div class="detail-row">
+                        <span class="detail-label">تاريخ الربط:</span>
+                        <span class="detail-value">{{ sim.assignment_date.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- معلومات الربط -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                {% if direct_employee %}
+                <!-- الموظف المربوط مباشرة -->
+                <div class="detail-card employee-card">
+                    <div class="card-header">
+                        <i class="fas fa-user me-2"></i>الموظف المربوط (مباشر)
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">اسم الموظف:</span>
+                        <span class="detail-value" style="color: white;">
+                            <strong>{{ direct_employee.name }}</strong>
+                        </span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">رقم الهوية:</span>
+                        <span class="detail-value" style="color: white;">{{ direct_employee.national_id or 'غير محدد' }}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">الرقم الوظيفي:</span>
+                        <span class="detail-value" style="color: white;">{{ direct_employee.employee_id or 'غير محدد' }}</span>
+                    </div>
+                    
+                    {% if direct_employee.departments %}
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">القسم:</span>
+                        <span class="detail-value" style="color: white;">
+                            {% for dept in direct_employee.departments %}
+                                {{ dept.name }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">المدينة:</span>
+                        <span class="detail-value" style="color: white;">{{ direct_employee.city or 'غير محدد' }}</span>
+                    </div>
+                </div>
+                
+                {% elif employee %}
+                <!-- الموظف المربوط عبر الجهاز -->
+                <div class="detail-card employee-card">
+                    <div class="card-header">
+                        <i class="fas fa-user me-2"></i>الموظف المربوط (عبر الجهاز)
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">اسم الموظف:</span>
+                        <span class="detail-value" style="color: white;">
+                            <strong>{{ employee.name }}</strong>
+                        </span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">رقم الهوية:</span>
+                        <span class="detail-value" style="color: white;">{{ employee.national_id or 'غير محدد' }}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">الرقم الوظيفي:</span>
+                        <span class="detail-value" style="color: white;">{{ employee.employee_id or 'غير محدد' }}</span>
+                    </div>
+                    
+                    {% if employee.departments %}
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">القسم:</span>
+                        <span class="detail-value" style="color: white;">
+                            {% for dept in employee.departments %}
+                                {{ dept.name }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">المدينة:</span>
+                        <span class="detail-value" style="color: white;">{{ employee.city or 'غير محدد' }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <!-- حالة فارغة -->
+                <div class="detail-card">
+                    <div class="card-header">
+                        <i class="fas fa-user-slash me-2"></i>معلومات الربط
+                    </div>
+                    <div class="empty-state">
+                        <i class="fas fa-user-slash"></i>
+                        <h5>غير مربوط</h5>
+                        <p>هذا الرقم غير مربوط بأي موظف حالياً</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if device %}
+        <!-- معلومات الجهاز -->
+        <div class="row">
+            <div class="col-12">
+                <div class="detail-card device-card">
+                    <div class="card-header">
+                        <i class="fas fa-mobile-alt me-2"></i>معلومات الجهاز المربوط
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-row">
+                                <span class="detail-label" style="color: rgba(255,255,255,0.9);">رقم الجهاز:</span>
+                                <span class="detail-value" style="color: white;">
+                                    <strong>{{ device.device_number or 'غير محدد' }}</strong>
+                                </span>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label" style="color: rgba(255,255,255,0.9);">نوع الجهاز:</span>
+                                <span class="detail-value" style="color: white;">{{ device.device_type or 'غير محدد' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="detail-row">
+                                <span class="detail-label" style="color: rgba(255,255,255,0.9);">العلامة التجارية:</span>
+                                <span class="detail-value" style="color: white;">{{ device.brand or 'غير محدد' }}</span>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label" style="color: rgba(255,255,255,0.9);">الموديل:</span>
+                                <span class="detail-value" style="color: white;">{{ device.model or 'غير محدد' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if device.description %}
+                    <div class="detail-row">
+                        <span class="detail-label" style="color: rgba(255,255,255,0.9);">وصف الجهاز:</span>
+                        <span class="detail-value" style="color: white;">{{ device.description }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if device_assignment %}
+        <!-- تفاصيل الربط -->
+        <div class="row">
+            <div class="col-12">
+                <div class="detail-card">
+                    <div class="card-header">
+                        <i class="fas fa-link me-2"></i>تفاصيل الربط في النظام
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="detail-row">
+                                <span class="detail-label">تاريخ الربط:</span>
+                                <span class="detail-value">
+                                    {% if device_assignment.assignment_date %}
+                                        {{ device_assignment.assignment_date.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        غير محدد
+                                    {% endif %}
+                                </span>
+                            </div>
+                            
+                            <div class="detail-row">
+                                <span class="detail-label">الحالة:</span>
+                                <span class="detail-value">
+                                    {% if device_assignment.is_active %}
+                                        <span class="status-badge status-assigned">نشط</span>
+                                    {% else %}
+                                        <span class="status-badge status-available">غير نشط</span>
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            {% if device_assignment.notes %}
+                            <div class="detail-row">
+                                <span class="detail-label">ملاحظات:</span>
+                                <span class="detail-value">{{ device_assignment.notes }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="detail-row">
+                                <span class="detail-label">آخر تحديث:</span>
+                                <span class="detail-value">
+                                    {% if device_assignment.updated_at %}
+                                        {{ device_assignment.updated_at.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        غير محدد
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- أزرار الإجراءات -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('sim_management.edit', sim_id=sim.id) }}" class="btn btn-warning me-3">
+                <i class="fas fa-edit me-2"></i>تعديل
+            </a>
+            <a href="{{ url_for('sim_management.index') }}" class="btn btn-secondary">
+                <i class="fas fa-list me-2"></i>العودة للقائمة
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

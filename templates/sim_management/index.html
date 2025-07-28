@@ -440,12 +440,11 @@
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <!-- زر عرض تفاصيل الربط -->
-                                            <button type="button" class="btn btn-outline-info" 
-                                                    data-bs-toggle="modal" 
-                                                    data-bs-target="#detailsModal{{ sim.id }}"
-                                                    title="عرض تفاصيل الربط">
+                                            <a href="{{ url_for('sim_management.details', sim_id=sim.id) }}" 
+                                               class="btn btn-outline-info" 
+                                               title="عرض تفاصيل الربط">
                                                 <i class="fas fa-info-circle"></i>
-                                            </button>
+                                            </a>
                                             
                                             <a href="{{ url_for('sim_management.edit', sim_id=sim.id) }}" 
                                                class="btn btn-outline-primary"

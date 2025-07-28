@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
-from models import SimCard, ImportedPhoneNumber, Employee, Department, DeviceAssignment, db, UserRole
+from models import SimCard, ImportedPhoneNumber, Employee, Department, DeviceAssignment, MobileDevice, db, UserRole
 from datetime import datetime
 import logging
 from utils.audit_logger import log_activity
@@ -567,3 +567,38 @@ def import_excel():
             return render_template('sim_management/import_excel.html')
     
     return render_template('sim_management/import_excel.html')
+
+@sim_management_bp.route('/details/<int:sim_id>')
+@login_required
+def details(sim_id):
+    """صفحة عرض تفاصيل بطاقة SIM"""
+    try:
+        sim = SimCard.query.get_or_404(sim_id)
+        
+        # البحث عن تفاصيل الربط في DeviceAssignment
+        device_assignment = DeviceAssignment.query.filter_by(phone_number=sim.phone_number).first()
+        employee = None
+        device = None
+        
+        if device_assignment:
+            if device_assignment.employee_id:
+                employee = Employee.query.get(device_assignment.employee_id)
+            if device_assignment.device_id:
+                device = MobileDevice.query.get(device_assignment.device_id)
+        
+        # البحث عن الموظف المربوط مباشرة في SimCard
+        direct_employee = None
+        if sim.employee_id:
+            direct_employee = Employee.query.get(sim.employee_id)
+        
+        return render_template('sim_management/details.html', 
+                             sim=sim, 
+                             device_assignment=device_assignment,
+                             employee=employee, 
+                             device=device,
+                             direct_employee=direct_employee)
+                             
+    except Exception as e:
+        current_app.logger.error(f"Error loading SIM details: {str(e)}")
+        flash('حدث خطأ أثناء تحميل التفاصيل', 'danger')
+        return redirect(url_for('sim_management.index'))
