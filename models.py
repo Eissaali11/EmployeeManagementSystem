@@ -1625,7 +1625,7 @@ class DeviceAssignment(db.Model):
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='CASCADE'), nullable=True)  # جعلناه اختياري
     department_id = db.Column(db.Integer, db.ForeignKey('department.id', ondelete='CASCADE'), nullable=True)  # جديد للربط المباشر بالقسم
     device_id = db.Column(db.Integer, db.ForeignKey('mobile_devices.id', ondelete='SET NULL'), nullable=True)
-    sim_card_id = db.Column(db.Integer, db.ForeignKey('imported_phone_numbers.id', ondelete='SET NULL'), nullable=True)
+    sim_card_id = db.Column(db.Integer, db.ForeignKey('sim_cards.id', ondelete='SET NULL'), nullable=True)
     
     # معلومات الربط
     assignment_type = db.Column(db.String(50), nullable=False)  # device_only, sim_only, device_and_sim
@@ -1646,7 +1646,7 @@ class DeviceAssignment(db.Model):
     employee = db.relationship('Employee', backref='device_assignments', lazy=True)
     department = db.relationship('Department', backref='dept_device_assignments', lazy=True)
     device = db.relationship('MobileDevice', backref='assignments', lazy=True)
-    sim_card = db.relationship('ImportedPhoneNumber', backref='assignments', lazy=True)
+    sim_card = db.relationship('SimCard', backref='assignments', lazy=True)
     assigned_by_user = db.relationship('User', backref='assigned_devices', lazy=True)
     
     @property
