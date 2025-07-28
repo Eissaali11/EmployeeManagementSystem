@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, current_app, jsonify
 from flask_login import login_required, current_user
-from models import MobileDevice, SimCard, Employee, Department, db, UserRole, DeviceAssignment, ImportedPhoneNumber
+from models import MobileDevice, SimCard, Employee, Department, db, UserRole, DeviceAssignment
 from datetime import datetime
 import logging
 from utils.audit_logger import log_activity
@@ -29,8 +29,8 @@ def departments_view():
                 devices = MobileDevice.query.filter_by(employee_id=employee.id).all()
                 device_count += len(devices)
                 
-                # عدد أرقام SIM من ImportedPhoneNumber
-                sims = ImportedPhoneNumber.query.filter_by(employee_id=employee.id).all()
+                # عدد أرقام SIM من نظام إدارة SIM
+                sims = SimCard.query.filter_by(employee_id=employee.id).all()
                 sim_count += len(sims)
                 
                 # إضافة الأجهزة والأرقام للموظف للعرض
@@ -52,7 +52,7 @@ def departments_view():
         stats = {
             'total_departments': len(departments),
             'total_devices': MobileDevice.query.count(),
-            'total_sims': ImportedPhoneNumber.query.count(),
+            'total_sims': SimCard.query.count(),
             'total_employees': Employee.query.count(),
         }
         
@@ -119,113 +119,51 @@ def index():
         for device in available_devices:
             device.is_assigned = device.id in assigned_device_ids
         
-        # الأرقام المتاحة - استخدام ImportedPhoneNumber بدلاً من SimCard للاتساق
-        # جلب IDs الأرقام المربوطة حالياً من DeviceAssignment
-        assigned_sim_ids = db.session.query(DeviceAssignment.sim_card_id).filter(
-            DeviceAssignment.is_active == True,
-            DeviceAssignment.sim_card_id.isnot(None)
-        ).distinct().all()
-        assigned_sim_ids = [id[0] for id in assigned_sim_ids]
+        # الأرقام المتاحة - استخدام SimCard من نظام إدارة بطاقات SIM فقط
+        from models import SimCard
         
-        available_sims_query = ImportedPhoneNumber.query
+        # جلب الأرقام المتاحة من نظام إدارة بطاقات SIM فقط
+        available_sims_query = SimCard.query.filter(
+            SimCard.employee_id.is_(None)  # الأرقام غير المربوطة في نظام SIM
+        )
         
         # فلترة حسب رقم الهاتف
         if phone_search:
             available_sims_query = available_sims_query.filter(
-                ImportedPhoneNumber.phone_number.contains(phone_search)
+                SimCard.phone_number.contains(phone_search)
             )
         
-        if sim_status == 'available':
-            # فلترة الأرقام المتاحة فقط: غير مربوطة في DeviceAssignment ولا في SimCard
-            from models import SimCard
-            
-            # جلب أرقام SIM المربوطة في نظام إدارة بطاقات SIM
-            sim_card_assigned_numbers = db.session.query(SimCard.phone_number).filter(
+        # فلترة حسب الحالة
+        if sim_status == 'assigned':
+            # عرض الأرقام المربوطة من نظام SIM
+            available_sims_query = SimCard.query.filter(
                 SimCard.employee_id.isnot(None)
-            ).all()
-            sim_card_assigned_numbers = [num[0] for num in sim_card_assigned_numbers]
+            )
+        # else: الافتراضي هو الأرقام المتاحة (غير مربوطة) وهو مطبق بالفعل
             
-            # دمج القوائم للحصول على جميع الأرقام المربوطة
-            all_assigned_numbers = set(sim_card_assigned_numbers)
-            
-            # فلترة الأرقام المتاحة فقط
-            if assigned_sim_ids:
-                available_sims_query = available_sims_query.filter(
-                    ~ImportedPhoneNumber.id.in_(assigned_sim_ids),
-                    ImportedPhoneNumber.employee_id.is_(None)
-                )
-            else:
-                available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.is_(None))
-            
-            # إزالة الأرقام المربوطة في نظام بطاقات SIM
-            if all_assigned_numbers:
-                available_sims_query = available_sims_query.filter(
-                    ~ImportedPhoneNumber.phone_number.in_(all_assigned_numbers)
-                )
-        elif sim_status == 'assigned':
-            # الأرقام المربوطة
-            if assigned_sim_ids:
-                available_sims_query = available_sims_query.filter(
-                    ImportedPhoneNumber.id.in_(assigned_sim_ids)
-                )
-            else:
-                available_sims_query = available_sims_query.filter(False)  # لا توجد أرقام مربوطة
-        else:
-            # عرض الأرقام المتاحة فقط بشكل افتراضي
-            from models import SimCard
-            
-            # جلب أرقام SIM المربوطة في نظام إدارة بطاقات SIM
-            sim_card_assigned_numbers = db.session.query(SimCard.phone_number).filter(
-                SimCard.employee_id.isnot(None)
-            ).all()
-            sim_card_assigned_numbers = [num[0] for num in sim_card_assigned_numbers]
-            
-            # فلترة الأرقام المتاحة فقط (غير مربوطة في أي من النظامين)
-            if assigned_sim_ids:
-                available_sims_query = available_sims_query.filter(
-                    ~ImportedPhoneNumber.id.in_(assigned_sim_ids),
-                    ImportedPhoneNumber.employee_id.is_(None)
-                )
-            else:
-                available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.is_(None))
-            
-            # إزالة الأرقام المربوطة في نظام بطاقات SIM
-            if sim_card_assigned_numbers:
-                available_sims_query = available_sims_query.filter(
-                    ~ImportedPhoneNumber.phone_number.in_(sim_card_assigned_numbers)
-                )
-            
-        available_sims = available_sims_query.order_by(ImportedPhoneNumber.phone_number).all()
+        available_sims = available_sims_query.order_by(SimCard.phone_number).all()
         
         # إضافة معلومة هل الرقم مربوط أم لا
         for sim in available_sims:
-            sim.is_assigned = sim.id in assigned_sim_ids or sim.employee_id is not None
+            sim.is_assigned = sim.employee_id is not None
         
         # عمليات الربط النشطة
         active_assignments = DeviceAssignment.query.filter(
             DeviceAssignment.is_active == True
         ).order_by(DeviceAssignment.assignment_date.desc()).limit(10).all()
         
-        # إحصائيات محدثة تعتمد على DeviceAssignment و ImportedPhoneNumber مع مراعاة نظام إدارة بطاقات SIM
-        from models import SimCard
-        
-        # حساب الأرقام المتاحة الفعلية (غير مربوطة في أي من النظامين)
-        sim_card_assigned_count = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
-        device_assignment_sim_count = len(assigned_sim_ids)
-        imported_phone_employee_assigned = ImportedPhoneNumber.query.filter(
-            ImportedPhoneNumber.employee_id.isnot(None)
-        ).count()
-        
-        total_sims = ImportedPhoneNumber.query.count()
-        total_assigned_sims = device_assignment_sim_count + imported_phone_employee_assigned + sim_card_assigned_count
+        # إحصائيات محدثة تعتمد على نظام إدارة بطاقات SIM فقط
+        total_sims = SimCard.query.count()
+        assigned_sims_count = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
+        available_sims_count = total_sims - assigned_sims_count
         
         stats = {
             'total_devices': MobileDevice.query.count(),
             'available_devices': MobileDevice.query.count() - len(assigned_device_ids),
             'assigned_devices': len(assigned_device_ids),
             'total_sims': total_sims,
-            'available_sims': max(0, total_sims - total_assigned_sims),
-            'assigned_sims': total_assigned_sims,
+            'available_sims': available_sims_count,
+            'assigned_sims': assigned_sims_count,
         }
         
         return render_template('device_assignment/index.html',
@@ -308,7 +246,7 @@ def assign():
         
         # التحقق من الرقم إذا تم تحديده
         if sim_id:
-            sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+            sim_card = SimCard.query.get_or_404(sim_id)
             if sim_card.employee_id:
                 flash('هذا الرقم مربوط بموظف آخر بالفعل', 'danger')
                 return redirect(url_for('device_assignment.index'))
@@ -591,8 +529,8 @@ def department_management():
             MobileDevice.department_id.is_(None)
         ).all()
         
-        # جلب الأرقام المتاحة (غير مربوطة بموظف)
-        available_sims = ImportedPhoneNumber.query.filter_by(employee_id=None).all()
+        # جلب الأرقام المتاحة (غير مربوطة بموظف) من نظام إدارة SIM
+        available_sims = SimCard.query.filter_by(employee_id=None).all()
         
         return render_template('device_assignment/department_management.html',
                              departments=departments,
@@ -623,8 +561,10 @@ def assign_device(device_id):
         # جلب الموظفين النشطين
         employees = Employee.query.order_by(Employee.name).all()
         
-        # جلب الأرقام المتاحة
-        available_sims = ImportedPhoneNumber.query.filter_by(is_used=False, employee_id=None).all()
+        # جلب الأرقام المتاحة (غير مربوطة) من نظام إدارة SIM
+        available_sims = SimCard.query.filter(
+            SimCard.employee_id.is_(None)
+        ).all()
         
         return render_template('device_assignment/assign_device.html',
                              device=device,
@@ -678,11 +618,11 @@ def process_assign_device(device_id):
         
         # ربط الرقم إذا تم اختياره
         if sim_card_id and assignment_type in ['sim_only', 'device_and_sim']:
-            sim_card = ImportedPhoneNumber.query.get(sim_card_id)
-            if sim_card and not sim_card.is_used:
+            sim_card = SimCard.query.get(sim_card_id)
+            if sim_card and not sim_card.employee_id:
                 assignment.sim_card_id = sim_card_id
                 sim_card.employee_id = employee_id
-                sim_card.is_used = True
+                sim_card.status = 'مربوطة'
         
         # تحديث بيانات الجهاز
         device.employee_id = employee_id
@@ -754,7 +694,7 @@ def assign_to_department():
         
         # ربط الرقم (نحتاج لإنشاء DeviceAssignment)
         if sim_id:
-            sim_card = ImportedPhoneNumber.query.get_or_404(sim_id)
+            sim_card = SimCard.query.get_or_404(sim_id)
             if sim_card.employee_id:
                 flash('هذا الرقم مربوط بموظف آخر بالفعل', 'danger')
                 return redirect(url_for('device_assignment.department_management'))
@@ -845,8 +785,8 @@ def reports():
         available_devices = total_devices - assigned_devices
         
         # إحصائيات الأرقام
-        total_sims = ImportedPhoneNumber.query.count()
-        assigned_sims = ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.isnot(None)).count()
+        total_sims = SimCard.query.count()
+        assigned_sims = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
         available_sims = total_sims - assigned_sims
         
         # إحصائيات الأقسام
@@ -862,8 +802,8 @@ def reports():
             ).count()
             
             # أرقام مربوطة بموظفين في هذا القسم
-            dept_sims = db.session.query(ImportedPhoneNumber).join(Employee).filter(
-                ImportedPhoneNumber.employee_id.isnot(None),
+            dept_sims = db.session.query(SimCard).join(Employee).filter(
+                SimCard.employee_id.isnot(None),
                 Employee.departments.any(Department.id == dept.id)
             ).count()
             
@@ -901,7 +841,7 @@ def export_available_sims():
         import io
         
         # جلب الأرقام المتاحة
-        available_sims = ImportedPhoneNumber.query.filter_by(employee_id=None).all()
+        available_sims = SimCard.query.filter_by(employee_id=None).all()
         
         # إنشاء ملف Excel
         wb = Workbook()
@@ -909,7 +849,7 @@ def export_available_sims():
         ws.title = "الأرقام المتاحة"
         
         # إعداد العناوين
-        headers = ['رقم الهاتف', 'الوصف', 'حالة الاستخدام', 'تاريخ الإضافة', 'المرتبط بموظف']
+        headers = ['رقم الهاتف', 'مزود الخدمة', 'نوع الباقة', 'الحالة', 'تاريخ الإضافة', 'المرتبط بموظف']
         for col, header in enumerate(headers, 1):
             cell = ws.cell(row=1, column=col, value=header)
             cell.font = Font(bold=True, name='Arial')
@@ -920,10 +860,11 @@ def export_available_sims():
         # إضافة البيانات
         for row, sim in enumerate(available_sims, 2):
             ws.cell(row=row, column=1, value=sim.phone_number)
-            ws.cell(row=row, column=2, value=sim.description or 'غير محدد')
-            ws.cell(row=row, column=3, value='مستخدم' if sim.is_used else 'متاح')
-            ws.cell(row=row, column=4, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
-            ws.cell(row=row, column=5, value=sim.employee.name if sim.employee else 'غير مرتبط')
+            ws.cell(row=row, column=2, value=sim.carrier or 'غير محدد')
+            ws.cell(row=row, column=3, value=sim.plan_type or 'غير محدد')
+            ws.cell(row=row, column=4, value=sim.status or 'متاحة')
+            ws.cell(row=row, column=5, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
+            ws.cell(row=row, column=6, value=sim.employee.name if sim.employee else 'غير مرتبطة')
         
         # حفظ الملف
         output = io.BytesIO()
@@ -1007,7 +948,7 @@ def export_available_combined():
         # جلب البيانات المتاحة
         assigned_device_ids = db.session.query(DeviceAssignment.device_id).filter_by(is_active=True).subquery()
         available_devices = MobileDevice.query.filter(~MobileDevice.id.in_(assigned_device_ids)).all()
-        available_sims = ImportedPhoneNumber.query.filter_by(employee_id=None).all()
+        available_sims = SimCard.query.filter_by(employee_id=None).all()
         
         # إنشاء ملف Excel
         wb = Workbook()
@@ -1038,7 +979,7 @@ def export_available_combined():
         ws2 = wb.create_sheet(title="الأرقام المتاحة")
         
         # عناوين الأرقام
-        sim_headers = ['رقم الهاتف', 'الوصف', 'حالة الاستخدام', 'تاريخ الإضافة', 'المرتبط بموظف']
+        sim_headers = ['رقم الهاتف', 'مزود الخدمة', 'نوع الباقة', 'الحالة', 'تاريخ الإضافة', 'المرتبط بموظف']
         for col, header in enumerate(sim_headers, 1):
             cell = ws2.cell(row=1, column=col, value=header)
             cell.font = Font(bold=True, name='Arial')
@@ -1049,10 +990,11 @@ def export_available_combined():
         # بيانات الأرقام
         for row, sim in enumerate(available_sims, 2):
             ws2.cell(row=row, column=1, value=sim.phone_number)
-            ws2.cell(row=row, column=2, value=sim.description or 'غير محدد')
-            ws2.cell(row=row, column=3, value='مستخدم' if sim.is_used else 'متاح')
-            ws2.cell(row=row, column=4, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
-            ws2.cell(row=row, column=5, value=sim.employee.name if sim.employee else 'غير مرتبط')
+            ws2.cell(row=row, column=2, value=sim.carrier or 'غير محدد')
+            ws2.cell(row=row, column=3, value=sim.plan_type or 'غير محدد')
+            ws2.cell(row=row, column=4, value=sim.status or 'متاحة')
+            ws2.cell(row=row, column=5, value=sim.created_at.strftime('%Y-%m-%d') if sim.created_at else '')
+            ws2.cell(row=row, column=6, value=sim.employee.name if sim.employee else 'غير مرتبطة')
         
         # ورقة الإحصائيات
         ws3 = wb.create_sheet(title="ملخص الإحصائيات")
