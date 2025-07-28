@@ -594,17 +594,32 @@ def details(sim_id):
                 if device_assignment.device_id:
                     device = MobileDevice.query.get(device_assignment.device_id)
         
-        # البحث عن الموظف المربوط مباشرة في SimCard
-        direct_employee = None
-        if sim.employee_id:
-            direct_employee = Employee.query.get(sim.employee_id)
+        # البحث عن الموظف المربوط مباشرة في SimCard إذا لم نجد في DeviceAssignment
+        if not employee and sim.employee_id:
+            employee = Employee.query.get(sim.employee_id)
+        
+        # البحث عن الجهاز المربوط مباشرة في SimCard
+        if not device and hasattr(sim, 'device_id') and sim.device_id:
+            device = MobileDevice.query.get(sim.device_id)
+        
+        # البحث عن جميع الأجهزة المربوطة بهذا الرقم
+        if not device and imported_number:
+            all_assignments = DeviceAssignment.query.filter_by(
+                sim_card_id=imported_number.id
+            ).all()
+            
+            for assignment in all_assignments:
+                if assignment.device_id and assignment.is_active:
+                    device = MobileDevice.query.get(assignment.device_id)
+                    if device:
+                        device_assignment = assignment
+                        break
         
         return render_template('sim_management/details.html', 
                              sim=sim, 
                              device_assignment=device_assignment,
                              employee=employee, 
-                             device=device,
-                             direct_employee=direct_employee)
+                             device=device)
                              
     except Exception as e:
         current_app.logger.error(f"Error loading SIM details: {str(e)}")
