@@ -797,11 +797,6 @@
                                                         onclick="openImageModal('{{ '/' + vehicle.registration_form_image }}', 'صورة الاستمارة')">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-success" 
-                                                        onclick="shareVehicleDocuments()"
-                                                        title="مشاركة الوثائق عبر الواتساب">
-                                                    <i class="fab fa-whatsapp"></i>
-                                                </button>
                                                 <form method="POST" 
                                                       action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" 
                                                       class="d-inline">
@@ -2520,20 +2515,5 @@ ${formUrl}
             </form>
         </div>
     </div>
-
-<!-- Vehicle Document Sharing JavaScript -->
-<script src="{{ url_for('static', filename='js/vehicle_document_share.js') }}"></script>
-
-<!-- Vehicle data for sharing -->
-<div style="display: none;">
-    <span data-plate-number="{{ vehicle.plate_number }}"></span>
-    <span data-make="{{ vehicle.make }}"></span>
-    <span data-model="{{ vehicle.model }}"></span>
-    <span data-year="{{ vehicle.year }}"></span>
-    <span data-current-driver="{{ current_driver.name if current_driver else 'غير محدد' }}"></span>
-    <span data-driver-phone="{{ current_driver.mobile if current_driver else '' }}"></span>
-    <span data-registration-form="{{ request.url_root }}{{ vehicle.registration_form_image if vehicle.registration_form_image else '' }}"></span>
-    <span data-insurance-file="{{ request.url_root }}{{ vehicle.insurance_file if vehicle.insurance_file else '' }}"></span>
-</div>
 </div>
 {% endblock %}
