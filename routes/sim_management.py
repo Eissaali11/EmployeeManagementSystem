@@ -668,7 +668,9 @@ def export_sim_details_excel(sim_id):
         data.append(['شركة الاتصالات', sim.carrier or 'غير محدد'])
         data.append(['نوع الخطة', sim.plan_type or 'غير محدد'])
         data.append(['التكلفة الشهرية', f'{sim.monthly_cost} ريال' if sim.monthly_cost else 'غير محدد'])
-        data.append(['تاريخ الاستيراد', sim.import_date.strftime('%Y-%m-%d') if sim.import_date else 'غير محدد'])
+        data.append(['تاريخ التفعيل', sim.activation_date.strftime('%Y-%m-%d') if sim.activation_date else 'غير محدد'])
+        data.append(['تاريخ الإنشاء', sim.created_at.strftime('%Y-%m-%d') if sim.created_at else 'غير محدد'])
+        data.append(['تاريخ الربط', sim.assigned_date.strftime('%Y-%m-%d') if sim.assigned_date else 'غير محدد'])
         data.append(['الوصف', sim.description or 'لا يوجد'])
         data.append(['', ''])
         
@@ -682,7 +684,7 @@ def export_sim_details_excel(sim_id):
             data.append(['هاتف العمل', employee.mobile or 'غير محدد'])
             data.append(['الهاتف الشخصي', employee.mobilePersonal or 'غير محدد'])
             data.append(['البريد الإلكتروني', employee.email or 'غير محدد'])
-            data.append(['تاريخ التوظيف', employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد'])
+            data.append(['تاريخ التوظيف', employee.hire_date.strftime('%Y-%m-%d') if hasattr(employee, 'hire_date') and employee.hire_date else 'غير محدد'])
             data.append(['', ''])
         
         # معلومات الجهاز المربوط
@@ -693,8 +695,8 @@ def export_sim_details_excel(sim_id):
             data.append(['رقم IMEI', device.imei or 'غير محدد'])
             data.append(['رقم المسلسل', device.serial_number or 'غير محدد'])
             data.append(['حالة الجهاز', device.status or 'غير محدد'])
-            data.append(['تاريخ الشراء', device.purchase_date.strftime('%Y-%m-%d') if device.purchase_date else 'غير محدد'])
-            data.append(['تاريخ انتهاء الضمان', device.warranty_expiry.strftime('%Y-%m-%d') if device.warranty_expiry else 'غير محدد'])
+            data.append(['تاريخ الشراء', device.purchase_date.strftime('%Y-%m-%d') if hasattr(device, 'purchase_date') and device.purchase_date else 'غير محدد'])
+            data.append(['تاريخ انتهاء الضمان', device.warranty_expiry.strftime('%Y-%m-%d') if hasattr(device, 'warranty_expiry') and device.warranty_expiry else 'غير محدد'])
             data.append(['ملاحظات الجهاز', device.notes or 'لا توجد'])
             data.append(['', ''])
         
