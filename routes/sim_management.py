@@ -401,12 +401,41 @@ def api_available_sims():
 @sim_management_bp.route('/export-excel')
 @login_required
 def export_excel():
-    """تصدير أرقام SIM إلى ملف Excel"""
+    """تصدير أرقام SIM إلى ملف Excel مع دعم الفلاتر"""
     try:
-        # جلب جميع أرقام SIM مع معلومات الموظفين
-        sim_cards = db.session.query(SimCard, Employee).outerjoin(
+        # إنشاء استعلام أساسي
+        query = db.session.query(SimCard, Employee).outerjoin(
             Employee, SimCard.employee_id == Employee.id
-        ).order_by(SimCard.id).all()
+        )
+        
+        # تطبيق الفلاتر من المعاملات
+        search = request.args.get('search', '').strip()
+        carrier_filter = request.args.get('carrier', '').strip()
+        status_filter = request.args.get('status', '').strip()
+        employee_filter = request.args.get('employee', '').strip()
+        
+        if search:
+            query = query.filter(
+                or_(
+                    SimCard.phone_number.contains(search),
+                    SimCard.carrier.contains(search),
+                    SimCard.plan_type.contains(search),
+                    SimCard.description.contains(search)
+                )
+            )
+        
+        if carrier_filter:
+            query = query.filter(SimCard.carrier == carrier_filter)
+            
+        if status_filter:
+            query = query.filter(SimCard.status == status_filter)
+            
+        if employee_filter == 'assigned':
+            query = query.filter(SimCard.employee_id.isnot(None))
+        elif employee_filter == 'unassigned':
+            query = query.filter(SimCard.employee_id.is_(None))
+        
+        sim_cards = query.order_by(SimCard.id).all()
         
         # إعداد البيانات للتصدير
         data = []
@@ -420,9 +449,8 @@ def export_excel():
                 'اسم الموظف': employee.name if employee else '',
                 'رقم الموظف': employee.employee_id if employee else '',
                 'القسم': ', '.join([dept.name for dept in employee.departments]) if employee and employee.departments else '',
-                'تاريخ الاستيراد': sim_card.import_date.strftime('%Y-%m-%d') if sim_card.import_date else '',
-                'تاريخ الربط': sim_card.assignment_date.strftime('%Y-%m-%d') if sim_card.assignment_date else '',
-                'الوصف': sim_card.description or ''
+                'تاريخ الإنشاء': sim_card.created_at.strftime('%Y-%m-%d') if sim_card.created_at else '',
+                'الملاحظات': getattr(sim_card, 'notes', None) or getattr(sim_card, 'description', None) or ''
             })
         
         # إنشاء DataFrame
@@ -464,7 +492,7 @@ def export_excel():
         return send_file(
             temp_filename,
             as_attachment=True,
-            download_name=f'sim_cards_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx',
+            download_name=f'sim_cards_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}{"_filtered" if search or carrier_filter or status_filter or employee_filter else ""}.xlsx',
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         
@@ -690,7 +718,7 @@ def export_sim_details_excel(sim_id):
         # معلومات الجهاز المربوط
         if device:
             data.append(['معلومات الجهاز المربوط', ''])
-            data.append(['نوع الجهاز', device.device_type or 'غير محدد'])
+            data.append(['الماركة', device.device_brand or 'غير محدد'])
             data.append(['الطراز', device.model or 'غير محدد'])
             data.append(['رقم IMEI', device.imei or 'غير محدد'])
             data.append(['رقم المسلسل', device.serial_number or 'غير محدد'])

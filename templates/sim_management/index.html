@@ -442,9 +442,14 @@
                                 </a>
                             </div>
                             <div class="col-6">
-                                <a href="{{ url_for('sim_management.export_excel') }}" class="btn btn-warning btn-sm w-100">
+                                <a href="{{ url_for('sim_management.export_excel', search=search, carrier=carrier_filter, status=status_filter, employee=employee_filter) }}" 
+                                   class="btn btn-warning btn-sm w-100"
+                                   title="تصدير البيانات المفلترة حالياً">
                                     <i class="fas fa-file-export me-1"></i>
                                     تصدير Excel
+                                    {% if search or carrier_filter or status_filter or employee_filter %}
+                                        <i class="fas fa-filter ms-1" style="font-size: 0.7em;"></i>
+                                    {% endif %}
                                 </a>
                             </div>
                         </div>
