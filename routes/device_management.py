@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, Response
 from flask_login import current_user
 from sqlalchemy import func, and_, or_
-from models import db, MobileDevice, Employee, Department, DeviceAssignment, ImportedPhoneNumber
+from models import db, MobileDevice, Employee, Department, DeviceAssignment, ImportedPhoneNumber, SimCard
 from datetime import datetime
 import io
 import pandas as pd
@@ -235,9 +235,32 @@ def index():
                 )
             )
         
-        # البحث المخصص برقم الهاتف
+        # البحث المخصص برقم الهاتف - في حقل phone_number وأيضاً في بطاقات SIM المربوطة
         if phone_search:
-            query = query.filter(MobileDevice.phone_number.like(f'%{phone_search}%'))
+            # البحث في حقل phone_number للجهاز نفسه
+            direct_phone_devices = MobileDevice.phone_number.like(f'%{phone_search}%')
+            
+            # البحث في بطاقات SIM المربوطة عبر DeviceAssignment
+            sim_linked_devices_query = db.session.query(MobileDevice.id).join(
+                DeviceAssignment, 
+                and_(DeviceAssignment.device_id == MobileDevice.id, DeviceAssignment.is_active == True)
+            ).join(
+                SimCard, DeviceAssignment.sim_card_id == SimCard.id
+            ).filter(
+                SimCard.phone_number.like(f'%{phone_search}%')
+            )
+            
+            sim_linked_device_ids = [row[0] for row in sim_linked_devices_query.all()]
+            
+            if sim_linked_device_ids:
+                query = query.filter(
+                    or_(
+                        direct_phone_devices,
+                        MobileDevice.id.in_(sim_linked_device_ids)
+                    )
+                )
+            else:
+                query = query.filter(direct_phone_devices)
         
         # ترتيب وصفحة
         devices = query.order_by(MobileDevice.created_at.desc()).all()
