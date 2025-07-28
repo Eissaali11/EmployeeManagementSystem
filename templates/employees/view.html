@@ -942,7 +942,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                        name="bank_iban" 
                                        value="{{ employee.bank_iban or '' }}" 
                                        placeholder="SA0000000000000000000000"
-                                       maxlength="50"
+                                       maxlength="34"
+                                       pattern="SA[0-9]{22}|[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}"
+                                       title="أدخل رقم الإيبان السعودي الصحيح بدءاً بـ SA متبوعاً بـ 22 رقم"
                                        style="font-family: 'Courier New', monospace; font-size: 1.1em; letter-spacing: 1px; border: 2px solid #e2e8f0; border-radius: 10px;">
                                 <label for="bank_iban">
                                     <i class="fas fa-credit-card me-1 text-primary"></i>رقم الإيبان البنكي
