@@ -23,70 +23,78 @@ def index():
         status_filter = request.args.get('status', '')
         search_term = request.args.get('search', '')
         
-        # الحصول على الأرقام المربوطة حالياً في DeviceAssignment
-        assigned_sim_ids = db.session.query(DeviceAssignment.sim_card_id).filter(
+        # الحصول على الأرقام المربوطة حالياً في DeviceAssignment (استخدم ImportedPhoneNumber IDs)
+        assigned_device_sims = db.session.query(DeviceAssignment.sim_card_id).filter(
             DeviceAssignment.is_active == True,
             DeviceAssignment.sim_card_id.isnot(None)
         ).distinct().all()
-        assigned_sim_ids = [id[0] for id in assigned_sim_ids]
+        assigned_device_sim_ids = [id[0] for id in assigned_device_sims]
         
-        # استعلام أساسي - استخدم ImportedPhoneNumber للتوافق مع نظام الأجهزة
-        query = ImportedPhoneNumber.query
+        # الحصول على أرقام SimCard المربوطة مع أرقام ImportedPhoneNumber المقابلة
+        device_assigned_phone_numbers = set()
+        if assigned_device_sim_ids:
+            imported_numbers_in_devices = ImportedPhoneNumber.query.filter(
+                ImportedPhoneNumber.id.in_(assigned_device_sim_ids)
+            ).all()
+            device_assigned_phone_numbers = {sim.phone_number for sim in imported_numbers_in_devices}
+        
+        # استعلام أساسي - استخدم SimCard
+        query = SimCard.query
         
         # تطبيق فلاتر
         if search_term:
-            query = query.filter(ImportedPhoneNumber.phone_number.contains(search_term))
+            query = query.filter(SimCard.phone_number.contains(search_term))
         
         if carrier_filter:
-            query = query.filter(ImportedPhoneNumber.carrier == carrier_filter)
+            query = query.filter(SimCard.carrier == carrier_filter)
             
         if status_filter == 'available':
             # الأرقام غير المربوطة (لا في employee_id ولا في DeviceAssignment)
             query = query.filter(
-                ImportedPhoneNumber.employee_id.is_(None),
-                ~ImportedPhoneNumber.id.in_(assigned_sim_ids) if assigned_sim_ids else True
+                SimCard.employee_id.is_(None),
+                ~SimCard.phone_number.in_(device_assigned_phone_numbers) if device_assigned_phone_numbers else True
             )
         elif status_filter == 'assigned':
             # الأرقام المربوطة (إما employee_id أو في DeviceAssignment)
-            if assigned_sim_ids:
+            if device_assigned_phone_numbers:
                 query = query.filter(
                     db.or_(
-                        ImportedPhoneNumber.employee_id.isnot(None),
-                        ImportedPhoneNumber.id.in_(assigned_sim_ids)
+                        SimCard.employee_id.isnot(None),
+                        SimCard.phone_number.in_(device_assigned_phone_numbers)
                     )
                 )
             else:
-                query = query.filter(ImportedPhoneNumber.employee_id.isnot(None))
+                query = query.filter(SimCard.employee_id.isnot(None))
         
         # ترتيب البيانات
-        sim_cards = query.order_by(ImportedPhoneNumber.id.desc()).all()
+        sim_cards = query.order_by(SimCard.id.desc()).all()
         
         # إضافة معلومة هل الرقم مربوط في DeviceAssignment
         for sim in sim_cards:
-            sim.is_device_assigned = sim.id in assigned_sim_ids
+            sim.is_device_assigned = sim.phone_number in device_assigned_phone_numbers
         
         # الحصول على قائمة الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()
         
         # إحصائيات محدثة تأخذ في الاعتبار DeviceAssignment
-        total_sims = ImportedPhoneNumber.query.count()
-        sims_with_employee = ImportedPhoneNumber.query.filter(ImportedPhoneNumber.employee_id.isnot(None)).count()
-        sims_in_device_assignment = len(assigned_sim_ids)
+        total_sims = SimCard.query.count()
+        sims_with_employee = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
+        sims_in_device_assignment = len(device_assigned_phone_numbers)
         
         # الأرقام المتاحة = الأرقام بدون employee_id وليست في DeviceAssignment
-        available_sims_count = ImportedPhoneNumber.query.filter(
-            ImportedPhoneNumber.employee_id.is_(None),
-            ~ImportedPhoneNumber.id.in_(assigned_sim_ids) if assigned_sim_ids else True
+        available_sims_count = SimCard.query.filter(
+            SimCard.employee_id.is_(None),
+            ~SimCard.phone_number.in_(device_assigned_phone_numbers) if device_assigned_phone_numbers else True
         ).count()
         
         stats = {
             'total_sims': total_sims,
             'available_sims': available_sims_count,
-            'assigned_sims': sims_with_employee + sims_in_device_assignment,
+            'assigned_sims': sims_with_employee,
             'device_assigned_sims': sims_in_device_assignment,
-            'stc_count': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.carrier == 'STC').count(),
-            'mobily_count': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.carrier == 'موبايلي').count(),
-            'zain_count': ImportedPhoneNumber.query.filter(ImportedPhoneNumber.carrier == 'زين').count(),
+            'stc_count': SimCard.query.filter(SimCard.carrier == 'STC').count(),
+            'mobily_count': SimCard.query.filter(SimCard.carrier == 'موبايلي').count(),
+            'zain_count': SimCard.query.filter(SimCard.carrier == 'زين').count(),
         }
         
         return render_template('sim_management/index.html', 
