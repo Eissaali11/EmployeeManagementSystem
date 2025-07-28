@@ -1317,13 +1317,29 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
     </div>
-                        {% if mobile_devices %}
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-info"></i>نوع الموبايل</p>
 
-
-    <!-- استمرار الصفحة مع باقي المحتوى... -->
-    <!-- يمكن إضافة أقسام أخرى هنا مثل إدارة الوثائق والملفات -->
+    <!-- Modal لعرض صورة شهادة الإيبان -->
+    {% if employee.bank_iban_image %}
+    <div class="modal fade" id="ibanImageModal" tabindex="-1" aria-labelledby="ibanImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ibanImageModalLabel">صورة شهادة الإيبان البنكي</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                         class="img-fluid rounded" 
+                         alt="صورة شهادة الإيبان البنكي"
+                         style="max-height: 500px;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
 {% endblock %}
 
