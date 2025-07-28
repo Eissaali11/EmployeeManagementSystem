@@ -679,7 +679,7 @@ def export_sim_details_excel(sim_id):
             data.append(['معلومات الموظف المربوط', ''])
             data.append(['اسم الموظف', employee.name])
             data.append(['رقم الموظف', employee.employee_id or 'غير محدد'])
-            data.append(['المنصب', employee.position or 'غير محدد'])
+            data.append(['المنصب', employee.job_title or 'غير محدد'])
             data.append(['الأقسام', ', '.join([dept.name for dept in employee.departments]) if employee.departments else 'غير محدد'])
             data.append(['هاتف العمل', employee.mobile or 'غير محدد'])
             data.append(['الهاتف الشخصي', employee.mobilePersonal or 'غير محدد'])
