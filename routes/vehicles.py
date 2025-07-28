@@ -1724,6 +1724,16 @@ def edit_workshop(id):
                         current_app.logger.error(f"خطأ في حفظ سجل الورشة: {str(e)}")
                         db.session.rollback()
                         flash(f'حدث خطأ أثناء حفظ التعديلات: {str(e)}', 'danger')
+                        # إعادة العرض مع البيانات الحالية
+                        return render_template(
+                                'vehicles/workshop_edit.html', 
+                                workshop=workshop, 
+                                vehicle=vehicle,
+                                before_images=before_images,
+                                after_images=after_images,
+                                reasons=WORKSHOP_REASON_CHOICES,
+                                statuses=REPAIR_STATUS_CHOICES
+                        )
 
         # عرض النموذج
         return render_template(
