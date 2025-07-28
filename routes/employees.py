@@ -20,7 +20,7 @@ employees_bp = Blueprint('employees', __name__)
 
 # المجلد المخصص لحفظ صور الموظفين
 UPLOAD_FOLDER = 'static/uploads/employees'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
 def allowed_file(filename):
     """التحقق من أن الملف من الأنواع المسموحة"""
@@ -330,6 +330,21 @@ def edit(id):
             # تحديث حقول الكفالة
             employee.sponsorship_status = request.form.get('sponsorship_status', 'inside')
             employee.current_sponsor_name = request.form.get('current_sponsor_name', '') if employee.sponsorship_status == 'inside' else None
+            
+            # تحديث حقول المعلومات البنكية
+            employee.bank_iban = request.form.get('bank_iban', '').strip() or None
+            
+            # معالجة رفع صورة شهادة الإيبان
+            bank_iban_image_file = request.files.get('bank_iban_image')
+            if bank_iban_image_file and bank_iban_image_file.filename:
+                # حذف الصورة القديمة إذا كانت موجودة
+                if employee.bank_iban_image:
+                    old_image_path = os.path.join('static', employee.bank_iban_image)
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                
+                # حفظ الصورة الجديدة
+                employee.bank_iban_image = save_employee_image(bank_iban_image_file, id, 'iban')
             
             join_date_str = request.form.get('join_date')
             employee.join_date = parse_date(join_date_str) if join_date_str else None
@@ -1469,3 +1484,5 @@ def comprehensive_report_excel(id):
         
         flash(f'حدث خطأ أثناء إنشاء التقرير الشامل (إكسل): {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
+
+

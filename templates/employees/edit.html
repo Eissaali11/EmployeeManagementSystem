@@ -253,6 +253,55 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- قسم المعلومات البنكية -->
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-university me-2"></i>المعلومات البنكية</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="bank_iban" class="form-label">رقم الإيبان البنكي (IBAN)</label>
+                                            <input type="text" class="form-control" id="bank_iban" name="bank_iban" 
+                                                   value="{{ employee.bank_iban or '' }}" 
+                                                   placeholder="SA0000000000000000000000"
+                                                   maxlength="34"
+                                                   pattern="[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}">
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                أدخل رقم الإيبان الصحيح للموظف (اختياري)
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="bank_iban_image" class="form-label">صورة شهادة الإيبان</label>
+                                            <input type="file" class="form-control" id="bank_iban_image" name="bank_iban_image" 
+                                                   accept="image/*,.pdf">
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-upload"></i>
+                                                يمكنك رفع صورة أو ملف PDF لشهادة الإيبان (اختياري)
+                                            </div>
+                                            {% if employee.bank_iban_image %}
+                                            <div class="mt-2">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-file-image text-success me-2"></i>
+                                                    <span class="text-success">تم رفع صورة شهادة الإيبان</span>
+                                                    <a href="{{ url_for('static', filename=employee.bank_iban_image) }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                                        <i class="fas fa-eye"></i> عرض
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- في ملف employees/edit.html -->
 
