@@ -156,10 +156,16 @@
                         <p class="mb-0">متاحة</p>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="stats-card text-center">
                         <h3>{{ stats.assigned_sims or 0 }}</h3>
-                        <p class="mb-0">مربوطة</p>
+                        <p class="mb-0">مربوطة بموظفين</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h3>{{ stats.device_assigned_sims or 0 }}</h3>
+                        <p class="mb-0">مربوطة بأجهزة</p>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -267,9 +273,12 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        {% if sim.employee_id %}
+                                        {% if sim.employee_id or sim.is_device_assigned %}
                                             <span class="status-assigned">
                                                 <i class="fas fa-link me-1"></i>مربوط
+                                                {% if sim.is_device_assigned %}
+                                                    <small class="d-block text-muted">(مربوط بجهاز)</small>
+                                                {% endif %}
                                             </span>
                                         {% else %}
                                             <span class="status-available">
@@ -299,7 +308,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             
-                                            {% if not sim.employee_id %}
+                                            {% if not sim.employee_id and not sim.is_device_assigned %}
                                                 <!-- زر ربط بموظف -->
                                                 <button type="button" class="btn btn-outline-success" 
                                                         data-bs-toggle="modal" 
@@ -315,7 +324,7 @@
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
-                                            {% else %}
+                                            {% elif sim.employee_id %}
                                                 <!-- زر فك الربط -->
                                                 <form method="POST" action="{{ url_for('sim_management.unassign_from_employee', sim_id=sim.id) }}" 
                                                       style="display: inline;" 
@@ -324,13 +333,19 @@
                                                         <i class="fas fa-unlink"></i>
                                                     </button>
                                                 </form>
+                                            {% elif sim.is_device_assigned %}
+                                                <!-- مربوط بجهاز - انتقال لصفحة إدارة الأجهزة -->
+                                                <a href="{{ url_for('device_assignment.index') }}" class="btn btn-outline-info btn-sm">
+                                                    <i class="fas fa-mobile-alt"></i>
+                                                    إدارة الأجهزة
+                                                </a>
                                             {% endif %}
                                         </div>
                                     </td>
                                 </tr>
                                 
                                 <!-- Modal لربط بموظف -->
-                                {% if not sim.employee_id %}
+                                {% if not sim.employee_id and not sim.is_device_assigned %}
                                 <div class="modal fade" id="assignModal{{ sim.id }}" tabindex="-1">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
