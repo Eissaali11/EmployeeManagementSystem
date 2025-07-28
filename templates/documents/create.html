@@ -42,6 +42,7 @@
                                     {% for employee in employees %}
                                     <option value="{{ employee.id }}" 
                                             data-national-id="{{ employee.national_id or '' }}" 
+                                            data-employee-id="{{ employee.employee_id or '' }}" 
                                             data-department-id="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}"
                                             data-department-names="{% for dept in employee.departments %}{{ dept.name }}{% if not loop.last %},{% endif %}{% endfor %}">
                                         {{ employee.name }} ({{ employee.employee_id }})
@@ -1655,8 +1656,8 @@ const empSelect       = document.getElementById('employee_id');
         }
     });
 </script>
-{% endblock %}
-
 
 <!-- ملف JavaScript لتحسين Select2 لحقل اختيار الموظفين -->
 <script src="{{ url_for('static', filename='js/employee_select2.js') }}"></script>
+
+{% endblock %}
