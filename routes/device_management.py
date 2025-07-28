@@ -10,6 +10,172 @@ from openpyxl.styles import Font, PatternFill, Alignment
 
 device_management_bp = Blueprint('device_management', __name__)
 
+@device_management_bp.route('/assignment-details')
+def assignment_details():
+    """صفحة عرض جميع تفاصيل الربط مع إمكانية التصدير إلى Excel"""
+    try:
+        # جلب جميع الأجهزة المربوطة مع تفاصيل الموظفين وبطاقات SIM
+        query = db.session.query(MobileDevice)\
+            .outerjoin(DeviceAssignment, and_(DeviceAssignment.device_id == MobileDevice.id, DeviceAssignment.is_active == True))\
+            .outerjoin(Employee, DeviceAssignment.employee_id == Employee.id)\
+            .outerjoin(ImportedPhoneNumber, ImportedPhoneNumber.device_id == MobileDevice.id)\
+            .filter(DeviceAssignment.id.isnot(None))
+        
+        assignments = query.all()
+        
+        # حساب الإحصائيات
+        total_assignments = len(assignments)
+        device_only = sum(1 for d in assignments if d.current_assignment and d.current_assignment.assignment_type == 'device_only')
+        sim_only = sum(1 for d in assignments if d.current_assignment and d.current_assignment.assignment_type == 'sim_only')
+        device_and_sim = sum(1 for d in assignments if d.current_assignment and d.current_assignment.assignment_type == 'device_and_sim')
+        
+        stats = {
+            'total_assignments': total_assignments,
+            'device_only': device_only,
+            'sim_only': sim_only,
+            'device_and_sim': device_and_sim
+        }
+        
+        return render_template('device_management/assignment_details.html', 
+                             assignments=assignments, stats=stats)
+                             
+    except Exception as e:
+        flash(f'خطأ في جلب تفاصيل الربط: {str(e)}', 'error')
+        return redirect(url_for('device_management.index'))
+
+@device_management_bp.route('/assignment-details/<int:device_id>')
+def assignment_details_single(device_id):
+    """صفحة عرض تفاصيل ربط جهاز محدد"""
+    try:
+        # جلب الجهاز مع التفاصيل
+        device = MobileDevice.query.get_or_404(device_id)
+        
+        # جلب تفاصيل الربط النشط
+        assignment = DeviceAssignment.query.filter_by(
+            device_id=device_id, 
+            is_active=True
+        ).first()
+        
+        # جلب بطاقة SIM المربوطة إن وجدت
+        sim_card = None
+        if device.phone_number:
+            sim_card = ImportedPhoneNumber.query.filter_by(
+                phone_number=device.phone_number
+            ).first()
+        
+        return render_template('device_management/assignment_detail_single.html',
+                             device=device, assignment=assignment, sim_card=sim_card)
+                             
+    except Exception as e:
+        flash(f'خطأ في جلب تفاصيل الجهاز: {str(e)}', 'error')
+        return redirect(url_for('device_management.index'))
+
+@device_management_bp.route('/export-assignment-details')
+def export_assignment_details():
+    """تصدير تفاصيل الربط إلى Excel"""
+    try:
+        # جلب البيانات
+        query = db.session.query(MobileDevice)\
+            .outerjoin(DeviceAssignment, and_(DeviceAssignment.device_id == MobileDevice.id, DeviceAssignment.is_active == True))\
+            .outerjoin(Employee, DeviceAssignment.employee_id == Employee.id)\
+            .outerjoin(ImportedPhoneNumber, ImportedPhoneNumber.device_id == MobileDevice.id)\
+            .filter(DeviceAssignment.id.isnot(None))
+        
+        assignments = query.all()
+        
+        # إنشاء ملف Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "تفاصيل ربط الأجهزة"
+        
+        # تنسيق الرؤوس
+        headers = [
+            'IMEI', 'البراند', 'الموديل', 'رقم الهاتف', 'نوع الرقم',
+            'اسم الموظف', 'رقم الموظف', 'القسم', 'نوع الربط', 
+            'تاريخ الربط', 'حالة الربط', 'ملاحظات'
+        ]
+        
+        # إضافة الرؤوس
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="667eea", end_color="667eea", fill_type="solid")
+            cell.alignment = Alignment(horizontal="center")
+        
+        # إضافة البيانات
+        for row, device in enumerate(assignments, 2):
+            assignment = device.current_assignment
+            employee = device.assigned_employee
+            
+            # تحديد نوع الرقم
+            phone_type = ""
+            if device.assigned_sim and device.assigned_sim.phone_number:
+                phone_type = "مربوط بـ SIM"
+            elif device.phone_number:
+                phone_type = "رقم مباشر"
+            else:
+                phone_type = "بدون رقم"
+            
+            # تحديد نوع الربط
+            assignment_type_ar = ""
+            if assignment and assignment.assignment_type:
+                if assignment.assignment_type == 'device_only':
+                    assignment_type_ar = "جهاز فقط"
+                elif assignment.assignment_type == 'sim_only':
+                    assignment_type_ar = "رقم فقط"
+                elif assignment.assignment_type == 'device_and_sim':
+                    assignment_type_ar = "جهاز ورقم"
+            
+            # القسم
+            department = ""
+            if employee and employee.departments:
+                department = ", ".join([d.name for d in employee.departments])
+            
+            ws.cell(row=row, column=1, value=device.imei or "")
+            ws.cell(row=row, column=2, value=device.device_brand or "")
+            ws.cell(row=row, column=3, value=device.device_model or "")
+            ws.cell(row=row, column=4, value=device.phone_number or "")
+            ws.cell(row=row, column=5, value=phone_type)
+            ws.cell(row=row, column=6, value=employee.name if employee else "")
+            ws.cell(row=row, column=7, value=employee.employee_id if employee else "")
+            ws.cell(row=row, column=8, value=department)
+            ws.cell(row=row, column=9, value=assignment_type_ar)
+            ws.cell(row=row, column=10, value=assignment.assignment_date.strftime('%Y-%m-%d') if assignment and assignment.assignment_date else "")
+            ws.cell(row=row, column=11, value="نشط" if assignment and assignment.is_active else "غير نشط")
+            ws.cell(row=row, column=12, value=assignment.notes if assignment and assignment.notes else "")
+        
+        # تعديل عرض الأعمدة
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = min(max_length + 2, 50)
+            ws.column_dimensions[column_letter].width = adjusted_width
+        
+        # إنشاء الاستجابة
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+        
+        filename = f"تفاصيل_ربط_الأجهزة_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return Response(
+            output.getvalue(),
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'}
+        )
+        
+    except Exception as e:
+        flash(f'خطأ في تصدير البيانات: {str(e)}', 'error')
+        return redirect(url_for('device_management.assignment_details'))
+
+
+
 @device_management_bp.route('/')
 def index():
     """عرض صفحة قائمة الأجهزة المحمولة مع الفلاتر والإحصائيات"""
@@ -292,9 +458,9 @@ def delete(device_id):
     try:
         device = MobileDevice.query.get_or_404(device_id)
         
-        # التحقق من أن الجهاز غير مربوط بموظف
-        if device.employee_id:
-            flash('لا يمكن حذف جهاز مربوط بموظف. يرجى فك الربط أولاً', 'error')
+        # التحقق من عدم ربط الجهاز
+        if device.is_assigned:
+            flash('لا يمكن حذف جهاز مربوط بموظف. يرجى فك الربط أولاً.', 'error')
             return redirect(url_for('device_management.index'))
         
         device_info = f'{device.device_brand} {device.device_model} - IMEI: {device.imei}'
@@ -305,7 +471,7 @@ def delete(device_id):
         # تسجيل العملية
         # audit_log('device_deleted', f'تم حذف الجهاز: {device_info}')
         
-        flash('تم حذف الجهاز بنجاح', 'success')
+        flash(f'تم حذف الجهاز {device.imei} بنجاح', 'success')
         
     except Exception as e:
         db.session.rollback()
@@ -378,7 +544,6 @@ def assign_to_employee(device_id):
 def unassign_from_employee(device_id):
     """فك ربط الجهاز من الموظف"""
     try:
-        print(f"DEBUG: بدء عملية فك ربط الجهاز {device_id}")
         device = MobileDevice.query.get_or_404(device_id)
         
         # العثور على جميع الربطات النشطة لهذا الجهاز
@@ -386,8 +551,6 @@ def unassign_from_employee(device_id):
             DeviceAssignment.device_id == device_id,
             DeviceAssignment.is_active == True
         ).all()
-        
-        print(f"DEBUG: عدد الربطات النشطة الموجودة: {len(active_assignments)}")
         
         if not active_assignments:
             flash('الجهاز غير مربوط بأي موظف', 'warning')
@@ -400,7 +563,6 @@ def unassign_from_employee(device_id):
             if assignment.employee:
                 employee_name = assignment.employee.name
             
-            print(f"DEBUG: إلغاء الربط {assignment.id} للموظف {employee_name}")
             assignment.is_active = False
             assignment.unassigned_date = datetime.utcnow()
             assignment.unassigned_by = current_user.id if current_user.is_authenticated else None
@@ -411,16 +573,13 @@ def unassign_from_employee(device_id):
                 if sim_card:
                     sim_card.employee_id = None
                     sim_card.is_used = False
-                    print(f"DEBUG: تم فك ربط الرقم {sim_card.phone_number}")
         
         # فك ربط الجهاز في الجدول الأساسي
         device.employee_id = None
         device.status = 'متاح'
         device.updated_at = datetime.utcnow()
-        print(f"DEBUG: تم تحديث حالة الجهاز إلى متاح")
         
         db.session.commit()
-        print(f"DEBUG: تم حفظ التغييرات في قاعدة البيانات")
         
         # تسجيل العملية
         from utils.audit_logger import log_activity
