@@ -67,6 +67,59 @@
     border-bottom: none;
     padding: 15px 20px;
 }
+
+/* أنماط المستندات المحسنة */
+.document-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.document-card {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #f8f9fa;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+}
+
+.document-card:hover {
+    border-color: #1da18e;
+    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(29, 161, 142, 0.15);
+    color: inherit;
+    text-decoration: none;
+}
+
+.document-card .document-icon {
+    font-size: 2rem;
+    margin-left: 15px;
+    min-width: 60px;
+    text-align: center;
+}
+
+.document-card .document-info h6 {
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #333;
+}
+
+.document-card .document-info small {
+    font-size: 0.85rem;
+}
+
+.delivery-card:hover {
+    border-color: #28a745;
+}
+
+.reception-card:hover {
+    border-color: #007bff;
+}
 </style>
 {% endblock %}
 
@@ -285,11 +338,25 @@
                                     {% if record.delivery_link %}
                                     <a href="{{ record.delivery_link }}" target="_blank" class="document-card delivery-card">
                                         <div class="document-icon">
-                                            <i class="fas fa-file-export"></i>
+                                            {% if record.delivery_link.lower().endswith('.pdf') or 'pdf' in record.delivery_link.lower() %}
+                                                <i class="fas fa-file-pdf text-danger"></i>
+                                            {% elif record.delivery_link.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                                <i class="fas fa-file-image text-success"></i>
+                                            {% else %}
+                                                <i class="fas fa-file-export text-primary"></i>
+                                            {% endif %}
                                         </div>
                                         <div class="document-info">
-                                            <h6>نموذج التسليم</h6>
-                                            <small class="text-muted">انقر للعرض أو التحميل</small>
+                                            <h6>نموذج التسليم للورشة</h6>
+                                            <small class="text-muted">
+                                                {% if record.delivery_link.lower().endswith('.pdf') or 'pdf' in record.delivery_link.lower() %}
+                                                    ملف PDF - انقر للعرض
+                                                {% elif record.delivery_link.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                                    صورة - انقر للعرض
+                                                {% else %}
+                                                    رابط خارجي - انقر للفتح
+                                                {% endif %}
+                                            </small>
                                         </div>
                                     </a>
                                     {% endif %}
@@ -297,11 +364,25 @@
                                     {% if record.reception_link %}
                                     <a href="{{ record.reception_link }}" target="_blank" class="document-card reception-card">
                                         <div class="document-icon">
-                                            <i class="fas fa-file-import"></i>
+                                            {% if record.reception_link.lower().endswith('.pdf') or 'pdf' in record.reception_link.lower() %}
+                                                <i class="fas fa-file-pdf text-danger"></i>
+                                            {% elif record.reception_link.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                                <i class="fas fa-file-image text-success"></i>
+                                            {% else %}
+                                                <i class="fas fa-file-import text-primary"></i>
+                                            {% endif %}
                                         </div>
                                         <div class="document-info">
-                                            <h6>نموذج الاستلام</h6>
-                                            <small class="text-muted">انقر للعرض أو التحميل</small>
+                                            <h6>نموذج الاستلام من الورشة</h6>
+                                            <small class="text-muted">
+                                                {% if record.reception_link.lower().endswith('.pdf') or 'pdf' in record.reception_link.lower() %}
+                                                    ملف PDF - انقر للعرض
+                                                {% elif record.reception_link.lower().endswith(('.jpg', '.jpeg', '.png', '.gif')) %}
+                                                    صورة - انقر للعرض
+                                                {% else %}
+                                                    رابط خارجي - انقر للفتح
+                                                {% endif %}
+                                            </small>
                                         </div>
                                     </a>
                                     {% endif %}
