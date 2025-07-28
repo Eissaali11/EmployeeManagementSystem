@@ -525,19 +525,77 @@ def export_excel():
         
         sim_cards = query.order_by(SimCard.id).all()
         
+        # الحصول على الأرقام المربوطة حالياً في DeviceAssignment
+        assigned_device_sims = db.session.query(DeviceAssignment.sim_card_id).filter(
+            DeviceAssignment.is_active.is_(True),
+            DeviceAssignment.sim_card_id.isnot(None)
+        ).distinct().all()
+        assigned_device_sim_ids = [id[0] for id in assigned_device_sims]
+        
+        # الحصول على أرقام SimCard المربوطة مع أرقام ImportedPhoneNumber المقابلة
+        device_assigned_phone_numbers = set()
+        if assigned_device_sim_ids:
+            imported_numbers_in_devices = ImportedPhoneNumber.query.filter(
+                ImportedPhoneNumber.id.in_(assigned_device_sim_ids)
+            ).all()
+            device_assigned_phone_numbers = {sim.phone_number for sim in imported_numbers_in_devices}
+
         # إعداد البيانات للتصدير
         data = []
         for sim_card, employee in sim_cards:
+            # تحديد حالة الربط
+            is_assigned_to_employee = bool(sim_card.employee_id and employee)
+            is_assigned_to_device = sim_card.phone_number in device_assigned_phone_numbers
+            
+            # تحديد الحالة والموظف
+            if is_assigned_to_employee:
+                status = 'مربوط (موظف)'
+                employee_name = employee.name
+                employee_id_display = employee.employee_id if employee else ''
+                departments_text = ', '.join([dept.name for dept in employee.departments]) if employee and employee.departments else ''
+            elif is_assigned_to_device:
+                status = 'مربوط (جهاز)'
+                # البحث عن الموظف المربوط عبر الجهاز
+                imported_num = ImportedPhoneNumber.query.filter_by(phone_number=sim_card.phone_number).first()
+                if imported_num:
+                    device_assignment = DeviceAssignment.query.filter_by(
+                        sim_card_id=imported_num.id, is_active=True
+                    ).first()
+                    if device_assignment and device_assignment.employee_id:
+                        device_employee = Employee.query.get(device_assignment.employee_id)
+                        if device_employee:
+                            employee_name = f"{device_employee.name} (عبر الجهاز)"
+                            employee_id_display = device_employee.employee_id
+                            departments_text = ', '.join([dept.name for dept in device_employee.departments]) if device_employee.departments else ''
+                        else:
+                            employee_name = 'مربوط بجهاز'
+                            employee_id_display = ''
+                            departments_text = ''
+                    else:
+                        employee_name = 'مربوط بجهاز'
+                        employee_id_display = ''
+                        departments_text = ''
+                else:
+                    employee_name = 'مربوط بجهاز'
+                    employee_id_display = ''
+                    departments_text = ''
+            else:
+                status = 'متاح'
+                employee_name = ''
+                employee_id_display = ''
+                departments_text = ''
+
             data.append({
                 'رقم الهاتف': sim_card.phone_number,
                 'شركة الاتصالات': sim_card.carrier,
                 'نوع الخطة': sim_card.plan_type or '',
                 'التكلفة الشهرية': sim_card.monthly_cost or 0,
-                'الحالة': 'مربوط' if sim_card.employee_id else 'متاح',
-                'اسم الموظف': employee.name if employee else '',
-                'رقم الموظف': employee.employee_id if employee else '',
-                'القسم': ', '.join([dept.name for dept in employee.departments]) if employee and employee.departments else '',
+                'الحالة': status,
+                'اسم الموظف': employee_name,
+                'رقم الموظف': employee_id_display,
+                'القسم': departments_text,
                 'تاريخ الإنشاء': sim_card.created_at.strftime('%Y-%m-%d') if sim_card.created_at else '',
+                'تاريخ الربط': sim_card.assigned_date.strftime('%Y-%m-%d') if sim_card.assigned_date else '',
                 'الملاحظات': getattr(sim_card, 'notes', None) or getattr(sim_card, 'description', None) or ''
             })
         
