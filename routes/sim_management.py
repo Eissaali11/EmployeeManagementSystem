@@ -870,49 +870,54 @@ def export_sim_details_excel(sim_id):
         temp_file.close()
         
         # كتابة البيانات إلى Excel مع تنسيق محسن
-        with pd.ExcelWriter(temp_filename, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name=f'SIM {sim.phone_number}', index=False)
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = f'SIM {sim.phone_number}'
+        
+        # إضافة البيانات إلى الورقة
+        for row_data in data:
+            ws.append(row_data)
             
-            # تنسيق الورقة
-            worksheet = writer.sheets[f'SIM {sim.phone_number}']
-            
-            # تعديل عرض الأعمدة
-            worksheet.column_dimensions['A'].width = 25
-            worksheet.column_dimensions['B'].width = 40
-            
-            # تنسيق الخلايا
-            from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
-            
-            # تنسيق رؤوس الأقسام
-            section_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
-            section_font = Font(color='FFFFFF', bold=True, size=12)
-            
-            # تنسيق البيانات العادية
-            data_font = Font(size=11)
-            border = Border(
-                left=Side(style='thin'),
-                right=Side(style='thin'),
-                top=Side(style='thin'),
-                bottom=Side(style='thin')
-            )
-            
-            for row_num, row in enumerate(worksheet.iter_rows(min_row=2), start=2):
-                cell_value = row[0].value
-                if cell_value and not cell_value.strip() == '' and row[1].value == '':
-                    # هذا رأس قسم
-                    for cell in row:
-                        cell.fill = section_fill
-                        cell.font = section_font
-                        cell.alignment = Alignment(horizontal='center')
-                else:
-                    # بيانات عادية
-                    for cell in row:
-                        cell.font = data_font
-                        cell.border = border
-                        if cell.column == 1:  # عمود البيان
-                            cell.alignment = Alignment(horizontal='right')
-                        else:  # عمود القيمة
-                            cell.alignment = Alignment(horizontal='right')
+        # تعديل عرض الأعمدة
+        ws.column_dimensions['A'].width = 25
+        ws.column_dimensions['B'].width = 40
+        
+        # تنسيق رؤوس الأقسام
+        section_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+        section_font = Font(color='FFFFFF', bold=True, size=12)
+        
+        # تنسيق البيانات العادية
+        data_font = Font(size=11)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        for row_num, row in enumerate(ws.iter_rows(min_row=1), start=1):
+            cell_value = row[0].value
+            if cell_value and len(row) > 1 and (not row[1].value or row[1].value == ''):
+                # هذا رأس قسم
+                for cell in row:
+                    cell.fill = section_fill
+                    cell.font = section_font
+                    cell.alignment = Alignment(horizontal='center')
+            else:
+                # بيانات عادية
+                for cell in row:
+                    cell.font = data_font
+                    cell.border = border
+                    if cell.column == 1:  # عمود البيان
+                        cell.alignment = Alignment(horizontal='right')
+                    else:  # عمود القيمة
+                        cell.alignment = Alignment(horizontal='right')
+        
+        # حفظ الملف
+        wb.save(temp_filename)
         
         # تسجيل العملية
         log_activity(
