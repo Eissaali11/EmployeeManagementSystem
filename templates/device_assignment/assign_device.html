@@ -135,17 +135,25 @@
                             <!-- اختيار الرقم (يظهر عند اختيار device_and_sim) -->
                             <div class="col-md-6 mb-3" id="sim_selection" style="display: none;">
                                 <label for="sim_card_id" class="form-label">
-                                    <i class="fas fa-sim-card me-1"></i>رقم الهاتف
+                                    <i class="fas fa-sim-card me-1"></i>رقم الهاتف <span class="text-success">({{ available_sims|length }} رقم متاح)</span>
                                 </label>
-                                <select class="form-select" id="sim_card_id" name="sim_card_id">
-                                    <option value="">اختر رقم هاتف</option>
+                                <select class="form-select searchable-phone" id="sim_card_id" name="sim_card_id">
+                                    <option value="">اختر رقم هاتف من الأرقام المتاحة</option>
                                     {% for sim in available_sims %}
-                                    <option value="{{ sim.id }}">
+                                    <option value="{{ sim.id }}" 
+                                            data-carrier="{{ sim.carrier or 'غير محدد' }}"
+                                            data-type="{{ sim.sim_type or 'عادي' }}"
+                                            data-phone="{{ sim.phone_number }}">
                                         {{ sim.phone_number }}
-                                        {% if sim.carrier %}({{ sim.carrier }}){% endif %}
+                                        {% if sim.carrier %} - {{ sim.carrier }}{% endif %}
+                                        {% if sim.sim_type %} ({{ sim.sim_type }}){% endif %}
                                     </option>
                                     {% endfor %}
                                 </select>
+                                <div class="form-text text-success">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    يتم عرض الأرقام المتاحة فقط (غير مربوطة بموظفين)
+                                </div>
                             </div>
 
                             <!-- ملاحظات -->
@@ -181,7 +189,7 @@
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
-// تهيئة Tom Select للموظفين
+// تهيئة Tom Select للموظفين وأرقام الهاتف
 document.addEventListener('DOMContentLoaded', function() {
     // إنشاء Searchable Dropdown للموظفين
     const employeeSelect = new TomSelect('#employee_id', {
@@ -233,8 +241,57 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // حفظ مرجع لـ TomSelect
+    // إنشاء Searchable Dropdown لأرقام الهاتف
+    const phoneSelect = new TomSelect('#sim_card_id', {
+        plugins: ['clear_button'],
+        placeholder: 'ابحث واختر رقم الهاتف...',
+        searchField: ['text', 'value'],
+        sortField: {
+            field: 'text',
+            direction: 'asc'
+        },
+        render: {
+            option: function(data, escape) {
+                const option = document.querySelector(`option[value="${data.value}"]`);
+                if (!option || !data.value) return '<div>' + escape(data.text) + '</div>';
+                
+                const carrier = option.getAttribute('data-carrier') || 'غير محدد';
+                const type = option.getAttribute('data-type') || 'عادي';
+                const phone = option.getAttribute('data-phone') || '';
+                
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-2" style="direction: rtl;">
+                        <div>
+                            <div class="fw-bold text-primary">${escape(phone)}</div>
+                            <small class="text-muted">
+                                <i class="fas fa-building me-1"></i>${escape(carrier)}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-tag me-1"></i>${escape(type)}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success">متاح</span>
+                        </div>
+                    </div>
+                `;
+            },
+            item: function(data, escape) {
+                return '<div>' + escape(data.text) + '</div>';
+            }
+        },
+        onItemAdd: function(value) {
+            // إضافة معلومات إضافية عند اختيار الرقم
+            const option = document.querySelector(`option[value="${value}"]`);
+            if (option) {
+                const phone = option.getAttribute('data-phone');
+                console.log('تم اختيار الرقم:', phone);
+            }
+        }
+    });
+    
+    // حفظ مراجع لـ TomSelect
     window.employeeSelectInstance = employeeSelect;
+    window.phoneSelectInstance = phoneSelect;
 });
 
 // فلترة الموظفين حسب القسم
@@ -282,10 +339,18 @@ document.getElementById('assignment_type').addEventListener('change', function()
     if (this.value === 'device_and_sim') {
         simSelection.style.display = 'block';
         simSelect.required = true;
+        // تفعيل Tom Select للأرقام عند الحاجة
+        if (window.phoneSelectInstance) {
+            window.phoneSelectInstance.enable();
+        }
     } else {
         simSelection.style.display = 'none';
         simSelect.required = false;
-        simSelect.value = '';
+        // مسح الاختيار الحالي
+        if (window.phoneSelectInstance) {
+            window.phoneSelectInstance.clear();
+            window.phoneSelectInstance.disable();
+        }
     }
 });
 </script>
