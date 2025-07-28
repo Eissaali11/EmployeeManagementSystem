@@ -625,3 +625,164 @@ def details(sim_id):
         current_app.logger.error(f"Error loading SIM details: {str(e)}")
         flash('حدث خطأ أثناء تحميل التفاصيل', 'danger')
         return redirect(url_for('sim_management.index'))
+
+@sim_management_bp.route('/export-details-excel/<int:sim_id>')
+@login_required
+def export_sim_details_excel(sim_id):
+    """تصدير تفاصيل SIM محددة إلى ملف Excel منسق"""
+    try:
+        # جلب تفاصيل SIM
+        sim = SimCard.query.get_or_404(sim_id)
+        
+        # البحث عن ImportedPhoneNumber المقابل لهذا الرقم
+        imported_number = ImportedPhoneNumber.query.filter_by(phone_number=sim.phone_number).first()
+        device_assignment = None
+        employee = None
+        device = None
+        
+        if imported_number:
+            # البحث عن DeviceAssignment باستخدام sim_card_id
+            device_assignment = DeviceAssignment.query.filter_by(
+                sim_card_id=imported_number.id,
+                is_active=True
+            ).first()
+            
+            if device_assignment:
+                if device_assignment.employee_id:
+                    employee = Employee.query.get(device_assignment.employee_id)
+                if device_assignment.device_id:
+                    device = MobileDevice.query.get(device_assignment.device_id)
+        
+        # البحث عن الموظف المربوط مباشرة في SimCard إذا لم نجد في DeviceAssignment
+        if not employee and sim.employee_id:
+            employee = Employee.query.get(sim.employee_id)
+        
+        # إعداد البيانات للتصدير
+        data = []
+        
+        # معلومات أساسية
+        data.append(['القسم', 'المعلومات'])
+        data.append(['', ''])
+        data.append(['المعلومات الأساسية', ''])
+        data.append(['رقم الهاتف', sim.phone_number])
+        data.append(['شركة الاتصالات', sim.carrier or 'غير محدد'])
+        data.append(['نوع الخطة', sim.plan_type or 'غير محدد'])
+        data.append(['التكلفة الشهرية', f'{sim.monthly_cost} ريال' if sim.monthly_cost else 'غير محدد'])
+        data.append(['تاريخ الاستيراد', sim.import_date.strftime('%Y-%m-%d') if sim.import_date else 'غير محدد'])
+        data.append(['الوصف', sim.description or 'لا يوجد'])
+        data.append(['', ''])
+        
+        # معلومات الموظف المربوط
+        if employee:
+            data.append(['معلومات الموظف المربوط', ''])
+            data.append(['اسم الموظف', employee.name])
+            data.append(['رقم الموظف', employee.employee_id or 'غير محدد'])
+            data.append(['المنصب', employee.position or 'غير محدد'])
+            data.append(['الأقسام', ', '.join([dept.name for dept in employee.departments]) if employee.departments else 'غير محدد'])
+            data.append(['هاتف العمل', employee.mobile or 'غير محدد'])
+            data.append(['الهاتف الشخصي', employee.mobilePersonal or 'غير محدد'])
+            data.append(['البريد الإلكتروني', employee.email or 'غير محدد'])
+            data.append(['تاريخ التوظيف', employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else 'غير محدد'])
+            data.append(['', ''])
+        
+        # معلومات الجهاز المربوط
+        if device:
+            data.append(['معلومات الجهاز المربوط', ''])
+            data.append(['نوع الجهاز', device.device_type or 'غير محدد'])
+            data.append(['الطراز', device.model or 'غير محدد'])
+            data.append(['رقم IMEI', device.imei or 'غير محدد'])
+            data.append(['رقم المسلسل', device.serial_number or 'غير محدد'])
+            data.append(['حالة الجهاز', device.status or 'غير محدد'])
+            data.append(['تاريخ الشراء', device.purchase_date.strftime('%Y-%m-%d') if device.purchase_date else 'غير محدد'])
+            data.append(['تاريخ انتهاء الضمان', device.warranty_expiry.strftime('%Y-%m-%d') if device.warranty_expiry else 'غير محدد'])
+            data.append(['ملاحظات الجهاز', device.notes or 'لا توجد'])
+            data.append(['', ''])
+        
+        # معلومات الربط
+        if device_assignment:
+            data.append(['معلومات الربط', ''])
+            data.append(['تاريخ الربط', device_assignment.assignment_date.strftime('%Y-%m-%d %H:%M') if device_assignment.assignment_date else 'غير محدد'])
+            data.append(['الحالة', 'نشط' if device_assignment.is_active else 'غير نشط'])
+            data.append(['ملاحظات الربط', device_assignment.notes or 'لا توجد'])
+            data.append(['', ''])
+        
+        # إحصائيات
+        data.append(['إحصائيات', ''])
+        data.append(['حالة الرقم', 'مربوط' if (employee or device) else 'متاح'])
+        data.append(['نوع الربط', 'موظف وجهاز' if (employee and device) else ('موظف فقط' if employee else ('جهاز فقط' if device else 'غير مربوط'))])
+        data.append(['تاريخ التصدير', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+        
+        # إنشاء DataFrame
+        df = pd.DataFrame(data, columns=['البيان', 'القيمة'])
+        
+        # إنشاء ملف مؤقت
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
+        temp_filename = temp_file.name
+        temp_file.close()
+        
+        # كتابة البيانات إلى Excel مع تنسيق محسن
+        with pd.ExcelWriter(temp_filename, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name=f'SIM {sim.phone_number}', index=False)
+            
+            # تنسيق الورقة
+            worksheet = writer.sheets[f'SIM {sim.phone_number}']
+            
+            # تعديل عرض الأعمدة
+            worksheet.column_dimensions['A'].width = 25
+            worksheet.column_dimensions['B'].width = 40
+            
+            # تنسيق الخلايا
+            from openpyxl.styles import Font, PatternFill, Border, Side, Alignment
+            
+            # تنسيق رؤوس الأقسام
+            section_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+            section_font = Font(color='FFFFFF', bold=True, size=12)
+            
+            # تنسيق البيانات العادية
+            data_font = Font(size=11)
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            for row_num, row in enumerate(worksheet.iter_rows(min_row=2), start=2):
+                cell_value = row[0].value
+                if cell_value and not cell_value.strip() == '' and row[1].value == '':
+                    # هذا رأس قسم
+                    for cell in row:
+                        cell.fill = section_fill
+                        cell.font = section_font
+                        cell.alignment = Alignment(horizontal='center')
+                else:
+                    # بيانات عادية
+                    for cell in row:
+                        cell.font = data_font
+                        cell.border = border
+                        if cell.column == 1:  # عمود البيان
+                            cell.alignment = Alignment(horizontal='right')
+                        else:  # عمود القيمة
+                            cell.alignment = Alignment(horizontal='right')
+        
+        # تسجيل العملية
+        log_activity(
+            action="export_details",
+            entity_type="SIM",
+            entity_id=sim_id,
+            details=f"تصدير تفاصيل SIM {sim.phone_number} إلى Excel"
+        )
+        
+        # إرسال الملف
+        filename = f'sim_details_{sim.phone_number.replace("+", "").replace(" ", "_")}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        return send_file(
+            temp_filename,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error exporting SIM details: {str(e)}")
+        flash('حدث خطأ أثناء تصدير التفاصيل', 'danger')
+        return redirect(url_for('sim_management.details', sim_id=sim_id))
