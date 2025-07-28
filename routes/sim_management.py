@@ -575,16 +575,24 @@ def details(sim_id):
     try:
         sim = SimCard.query.get_or_404(sim_id)
         
-        # البحث عن تفاصيل الربط في DeviceAssignment
-        device_assignment = DeviceAssignment.query.filter_by(phone_number=sim.phone_number).first()
+        # البحث عن ImportedPhoneNumber المقابل لهذا الرقم
+        imported_number = ImportedPhoneNumber.query.filter_by(phone_number=sim.phone_number).first()
+        device_assignment = None
         employee = None
         device = None
         
-        if device_assignment:
-            if device_assignment.employee_id:
-                employee = Employee.query.get(device_assignment.employee_id)
-            if device_assignment.device_id:
-                device = MobileDevice.query.get(device_assignment.device_id)
+        if imported_number:
+            # البحث عن DeviceAssignment باستخدام sim_card_id
+            device_assignment = DeviceAssignment.query.filter_by(
+                sim_card_id=imported_number.id,
+                is_active=True
+            ).first()
+            
+            if device_assignment:
+                if device_assignment.employee_id:
+                    employee = Employee.query.get(device_assignment.employee_id)
+                if device_assignment.device_id:
+                    device = MobileDevice.query.get(device_assignment.device_id)
         
         # البحث عن الموظف المربوط مباشرة في SimCard
         direct_employee = None
