@@ -275,6 +275,99 @@
             display: inline-block;
         }
     }
+    
+    /* أنماط قوائم الأجهزة والأرقام */
+    .devices-lists-section, .sims-lists-section {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .devices-lists-section h2, .sims-lists-section h2 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .list-card {
+        background: rgba(248, 249, 250, 0.95);
+        border-radius: 12px;
+        padding: 25px;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+        height: 100%;
+        max-height: 500px;
+        overflow: hidden;
+    }
+    
+    .list-card:hover {
+        transform: translateY(-3px);
+        border-color: #007bff;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .list-card h3 {
+        color: #2c3e50;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .list-card .table-responsive {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    
+    .list-card .table {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .list-card .table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-top: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .list-card .table td {
+        vertical-align: middle;
+        padding: 8px 12px;
+    }
+    
+    .list-card .table code {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        margin: 0;
+    }
 </style>
 {% endblock %}
 
@@ -381,6 +474,187 @@
                     </div>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- قوائم الأجهزة المربوطة والمتاحة -->
+    <div class="devices-lists-section">
+        <h2><i class="fas fa-mobile-alt"></i> قوائم الأجهزة المحمولة</h2>
+        
+        <div class="row">
+            <!-- الأجهزة المربوطة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-link text-success"></i> الأجهزة المربوطة ({{ assigned_devices }})</h3>
+                    {% if assigned_devices_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>IMEI</th>
+                                        <th>الماركة</th>
+                                        <th>الموديل</th>
+                                        <th>مربوط مع</th>
+                                        <th>تاريخ الربط</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for device, assignment, employee in assigned_devices_list %}
+                                    <tr>
+                                        <td><code>{{ device.imei }}</code></td>
+                                        <td>{{ device.device_brand or 'غير محدد' }}</td>
+                                        <td>{{ device.device_model or 'غير محدد' }}</td>
+                                        <td>
+                                            {% if employee %}
+                                                <span class="badge bg-info">{{ employee.name }}</span>
+                                            {% elif assignment.department %}
+                                                <span class="badge bg-warning">{{ assignment.department.name }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">غير محدد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ assignment.assignment_date.strftime('%Y-%m-%d') if assignment.assignment_date else 'غير محدد' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أجهزة مربوطة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- الأجهزة المتاحة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-circle text-success"></i> الأجهزة المتاحة ({{ available_devices }})</h3>
+                    {% if available_devices_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>IMEI</th>
+                                        <th>الماركة</th>
+                                        <th>الموديل</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإضافة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for device in available_devices_list %}
+                                    <tr>
+                                        <td><code>{{ device.imei }}</code></td>
+                                        <td>{{ device.device_brand or 'غير محدد' }}</td>
+                                        <td>{{ device.device_model or 'غير محدد' }}</td>
+                                        <td><span class="badge bg-success">{{ device.status or 'متاح' }}</span></td>
+                                        <td>{{ device.created_at.strftime('%Y-%m-%d') if device.created_at else 'غير محدد' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أجهزة متاحة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قوائم الأرقام المربوطة والمتاحة -->
+    <div class="sims-lists-section">
+        <h2><i class="fas fa-sim-card"></i> قوائم أرقام SIM</h2>
+        
+        <div class="row">
+            <!-- الأرقام المربوطة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-link text-success"></i> الأرقام المربوطة ({{ assigned_sims }})</h3>
+                    {% if assigned_sims_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الهاتف</th>
+                                        <th>مزود الخدمة</th>
+                                        <th>نوع الباقة</th>
+                                        <th>مربوط مع</th>
+                                        <th>القسم</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sim, employee in assigned_sims_list %}
+                                    <tr>
+                                        <td><code>{{ sim.phone_number }}</code></td>
+                                        <td>{{ sim.carrier or 'غير محدد' }}</td>
+                                        <td>{{ sim.plan_type or 'غير محدد' }}</td>
+                                        <td><span class="badge bg-info">{{ employee.name }}</span></td>
+                                        <td>
+                                            {% set dept_names = employee.departments|map(attribute='name')|list %}
+                                            {% if dept_names %}
+                                                {{ dept_names|join(', ') }}
+                                            {% else %}
+                                                غير محدد
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أرقام مربوطة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- الأرقام المتاحة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-circle text-success"></i> الأرقام المتاحة ({{ available_sims }})</h3>
+                    {% if available_sims_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الهاتف</th>
+                                        <th>مزود الخدمة</th>
+                                        <th>نوع الباقة</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإضافة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sim in available_sims_list %}
+                                    <tr>
+                                        <td><code>{{ sim.phone_number }}</code></td>
+                                        <td>{{ sim.carrier or 'غير محدد' }}</td>
+                                        <td>{{ sim.plan_type or 'غير محدد' }}</td>
+                                        <td><span class="badge bg-success">{{ sim.status or 'متاحة' }}</span></td>
+                                        <td>{{ sim.created_at.strftime('%Y-%m-%d') if sim.created_at else 'غير محدد' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أرقام متاحة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

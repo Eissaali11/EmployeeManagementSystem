@@ -785,13 +785,30 @@ def reports():
     try:
         # إحصائيات الأجهزة
         total_devices = MobileDevice.query.count()
-        assigned_devices = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).count()
-        available_devices = total_devices - assigned_devices
+        assigned_devices_count = DeviceAssignment.query.filter_by(is_active=True).filter(DeviceAssignment.device_id.isnot(None)).count()
+        available_devices_count = total_devices - assigned_devices_count
         
         # إحصائيات الأرقام
         total_sims = SimCard.query.count()
-        assigned_sims = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
-        available_sims = total_sims - assigned_sims
+        assigned_sims_count = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
+        available_sims_count = total_sims - assigned_sims_count
+        
+        # قوائم الأجهزة المربوطة والمتاحة
+        assigned_device_ids = db.session.query(DeviceAssignment.device_id).filter_by(is_active=True).subquery()
+        assigned_devices_list = db.session.query(MobileDevice, DeviceAssignment, Employee).join(
+            DeviceAssignment, MobileDevice.id == DeviceAssignment.device_id
+        ).outerjoin(Employee, DeviceAssignment.employee_id == Employee.id).filter(
+            DeviceAssignment.is_active == True
+        ).all()
+        
+        available_devices_list = MobileDevice.query.filter(~MobileDevice.id.in_(assigned_device_ids)).all()
+        
+        # قوائم الأرقام المربوطة والمتاحة
+        assigned_sims_list = db.session.query(SimCard, Employee).join(
+            Employee, SimCard.employee_id == Employee.id
+        ).all()
+        
+        available_sims_list = SimCard.query.filter(SimCard.employee_id.is_(None)).all()
         
         # إحصائيات الأقسام
         departments = Department.query.all()
@@ -822,11 +839,15 @@ def reports():
         
         return render_template('device_assignment/reports.html',
                              total_devices=total_devices,
-                             assigned_devices=assigned_devices,
-                             available_devices=available_devices,
+                             assigned_devices=assigned_devices_count,
+                             available_devices=available_devices_count,
                              total_sims=total_sims,
-                             assigned_sims=assigned_sims,
-                             available_sims=available_sims,
+                             assigned_sims=assigned_sims_count,
+                             available_sims=available_sims_count,
+                             assigned_devices_list=assigned_devices_list,
+                             available_devices_list=available_devices_list,
+                             assigned_sims_list=assigned_sims_list,
+                             available_sims_list=available_sims_list,
                              department_stats=department_stats)
     
     except Exception as e:
