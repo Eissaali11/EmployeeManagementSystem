@@ -1,562 +1,183 @@
-{% extends 'layout.html' %}
-
-{% block extra_css %}
-<style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
-        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        --glass-bg: rgba(255, 255, 255, 0.95);
-        --glass-border: rgba(255, 255, 255, 0.2);
-    }
-
-    /* Enhanced Header */
-    .employee-header {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        padding: 2rem;
-        margin-bottom: 2rem;
-        position: relative;
-        overflow: hidden;
-        animation: slideDown 0.6s ease-out;
-    }
-
-    .employee-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: var(--primary-gradient);
-    }
-
-    .employee-header h1 {
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        font-size: 2.5rem;
-    }
-
-    /* Enhanced Action Buttons */
-    .btn-action-group {
-        display: flex;
-        gap: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    .btn-enhanced {
-        position: relative;
-        overflow: hidden;
-        border: none;
-        border-radius: 12px;
-        padding: 0.75rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: var(--card-shadow);
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 140px;
-        justify-content: center;
-    }
-
-    .btn-enhanced::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .btn-enhanced:hover::before {
-        left: 100%;
-    }
-
-    .btn-enhanced:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--card-shadow-hover);
-        text-decoration: none;
-    }
-
-    .btn-primary-enhanced {
-        background: var(--primary-gradient);
-        color: white;
-    }
-
-    .btn-success-enhanced {
-        background: var(--success-gradient);
-        color: white;
-    }
-
-    .btn-info-enhanced {
-        background: var(--info-gradient);
-        color: white;
-    }
-
-    .btn-warning-enhanced {
-        background: var(--warning-gradient);
-        color: white;
-    }
-
-    .btn-danger-enhanced {
-        background: var(--danger-gradient);
-        color: white;
-    }
-
-    /* Enhanced Cards */
-    .dashboard-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        overflow: hidden;
-        height: 100%;
-    }
-
-    .dashboard-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
-    }
-
-    .dashboard-card .card-header {
-        background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
-        color: white;
-        padding: 1rem 1.5rem;
-        border-bottom: none;
-    }
-
-    .dashboard-card .card-header h5 {
-        margin: 0;
-        font-weight: 600;
-    }
-
-    /* Enhanced Stats Cards */
-    .stat-card {
-        border: none;
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s ease;
-        overflow: hidden;
-        position: relative;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.4);
-    }
-
-    .stat-card .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Enhanced Images Section */
-    .image-upload-card {
-        background: var(--glass-bg);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-
-    .image-upload-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--card-shadow-hover);
-    }
-
-    .image-preview {
-        min-height: 200px;
-        background-color: #f8f9fa;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    /* Enhanced Table */
-    .enhanced-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
-    }
-
-    .enhanced-table thead th {
-        background: rgba(102, 126, 234, 0.1);
-        color: #05122D;
-        font-weight: 600;
-        padding: 1rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .enhanced-table tbody td {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        vertical-align: middle;
-    }
-
-    .enhanced-table tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .enhanced-table tbody tr:hover {
-        background: rgba(102, 126, 234, 0.05);
-    }
-
-    /* Enhanced Badges */
-    .badge-enhanced {
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 0.75rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .badge-enhanced:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Department Pills */
-    .department-pills-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        background: rgba(102, 126, 234, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(102, 126, 234, 0.2);
-    }
-
-    .department-pill {
-        display: inline-flex;
-        align-items: center;
-        padding: 0.5em 0.9em;
-        font-size: 0.9rem;
-        cursor: pointer;
-        border-radius: 50rem;
-        transition: all 0.2s ease-in-out;
-        background-color: #495057;
-        color: #ced4da;
-        border: 1px solid #495057;
-    }
-
-    .department-pill .fa-check-circle {
-        display: none;
-    }
-
-    .department-pill.active {
-        background: var(--primary-gradient);
-        color: white;
-        border-color: #0a58ca;
-        font-weight: 500;
-    }
-
-    .department-pill.active .fa-check-circle {
-        display: inline-block;
-    }
-
-    .department-pill:not(.active):hover {
-        background-color: #6c757d;
-    }
-
-    /* Chart Container */
-    .chart-container {
-        position: relative;
-        height: 200px;
-        width: 100%;
-        margin-top: 15px;
-    }
-
-    /* Animations */
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .employee-header {
-            padding: 1.5rem;
-        }
-        
-        .btn-action-group {
-            flex-direction: column;
-            width: 100%;
-        }
-        
-        .btn-enhanced {
-            width: 100%;
-        }
-        
-        .stat-card .stat-value {
-            font-size: 2rem;
-        }
-        
-        .enhanced-table thead {
-            display: none;
-        }
-        
-        .enhanced-table tbody tr {
-            display: block;
-            margin-bottom: 1rem;
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-        }
-        
-        .enhanced-table tbody td {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        
-        .enhanced-table tbody td::before {
-            content: attr(data-label);
-            font-weight: 600;
-            margin-right: 1rem;
-            color: #667eea;
-        }
-    }
-</style>
-
-
-<style>
-    /* ... أي ستايلات أخرى ... */
-    .department-pills-container {
-        display: flex; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .department-pill {
-        display: inline-flex; align-items: center; padding: 0.5em 0.9em;
-        font-size: 0.9rem; cursor: pointer; border-radius: 50rem;
-        transition: all 0.2s ease-in-out;
-        /* ستايل السمة الداكنة الافتراضي */
-        background-color: #495057; color: #ced4da; border: 1px solid #495057;
-    }
-    .department-pill .fa-check-circle { display: none; }
-    .department-pill.active {
-        background-color: #0d6efd; color: white; border-color: #0a58ca; font-weight: 500;
-    }
-    .department-pill.active .fa-check-circle { display: inline-block; }
-    .department-pill:not(.active):hover { background-color: #6c757d; }
-
-    /* تحسينات خاصة بقسم المعلومات البنكية */
-    .banking-section {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .banking-section::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
-        animation: banking-glow 3s ease-in-out infinite alternate;
-        pointer-events: none;
-    }
-
-    @keyframes banking-glow {
-        0% { transform: scale(1) rotate(0deg); }
-        100% { transform: scale(1.1) rotate(10deg); }
-    }
-
-    .banking-card {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s ease;
-    }
-
-    .banking-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.6s ease;
-    }
-
-    .banking-card:hover::before {
-        left: 100%;
-    }
-
-    .banking-card:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-    }
-
-    .iban-display {
-        position: relative;
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-        border: 2px solid #22c55e;
-        border-radius: 12px;
-        padding: 20px;
-        font-family: 'Courier New', monospace;
-        font-size: 1.2em;
-        letter-spacing: 2px;
-        font-weight: bold;
-        color: #1e40af;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        overflow: hidden;
-    }
-
-    .iban-display::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, #22c55e, #3b82f6, #22c55e);
-        animation: iban-shimmer 2s linear infinite;
-    }
-
-    @keyframes iban-shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-
-    .form-floating label {
-        color: #1e40af;
-        font-weight: 600;
-    }
-
-    .form-floating .form-control:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
-    }
-
-    .form-floating .form-control:focus ~ label {
-        color: #1e40af;
-    }
-
-    .banking-submit-btn {
-        position: relative;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }
-
-    .banking-submit-btn::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        background: rgba(255,255,255,0.2);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        transition: width 0.4s ease, height 0.4s ease;
-    }
-
-    .banking-submit-btn:hover::before {
-        width: 300px;
-        height: 300px;
-    }
-
-    .iban-image-container {
-        position: relative;
-        overflow: hidden;
-        border-radius: 12px;
-    }
-
-    .iban-image-container::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-        transform: translateX(-100%);
-        transition: transform 0.6s ease;
-    }
-
-    .iban-image-container:hover::after {
-        transform: translateX(100%);
-    }
-
-    .success-check {
-        animation: checkmark 0.6s ease-in-out;
-    }
-
-    @keyframes checkmark {
-        0% { transform: scale(0) rotate(45deg); }
-        50% { transform: scale(1.2) rotate(45deg); }
-        100% { transform: scale(1) rotate(45deg); }
-    }
-
-    .alert-enhanced {
-        border: none;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .alert-enhanced::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(to bottom, #3b82f6, #1d4ed8);
-    }
-</style>
-
-{% endblock %}
-
-
+{% extends "layout.html" %}
+
+{% block title %}عرض الموظف - {{ employee.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- رأس الصفحة -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="text-primary fw-bold mb-1">{{ employee.name }}</h2>
+                    <small class="text-muted">رقم الموظف: {{ employee.employee_id }}</small>
+                </div>
+                <div>
+                    <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-primary me-2">
+                        <i class="fas fa-edit me-1"></i>تعديل البيانات
+                    </a>
+                    <a href="{{ url_for('employees.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-right me-1"></i>العودة للقائمة
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- بطاقة المعلومات الشخصية -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-lg" style="border: none; border-radius: 15px; overflow: hidden;">
+                <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%); color: white; border: none; padding: 20px;">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-user fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0" style="font-weight: 600;">المعلومات الشخصية</h5>
+                            <small style="opacity: 0.9;">البيانات الأساسية والشخصية</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" style="padding: 25px; background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">الاسم الكامل</p>
+                                <p class="fs-6 fw-bold mb-0">{{ employee.name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">رقم الهوية</p>
+                                <p class="fs-6 fw-bold mb-0" style="font-family: 'Courier New', monospace;">{{ employee.national_id or '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">الرقم الوظيفي</p>
+                                <p class="fs-6 fw-bold mb-0" style="font-family: 'Courier New', monospace;">{{ employee.employee_id or '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">تاريخ الميلاد</p>
+                                <p class="fs-6 fw-bold mb-0">{{ employee.date_of_birth.strftime('%Y-%m-%d') if employee.date_of_birth else '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">الجنسية</p>
+                                <p class="fs-6 fw-bold mb-0">{{ employee.nationality_rel.name if employee.nationality_rel else employee.nationality or '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">الرقم الشخصي</p>
+                                <p class="fs-6 fw-bold mb-0">{{ employee.mobile or '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">رقم الإيبان البنكي</p>
+                                <p class="fs-6 fw-bold mb-0" style="font-family: 'Courier New', monospace;">{{ employee.bank_iban or '-' }}</p>
+                            </div>
+                        </div>
+                        {% if employee.bank_iban_image %}
+                        <div class="col-12">
+                            <div class="text-center">
+                                <button class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#ibanImageModal">
+                                    <i class="fas fa-image me-1"></i>عرض صورة شهادة الإيبان
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- بطاقة معلومات العمل -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-lg" style="border: none; border-radius: 15px; overflow: hidden;">
+                <div class="card-header" style="background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%); color: white; border: none; padding: 20px;">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fas fa-briefcase fa-lg"></i>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0" style="font-weight: 600;">معلومات العمل</h5>
+                            <small style="opacity: 0.9;">القسم والوظيفة والأجهزة</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body" style="padding: 25px; background: linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%);">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">القسم</p>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% if employee.departments %}
+                                        {% for department in employee.departments %}
+                                            <span class="badge bg-success">{{ department.name }}</span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">الموقع</p>
+                                <p class="fs-6 fw-bold mb-0">{{ employee.city or '-' }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small">جوال العمل</p>
+                                <p class="fs-6 fw-bold mb-0">{{ employee.mobilePersonal or '-' }}</p>
+                            </div>
+                        </div>
+                        {% if mobile_devices %}
+                        {% set primary_device = mobile_devices[0] %}
+                        <div class="col-12">
+                            <div class="info-item p-3" style="background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                                <p class="mb-1 text-muted small"><i class="fas fa-barcode me-1 text-success"></i>رقم IMEI</p>
+                                <p class="fs-6 fw-bold text-success mb-0" style="font-family: 'Courier New', monospace;">{{ primary_device.imei or '-' }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal لعرض صورة شهادة الإيبان -->
+    {% if employee.bank_iban_image %}
+    <div class="modal fade" id="ibanImageModal" tabindex="-1" aria-labelledby="ibanImageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ibanImageModalLabel">صورة شهادة الإيبان البنكي</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
+                         class="img-fluid rounded" 
+                         alt="صورة شهادة الإيبان البنكي"
+                         style="max-height: 500px;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
 {% endblock %}
 
 {% block scripts %}
