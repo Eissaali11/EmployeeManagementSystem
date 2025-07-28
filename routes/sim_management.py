@@ -24,20 +24,23 @@ def index():
         status_filter = request.args.get('status', '')
         search_term = request.args.get('search', '')
         
-        # الحصول على الأرقام المربوطة حالياً في DeviceAssignment (استخدم ImportedPhoneNumber IDs)
-        assigned_device_sims = db.session.query(DeviceAssignment.sim_card_id).filter(
+        # الحصول على الأرقام المربوطة حالياً في DeviceAssignment
+        # البحث عن العلاقات النشطة في DeviceAssignment مع SimCard
+        device_assigned_query = db.session.query(DeviceAssignment).filter(
             DeviceAssignment.is_active == True,
             DeviceAssignment.sim_card_id.isnot(None)
-        ).distinct().all()
-        assigned_device_sim_ids = [id[0] for id in assigned_device_sims]
+        )
         
-        # الحصول على أرقام SimCard المربوطة مع أرقام ImportedPhoneNumber المقابلة
+        # جلب أرقام الهواتف المربوطة بالأجهزة
         device_assigned_phone_numbers = set()
-        if assigned_device_sim_ids:
-            imported_numbers_in_devices = ImportedPhoneNumber.query.filter(
-                ImportedPhoneNumber.id.in_(assigned_device_sim_ids)
-            ).all()
-            device_assigned_phone_numbers = {sim.phone_number for sim in imported_numbers_in_devices}
+        device_assignments = device_assigned_query.all()
+        
+        for assignment in device_assignments:
+            if assignment.sim_card_id:
+                # جلب رقم الهاتف من SimCard مباشرة
+                sim_card = SimCard.query.filter_by(id=assignment.sim_card_id).first()
+                if sim_card:
+                    device_assigned_phone_numbers.add(sim_card.phone_number)
         
         # استعلام أساسي - استخدم SimCard
         query = SimCard.query
@@ -51,10 +54,13 @@ def index():
             
         if status_filter == 'available':
             # الأرقام غير المربوطة (لا في employee_id ولا في DeviceAssignment)
-            query = query.filter(
-                SimCard.employee_id.is_(None),
-                ~SimCard.phone_number.in_(device_assigned_phone_numbers) if device_assigned_phone_numbers else True
-            )
+            if device_assigned_phone_numbers:
+                query = query.filter(
+                    SimCard.employee_id.is_(None),
+                    ~SimCard.phone_number.in_(device_assigned_phone_numbers)
+                )
+            else:
+                query = query.filter(SimCard.employee_id.is_(None))
         elif status_filter == 'assigned':
             # الأرقام المربوطة (إما employee_id أو في DeviceAssignment)
             if device_assigned_phone_numbers:
@@ -78,10 +84,8 @@ def index():
             # البحث عن الموظف المربوط بالجهاز إذا كان الرقم مربوط بجهاز
             if sim.is_device_assigned:
                 # البحث عن DeviceAssignment المرتبط بهذا الرقم
-                device_assignment = DeviceAssignment.query.join(
-                    ImportedPhoneNumber, DeviceAssignment.sim_card_id == ImportedPhoneNumber.id
-                ).filter(
-                    ImportedPhoneNumber.phone_number == sim.phone_number,
+                device_assignment = DeviceAssignment.query.filter(
+                    DeviceAssignment.sim_card_id == sim.id,
                     DeviceAssignment.is_active == True
                 ).first()
                 
@@ -99,10 +103,13 @@ def index():
         sims_in_device_assignment = len(device_assigned_phone_numbers)
         
         # الأرقام المتاحة = الأرقام بدون employee_id وليست في DeviceAssignment
-        available_sims_count = SimCard.query.filter(
-            SimCard.employee_id.is_(None),
-            ~SimCard.phone_number.in_(device_assigned_phone_numbers) if device_assigned_phone_numbers else True
-        ).count()
+        if device_assigned_phone_numbers:
+            available_sims_count = SimCard.query.filter(
+                SimCard.employee_id.is_(None),
+                ~SimCard.phone_number.in_(device_assigned_phone_numbers)
+            ).count()
+        else:
+            available_sims_count = SimCard.query.filter(SimCard.employee_id.is_(None)).count()
         
         stats = {
             'total_sims': total_sims,
