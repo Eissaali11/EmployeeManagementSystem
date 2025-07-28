@@ -118,27 +118,59 @@ def index():
         for device in available_devices:
             device.is_assigned = device.id in assigned_device_ids
         
-        # الأرقام المتاحة
-        available_sims_query = SimCard.query
+        # الأرقام المتاحة - استخدام ImportedPhoneNumber بدلاً من SimCard للاتساق
+        # جلب IDs الأرقام المربوطة حالياً من DeviceAssignment
+        assigned_sim_ids = db.session.query(DeviceAssignment.sim_card_id).filter(
+            DeviceAssignment.is_active == True,
+            DeviceAssignment.sim_card_id.isnot(None)
+        ).distinct().all()
+        assigned_sim_ids = [id[0] for id in assigned_sim_ids]
+        
+        available_sims_query = ImportedPhoneNumber.query
         if sim_status == 'available':
-            available_sims_query = available_sims_query.filter(SimCard.employee_id.is_(None))
+            # الأرقام غير المربوطة
+            if assigned_sim_ids:
+                available_sims_query = available_sims_query.filter(
+                    ~ImportedPhoneNumber.id.in_(assigned_sim_ids),
+                    ImportedPhoneNumber.employee_id.is_(None)
+                )
+            else:
+                available_sims_query = available_sims_query.filter(ImportedPhoneNumber.employee_id.is_(None))
         elif sim_status == 'assigned':
-            available_sims_query = available_sims_query.filter(SimCard.employee_id.isnot(None))
-        available_sims = available_sims_query.order_by(SimCard.phone_number).all()
+            # الأرقام المربوطة
+            if assigned_sim_ids:
+                available_sims_query = available_sims_query.filter(
+                    ImportedPhoneNumber.id.in_(assigned_sim_ids)
+                )
+            else:
+                available_sims_query = available_sims_query.filter(False)  # لا توجد أرقام مربوطة
+        else:
+            # عرض جميع الأرقام مع تمييز المربوطة
+            pass
+            
+        available_sims = available_sims_query.order_by(ImportedPhoneNumber.phone_number).all()
+        
+        # إضافة معلومة هل الرقم مربوط أم لا
+        for sim in available_sims:
+            sim.is_assigned = sim.id in assigned_sim_ids or sim.employee_id is not None
         
         # عمليات الربط النشطة
         active_assignments = DeviceAssignment.query.filter(
             DeviceAssignment.is_active == True
         ).order_by(DeviceAssignment.assignment_date.desc()).limit(10).all()
         
-        # إحصائيات محدثة تعتمد على DeviceAssignment
+        # إحصائيات محدثة تعتمد على DeviceAssignment و ImportedPhoneNumber
         stats = {
             'total_devices': MobileDevice.query.count(),
             'available_devices': MobileDevice.query.count() - len(assigned_device_ids),
             'assigned_devices': len(assigned_device_ids),
-            'total_sims': SimCard.query.count(),
-            'available_sims': SimCard.query.filter(SimCard.employee_id.is_(None)).count(),
-            'assigned_sims': SimCard.query.filter(SimCard.employee_id.isnot(None)).count(),
+            'total_sims': ImportedPhoneNumber.query.count(),
+            'available_sims': ImportedPhoneNumber.query.filter(
+                ImportedPhoneNumber.employee_id.is_(None)
+            ).count() - len(assigned_sim_ids),
+            'assigned_sims': len(assigned_sim_ids) + ImportedPhoneNumber.query.filter(
+                ImportedPhoneNumber.employee_id.isnot(None)
+            ).count(),
         }
         
         return render_template('device_assignment/index.html',

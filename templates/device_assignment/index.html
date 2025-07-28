@@ -4,30 +4,97 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --info-gradient: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        --warning-gradient: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        --danger-gradient: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        --dark-gradient: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-family: 'Cairo', 'Segoe UI', sans-serif;
+        direction: rtl;
+    }
+
     .stats-card {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        background: var(--success-gradient);
         color: white;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .stats-card:hover::before {
+        left: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
     }
     
     .assignment-card {
-        border: 1px solid #dee2e6;
-        border-radius: 15px;
-        padding: 20px;
-        margin-bottom: 20px;
+        background: white;
+        border: none;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .assignment-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary-gradient);
     }
     
     .assignment-card:hover {
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        transform: translateY(-2px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
     }
     
-    .device-status-available { color: #28a745; font-weight: bold; }
-    .device-status-assigned { color: #dc3545; font-weight: bold; }
+    .device-status-available { 
+        color: #28a745; 
+        font-weight: bold;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.85em;
+    }
+    
+    .device-status-assigned { 
+        color: #dc3545; 
+        font-weight: bold;
+        background: rgba(220, 53, 69, 0.1);
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.85em;
+    }
     
     .search-filters {
         background: #f8f9fa;
