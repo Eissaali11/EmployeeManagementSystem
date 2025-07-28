@@ -203,6 +203,7 @@ class Document(db.Model):
     document_number = db.Column(db.String(100), nullable=False)
     issue_date = db.Column(db.Date, nullable=True)  # تم تعديلها للسماح بقيم NULL
     expiry_date = db.Column(db.Date, nullable=True)  # تم تعديلها للسماح بقيم NULL
+    file_path = db.Column(db.String(255), nullable=True)  # مسار الملف المرفق
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

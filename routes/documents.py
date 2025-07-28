@@ -42,7 +42,7 @@ def delete_document(document_id):
             document_type = document.document_type
             
             # حذف الملف من الخادم إذا كان موجوداً
-            if document.file_path:
+            if hasattr(document, 'file_path') and document.file_path:
                 import os
                 file_path = os.path.join('static', document.file_path)
                 if os.path.exists(file_path):
