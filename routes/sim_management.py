@@ -309,8 +309,8 @@ def assign(sim_id):
             current_app.logger.error(f"Error assigning SIM card: {str(e)}")
             flash('حدث خطأ أثناء ربط الرقم', 'danger')
     
-    # جلب جميع الموظفين مع معلومات أرقام SIM المرتبطة
-    employees = Employee.query.order_by(Employee.name).all()
+    # جلب الموظفين النشطين فقط مع معلومات أرقام SIM المرتبطة
+    employees = Employee.query.filter_by(status='active').order_by(Employee.name).all()
     departments = Department.query.all()
     
     # إضافة معلومات أرقام SIM للموظفين

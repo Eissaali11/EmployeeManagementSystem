@@ -243,6 +243,12 @@
                                    placeholder="البحث بالاسم أو رقم الموظف...">
                         </div>
 
+                        <!-- تنبيه للموظفين النشطين فقط -->
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>ملاحظة:</strong> يظهر فقط الموظفين النشطين المتاحين للربط. الموظفين غير النشطين أو في إجازة لا يظهرون في القائمة.
+                        </div>
+
                         <!-- قائمة الموظفين -->
                         <div id="employeesList" class="mb-4" style="max-height: 400px; overflow-y: auto;">
                             {% for employee in employees %}
