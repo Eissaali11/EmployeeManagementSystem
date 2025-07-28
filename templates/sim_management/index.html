@@ -141,6 +141,34 @@
         box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         color: white;
     }
+
+    /* إصلاح مشكلة النوافذ المنبثقة */
+    .modal-backdrop {
+        z-index: 1040 !important;
+    }
+
+    .modal {
+        z-index: 1050 !important;
+    }
+
+    .modal-dialog {
+        z-index: 1060 !important;
+    }
+
+    /* التأكد من ظهور المحتوى */
+    .modal.show {
+        display: block !important;
+    }
+
+    .modal.show .modal-dialog {
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    /* إصلاح خلفية Modal */
+    .modal-backdrop.show {
+        opacity: 0.5 !important;
+    }
     
     .carrier-badge {
         padding: 5px 10px;
@@ -697,6 +725,32 @@ $(document).ready(function() {
 
     // إخفاء الزر في البداية
     $('.back-to-top').hide();
+
+    // إصلاح مشكلة النوافذ المنبثقة
+    $(document).on('click', '[data-bs-toggle="modal"]', function(e) {
+        e.preventDefault();
+        const targetModal = $($(this).data('bs-target'));
+        
+        // إزالة أي modal مفتوح
+        $('.modal').modal('hide');
+        
+        // انتظار قصير ثم فتح النافذة الجديدة
+        setTimeout(function() {
+            targetModal.modal('show');
+        }, 150);
+    });
+
+    // التأكد من إزالة backdrop عند إغلاق النافذة
+    $(document).on('hidden.bs.modal', '.modal', function() {
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+        $('body').css('padding-right', '');
+    });
+
+    // إصلاح مشكلة التمرير
+    $(document).on('shown.bs.modal', '.modal', function() {
+        $('body').addClass('modal-open');
+    });
 });
 </script>
 {% endblock %}
