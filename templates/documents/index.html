@@ -304,6 +304,10 @@
         background: var(--primary-gradient);
     }
 
+    .btn-sm-enhanced.btn-danger {
+        background: var(--danger-gradient);
+    }
+
     /* Animations */
     @keyframes slideDown {
         from {
@@ -632,6 +636,12 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     {% endif %}
+                                    <button type="button" 
+                                            class="btn btn-sm-enhanced btn-danger" 
+                                            title="حذف الوثيقة"
+                                            onclick="confirmDelete({{ document.id }}, '{{ document.document_type_display or document.document_type }}', '{{ document.employee.name }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -702,6 +712,29 @@
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+        }
+    }
+
+    // دالة تأكيد حذف الوثيقة
+    function confirmDelete(documentId, documentType, employeeName) {
+        if (confirm(`هل أنت متأكد من حذف وثيقة "${documentType}" للموظف "${employeeName}"؟\n\nسيتم حذف الوثيقة نهائياً ولا يمكن التراجع عن هذا الإجراء.`)) {
+            // إنشاء نموذج مخفي لإرسال طلب الحذف
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/documents/delete/${documentId}`;
+            
+            // إضافة CSRF token إذا كان متاحاً
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = csrfToken.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
         }
     });
 
