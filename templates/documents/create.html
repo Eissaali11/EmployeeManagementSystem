@@ -37,8 +37,8 @@
                                         {% endfor %}
                                     </select>
                                 </div>
-                                <select class="form-select" id="employee_id" name="employee_id">
-                                    <option value="">اختر الموظف</option>
+                                <select class="form-select select2-employee" id="employee_id" name="employee_id">
+                                    <option value="">ابحث واختر الموظف...</option>
                                     {% for employee in employees %}
                                     <option value="{{ employee.id }}" 
                                             data-national-id="{{ employee.national_id or '' }}" 
@@ -1656,3 +1656,7 @@ const empSelect       = document.getElementById('employee_id');
     });
 </script>
 {% endblock %}
+
+
+<!-- ملف JavaScript لتحسين Select2 لحقل اختيار الموظفين -->
+<script src="{{ url_for('static', filename='js/employee_select2.js') }}"></script>
