@@ -70,9 +70,25 @@ def index():
         # ترتيب البيانات
         sim_cards = query.order_by(SimCard.id.desc()).all()
         
-        # إضافة معلومة هل الرقم مربوط في DeviceAssignment
+        # إضافة معلومة هل الرقم مربوط في DeviceAssignment وجلب اسم الموظف
         for sim in sim_cards:
             sim.is_device_assigned = sim.phone_number in device_assigned_phone_numbers
+            sim.device_employee_name = None
+            
+            # البحث عن الموظف المربوط بالجهاز إذا كان الرقم مربوط بجهاز
+            if sim.is_device_assigned:
+                # البحث عن DeviceAssignment المرتبط بهذا الرقم
+                device_assignment = DeviceAssignment.query.join(
+                    ImportedPhoneNumber, DeviceAssignment.sim_card_id == ImportedPhoneNumber.id
+                ).filter(
+                    ImportedPhoneNumber.phone_number == sim.phone_number,
+                    DeviceAssignment.is_active == True
+                ).first()
+                
+                if device_assignment and device_assignment.employee_id:
+                    employee = Employee.query.get(device_assignment.employee_id)
+                    if employee:
+                        sim.device_employee_name = employee.name
         
         # الحصول على قائمة الأقسام للفلترة
         departments = Department.query.order_by(Department.name).all()

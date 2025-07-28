@@ -563,9 +563,23 @@
                                     </td>
                                     <td class="text-center">
                                         {% if sim.employee %}
+                                            <!-- مربوط بموظف مباشرة -->
                                             <div class="employee-info">
-                                                <div class="employee-name">{{ sim.employee.name }}</div>
+                                                <div class="employee-name">
+                                                    <i class="fas fa-user text-success me-1"></i>
+                                                    {{ sim.employee.name }}
+                                                </div>
                                                 <div class="employee-id">{{ sim.employee.employee_id }}</div>
+                                                <small class="text-muted">مربوط مباشرة</small>
+                                            </div>
+                                        {% elif sim.device_employee_name %}
+                                            <!-- مربوط بجهاز موظف -->
+                                            <div class="employee-info">
+                                                <div class="employee-name">
+                                                    <i class="fas fa-mobile-alt text-warning me-1"></i>
+                                                    {{ sim.device_employee_name }}
+                                                </div>
+                                                <small class="text-muted">مربوط بجهاز</small>
                                             </div>
                                         {% else %}
                                             <span class="text-muted">غير مربوط</span>
