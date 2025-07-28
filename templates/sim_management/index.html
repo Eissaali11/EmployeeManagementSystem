@@ -596,12 +596,11 @@
                                             
                                             {% if not sim.employee_id and not sim.is_device_assigned %}
                                                 <!-- زر ربط بموظف -->
-                                                <button type="button" class="btn btn-success btn-sm" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#assignModal{{ sim.id }}"
-                                                        title="ربط بموظف">
+                                                <a href="{{ url_for('sim_management.assign', sim_id=sim.id) }}" 
+                                                   class="btn btn-success btn-sm" 
+                                                   title="ربط بموظف">
                                                     <i class="fas fa-link"></i>
-                                                </button>
+                                                </a>
                                                 
                                                 <!-- زر حذف -->
                                                 <button type="button" class="btn btn-danger btn-sm" 
@@ -762,38 +761,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Modal لربط بموظف -->
-                                {% if not sim.employee_id and not sim.is_device_assigned %}
-                                <div class="modal fade" id="assignModal{{ sim.id }}" tabindex="-1">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">ربط الرقم {{ sim.phone_number }} بموظف</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
-                                            <form method="POST" action="{{ url_for('sim_management.assign_to_employee', sim_id=sim.id) }}">
-                                                <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">اختر الموظف</label>
-                                                        <select name="employee_id" class="form-select" required>
-                                                            <option value="">-- اختر موظف --</option>
-                                                            {% for employee in employees %}
-                                                                <option value="{{ employee.id }}">
-                                                                    {{ employee.name }} ({{ employee.employee_id }})
-                                                                </option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                                                    <button type="submit" class="btn btn-success">ربط</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
+
                                 
                                 {% endfor %}
                             </tbody>

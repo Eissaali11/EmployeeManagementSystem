@@ -251,6 +251,64 @@ def edit(sim_id):
     
     return render_template('sim_management/edit.html', sim_card=sim_card)
 
+@sim_management_bp.route('/assign/<int:sim_id>', methods=['GET', 'POST'])
+@login_required
+def assign(sim_id):
+    """صفحة ربط رقم SIM بموظف"""
+    sim_card = SimCard.query.get_or_404(sim_id)
+    
+    # التحقق من أن الرقم متاح للربط
+    if sim_card.employee_id:
+        flash('هذا الرقم مربوط بموظف بالفعل', 'warning')
+        return redirect(url_for('sim_management.index'))
+    
+    if request.method == 'POST':
+        try:
+            employee_id = request.form.get('employee_id')
+            
+            if not employee_id:
+                flash('يرجى اختيار موظف', 'danger')
+                return render_template('sim_management/assign.html', 
+                                     sim_card=sim_card, 
+                                     employees=Employee.query.all())
+            
+            employee = Employee.query.get(employee_id)
+            if not employee:
+                flash('الموظف المختار غير موجود', 'danger')
+                return render_template('sim_management/assign.html', 
+                                     sim_card=sim_card, 
+                                     employees=Employee.query.all())
+            
+            # ربط الرقم بالموظف
+            sim_card.employee_id = employee_id
+            sim_card.assignment_date = datetime.now()
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity(
+                action="assign",
+                entity_type="SIM",
+                entity_id=sim_card.id,
+                details=f"ربط رقم SIM {sim_card.phone_number} بالموظف {employee.name}"
+            )
+            
+            flash(f'تم ربط الرقم {sim_card.phone_number} بالموظف {employee.name} بنجاح', 'success')
+            return redirect(url_for('sim_management.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error assigning SIM card: {str(e)}")
+            flash('حدث خطأ أثناء ربط الرقم', 'danger')
+    
+    # جلب جميع الموظفين للعرض
+    employees = Employee.query.order_by(Employee.name).all()
+    departments = Department.query.all()
+    
+    return render_template('sim_management/assign.html', 
+                         sim_card=sim_card, 
+                         employees=employees,
+                         departments=departments)
+
 @sim_management_bp.route('/delete/<int:sim_id>', methods=['POST'])
 @login_required
 def delete(sim_id):
