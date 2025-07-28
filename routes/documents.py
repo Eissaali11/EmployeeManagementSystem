@@ -58,10 +58,10 @@ def delete_document(document_id):
             
             # تسجيل العملية في سجل النشاط
             log_activity(
-                user_id=current_user.id,
                 action='delete',
-                model_name='document',
-                description=f'تم حذف وثيقة {document_type} للموظف {employee_name}'
+                entity_type='document',
+                entity_id=document_id,
+                details=f'تم حذف وثيقة {document_type} للموظف {employee_name}'
             )
             
             flash(f'تم حذف وثيقة {document_type} للموظف {employee_name} بنجاح', 'success')
