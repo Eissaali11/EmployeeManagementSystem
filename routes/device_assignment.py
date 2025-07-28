@@ -122,24 +122,28 @@ def index():
         # الأرقام المتاحة - استخدام SimCard من نظام إدارة بطاقات SIM فقط
         from models import SimCard
         
-        # جلب الأرقام المتاحة من نظام إدارة بطاقات SIM فقط
-        available_sims_query = SimCard.query.filter(
-            SimCard.employee_id.is_(None)  # الأرقام غير المربوطة في نظام SIM
-        )
+        # فلترة الأرقام حسب الحالة
+        if sim_status == 'assigned':
+            # عرض الأرقام المربوطة من نظام SIM
+            available_sims_query = SimCard.query.filter(
+                SimCard.employee_id.isnot(None)
+            )
+        elif sim_status == 'available':
+            # عرض الأرقام المتاحة (غير مربوطة) فقط
+            available_sims_query = SimCard.query.filter(
+                SimCard.employee_id.is_(None)
+            )
+        else:
+            # الافتراضي: عرض الأرقام المتاحة فقط (كما في صفحة إدارة SIM)
+            available_sims_query = SimCard.query.filter(
+                SimCard.employee_id.is_(None)
+            )
         
         # فلترة حسب رقم الهاتف
         if phone_search:
             available_sims_query = available_sims_query.filter(
                 SimCard.phone_number.contains(phone_search)
             )
-        
-        # فلترة حسب الحالة
-        if sim_status == 'assigned':
-            # عرض الأرقام المربوطة من نظام SIM
-            available_sims_query = SimCard.query.filter(
-                SimCard.employee_id.isnot(None)
-            )
-        # else: الافتراضي هو الأرقام المتاحة (غير مربوطة) وهو مطبق بالفعل
             
         available_sims = available_sims_query.order_by(SimCard.phone_number).all()
         
