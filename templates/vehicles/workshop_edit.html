@@ -265,10 +265,26 @@
         const saveButton = document.getElementById('save-button');
         
         // عند تقديم النموذج
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(event) {
+            console.log('تم إرسال النموذج...');
+            
+            // التحقق من الحقول المطلوبة
+            const entryDate = document.getElementById('entry_date').value;
+            const reason = document.getElementById('reason').value;
+            const description = document.getElementById('description').value;
+            const repairStatus = document.getElementById('repair_status').value;
+            
+            if (!entryDate || !reason || !description || !repairStatus) {
+                event.preventDefault();
+                alert('يرجى تعبئة جميع الحقول المطلوبة');
+                return false;
+            }
+            
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
+            
+            console.log('تم قبول النموذج وإرساله...');
         });
     });
 </script>
