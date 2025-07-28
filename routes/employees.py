@@ -1027,29 +1027,44 @@ def update_status(id):
                 try:
                     # استيراد SimCard model
                     from models import SimCard
+                    from flask import current_app
+                    
+                    current_app.logger.info(f"Checking SIM cards for employee {employee.id} ({employee.name}) who became inactive")
                     
                     # البحث عن جميع أرقام SIM المرتبطة بهذا الموظف
                     sim_cards = SimCard.query.filter_by(employee_id=employee.id).all()
                     
+                    current_app.logger.info(f"Found {len(sim_cards)} SIM cards linked to employee {employee.id}")
+                    
                     if sim_cards:
                         for sim_card in sim_cards:
+                            current_app.logger.info(f"Unlinking SIM card {sim_card.phone_number} (ID: {sim_card.id}) from employee {employee.id}")
+                            
                             # فك الربط
                             sim_card.employee_id = None
-                            sim_card.assignment_date = None
+                            sim_card.assigned_date = None
                             
                             # تسجيل عملية فك الربط
-                            from utils.audit_logger import log_activity
-                            log_activity(
-                                action="unassign_auto",
-                                entity_type="SIM",
-                                entity_id=sim_card.id,
-                                details=f"فك ربط رقم SIM {sim_card.phone_number} تلقائياً بسبب تغيير حالة الموظف {employee.name} إلى غير نشط"
-                            )
+                            try:
+                                from utils.audit_logger import log_activity
+                                log_activity(
+                                    action="unassign_auto",
+                                    entity_type="SIM",
+                                    entity_id=sim_card.id,
+                                    details=f"فك ربط رقم SIM {sim_card.phone_number} تلقائياً بسبب تغيير حالة الموظف {employee.name} إلى غير نشط"
+                                )
+                            except Exception as audit_e:
+                                current_app.logger.error(f"Failed to log audit: {str(audit_e)}")
                         
+                        # حفظ التغييرات في قاعدة البيانات
+                        db.session.commit()
                         flash(f'تم فك ربط {len(sim_cards)} رقم SIM مرتبط بالموظف تلقائياً', 'info')
+                        current_app.logger.info(f"Successfully unlinked {len(sim_cards)} SIM cards from employee {employee.id}")
                 
                 except Exception as e:
                     current_app.logger.error(f"Error unassigning SIM cards for inactive employee: {str(e)}")
+                    db.session.rollback()
+                    flash('تحذير: حدث خطأ في فك ربط أرقام SIM. يرجى فحص الأرقام يدوياً', 'warning')
                     # لا نتوقف عن تحديث حالة الموظف حتى لو فشل فك ربط الأرقام
             
             # توثيق التغيير في السجل
