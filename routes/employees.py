@@ -1022,6 +1022,36 @@ def update_status(id):
             
             note = request.form.get('note', '')
             
+            # إذا تم تغيير الحالة إلى غير نشط، فك ربط جميع أرقام SIM
+            if new_status == 'inactive' and old_status != 'inactive':
+                try:
+                    # استيراد SimCard model
+                    from models import SimCard
+                    
+                    # البحث عن جميع أرقام SIM المرتبطة بهذا الموظف
+                    sim_cards = SimCard.query.filter_by(employee_id=employee.id).all()
+                    
+                    if sim_cards:
+                        for sim_card in sim_cards:
+                            # فك الربط
+                            sim_card.employee_id = None
+                            sim_card.assignment_date = None
+                            
+                            # تسجيل عملية فك الربط
+                            from utils.audit_logger import log_activity
+                            log_activity(
+                                action="unassign_auto",
+                                entity_type="SIM",
+                                entity_id=sim_card.id,
+                                details=f"فك ربط رقم SIM {sim_card.phone_number} تلقائياً بسبب تغيير حالة الموظف {employee.name} إلى غير نشط"
+                            )
+                        
+                        flash(f'تم فك ربط {len(sim_cards)} رقم SIM مرتبط بالموظف تلقائياً', 'info')
+                
+                except Exception as e:
+                    current_app.logger.error(f"Error unassigning SIM cards for inactive employee: {str(e)}")
+                    # لا نتوقف عن تحديث حالة الموظف حتى لو فشل فك ربط الأرقام
+            
             # توثيق التغيير في السجل
             status_names = {
                 'active': 'نشط',
