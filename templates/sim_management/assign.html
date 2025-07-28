@@ -105,6 +105,18 @@
         background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.1) 100%);
     }
 
+    .employee-card.has-sim {
+        border-color: #ffc107;
+        background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .employee-card.has-sim:hover {
+        transform: none;
+        box-shadow: 0 5px 15px rgba(255, 193, 7, 0.2);
+    }
+
     .employee-name {
         font-weight: 600;
         color: #495057;
@@ -197,16 +209,31 @@
                     <form method="POST" id="assignForm">
                         <!-- فلترة حسب القسم -->
                         <div class="department-filter">
-                            <h6 class="mb-3">
-                                <i class="fas fa-filter me-2"></i>
-                                فلترة حسب القسم
-                            </h6>
-                            <select class="form-select" id="departmentFilter">
-                                <option value="">جميع الأقسام</option>
-                                {% for dept in departments %}
-                                <option value="{{ dept.id }}">{{ dept.name }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-filter me-2"></i>
+                                        فلترة حسب القسم
+                                    </h6>
+                                    <select class="form-select" id="departmentFilter">
+                                        <option value="">جميع الأقسام</option>
+                                        {% for dept in departments %}
+                                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-sim-card me-2"></i>
+                                        حالة الربط
+                                    </h6>
+                                    <select class="form-select" id="simStatusFilter">
+                                        <option value="all">جميع الموظفين</option>
+                                        <option value="available" selected>المتاحون للربط فقط</option>
+                                        <option value="assigned">المربوطون بأرقام</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- بحث الموظفين -->
@@ -219,23 +246,48 @@
                         <!-- قائمة الموظفين -->
                         <div id="employeesList" class="mb-4" style="max-height: 400px; overflow-y: auto;">
                             {% for employee in employees %}
-                            <div class="employee-card" data-employee-id="{{ employee.id }}" 
+                            <div class="employee-card {% if employee.current_sim %}has-sim{% endif %}" 
+                                 data-employee-id="{{ employee.id }}" 
                                  data-employee-name="{{ employee.name }}" 
                                  data-employee-number="{{ employee.employee_id or '' }}"
+                                 data-has-sim="{{ 'true' if employee.current_sim else 'false' }}"
                                  data-departments="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}">
-                                <div class="employee-name">{{ employee.name }}</div>
-                                <div class="employee-details">
-                                    <i class="fas fa-id-badge me-1"></i>
-                                    رقم الموظف: {{ employee.employee_id or 'غير محدد' }}
-                                    
-                                    {% if employee.departments %}
-                                        <br>
-                                        <i class="fas fa-building me-1"></i>
-                                        الأقسام:
-                                        {% for dept in employee.departments %}
-                                            <span class="badge bg-info department-badge">{{ dept.name }}</span>
-                                        {% endfor %}
-                                    {% endif %}
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="employee-name">{{ employee.name }}</div>
+                                        <div class="employee-details">
+                                            <i class="fas fa-id-badge me-1"></i>
+                                            رقم الموظف: {{ employee.employee_id or 'غير محدد' }}
+                                            
+                                            {% if employee.departments %}
+                                                <br>
+                                                <i class="fas fa-building me-1"></i>
+                                                الأقسام:
+                                                {% for dept in employee.departments %}
+                                                    <span class="badge bg-info department-badge">{{ dept.name }}</span>
+                                                {% endfor %}
+                                            {% endif %}
+                                            
+                                            {% if employee.current_sim %}
+                                                <br>
+                                                <i class="fas fa-sim-card me-1 text-warning"></i>
+                                                <span class="text-warning">مربوط برقم: {{ employee.current_sim.phone_number }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="status-indicators">
+                                        {% if employee.current_sim %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-sim-card me-1"></i>
+                                                مربوط
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check me-1"></i>
+                                                متاح
+                                            </span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% endfor %}
@@ -285,6 +337,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // اختيار موظف
     employeeCards.forEach(card => {
         card.addEventListener('click', function() {
+            // التحقق من أن الموظف ليس مربوط برقم آخر
+            const hasSim = this.dataset.hasSim === 'true';
+            
+            if (hasSim) {
+                alert('هذا الموظف مربوط برقم آخر بالفعل. لا يمكن ربط موظف بأكثر من رقم واحد.');
+                return;
+            }
+            
             // إزالة التحديد من جميع البطاقات
             employeeCards.forEach(c => c.classList.remove('selected'));
             
@@ -312,9 +372,16 @@ document.addEventListener('DOMContentLoaded', function() {
         filterEmployees();
     });
     
+    // فلترة حسب حالة الربط
+    const simStatusFilter = document.getElementById('simStatusFilter');
+    simStatusFilter.addEventListener('change', function() {
+        filterEmployees();
+    });
+    
     function filterEmployees() {
         const departmentId = departmentFilter.value;
         const searchTerm = employeeSearch.value.toLowerCase();
+        const simStatus = simStatusFilter.value;
         
         employeeCards.forEach(card => {
             let show = true;
@@ -336,9 +403,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            // فلترة حسب حالة الربط
+            const hasSim = card.dataset.hasSim === 'true';
+            if (simStatus === 'available' && hasSim) {
+                show = false;
+            } else if (simStatus === 'assigned' && !hasSim) {
+                show = false;
+            }
+            
             card.style.display = show ? 'block' : 'none';
         });
     }
+    
+    // تطبيق الفلتر الافتراضي عند تحميل الصفحة
+    filterEmployees();
     
     // التحقق من النموذج
     document.getElementById('assignForm').addEventListener('submit', function(e) {

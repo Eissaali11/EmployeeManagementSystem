@@ -279,6 +279,15 @@ def assign(sim_id):
                                      sim_card=sim_card, 
                                      employees=Employee.query.all())
             
+            # التحقق من أن الموظف ليس مربوط برقم آخر
+            existing_sim = SimCard.query.filter_by(employee_id=employee_id).first()
+            if existing_sim:
+                flash(f'الموظف {employee.name} مربوط بالفعل برقم {existing_sim.phone_number}. لا يمكن ربط موظف بأكثر من رقم واحد', 'warning')
+                return render_template('sim_management/assign.html', 
+                                     sim_card=sim_card, 
+                                     employees=Employee.query.all(),
+                                     departments=Department.query.all())
+            
             # ربط الرقم بالموظف
             sim_card.employee_id = employee_id
             sim_card.assignment_date = datetime.now()
@@ -300,9 +309,13 @@ def assign(sim_id):
             current_app.logger.error(f"Error assigning SIM card: {str(e)}")
             flash('حدث خطأ أثناء ربط الرقم', 'danger')
     
-    # جلب جميع الموظفين للعرض
+    # جلب جميع الموظفين مع معلومات أرقام SIM المرتبطة
     employees = Employee.query.order_by(Employee.name).all()
     departments = Department.query.all()
+    
+    # إضافة معلومات أرقام SIM للموظفين
+    for employee in employees:
+        employee.current_sim = SimCard.query.filter_by(employee_id=employee.id).first()
     
     return render_template('sim_management/assign.html', 
                          sim_card=sim_card, 
