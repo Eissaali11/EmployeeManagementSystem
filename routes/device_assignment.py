@@ -74,6 +74,7 @@ def index():
         device_status = request.args.get('device_status', '')
         sim_status = request.args.get('sim_status', '')
         employee_search = request.args.get('employee_search', '')
+        phone_search = request.args.get('phone_search', '')
         
         # الحصول على البيانات الأساسية
         departments = Department.query.order_by(Department.name).all()
@@ -127,6 +128,13 @@ def index():
         assigned_sim_ids = [id[0] for id in assigned_sim_ids]
         
         available_sims_query = ImportedPhoneNumber.query
+        
+        # فلترة حسب رقم الهاتف
+        if phone_search:
+            available_sims_query = available_sims_query.filter(
+                ImportedPhoneNumber.phone_number.contains(phone_search)
+            )
+        
         if sim_status == 'available':
             # الأرقام غير المربوطة
             if assigned_sim_ids:
@@ -183,7 +191,8 @@ def index():
                              department_filter=department_filter,
                              device_status=device_status,
                              sim_status=sim_status,
-                             employee_search=employee_search)
+                             employee_search=employee_search,
+                             phone_search=phone_search)
     
     except Exception as e:
         current_app.logger.error(f"Error in device_assignment index: {str(e)}")
@@ -198,7 +207,8 @@ def index():
                              department_filter='',
                              device_status='',
                              sim_status='',
-                             employee_search='')
+                             employee_search='',
+                             phone_search='')
 
 @device_assignment_bp.route('/assign', methods=['POST'])
 @login_required

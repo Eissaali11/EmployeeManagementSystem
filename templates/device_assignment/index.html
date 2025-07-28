@@ -97,10 +97,46 @@
     }
     
     .search-filters {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    
+    .search-filters h5 {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: -10px -10px 20px -10px;
+        text-align: center;
+    }
+    
+    .search-filters .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    
+    .search-filters .form-control,
+    .search-filters .form-select {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .search-filters .form-control:focus,
+    .search-filters .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .search-filters .btn {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
     }
     
     .assignment-form {
@@ -286,6 +322,101 @@
                         </a>
                     </div>
                 </div>
+            </div>
+            
+            <!-- فلاتر البحث -->
+            <div class="search-filters mb-4">
+                <h5 class="mb-3">
+                    <i class="fas fa-filter me-2"></i>
+                    فلاتر البحث والعرض
+                </h5>
+                
+                <form method="GET" action="{{ url_for('device_assignment.index') }}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">القسم</label>
+                            <select name="department_id" class="form-select">
+                                <option value="">جميع الأقسام</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if department_filter == dept.id|string %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">حالة الأجهزة</label>
+                            <select name="device_status" class="form-select">
+                                <option value="">جميع الأجهزة</option>
+                                <option value="available" {% if device_status == 'available' %}selected{% endif %}>متاحة</option>
+                                <option value="assigned" {% if device_status == 'assigned' %}selected{% endif %}>مربوطة</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">حالة أرقام SIM</label>
+                            <select name="sim_status" class="form-select">
+                                <option value="">جميع الأرقام</option>
+                                <option value="available" {% if sim_status == 'available' %}selected{% endif %}>متاحة</option>
+                                <option value="assigned" {% if sim_status == 'assigned' %}selected{% endif %}>مربوطة</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">البحث برقم الهاتف</label>
+                            <input type="text" name="phone_search" class="form-control" 
+                                   placeholder="أدخل رقم الهاتف أو جزء منه..." 
+                                   value="{{ phone_search }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label class="form-label">البحث في الموظفين</label>
+                            <input type="text" name="employee_search" class="form-control" 
+                                   placeholder="اسم الموظف أو رقم الموظف..." 
+                                   value="{{ employee_search }}">
+                        </div>
+                        
+                        <div class="col-md-9 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>بحث وفلترة
+                            </button>
+                            
+                            <a href="{{ url_for('device_assignment.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>مسح الفلاتر
+                            </a>
+                            
+                            <!-- عرض الفلاتر النشطة -->
+                            {% set active_filters = [] %}
+                            {% if department_filter %}
+                                {% set _ = active_filters.append('القسم: ' + departments|selectattr('id', 'equalto', department_filter|int)|map(attribute='name')|first) %}
+                            {% endif %}
+                            {% if device_status %}
+                                {% set _ = active_filters.append('الأجهزة: ' + ('متاحة' if device_status == 'available' else 'مربوطة')) %}
+                            {% endif %}
+                            {% if sim_status %}
+                                {% set _ = active_filters.append('SIM: ' + ('متاحة' if sim_status == 'available' else 'مربوطة')) %}
+                            {% endif %}
+                            {% if phone_search %}
+                                {% set _ = active_filters.append('رقم الهاتف: ' + phone_search) %}
+                            {% endif %}
+                            {% if employee_search %}
+                                {% set _ = active_filters.append('الموظف: ' + employee_search) %}
+                            {% endif %}
+                            
+                            {% if active_filters %}
+                            <div class="ms-3">
+                                <small class="text-muted">الفلاتر النشطة:</small>
+                                {% for filter in active_filters %}
+                                <span class="badge bg-info me-1">{{ filter }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
             </div>
             
             <!-- نموذج الربط الجديد -->
