@@ -461,25 +461,41 @@ def export_excel():
         temp_filename = temp_file.name
         temp_file.close()
         
-        # كتابة البيانات إلى Excel
-        with pd.ExcelWriter(temp_filename, engine='openpyxl') as writer:
-            df.to_excel(writer, sheet_name='أرقام SIM', index=False, encoding='utf-8')
-            
-            # تنسيق الورقة
-            worksheet = writer.sheets['أرقام SIM']
-            
-            # تعديل عرض الأعمدة
-            for column in worksheet.columns:
-                max_length = 0
-                column_letter = column[0].column_letter
-                for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except:
-                        pass
-                adjusted_width = min(max_length + 2, 50)
-                worksheet.column_dimensions[column_letter].width = adjusted_width
+        # كتابة البيانات إلى Excel بطريقة محسنة
+        try:
+            with pd.ExcelWriter(temp_filename, engine='openpyxl') as writer:
+                # كتابة البيانات إلى ورقة SIM_Cards
+                df.to_excel(writer, sheet_name='SIM_Cards', index=False)
+                
+                # الحصول على ورقة العمل وتنسيقها
+                workbook = writer.book
+                worksheet = writer.sheets['SIM_Cards']
+                
+                # تعديل عرض الأعمدة
+                for idx, column in enumerate(df.columns, 1):
+                    # حساب أقصى طول للعمود
+                    max_length = max(
+                        len(str(column)),  # طول عنوان العمود
+                        df[column].astype(str).str.len().max() if not df.empty else 0  # أقصى طول للبيانات
+                    )
+                    # تعيين عرض العمود مع حد أقصى
+                    adjusted_width = min(max_length + 2, 50)
+                    worksheet.column_dimensions[chr(64 + idx)].width = adjusted_width
+                
+                # تنسيق الرأس
+                from openpyxl.styles import Font, PatternFill, Alignment
+                header_font = Font(bold=True, color="FFFFFF")
+                header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                header_alignment = Alignment(horizontal="center", vertical="center")
+                
+                # تطبيق التنسيق على الصف الأول (الرأس)
+                for cell in worksheet[1]:
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = header_alignment
+        except Exception as excel_error:
+            # في حالة فشل التنسيق، نحفظ الملف بشكل بسيط
+            df.to_excel(temp_filename, index=False, sheet_name='SIM_Cards')
         
         # تسجيل العملية
         log_activity(
