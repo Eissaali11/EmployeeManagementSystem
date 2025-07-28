@@ -9,6 +9,7 @@ from flask import send_file
 import os
 import tempfile
 from werkzeug.utils import secure_filename
+from sqlalchemy import or_
 
 sim_management_bp = Blueprint('sim_management', __name__)
 
@@ -461,41 +462,23 @@ def export_excel():
         temp_filename = temp_file.name
         temp_file.close()
         
-        # كتابة البيانات إلى Excel بطريقة محسنة
+        # كتابة البيانات إلى Excel بشكل مبسط وآمن
         try:
-            with pd.ExcelWriter(temp_filename, engine='openpyxl') as writer:
-                # كتابة البيانات إلى ورقة SIM_Cards
-                df.to_excel(writer, sheet_name='SIM_Cards', index=False)
+            # حفظ بسيط أولاً
+            df.to_excel(temp_filename, index=False, sheet_name='SIM_Cards', engine='openpyxl')
+            
+            # التحقق من أن الملف تم إنشاؤه بنجاح
+            if not os.path.exists(temp_filename) or os.path.getsize(temp_filename) == 0:
+                raise Exception("فشل في إنشاء الملف")
                 
-                # الحصول على ورقة العمل وتنسيقها
-                workbook = writer.book
-                worksheet = writer.sheets['SIM_Cards']
-                
-                # تعديل عرض الأعمدة
-                for idx, column in enumerate(df.columns, 1):
-                    # حساب أقصى طول للعمود
-                    max_length = max(
-                        len(str(column)),  # طول عنوان العمود
-                        df[column].astype(str).str.len().max() if not df.empty else 0  # أقصى طول للبيانات
-                    )
-                    # تعيين عرض العمود مع حد أقصى
-                    adjusted_width = min(max_length + 2, 50)
-                    worksheet.column_dimensions[chr(64 + idx)].width = adjusted_width
-                
-                # تنسيق الرأس
-                from openpyxl.styles import Font, PatternFill, Alignment
-                header_font = Font(bold=True, color="FFFFFF")
-                header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-                header_alignment = Alignment(horizontal="center", vertical="center")
-                
-                # تطبيق التنسيق على الصف الأول (الرأس)
-                for cell in worksheet[1]:
-                    cell.font = header_font
-                    cell.fill = header_fill
-                    cell.alignment = header_alignment
+            current_app.logger.info(f"تم إنشاء ملف Excel بحجم: {os.path.getsize(temp_filename)} بايت")
+            
         except Exception as excel_error:
-            # في حالة فشل التنسيق، نحفظ الملف بشكل بسيط
-            df.to_excel(temp_filename, index=False, sheet_name='SIM_Cards')
+            current_app.logger.error(f"خطأ في كتابة Excel: {str(excel_error)}")
+            # محاولة أخيرة مع CSV
+            csv_temp = temp_filename.replace('.xlsx', '.csv')
+            df.to_csv(csv_temp, index=False, encoding='utf-8-sig')
+            temp_filename = csv_temp
         
         # تسجيل العملية
         log_activity(
@@ -504,13 +487,46 @@ def export_excel():
             details=f"تصدير {len(data)} رقم SIM إلى Excel"
         )
         
-        # إرسال الملف
-        return send_file(
-            temp_filename,
-            as_attachment=True,
-            download_name=f'sim_cards_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}{"_filtered" if search or carrier_filter or status_filter or employee_filter else ""}.xlsx',
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
+        # تحديد نوع الملف ومحاولة التحميل الآمن
+        is_csv = temp_filename.endswith('.csv')
+        file_extension = '.csv' if is_csv else '.xlsx'
+        download_name = f'sim_cards_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}{"_filtered" if search or carrier_filter or status_filter or employee_filter else ""}{file_extension}'
+        mimetype = 'text/csv' if is_csv else 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        
+        try:
+            # إرسال الملف
+            response = send_file(
+                temp_filename,
+                as_attachment=True,
+                download_name=download_name,
+                mimetype=mimetype
+            )
+            
+            # تنظيف الملف المؤقت بعد الإرسال
+            def cleanup_temp_file():
+                try:
+                    if os.path.exists(temp_filename):
+                        os.unlink(temp_filename)
+                except:
+                    pass
+            
+            # تسجيل نجاح العملية
+            current_app.logger.info(f"تم تصدير {len(data)} سجل SIM بنجاح كـ {file_extension}")
+            
+            # إضافة cleanup للملف بعد الإرسال
+            response.call_on_close(cleanup_temp_file)
+            
+            return response
+            
+        except Exception as send_error:
+            current_app.logger.error(f"خطأ في إرسال الملف: {str(send_error)}")
+            # تنظيف الملف في حالة الخطأ
+            try:
+                if os.path.exists(temp_filename):
+                    os.unlink(temp_filename)
+            except:
+                pass
+            raise send_error
         
     except Exception as e:
         current_app.logger.error(f"Error exporting SIM cards: {str(e)}")
