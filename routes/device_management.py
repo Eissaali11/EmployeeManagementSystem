@@ -19,6 +19,7 @@ def index():
         brand_filter = request.args.get('brand', '')
         status_filter = request.args.get('status', '')
         search_term = request.args.get('search', '')
+        phone_search = request.args.get('phone_search', '')
         page = request.args.get('page', 1, type=int)
         
         # بناء الاستعلام
@@ -63,9 +64,14 @@ def index():
             query = query.filter(
                 or_(
                     MobileDevice.imei.like(f'%{search_term}%'),
-                    MobileDevice.phone_number.like(f'%{search_term}%')
+                    MobileDevice.device_model.like(f'%{search_term}%'),
+                    MobileDevice.email.like(f'%{search_term}%')
                 )
             )
+        
+        # البحث المخصص برقم الهاتف
+        if phone_search:
+            query = query.filter(MobileDevice.phone_number.like(f'%{phone_search}%'))
         
         # ترتيب وصفحة
         devices = query.order_by(MobileDevice.created_at.desc()).all()
@@ -178,7 +184,8 @@ def index():
                              department_filter=department_filter,
                              brand_filter=brand_filter,
                              status_filter=status_filter,
-                             search_term=search_term)
+                             search_term=search_term,
+                             phone_search=phone_search)
     
     except Exception as e:
         flash(f'حدث خطأ في تحميل البيانات: {str(e)}', 'error')

@@ -147,10 +147,22 @@
                         </select>
                     </div>
                     
-                    <div class="col-md-3">
-                        <label class="form-label">البحث (IMEI أو رقم الهاتف)</label>
+                    <div class="col-md-2">
+                        <label class="form-label">🔍 البحث برقم الهاتف</label>
+                        <input type="text" name="phone_search" class="form-control" 
+                               placeholder="رقم الهاتف..." 
+                               value="{{ phone_search or '' }}"
+                               style="border: 2px solid #28a745; border-radius: 8px;">
+                        <small class="form-text text-success">البحث في أرقام الهاتف فقط</small>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">البحث العام</label>
                         <input type="text" name="search" class="form-control" 
-                               placeholder="ادخل IMEI أو رقم الهاتف..." value="{{ search_term }}">
+                               placeholder="IMEI أو الموديل..." 
+                               value="{{ search_term }}"
+                               style="border: 2px solid #007bff; border-radius: 8px;">
+                        <small class="form-text text-muted">IMEI أو الموديل أو الإيميل</small>
                     </div>
                     
                     <div class="col-md-2 d-flex align-items-end">

@@ -42,6 +42,7 @@ def index():
     try:
         # جلب معاملات البحث والفلترة
         search = request.args.get('search', '')
+        phone_search = request.args.get('phone_search', '')
         status_filter = request.args.get('status', '')
         employee_filter = request.args.get('employee_id', '')
         device_brand = request.args.get('device_brand', '')
@@ -55,12 +56,15 @@ def index():
         if search:
             query = query.filter(
                 or_(
-                    MobileDevice.phone_number.contains(search),
                     MobileDevice.imei.contains(search),
                     MobileDevice.email.contains(search),
                     MobileDevice.device_model.contains(search)
                 )
             )
+        
+        # البحث المخصص برقم الهاتف
+        if phone_search:
+            query = query.filter(MobileDevice.phone_number.contains(phone_search))
         
         if status_filter:
             if status_filter == 'متاح':
@@ -168,6 +172,7 @@ def index():
                              employees=employees,
                              device_brands=device_brands,
                              search=search,
+                             phone_search=phone_search,
                              status_filter=status_filter,
                              employee_filter=employee_filter,
                              device_brand=device_brand,
