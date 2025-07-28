@@ -29,49 +29,52 @@ import json
 
 documents_bp = Blueprint('documents', __name__)
 
-@documents_bp.route('/delete/<int:document_id>', methods=['POST'])
+@documents_bp.route('/delete/<int:document_id>', methods=['GET', 'POST'])
 @login_required
 def delete_document(document_id):
-    """حذف وثيقة"""
-    try:
-        # البحث عن الوثيقة
-        document = Document.query.get_or_404(document_id)
-        
-        # حفظ معلومات الوثيقة للسجل
-        employee_name = document.employee.name if document.employee else 'غير محدد'
-        document_type = document.document_type
-        
-        # حذف الملف من الخادم إذا كان موجوداً
-        if document.file_path:
-            import os
-            file_path = os.path.join('static', document.file_path)
-            if os.path.exists(file_path):
-                try:
-                    os.remove(file_path)
-                    print(f"تم حذف الملف: {file_path}")
-                except Exception as e:
-                    print(f"خطأ في حذف الملف {file_path}: {e}")
-        
-        # حذف الوثيقة من قاعدة البيانات
-        db.session.delete(document)
-        db.session.commit()
-        
-        # تسجيل العملية في سجل النشاط
-        log_activity(
-            user_id=current_user.id,
-            action='delete',
-            model_name='document',
-            description=f'تم حذف وثيقة {document_type} للموظف {employee_name}'
-        )
-        
-        flash(f'تم حذف وثيقة {document_type} للموظف {employee_name} بنجاح', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'حدث خطأ أثناء حذف الوثيقة: {str(e)}', 'error')
-        print(f"خطأ في حذف الوثيقة {document_id}: {e}")
+    """صفحة تأكيد وتنفيذ حذف الوثيقة"""
+    document = Document.query.get_or_404(document_id)
     
-    return redirect(url_for('documents.index'))
+    if request.method == 'POST':
+        try:
+            # حفظ معلومات الوثيقة للسجل
+            employee_name = document.employee.name if document.employee else 'غير محدد'
+            document_type = document.document_type
+            
+            # حذف الملف من الخادم إذا كان موجوداً
+            if document.file_path:
+                import os
+                file_path = os.path.join('static', document.file_path)
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                        print(f"تم حذف الملف: {file_path}")
+                    except Exception as e:
+                        print(f"خطأ في حذف الملف {file_path}: {e}")
+            
+            # حذف الوثيقة من قاعدة البيانات
+            db.session.delete(document)
+            db.session.commit()
+            
+            # تسجيل العملية في سجل النشاط
+            log_activity(
+                user_id=current_user.id,
+                action='delete',
+                model_name='document',
+                description=f'تم حذف وثيقة {document_type} للموظف {employee_name}'
+            )
+            
+            flash(f'تم حذف وثيقة {document_type} للموظف {employee_name} بنجاح', 'success')
+            return redirect(url_for('documents.index'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'حدث خطأ أثناء حذف الوثيقة: {str(e)}', 'error')
+            print(f"خطأ في حذف الوثيقة {document_id}: {e}")
+            return redirect(url_for('documents.index'))
+    
+    # GET request - عرض صفحة التأكيد
+    return render_template('documents/confirm_delete.html', document=document)
 
 @documents_bp.route('/get_sponsorship_employees', methods=['POST'])
 def get_sponsorship_employees():
