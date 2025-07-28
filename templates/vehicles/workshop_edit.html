@@ -221,7 +221,7 @@
                         </div>
                         
                         <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary px-5" id="save-button">
+                            <button type="submit" class="btn btn-primary px-5" id="save-button" onclick="console.log('تم النقر على زر الحفظ');">
                                 <i class="fas fa-save ms-1"></i>
                                 حفظ التعديلات
                             </button>
@@ -264,6 +264,25 @@
         const form = document.getElementById('workshop-edit-form');
         const saveButton = document.getElementById('save-button');
         
+        console.log('تم تحميل JavaScript للنموذج');
+        console.log('النموذج:', form);
+        console.log('زر الحفظ:', saveButton);
+        
+        if (!form) {
+            console.error('لم يتم العثور على النموذج!');
+            return;
+        }
+        
+        if (!saveButton) {
+            console.error('لم يتم العثور على زر الحفظ!');
+            return;
+        }
+        
+        // إضافة مستمع للنقر على زر الحفظ
+        saveButton.addEventListener('click', function(event) {
+            console.log('تم النقر على زر الحفظ');
+        });
+        
         // عند تقديم النموذج
         form.addEventListener('submit', function(event) {
             console.log('تم إرسال النموذج...');
@@ -273,6 +292,8 @@
             const reason = document.getElementById('reason').value;
             const description = document.getElementById('description').value;
             const repairStatus = document.getElementById('repair_status').value;
+            
+            console.log('البيانات:', {entryDate, reason, description, repairStatus});
             
             if (!entryDate || !reason || !description || !repairStatus) {
                 event.preventDefault();
@@ -285,6 +306,7 @@
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
             
             console.log('تم قبول النموذج وإرساله...');
+            return true;
         });
     });
 </script>
