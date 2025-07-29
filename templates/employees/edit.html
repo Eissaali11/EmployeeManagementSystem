@@ -14,7 +14,7 @@
             <h5 class="card-title mb-0">تعديل بيانات: {{ employee.name }}</h5>
         </div>
         <div class="card-body">
-            <form action="{{ url_for('employees.edit', id=employee.id) }}" method="post">
+            <form action="{{ url_for('employees.edit', id=employee.id) }}" method="post" enctype="multipart/form-data">
                 <!-- إضافة حقل مخفي لتتبع الصفحة المرجعية -->
                 <input type="hidden" name="return_url" value="{{ request.referrer or url_for('employees.index') }}">
                 <div class="row">
