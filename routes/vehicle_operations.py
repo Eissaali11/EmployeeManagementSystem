@@ -3,7 +3,7 @@ from models import (Vehicle, VehicleHandover, VehicleWorkshop, VehicleExternalSa
                     VehicleMaintenance, Employee, Department, User, UserRole)
 from app import db
 from flask_login import current_user, login_required
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func
 from datetime import datetime, timedelta
 
 vehicle_operations_bp = Blueprint('vehicle_operations', __name__)
@@ -114,16 +114,15 @@ def vehicle_operations_list():
             
             if date_from:
                 try:
-                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
-                    safety_query = safety_query.filter(VehicleExternalSafetyCheck.created_at >= date_from_obj)
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    safety_query = safety_query.filter(func.date(VehicleExternalSafetyCheck.created_at) >= date_from_obj)
                 except ValueError:
                     pass
             
             if date_to:
                 try:
-                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
-                    date_to_obj = date_to_obj.replace(hour=23, minute=59, second=59)
-                    safety_query = safety_query.filter(VehicleExternalSafetyCheck.created_at <= date_to_obj)
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    safety_query = safety_query.filter(func.date(VehicleExternalSafetyCheck.created_at) <= date_to_obj)
                 except ValueError:
                     pass
 
