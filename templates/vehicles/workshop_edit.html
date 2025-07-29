@@ -286,6 +286,38 @@
         form.addEventListener('submit', function(event) {
             console.log('تم إرسال النموذج...');
             
+            // التحقق من الملفات المرفقة
+            const beforeImages = document.getElementById('before_images').files;
+            const afterImages = document.getElementById('after_images').files;
+            
+            console.log('صور قبل الإصلاح:', beforeImages.length);
+            console.log('صور بعد الإصلاح:', afterImages.length);
+            
+            // التحقق من حجم الملفات
+            const maxFileSize = 5 * 1024 * 1024; // 5MB
+            let hasLargeFile = false;
+            
+            for (let file of beforeImages) {
+                if (file.size > maxFileSize) {
+                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 5MB`);
+                    hasLargeFile = true;
+                    break;
+                }
+            }
+            
+            for (let file of afterImages) {
+                if (file.size > maxFileSize) {
+                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 5MB`);
+                    hasLargeFile = true;
+                    break;
+                }
+            }
+            
+            if (hasLargeFile) {
+                event.preventDefault();
+                return false;
+            }
+            
             // جمع بيانات النموذج للتصحيح
             const formData = new FormData(form);
             console.log('بيانات النموذج:');
@@ -298,12 +330,32 @@
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
             
             console.log('تم قبول النموذج وإرساله...');
+            // لا تمنع السلوك الافتراضي - دع النموذج يرسل
             return true;
         });
         
         // إضافة مستمع للنقر على زر الحفظ
         saveButton.addEventListener('click', function(event) {
             console.log('تم النقر على زر الحفظ');
+            
+            // اختبار بسيط للتأكد من أن النموذج يعمل
+            const formData = new FormData(form);
+            console.log('اختبار النموذج - عدد الحقول:', formData.entries().length);
+            
+            // عرض بعض البيانات للتأكد
+            console.log('تاريخ الدخول:', formData.get('entry_date'));
+            console.log('السبب:', formData.get('reason'));
+            console.log('الوصف:', formData.get('description'));
+            console.log('حالة الإصلاح:', formData.get('repair_status'));
+            
+            // تأكيد إرسال النموذج
+            console.log('سيتم إرسال النموذج الآن...');
+            
+            // اختبار إرسال النموذج يدوياً إذا لم يرسل تلقائياً
+            setTimeout(() => {
+                console.log('إرسال النموذج يدوياً...');
+                form.submit();
+            }, 100);
         });
     });
 </script>

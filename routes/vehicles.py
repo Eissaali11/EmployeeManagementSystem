@@ -1625,6 +1625,7 @@ def edit_workshop(id):
                         current_app.logger.info(f"تم استقبال طلب POST لتعديل سجل الورشة {id}")
                         current_app.logger.info(f"بيانات النموذج: {request.form}")
                         current_app.logger.info(f"الملفات: {request.files}")
+                        current_app.logger.info(f"عدد الملفات المرفقة: {len(request.files)}")
 
                         # الحصول على البيانات من الطلب
                         entry_date_str = request.form.get('entry_date')
@@ -1638,6 +1639,8 @@ def edit_workshop(id):
                         delivery_link = request.form.get('delivery_link')
                         reception_link = request.form.get('reception_link')
                         notes = request.form.get('notes')
+
+                        current_app.logger.info(f"البيانات المستخرجة: entry_date={entry_date_str}, reason={reason}, description={description}, repair_status={repair_status}")
 
                         # تحويل التواريخ والتكلفة
                         entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
@@ -1660,6 +1663,8 @@ def edit_workshop(id):
                         workshop.reception_link = reception_link
                         workshop.notes = notes
                         workshop.updated_at = datetime.utcnow()
+
+                        current_app.logger.info("تم تحديث بيانات سجل الورشة")
 
                         # تحديث حالة السيارة إذا خرجت من الورشة
                         if exit_date and repair_status == 'completed':
@@ -1685,33 +1690,53 @@ def edit_workshop(id):
                         vehicle.updated_at = datetime.utcnow()
                         db.session.commit()
 
+                        current_app.logger.info("تم حفظ البيانات الأساسية")
+
                         # معالجة الصور المرفقة
                         before_image_files = request.files.getlist('before_images')
                         after_image_files = request.files.getlist('after_images')
 
-                        for image in before_image_files:
-                                if image and image.filename:
-                                        image_path = save_image(image, 'workshop')
-                                        if image_path:
-                                                workshop_image = VehicleWorkshopImage(
-                                                        workshop_record_id=id,
-                                                        image_type='before',
-                                                        image_path=image_path
-                                                )
-                                                db.session.add(workshop_image)
+                        current_app.logger.info(f"عدد صور قبل الإصلاح: {len(before_image_files)}")
+                        current_app.logger.info(f"عدد صور بعد الإصلاح: {len(after_image_files)}")
 
-                        for image in after_image_files:
+                        for i, image in enumerate(before_image_files):
                                 if image and image.filename:
-                                        image_path = save_image(image, 'workshop')
-                                        if image_path:
-                                                workshop_image = VehicleWorkshopImage(
-                                                        workshop_record_id=id,
-                                                        image_type='after',
-                                                        image_path=image_path
-                                                )
-                                                db.session.add(workshop_image)
+                                        current_app.logger.info(f"معالجة صورة قبل الإصلاح {i+1}: {image.filename}")
+                                        try:
+                                                image_path = save_image(image, 'workshop')
+                                                if image_path:
+                                                        workshop_image = VehicleWorkshopImage(
+                                                                workshop_record_id=id,
+                                                                image_type='before',
+                                                                image_path=image_path
+                                                        )
+                                                        db.session.add(workshop_image)
+                                                        current_app.logger.info(f"تم حفظ صورة قبل الإصلاح: {image_path}")
+                                                else:
+                                                        current_app.logger.error(f"فشل في حفظ صورة قبل الإصلاح: {image.filename}")
+                                        except Exception as e:
+                                                current_app.logger.error(f"خطأ في حفظ صورة قبل الإصلاح {image.filename}: {str(e)}")
+
+                        for i, image in enumerate(after_image_files):
+                                if image and image.filename:
+                                        current_app.logger.info(f"معالجة صورة بعد الإصلاح {i+1}: {image.filename}")
+                                        try:
+                                                image_path = save_image(image, 'workshop')
+                                                if image_path:
+                                                        workshop_image = VehicleWorkshopImage(
+                                                                workshop_record_id=id,
+                                                                image_type='after',
+                                                                image_path=image_path
+                                                        )
+                                                        db.session.add(workshop_image)
+                                                        current_app.logger.info(f"تم حفظ صورة بعد الإصلاح: {image_path}")
+                                                else:
+                                                        current_app.logger.error(f"فشل في حفظ صورة بعد الإصلاح: {image.filename}")
+                                        except Exception as e:
+                                                current_app.logger.error(f"خطأ في حفظ صورة بعد الإصلاح {image.filename}: {str(e)}")
 
                         db.session.commit()
+                        current_app.logger.info("تم حفظ جميع البيانات بنجاح")
 
                         # تسجيل الإجراء
                         log_audit('update', 'vehicle_workshop', workshop.id, 
@@ -1722,6 +1747,9 @@ def edit_workshop(id):
 
                 except Exception as e:
                         current_app.logger.error(f"خطأ في حفظ سجل الورشة: {str(e)}")
+                        current_app.logger.error(f"تفاصيل الخطأ: {type(e).__name__}")
+                        import traceback
+                        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
                         db.session.rollback()
                         flash(f'حدث خطأ أثناء حفظ التعديلات: {str(e)}', 'danger')
                         # إعادة العرض مع البيانات الحالية
@@ -2543,23 +2571,7 @@ def create_handover(id):
 #             )
 
 
-
-
-
-
-
-
-
-
-
-#       return render_template(
-#               'vehicles/handover_create.html', 
-#               vehicle=vehicle,
-#               handover_types=HANDOVER_TYPE_CHOICES,
-#               default_handover_type=default_handover_type,
-#               employees=employees,
-#               departments=departments
-#       )
+#
 
 
 
