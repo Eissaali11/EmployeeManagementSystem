@@ -1273,12 +1273,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                             </div>
                                         </div>
                                     </div>
-                                    {% endif %} 
-                                </div>
-                            </div>
-                        </div> 
-
+                                            {% endif %}
+                                    </div>
             </div>
+        </div>
+
+                </div>
         </div>
     </div>
 
@@ -1557,11 +1557,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             </div>
             <div class="col-md-6 mb-4">
-                <div class="dashboard-card card">
-                        <div class="card-header">
+            <div class="dashboard-card card">
+                <div class="card-header">
                             <h6 class="mb-0">إحصائيات الحضور للشهر الحالي</h6>
-                        </div>
-                        <div class="card-body">
+                </div>
+                <div class="card-body">
                             <div class="row g-2">
                                 {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
                                 {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
@@ -1573,14 +1573,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="stat-card p-3 bg-success text-white rounded">
                                         <h3 class="stat-value">{{ present_count }}</h3>
                                         <small>أيام الحضور</small>
-                                    </div>
-                                </div>
+                    </div>
+                    </div>
                                 <div class="col-md-3 text-center mb-3">
                                     <div class="stat-card p-3 bg-danger text-white rounded">
                                         <h3 class="stat-value">{{ absent_count }}</h3>
                                         <small>أيام الغياب</small>
-                                    </div>
-                                </div>
+                </div>
+            </div>
                                 <div class="col-md-3 text-center mb-3">
                                     <div class="stat-card p-3 bg-warning text-white rounded">
                                         <h3 class="stat-value">{{ leave_count }}</h3>
@@ -1591,7 +1591,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="stat-card p-3 bg-info text-white rounded">
                                         <h3 class="stat-value">{{ sick_count }}</h3>
                                         <small>إجازات مرضية</small>
-                                    </div>
+        </div>
                                 </div>
                                 
                                 <!-- Attendance Rate -->

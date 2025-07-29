@@ -286,6 +286,13 @@
         form.addEventListener('submit', function(event) {
             console.log('تم إرسال النموذج...');
             
+            // جمع بيانات النموذج للتصحيح
+            const formData = new FormData(form);
+            console.log('بيانات النموذج:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
