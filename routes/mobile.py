@@ -4092,8 +4092,12 @@ def edit_workshop_record(workshop_id):
     current_app.logger.debug(f"رابط الاستلام: {workshop_record.reception_link}")
     current_app.logger.debug(f"الملاحظات: {workshop_record.notes}")
     
-    current_app.logger.info(f"Method received: {request.method}")
-    print(f"DEBUG: Method received: {request.method}")
+    current_app.logger.info(f"★ WORKSHOP EDIT - Method: {request.method}, Workshop ID: {workshop_id}")
+    print(f"★ WORKSHOP EDIT - Method: {request.method}, Workshop ID: {workshop_id}")
+    
+    if request.method == 'POST':
+        current_app.logger.info(f"★ POST data received: {dict(request.form)}")
+        print(f"★ POST data received: {dict(request.form)}")
 
     if request.method == 'POST':
         try:
