@@ -65,7 +65,7 @@ def vehicle_operations_list():
                     'person_name': handover.person_name,
                     'details': f"{handover.handover_type or 'تسليم/استلام'} - الوقود: {handover.fuel_level or 'غير محدد'}",
                     'status': 'مكتمل',
-                    'department': getattr(handover.driver_employee, 'departments', [{}])[0].get('name', 'غير محدد') if handover.driver_employee and handover.driver_employee.departments else 'غير محدد'
+                    'department': handover.driver_employee.departments[0].name if handover.driver_employee and handover.driver_employee.departments else 'غير محدد'
                 })
 
         # جلب عمليات الورشة
