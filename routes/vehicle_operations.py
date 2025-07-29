@@ -494,6 +494,214 @@ def export_vehicle_operations():
         print(f"خطأ في تصدير عمليات السيارة: {e}")
         return jsonify({'message': f'حدث خطأ أثناء التصدير: {str(e)}'}), 500
 
+@vehicle_operations_bp.route('/export')
+def export_simple():
+    """تصدير مبسط بدون مصادقة للاختبار"""
+    try:
+        # جلب الفلاتر من الطلب
+        vehicle_filter = request.args.get('vehicle_filter', '').strip()
+        operation_type = request.args.get('operation_type', '').strip()
+        date_from = request.args.get('date_from', '').strip()
+        date_to = request.args.get('date_to', '').strip()
+
+        # إعداد قوائم العمليات
+        operations = []
+        
+        # جلب عمليات التسليم والاستلام
+        if not operation_type or operation_type == 'handover':
+            handover_query = VehicleHandover.query.join(Vehicle, VehicleHandover.vehicle_id == Vehicle.id)
+            
+            if vehicle_filter:
+                handover_query = handover_query.filter(Vehicle.plate_number.ilike(f'%{vehicle_filter}%'))
+            
+            if date_from:
+                try:
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    handover_query = handover_query.filter(func.date(VehicleHandover.handover_date) >= date_from_obj)
+                except ValueError:
+                    pass
+            
+            if date_to:
+                try:
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    handover_query = handover_query.filter(func.date(VehicleHandover.handover_date) <= date_to_obj)
+                except ValueError:
+                    pass
+
+            handovers = handover_query.all()
+            
+            for handover in handovers:
+                operations.append({
+                    'vehicle_plate': handover.vehicle.plate_number if handover.vehicle else 'غير محدد',
+                    'type_ar': 'تسليم/استلام',
+                    'operation_date': handover.handover_date,
+                    'person_name': handover.person_name,
+                    'details': f"{handover.handover_type or 'تسليم/استلام'} - الوقود: {handover.fuel_level or 'غير محدد'}",
+                    'status': 'مكتمل',
+                    'department': handover.driver_employee.departments[0].name if handover.driver_employee and handover.driver_employee.departments else 'غير محدد'
+                })
+
+        # جلب عمليات الورشة
+        if not operation_type or operation_type == 'workshop':
+            workshop_query = VehicleWorkshop.query.join(Vehicle, VehicleWorkshop.vehicle_id == Vehicle.id)
+            
+            if vehicle_filter:
+                workshop_query = workshop_query.filter(Vehicle.plate_number.ilike(f'%{vehicle_filter}%'))
+            
+            if date_from:
+                try:
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    workshop_query = workshop_query.filter(VehicleWorkshop.entry_date >= date_from_obj)
+                except ValueError:
+                    pass
+            
+            if date_to:
+                try:
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    workshop_query = workshop_query.filter(VehicleWorkshop.entry_date <= date_to_obj)
+                except ValueError:
+                    pass
+
+            workshops = workshop_query.all()
+            
+            for workshop in workshops:
+                operations.append({
+                    'vehicle_plate': workshop.vehicle.plate_number if workshop.vehicle else 'غير محدد',
+                    'type_ar': 'ورشة',
+                    'operation_date': workshop.entry_date,
+                    'person_name': workshop.technician_name or 'غير محدد',
+                    'details': f"الورشة: {workshop.workshop_name or 'غير محدد'} - الحالة: {workshop.repair_status or 'غير محدد'}",
+                    'status': workshop.repair_status or 'غير محدد',
+                    'department': 'الصيانة'
+                })
+
+        # جلب فحوصات السلامة الخارجية
+        if not operation_type or operation_type == 'safety_check':
+            safety_query = VehicleExternalSafetyCheck.query
+            
+            if vehicle_filter:
+                safety_query = safety_query.filter(VehicleExternalSafetyCheck.vehicle_plate_number.ilike(f'%{vehicle_filter}%'))
+            
+            if date_from:
+                try:
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    safety_query = safety_query.filter(func.date(VehicleExternalSafetyCheck.created_at) >= date_from_obj)
+                except ValueError:
+                    pass
+            
+            if date_to:
+                try:
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    safety_query = safety_query.filter(func.date(VehicleExternalSafetyCheck.created_at) <= date_to_obj)
+                except ValueError:
+                    pass
+
+            safety_checks = safety_query.all()
+            
+            for safety in safety_checks:
+                status_ar = {
+                    'pending': 'قيد المراجعة',
+                    'approved': 'معتمد',
+                    'rejected': 'مرفوض'
+                }.get(safety.approval_status, 'غير محدد')
+                
+                operations.append({
+                    'vehicle_plate': safety.vehicle_plate_number,
+                    'type_ar': 'فحص سلامة',
+                    'operation_date': safety.created_at.date() if safety.created_at else None,
+                    'person_name': safety.driver_name or 'غير محدد',
+                    'details': f"فحص سلامة خارجي - السائق: {safety.driver_name or 'غير محدد'}",
+                    'status': status_ar,
+                    'department': safety.driver_department or 'غير محدد'
+                })
+
+        # ترتيب العمليات حسب التاريخ
+        def get_sort_date(operation):
+            date_val = operation['operation_date']
+            if date_val is None:
+                return datetime.min.date()
+            if isinstance(date_val, datetime):
+                return date_val.date()
+            return date_val
+        
+        operations.sort(key=get_sort_date, reverse=True)
+
+        # إنشاء ملف Excel
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "عمليات السيارات"
+
+        # تعيين الاتجاه من اليمين إلى اليسار
+        ws.sheet_view.rightToLeft = True
+
+        # إعداد الألوان والخطوط
+        header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+        header_fill = PatternFill(start_color='1E3A5C', end_color='1E3A5C', fill_type='solid')
+        data_font = Font(name='Arial', size=11)
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+
+        # إضافة العناوين
+        headers = [
+            'رقم السيارة',
+            'نوع العملية', 
+            'تاريخ العملية',
+            'اسم الشخص/الفني',
+            'التفاصيل',
+            'الحالة',
+            'القسم'
+        ]
+
+        for col, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = Alignment(horizontal='center', vertical='center')
+            cell.border = border
+
+        # إضافة البيانات
+        for row_idx, operation in enumerate(operations, 2):
+            data = [
+                operation['vehicle_plate'],
+                operation['type_ar'],
+                operation['operation_date'].strftime('%Y-%m-%d') if operation['operation_date'] else 'غير محدد',
+                operation['person_name'],
+                operation['details'],
+                operation['status'],
+                operation['department']
+            ]
+            
+            for col_idx, value in enumerate(data, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=value)
+                cell.font = data_font
+                cell.alignment = Alignment(horizontal='center', vertical='center')
+                cell.border = border
+
+        # تعديل عرض الأعمدة
+        column_widths = [15, 15, 15, 20, 40, 15, 15]
+        for col, width in enumerate(column_widths, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col)].width = width
+
+        # حفظ الملف في الذاكرة
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        # إنشاء الاستجابة
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename=vehicle_operations_filtered_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        
+        return response
+
+    except Exception as e:
+        print(f"خطأ في تصدير عمليات السيارة المبسط: {e}")
+        return f"خطأ في التصدير: {str(e)}", 500
+
 @vehicle_operations_bp.route('/test-operations')
 def test_operations():
     """اختبار عرض العمليات بدون مصادقة"""

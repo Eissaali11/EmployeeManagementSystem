@@ -232,7 +232,7 @@ function exportOperations() {
     });
     
     // فتح التصدير في نافذة جديدة
-    window.open(`{{ url_for('vehicle_operations.export_vehicle_operations') }}?${params.toString()}`, '_blank');
+    window.open(`{{ url_for('vehicle_operations.export_simple') }}?${params.toString()}`, '_blank');
 }
 </script>
 {% endblock %}

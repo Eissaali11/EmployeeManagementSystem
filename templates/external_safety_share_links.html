@@ -626,7 +626,7 @@
 
         } catch (error) {
             console.error('فشل الاتصال بالخادم:', error);
-            showToast('فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.', 'danger');
+            showToast(`فشل الإرسال: ${error}`, 'danger');
         } finally {
             buttonElement.disabled = false;
             buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال بالبريد';
