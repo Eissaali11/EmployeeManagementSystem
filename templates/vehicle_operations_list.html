@@ -210,6 +210,33 @@
 </style>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+function exportOperations() {
+    // جلب القيم من الفلاتر الحالية
+    const vehicleFilter = document.getElementById('vehicle_filter')?.value || '';
+    const operationType = document.getElementById('operation_type')?.value || '';
+    const dateFrom = document.getElementById('date_from')?.value || '';
+    const dateTo = document.getElementById('date_to')?.value || '';
+    const employeeFilter = document.getElementById('employee_filter')?.value || '';
+    const departmentFilter = document.getElementById('department_filter')?.value || '';
+    
+    // إنشاء URL مع المعاملات
+    const params = new URLSearchParams({
+        vehicle_filter: vehicleFilter,
+        operation_type: operationType,
+        date_from: dateFrom,
+        date_to: dateTo,
+        employee_filter: employeeFilter,
+        department_filter: departmentFilter
+    });
+    
+    // فتح التصدير في نافذة جديدة
+    window.open(`{{ url_for('vehicle_operations.export_vehicle_operations') }}?${params.toString()}`, '_blank');
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid py-4">
     <!-- Enhanced Header -->
@@ -220,10 +247,10 @@
                 <p class="text-muted mb-0">عرض جميع العمليات المتعلقة بالمركبات مع فلاتر متقدمة</p>
             </div>
             <div>
-                <a href="{{ url_for('vehicle_operations.export_operations') }}" 
-                   class="btn btn-action-enhanced btn-export">
+                <button onclick="exportOperations(); return false;" 
+                        class="btn btn-action-enhanced btn-export">
                     <i class="fas fa-download"></i> تصدير Excel
-                </a>
+                </button>
             </div>
         </div>
     </div>
