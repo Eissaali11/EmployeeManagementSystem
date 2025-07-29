@@ -4852,3 +4852,10 @@ def get_vehicle_driver_info(vehicle_id):
             'success': False,
             'error': str(e)
         }), 500
+
+# تعديل سجل الورشة - النسخة المحمولة
+@mobile_bp.route('/vehicles/workshop/<int:workshop_id>/edit', methods=['GET', 'POST'])
+@login_required  
+def edit_workshop_mobile(workshop_id):
+    """تعديل سجل الورشة للنسخة المحمولة"""
+    return redirect(url_for('vehicles.edit_workshop', id=workshop_id))
