@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 vehicle_operations_bp = Blueprint('vehicle_operations', __name__)
 
-@vehicle_operations_bp.route('/vehicle-operations')
+@vehicle_operations_bp.route('/')
 @login_required
 def vehicle_operations_list():
     """صفحة عرض جميع عمليات السيارات مع فلاتر شاملة"""
@@ -26,6 +26,9 @@ def vehicle_operations_list():
 
     # إعداد قوائم العمليات
     operations = []
+    
+    # إضافة سجلات للتشخيص
+    print(f"فلاتر البحث: vehicle_filter={vehicle_filter}, operation_type={operation_type}")
 
     try:
         # جلب عمليات التسليم والاستلام
@@ -53,6 +56,7 @@ def vehicle_operations_list():
                 handover_query = handover_query.filter(VehicleHandover.person_name.ilike(f'%{employee_filter}%'))
 
             handovers = handover_query.all()
+            print(f"تم العثور على {len(handovers)} سجل تسليم/استلام")
             
             for handover in handovers:
                 operations.append({
@@ -194,6 +198,7 @@ def vehicle_operations_list():
 
         # ترتيب العمليات حسب التاريخ (الأحدث أولاً)
         operations.sort(key=lambda x: x['operation_date'] if x['operation_date'] else datetime.min, reverse=True)
+        print(f"إجمالي العمليات الموجودة: {len(operations)}")
 
         # جلب قوائم البيانات للفلاتر
         vehicles = Vehicle.query.all()
@@ -239,6 +244,15 @@ def vehicle_operations_list():
                              workshop_count=0,
                              safety_count=0,
                              maintenance_count=0)
+
+@vehicle_operations_bp.route('/test')
+def test_page():
+    """صفحة اختبار للتحقق من الوصول"""
+    from flask import jsonify
+    return jsonify({
+        'message': 'صفحة العمليات تعمل!',
+        'user_authenticated': current_user.is_authenticated if current_user else False
+    })
 
 @vehicle_operations_bp.route('/api/vehicle-operations/export')
 @login_required
