@@ -19,7 +19,8 @@ from models import (
         Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
-        Department, ExternalAuthorization, Module, Permission, UserRole
+        Department, ExternalAuthorization, Module, Permission, UserRole,
+        VehicleExternalSafetyCheck
 )
 from utils.audit_logger import log_activity
 from utils.audit_logger import log_audit
@@ -951,6 +952,14 @@ def view(id):
         # إضافة سجلات التسليم/الاستلام للقائمة الجانبية
         handovers = handover_records
 
+        # الحصول على سجلات الفحص الدوري وفحص السلامة والحوادث
+        periodic_inspections = VehiclePeriodicInspection.query.filter_by(vehicle_id=id).order_by(VehiclePeriodicInspection.inspection_date.desc()).all()
+        safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleSafetyCheck.check_date.desc()).all()
+        accidents = VehicleAccident.query.filter_by(vehicle_id=id).order_by(VehicleAccident.accident_date.desc()).all()
+
+        # الحصول على فحوصات السلامة الخارجية المعتمدة
+        external_safety_checks = VehicleExternalSafetyCheck.query.filter_by(vehicle_id=id).order_by(VehicleExternalSafetyCheck.inspection_date.desc()).all()
+
         return render_template(
                 'vehicles/view.html',
                 vehicle=vehicle,
@@ -963,7 +972,7 @@ def view(id):
                 safety_checks=safety_checks,
                 accidents=accidents,
                 external_authorizations=external_authorizations,
-                external_safety_checks=[],
+                external_safety_checks=external_safety_checks,
                 departments=departments,
                 employees=employees,
                 attachments=attachments,

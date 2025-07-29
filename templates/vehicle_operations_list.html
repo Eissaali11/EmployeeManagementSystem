@@ -105,7 +105,7 @@
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         box-shadow: var(--card-shadow);
-        overflow: hidden;
+        /* overflow: hidden; */
     }
 
     .table-enhanced {
@@ -324,7 +324,7 @@ function exportOperations() {
             <div class="row">
                 <div class="col-md-2 mb-3">
                     <label class="form-label text-light mb-1">رقم السيارة:</label>
-                    <select class="form-control filter-input-enhanced" name="vehicle_filter">
+                    <select class="form-control filter-input-enhanced bg-black" name="vehicle_filter">
                         <option value="">جميع السيارات</option>
                         {% for vehicle in vehicles %}
                         <option value="{{ vehicle.plate_number }}" {% if vehicle_filter == vehicle.plate_number %}selected{% endif %}>
@@ -335,8 +335,8 @@ function exportOperations() {
                 </div>
                 
                 <div class="col-md-2 mb-3">
-                    <label class="form-label text-light mb-1">نوع العملية:</label>
-                    <select class="form-control filter-input-enhanced" name="operation_type">
+                    <label class="form-label text-light mb-1 ">نوع العملية:</label>
+                    <select class="form-control filter-input-enhanced bg-black" name="operation_type">
                         <option value="">جميع العمليات</option>
                         <option value="handover" {% if operation_type == 'handover' %}selected{% endif %}>تسليم واستلام</option>
                         <option value="workshop" {% if operation_type == 'workshop' %}selected{% endif %}>ورشة</option>
@@ -346,33 +346,33 @@ function exportOperations() {
                 </div>
                 
                 <div class="col-md-2 mb-3">
-                    <label class="form-label text-light mb-1">من تاريخ:</label>
+                    <label class="form-label text-light mb-1 ">من تاريخ:</label>
                     <input type="date" 
-                           class="form-control filter-input-enhanced" 
+                           class="form-control filter-input-enhanced bg-black" 
                            name="date_from" 
                            value="{{ date_from }}">
                 </div>
                 
                 <div class="col-md-2 mb-3">
-                    <label class="form-label text-light mb-1">إلى تاريخ:</label>
+                    <label class="form-label text-light mb-1 ">إلى تاريخ:</label>
                     <input type="date" 
-                           class="form-control filter-input-enhanced" 
+                           class="form-control filter-input-enhanced bg-black" 
                            name="date_to" 
                            value="{{ date_to }}">
                 </div>
                 
                 <div class="col-md-2 mb-3">
-                    <label class="form-label text-light mb-1">اسم الشخص:</label>
+                    <label class="form-label text-light mb-1 ">اسم الشخص:</label>
                     <input type="text" 
-                           class="form-control filter-input-enhanced" 
+                           class="form-control filter-input-enhanced bg-black" 
                            name="employee_filter" 
                            value="{{ employee_filter }}"
                            placeholder="ابحث بالاسم">
                 </div>
                 
                 <div class="col-md-2 mb-3">
-                    <label class="form-label text-light mb-1">القسم:</label>
-                    <select class="form-control filter-input-enhanced" name="department_filter">
+                    <label class="form-label text-light mb-1 ">القسم:</label>
+                    <select class="form-control filter-input-enhanced bg-black" name="department_filter">
                         <option value="">جميع الأقسام</option>
                         {% for department in departments %}
                         <option value="{{ department.name }}" {% if department_filter == department.name %}selected{% endif %}>{{ department.name }}</option>

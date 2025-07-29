@@ -434,23 +434,7 @@
                                             <span>سجل العمليات الشامل</span>
                                         </a>
                                     </li>
-                                </ul>
-                            </li>
-                            {% endif %} {# التحقق من صلاحيات التقارير #} {% if
-                            current_user.role == UserRole.ADMIN or
-                            current_user|check_module_access(Module.REPORTS) %}
-                            <li class="nav-item mb-1">
-                                <a
-                                    href="{{ url_for('reports.index') }}"
-                                    class="nav-link nav-link-custom {% if '/reports' in request.path %}active{% endif %}"
-                                >
-                                    <i class="fas fa-chart-pie me-2"></i>
-                                    <span>التقارير</span>
-                                </a>
-                            </li>
-                            {% endif %} {# التحقق من صلاحيات المستخدمين #}
-                            
-                            
+                                        
                             {% if current_user.role == UserRole.ADMIN %}
                             <li class="nav-item mb-1">
 
@@ -471,6 +455,23 @@
                             </li>
 
                             {% endif %}
+                                </ul>
+                            </li>
+                            {% endif %} {# التحقق من صلاحيات التقارير #} {% if
+                            current_user.role == UserRole.ADMIN or
+                            current_user|check_module_access(Module.REPORTS) %}
+                            <li class="nav-item mb-1">
+                                <a
+                                    href="{{ url_for('reports.index') }}"
+                                    class="nav-link nav-link-custom {% if '/reports' in request.path %}active{% endif %}"
+                                >
+                                    <i class="fas fa-chart-pie me-2"></i>
+                                    <span>التقارير</span>
+                                </a>
+                            </li>
+                            {% endif %} {# التحقق من صلاحيات المستخدمين #}
+                            
+                        
                             {% if
                             current_user.role in [UserRole.ADMIN,
                             UserRole.MANAGER] or

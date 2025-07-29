@@ -1,5 +1,3 @@
-
-
 {% extends 'layout.html' %}
 
 {% block extra_css %}
@@ -593,7 +591,27 @@
                                             مشاهدة سجل التسليم
                                         </a>
                                         {% if current_driver.mobile %}
-                                        <button onclick="redirectToWhatsApp('{{ current_driver.mobile }}', '{{ current_driver.name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
+                                        <a href="https://wa.me/{{ current_driver.mobile | replace('+', '') | replace(' ', '') | replace('-', '') }}?text={{ (
+                                            'مرحباً ' ~ current_driver.name ~ '\n\n' ~
+                                            'بخصوص المركبة رقم: ' ~ vehicle.plate_number ~ '\n' ~
+                                            'تاريخ ' ~ current_driver.handover_type_ar ~ ': ' ~ current_driver.formatted_date ~ '\n\n' ~
+                                            '🚗 عزيزي السائق، نتمنى لك قيادة آمنة\n\n' ~
+                                            '⚠️ تنبيهات مهمة:\n' ~
+                                            '• تأكد من تغيير زيت السيارة في موعده\n' ~
+                                            '• حافظ على السيارة فهي أمانة ومسؤوليتك\n' ~
+                                            '• تفقد مستوى الوقود والماء بانتظام\n' ~
+                                            '• التزم بقوانين المرور وحدود السرعة\n\n' ~
+                                            '📞 أرقام الطوارئ المهمة:\n' ~
+                                            '• نجم (المساعدة على الطريق): 920000560\n' ~
+                                            '• المرور: 993\n' ~
+                                            '• الهلال الأحمر: 997\n' ~
+                                            '• الشرطة: 999\n' ~
+                                            '• أمن الطرق: 996\n\n' ~
+                                            '📄 المستندات والروابط:\n' ~
+                                            '• ملف PDF للتسليم/الاستلام:\n' ~ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) ~
+                                            (('\n• صورة الاستمارة:\n' ~ request.url_root ~ 'static/' ~ vehicle.registration_form_image) if vehicle.registration_form_image else '') ~
+                                            '\n\n🙏 شكراً لك والسلامة في الطريق'
+                                        ) | urlencode }}"
                                            class="btn btn-sm btn-success ms-1"
                                            target="_blank"
                                            title="إرسال رسالة واتساب">
@@ -1250,8 +1268,8 @@
                             <h5 class="mb-0">
                                 <i class="fas fa-shield-alt ms-2"></i>
                                 فحوصات السلامة 
-                                {% if vehicle_safety_checks %}
-                                <span class="badge-enhanced bg-secondary">{{ vehicle_safety_checks|length }}</span>
+                                {% if external_safety_checks %}
+                                <span class="badge-enhanced bg-secondary">{{ external_safety_checks|length }}</span>
                                 {% endif %}
                             </h5>
                             <div>
@@ -1268,7 +1286,7 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            {% if vehicle_safety_checks %}
+                            {% if external_safety_checks %}
                             <div class="safety-table-container">
                                 <table class="table table-striped table-hover safety-table" id="safetyChecksTable">
                                     <thead>
@@ -1286,37 +1304,37 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {% for vehicle_safety_checks in vehicle_safety_checks %}
-                                        <tr data-status="{{ vehicle_safety_checks.approval_status }}">
-                                            <td>{{ vehicle_safety_checks.id }}</td>
-                                            <td>{{ vehicle_safety_checks.vehicle_plate_number }}</td>
-                                            <td>{{ vehicle_safety_checks.vehicle_make_model }}</td>
-                                            <td>{{ vehicle_safety_checks.driver_name }}</td>
-                                            <td>{{ vehicle_safety_checks.driver_department }}</td>
-                                            <td>{{ vehicle_safety_checks.driver_city }}</td>
-                                            <td>{{ vehicle_safety_checks.inspection_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        {% for safety_check in external_safety_checks %}
+                                        <tr data-status="{{ safety_check.approval_status }}">
+                                            <td>{{ safety_check.id }}</td>
+                                            <td>{{ safety_check.vehicle_plate_number }}</td>
+                                            <td>{{ safety_check.vehicle_make_model }}</td>
+                                            <td>{{ safety_check.driver_name }}</td>
+                                            <td>{{ safety_check.driver_department }}</td>
+                                            <td>{{ safety_check.driver_city }}</td>
+                                            <td>{{ safety_check.inspection_date.strftime('%Y-%m-%d %H:%M') }}</td>
                                             <td>
-                                                {% if vehicle_safety_checks.is_pending %}
+                                                {% if safety_check.is_pending %}
                                                     <span class="badge-enhanced" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white;">قيد المراجعة</span>
-                                                {% elif vehicle_safety_checks.is_approved %}
+                                                {% elif safety_check.is_approved %}
                                                     <span class="badge-enhanced" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white;">معتمدة</span>
-                                                {% elif vehicle_safety_checks.is_rejected %}
+                                                {% elif safety_check.is_rejected %}
                                                     <span class="badge-enhanced" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white;">مرفوضة</span>
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <span class="badge-enhanced" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white;">{{ vehicle_safety_checks.safety_images | length }}</span>
+                                                <span class="badge-enhanced" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white;">{{ safety_check.safety_images | length }}</span>
                                             </td>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <a href="{{ url_for('external_safety.admin_view_safety_check', check_id=vehicle_safety_checks.id) }}" 
+                                                    <a href="{{ url_for('external_safety.admin_view_safety_check', check_id=safety_check.id) }}" 
                                                        class="btn btn-sm" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none;">
                                                         <i class="fas fa-eye"></i> عرض
                                                     </a>
                                                     
-                                                    {% if vehicle_safety_checks.is_pending %}
+                                                    {% if safety_check.is_pending %}
                                                     <form method="POST" 
-                                                          action="{{ url_for('external_safety.approve_safety_check', check_id=vehicle_safety_checks.id) }}" 
+                                                          action="{{ url_for('external_safety.approve_safety_check', check_id=safety_check.id) }}" 
                                                           style="display: inline-block;">
                                                         <button type="submit" 
                                                                 class="btn btn-sm" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; border: none;"
@@ -1325,7 +1343,7 @@
                                                         </button>
                                                     </form>
                                                     
-                                                    <a href="{{ url_for('external_safety.reject_safety_check_page', check_id=vehicle_safety_checks.id) }}" 
+                                                    <a href="{{ url_for('external_safety.reject_safety_check_page', check_id=safety_check.id) }}" 
                                                        class="btn btn-sm" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none;">
                                                         <i class="fas fa-times"></i> رفض
                                                     </a>
@@ -1338,11 +1356,11 @@
                                 </table>
                             </div>
 
-                            {% if vehicle_safety_checks|length >= 1 %}
+                            {% if external_safety_checks|length >= 1 %}
                             <div class="text-center mt-2">
                                 <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" 
                                    class="btn btn-sm btn-outline-primary">
-                                    عرض كل السجلات ({{ vehicle_safety_checks|length }})
+                                    عرض كل السجلات ({{ external_safety_checks|length }})
                                 </a>
                             </div>
                             {% endif %} 
@@ -1629,8 +1647,35 @@
                                         <i class="fas fa-file-pdf"></i>
                                     </a>
                                     {% if current_driver.mobile %}
-                                    </a>
-                                    {% endif %}
+                                    <a href="https://wa.me/{{ current_driver.mobile | replace('+', '') | replace(' ', '') | replace('-', '') }}?text={{ (
+                                            'مرحباً ' ~ current_driver.name ~ '\n\n' ~
+                                            'بخصوص المركبة رقم: ' ~ vehicle.plate_number ~ '\n' ~
+                                            'تاريخ ' ~ current_driver.handover_type_ar ~ ': ' ~ current_driver.formatted_date ~ '\n\n' ~
+                                            '🚗 عزيزي السائق، نتمنى لك قيادة آمنة\n\n' ~
+                                            '⚠️ تنبيهات مهمة:\n' ~
+                                            '• تأكد من تغيير زيت السيارة في موعده\n' ~
+                                            '• حافظ على السيارة فهي أمانة ومسؤوليتك\n' ~
+                                            '• تفقد مستوى الوقود والماء بانتظام\n' ~
+                                            '• التزم بقوانين المرور وحدود السرعة\n\n' ~
+                                            '📞 أرقام الطوارئ المهمة:\n' ~
+                                            '• نجم (المساعدة على الطريق): 920000560\n' ~
+                                            '• المرور: 993\n' ~
+                                            '• الهلال الأحمر: 997\n' ~
+                                            '• الشرطة: 999\n' ~
+                                            '• أمن الطرق: 996\n\n' ~
+                                            '📄 المستندات والروابط:\n' ~
+                                            '• ملف PDF للتسليم/الاستلام:\n' ~ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) ~
+                                            (('\n• صورة الاستمارة:\n' ~ request.url_root ~ 'static/' ~ vehicle.registration_form_image) if vehicle.registration_form_image else '') ~
+                                            '\n\n🙏 شكراً لك والسلامة في الطريق'
+                                        ) | urlencode }}"
+                                           class="btn btn-sm btn-success ms-1"
+                                           target="_blank"
+                                           title="إرسال رسالة واتساب">
+                                            <i class="fab fa-whatsapp ms-1"></i>
+                                            واتساب
+                                        </a>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% else %}
@@ -1679,7 +1724,6 @@
                                             <i class="fas fa-file-pdf"></i>
                                         </a>
                                         {% if driver.mobile %}
-<<<<<<< HEAD
                                         <a href="https://wa.me/{{ driver.mobile | replace('+', '') | replace(' ', '') | replace('-', '') }}?text={{ (
                                             'مرحباً ' ~ driver.name ~ '\n\n' ~
                                             'بخصوص المركبة رقم: ' ~ vehicle.plate_number ~ '\n' ~
@@ -1705,37 +1749,6 @@
                                            target="_blank"
                                            title="إرسال رسالة واتساب">
                                             <i class="fab fa-whatsapp"></i>
-=======
-                                        <a href="https://wa.me/{{ driver.mobile | replace('+', '') | replace(' ', '') | replace('-', '') }}?text={{ (
-                                            'مرحباً ' ~ driver.name ~ '\n\n' ~
-                                            'بخصوص المركبة رقم: ' ~ vehicle.plate_number ~ '\n' ~
-                                            'تاريخ ' ~ driver.handover_type_ar ~ ': ' ~ driver.formatted_date ~ '\n\n' ~
-                                            '🚗 عزيزي السائق، نتمنى لك قيادة آمنة\n\n' ~
-                                            '⚠️ تنبيهات مهمة:\n' ~
-                                            '• تأكد من تغيير زيت السيارة في موعده\n' ~
-                                            '• حافظ على السيارة فهي أمانة ومسؤوليتك\n' ~
-                                            '• تفقد مستوى الوقود والماء بانتظام\n' ~
-                                            '• التزم بقوانين المرور وحدود السرعة\n\n' ~
-                                            '📞 أرقام الطوارئ المهمة:\n' ~
-                                            '• نجم (المساعدة على الطريق): 920000560\n' ~
-                                            '• المرور: 993\n' ~
-                                            '• الهلال الأحمر: 997\n' ~
-                                            '• الشرطة: 999\n' ~
-                                            '• أمن الطرق: 996\n\n' ~
-                                            '📄 المستندات والروابط:\n' ~
-                                            '• ملف PDF للتسليم/الاستلام:\n' ~ url_for('vehicles.handover_pdf_public', id=driver.handover_id, _external=True) ~
-                                            (('\n• صورة الاستمارة:\n' ~ request.url_root ~ 'static/' ~ vehicle.registration_form_image) if vehicle.registration_form_image else '') ~
-                                            '\n\n🙏 شكراً لك والسلامة في الطريق'
-                                        ) | urlencode }}"
-                                           class="btn btn-sm btn-success ms-1"
-                                           target="_blank"
-                                           title="إرسال رسالة واتساب">
-                                            <i class="fab fa-whatsapp"></i>
-                                        </a>
-
->>>>>>> 8ba0f07203de4aca19118a407c33c104859872a3
-                                        </a>
-
                                         </a>
                                         {% endif %}
                                     </div>
