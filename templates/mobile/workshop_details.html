@@ -296,23 +296,23 @@
     {% endif %}
 
     <!-- الصور المرفقة -->
-    {% if workshop_record.valid_images %}
+    {% if workshop_record.images %}
     <div class="card mb-3">
         <div class="card-header bg-dark text-white">
             <h6 class="mb-0">
                 <i class="fas fa-images ms-2"></i>
-                الصور المرفقة ({{ workshop_record.valid_images|length }})
+                الصور المرفقة ({{ workshop_record.images|length }})
             </h6>
         </div>
         <div class="card-body">
             <div class="row">
-                {% for image in workshop_record.valid_images %}
+                {% for image in workshop_record.images %}
                 <div class="col-6 col-md-4 col-lg-3 mb-3">
                     <div class="image-card">
-                        <img src="{{ url_for('static', filename=image.image_path) }}" 
+                        <img src="/{{ image.image_path }}" 
                              class="img-fluid rounded shadow-sm" 
                              alt="صورة الورشة" 
-                             onclick="showImageModal('{{ url_for('static', filename=image.image_path) }}', '{{ image.notes or 'صورة الورشة' }}')">
+                             onclick="showImageModal('/{{ image.image_path }}', '{{ image.notes or 'صورة الورشة' }}')">
                         <div class="mt-2">
                             <small class="badge {% if image.image_type == 'before' %}bg-warning{% elif image.image_type == 'after' %}bg-success{% else %}bg-secondary{% endif %}">
                                 {% if image.image_type == 'before' %}قبل الإصلاح{% elif image.image_type == 'after' %}بعد الإصلاح{% else %}{{ image.image_type }}{% endif %}
@@ -469,12 +469,12 @@ function shareWorkshopDetails() {
         receptionLink: "{{ workshop_record.reception_link or '' }}",
         notes: "{{ workshop_record.notes or 'لا توجد ملاحظات' }}",
         detailsUrl: window.location.href,
-        imagesCount: {{ workshop_record.valid_images|length if workshop_record.valid_images else 0 }},
+        imagesCount: {{ workshop_record.images|length if workshop_record.images else 0 }},
         beforeImages: [
-            {% for image in workshop_record.valid_images %}
+            {% for image in workshop_record.images %}
             {% if image.image_type == 'before' or 'before' in (image.image_path or '') %}
             {
-                url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
+                url: "{{ request.url_root }}{{ image.image_path }}",
                 notes: "{{ image.notes or 'صورة قبل الإصلاح' }}",
                 type: "before"
             },
@@ -482,10 +482,10 @@ function shareWorkshopDetails() {
             {% endfor %}
         ],
         afterImages: [
-            {% for image in workshop_record.valid_images %}
+            {% for image in workshop_record.images %}
             {% if image.image_type == 'after' or 'after' in (image.image_path or '') %}
             {
-                url: "{{ request.url_root }}{{ url_for('static', filename=image.image_path) }}",
+                url: "{{ request.url_root }}{{ image.image_path }}",
                 notes: "{{ image.notes or 'صورة بعد الإصلاح' }}",
                 type: "after"
             },
