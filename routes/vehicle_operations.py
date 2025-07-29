@@ -114,14 +114,15 @@ def vehicle_operations_list():
             
             if date_from:
                 try:
-                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
                     safety_query = safety_query.filter(VehicleExternalSafetyCheck.created_at >= date_from_obj)
                 except ValueError:
                     pass
             
             if date_to:
                 try:
-                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                    date_to_obj = date_to_obj.replace(hour=23, minute=59, second=59)
                     safety_query = safety_query.filter(VehicleExternalSafetyCheck.created_at <= date_to_obj)
                 except ValueError:
                     pass
@@ -144,7 +145,7 @@ def vehicle_operations_list():
                     'type': 'safety_check',
                     'type_ar': 'فحص سلامة',
                     'vehicle_plate': safety.vehicle_plate_number,
-                    'operation_date': safety.created_at,
+                    'operation_date': safety.created_at.date() if safety.created_at else None,
                     'person_name': safety.driver_name or 'غير محدد',
                     'details': f"فحص سلامة خارجي - السائق: {safety.driver_name or 'غير محدد'}",
                     'status': status_ar,
@@ -197,7 +198,15 @@ def vehicle_operations_list():
             operations = [op for op in operations if department_filter.lower() in op['department'].lower()]
 
         # ترتيب العمليات حسب التاريخ (الأحدث أولاً)
-        operations.sort(key=lambda x: x['operation_date'] if x['operation_date'] else datetime.min, reverse=True)
+        def get_sort_date(operation):
+            date_val = operation['operation_date']
+            if date_val is None:
+                return datetime.min.date()
+            if isinstance(date_val, datetime):
+                return date_val.date()
+            return date_val
+        
+        operations.sort(key=get_sort_date, reverse=True)
         print(f"إجمالي العمليات الموجودة: {len(operations)}")
 
         # جلب قوائم البيانات للفلاتر
