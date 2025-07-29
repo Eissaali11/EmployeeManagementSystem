@@ -362,6 +362,7 @@ with app.app_context():
     from routes.sim_management import sim_management_bp
     from routes.device_management import device_management_bp
     from routes.device_assignment import device_assignment_bp
+    from routes.vehicle_operations import vehicle_operations_bp
 
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
@@ -391,6 +392,7 @@ with app.app_context():
     app.register_blueprint(sim_management_bp, url_prefix='/sim-management')
     app.register_blueprint(device_management_bp, url_prefix='/device-management')
     app.register_blueprint(device_assignment_bp, url_prefix='/device-assignment')
+    app.register_blueprint(vehicle_operations_bp, url_prefix='/vehicle-operations')
 
     # إضافة route لخدمة الصور من مجلد uploads
     @app.route('/uploads/<path:filename>')

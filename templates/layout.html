@@ -423,6 +423,17 @@
                                             <span>مشاركة روابط الفحص</span>
                                         </a>
                                     </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('vehicle_operations.vehicle_operations_list') }}"
+                                            class="nav-link nav-link-custom {% if '/vehicle-operations' in request.path %}active{% endif %}"
+                                        >
+                                            <i
+                                                class="fas fa-history me-2"
+                                            ></i>
+                                            <span>سجل العمليات الشامل</span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </li>
                             {% endif %} {# التحقق من صلاحيات التقارير #} {% if
