@@ -12,9 +12,6 @@ vehicle_operations_bp = Blueprint('vehicle_operations', __name__)
 @login_required
 def vehicle_operations_list():
     """صفحة عرض جميع عمليات السيارات مع فلاتر شاملة"""
-    if not current_user.is_authenticated:
-        flash('يجب تسجيل الدخول أولاً', 'error')
-        return redirect(url_for('auth.login'))
 
     # جلب الفلاتر من الطلب
     vehicle_filter = request.args.get('vehicle_filter', '').strip()
@@ -93,6 +90,7 @@ def vehicle_operations_list():
                     pass
 
             workshops = workshop_query.all()
+            print(f"تم العثور على {len(workshops)} سجل ورشة")
             
             for workshop in workshops:
                 operations.append({
@@ -132,6 +130,7 @@ def vehicle_operations_list():
                 safety_query = safety_query.filter(VehicleExternalSafetyCheck.driver_name.ilike(f'%{employee_filter}%'))
 
             safety_checks = safety_query.all()
+            print(f"تم العثور على {len(safety_checks)} فحص سلامة")
             
             for safety in safety_checks:
                 status_ar = {
@@ -175,6 +174,7 @@ def vehicle_operations_list():
                         pass
 
                 maintenances = maintenance_query.all()
+                print(f"تم العثور على {len(maintenances)} سجل صيانة")
                 
                 for maintenance in maintenances:
                     operations.append({
