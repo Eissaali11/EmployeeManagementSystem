@@ -63,7 +63,7 @@ def vehicle_operations_list():
                     'vehicle_plate': handover.vehicle.plate_number if handover.vehicle else 'غير محدد',
                     'operation_date': handover.handover_date,
                     'person_name': handover.person_name,
-                    'details': f"{handover.handover_type_ar} - الوقود: {handover.fuel_level or 'غير محدد'}",
+                    'details': f"{handover.handover_type or 'تسليم/استلام'} - الوقود: {handover.fuel_level or 'غير محدد'}",
                     'status': 'مكتمل',
                     'department': getattr(handover.driver_employee, 'departments', [{}])[0].get('name', 'غير محدد') if handover.driver_employee and handover.driver_employee.departments else 'غير محدد'
                 })
@@ -249,9 +249,52 @@ def vehicle_operations_list():
 def test_page():
     """صفحة اختبار للتحقق من الوصول"""
     from flask import jsonify
+    
+    # اختبار جلب البيانات من قاعدة البيانات
+    vehicle_count = Vehicle.query.count()
+    handover_count = VehicleHandover.query.count()
+    workshop_count = VehicleWorkshop.query.count()
+    safety_count = VehicleExternalSafetyCheck.query.count()
+    
     return jsonify({
         'message': 'صفحة العمليات تعمل!',
-        'user_authenticated': current_user.is_authenticated if current_user else False
+        'user_authenticated': current_user.is_authenticated if current_user else False,
+        'database_stats': {
+            'vehicles': vehicle_count,
+            'handovers': handover_count,
+            'workshops': workshop_count,
+            'safety_checks': safety_count
+        }
+    })
+
+@vehicle_operations_bp.route('/test-operations')
+def test_operations():
+    """اختبار عرض العمليات بدون مصادقة"""
+    vehicle_filter = request.args.get('vehicle_filter', '').strip()
+    
+    # جلب عمليات التسليم والاستلام للاختبار
+    handover_query = VehicleHandover.query.join(Vehicle, VehicleHandover.vehicle_id == Vehicle.id)
+    
+    if vehicle_filter:
+        handover_query = handover_query.filter(Vehicle.plate_number.ilike(f'%{vehicle_filter}%'))
+    
+    handovers = handover_query.all()
+    
+    operations = []
+    for handover in handovers:
+        operations.append({
+            'id': handover.id,
+            'type': 'handover',
+            'vehicle_plate': handover.vehicle.plate_number if handover.vehicle else 'غير محدد',
+            'operation_date': str(handover.handover_date),
+            'person_name': handover.person_name,
+            'details': f"{handover.handover_type or 'تسليم/استلام'} - الوقود: {handover.fuel_level or 'غير محدد'}",
+        })
+    
+    return jsonify({
+        'message': f'تم العثور على {len(operations)} عملية',
+        'filter': vehicle_filter,
+        'operations': operations
     })
 
 @vehicle_operations_bp.route('/api/vehicle-operations/export')
