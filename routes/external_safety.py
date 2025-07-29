@@ -789,18 +789,59 @@ def external_safety_success():
 
 @external_safety_bp.route('/admin/external-safety-checks')
 def admin_external_safety_checks():
-    """عرض جميع طلبات فحص السلامة للإدارة"""
+    """عرض جميع طلبات فحص السلامة للإدارة مع الفلاتر"""
     # التحقق من صلاحيات الإدارة
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
         return redirect('/')
     
-    # جلب جميع طلبات فحص السلامة
-    safety_checks = VehicleExternalSafetyCheck.query.order_by(
-        VehicleExternalSafetyCheck.created_at.desc()
-    ).all()
+    # الحصول على معايير الفلترة من request
+    vehicle_filter = request.args.get('vehicle_filter', '').strip()
+    department_filter = request.args.get('department_filter', '').strip()
+    status_filter = request.args.get('status_filter', '').strip()
     
-    return render_template('admin_external_safety_checks.html', safety_checks=safety_checks)
+    # بناء الاستعلام مع الفلاتر
+    query = VehicleExternalSafetyCheck.query
+    
+    # فلترة حسب رقم السيارة
+    if vehicle_filter:
+        query = query.filter(VehicleExternalSafetyCheck.vehicle_plate_number.contains(vehicle_filter))
+    
+    # فلترة حسب القسم
+    if department_filter:
+        query = query.filter(VehicleExternalSafetyCheck.driver_department.contains(department_filter))
+    
+    # فلترة حسب الحالة
+    if status_filter:
+        query = query.filter(VehicleExternalSafetyCheck.approval_status == status_filter)
+    
+    # جلب النتائج مرتبة حسب التاريخ
+    safety_checks = query.order_by(VehicleExternalSafetyCheck.created_at.desc()).all()
+    
+    # إحصائيات للفلاتر
+    total_checks = VehicleExternalSafetyCheck.query.count()
+    pending_checks = VehicleExternalSafetyCheck.query.filter_by(approval_status='pending').count()
+    approved_checks = VehicleExternalSafetyCheck.query.filter_by(approval_status='approved').count()
+    rejected_checks = VehicleExternalSafetyCheck.query.filter_by(approval_status='rejected').count()
+    
+    # جلب قائمة السيارات والأقسام للفلاتر
+    vehicles_list = db.session.query(VehicleExternalSafetyCheck.vehicle_plate_number).distinct().all()
+    vehicles_list = [v[0] for v in vehicles_list if v[0]]
+    
+    departments_list = db.session.query(VehicleExternalSafetyCheck.driver_department).distinct().all()
+    departments_list = [d[0] for d in departments_list if d[0]]
+    
+    return render_template('admin_external_safety_checks.html', 
+                         safety_checks=safety_checks,
+                         vehicle_filter=vehicle_filter,
+                         department_filter=department_filter,
+                         status_filter=status_filter,
+                         vehicles_list=vehicles_list,
+                         departments_list=departments_list,
+                         total_checks=total_checks,
+                         pending_checks=pending_checks,
+                         approved_checks=approved_checks,
+                         rejected_checks=rejected_checks)
 
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>')
 def admin_view_safety_check(check_id):

@@ -964,6 +964,7 @@ def view(id):
                 safety_checks=safety_checks,
                 accidents=accidents,
                 external_authorizations=external_authorizations,
+                external_safety_checks=[],
                 departments=departments,
                 employees=employees,
                 attachments=attachments,
@@ -4870,4 +4871,5 @@ def check_vehicle_operation_restrictions(vehicle):
             'status': 'out_of_service'
         }
     return {'blocked': False}
+
 

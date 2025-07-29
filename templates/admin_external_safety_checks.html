@@ -402,7 +402,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>قيد المراجعة</h5>
-                        <h2>{{ safety_checks | selectattr('is_pending') | list | length }}</h2>
+                        <h2>{{ pending_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-clock"></i>
@@ -416,7 +416,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>معتمدة</h5>
-                        <h2>{{ safety_checks | selectattr('is_approved') | list | length }}</h2>
+                        <h2>{{ approved_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-check-circle"></i>
@@ -430,7 +430,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>مرفوضة</h5>
-                        <h2>{{ safety_checks | selectattr('is_rejected') | list | length }}</h2>
+                        <h2>{{ rejected_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-times-circle"></i>
@@ -444,7 +444,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>الإجمالي</h5>
-                        <h2>{{ safety_checks | length }}</h2>
+                        <h2>{{ total_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-list"></i>
@@ -456,26 +456,44 @@
     
     <!-- Enhanced Filter Section -->
     <div class="filter-card-enhanced">
+        <form method="GET" id="filterForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <select class="form-control filter-input-enhanced" name="status_filter" onchange="submitFilterForm()">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>قيد المراجعة</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>معتمدة</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>مرفوضة</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <select class="form-control filter-input-enhanced" name="vehicle_filter" onchange="submitFilterForm()">
+                        <option value="">جميع السيارات</option>
+                        {% for vehicle in vehicles_list %}
+                        <option value="{{ vehicle }}" {% if vehicle_filter == vehicle %}selected{% endif %}>{{ vehicle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <select class="form-control filter-input-enhanced" name="department_filter" onchange="submitFilterForm()">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments_list %}
+                        <option value="{{ department }}" {% if department_filter == department %}selected{% endif %}>{{ department }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <button type="button" class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
+                            onclick="clearFilters()">
+                        <i class="fas fa-times"></i> مسح الفلاتر
+                    </button>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Bulk Actions -->
         <div class="row">
-            <div class="col-md-3 mb-3">
-                <select class="form-control filter-input-enhanced" id="statusFilter">
-                    <option value="">جميع الحالات</option>
-                    <option value="pending">قيد المراجعة</option>
-                    <option value="approved">معتمدة</option>
-                    <option value="rejected">مرفوضة</option>
-                </select>
-            </div>
-            <div class="col-md-3 mb-3">
-                <input type="text" class="form-control filter-input-enhanced" id="searchFilter" 
-                       placeholder="البحث برقم اللوحة أو اسم السائق...">
-            </div>
-            <div class="col-md-3 mb-3">
-                <button class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
-                        onclick="clearFilters()">
-                    <i class="fas fa-times"></i> مسح الفلاتر
-                </button>
-            </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-12">
                 <button class="btn btn-action-enhanced btn-reject" 
                         id="bulkDeleteBtn" 
                         onclick="bulkDelete()" 
@@ -668,7 +686,7 @@
                 
                 // Show notification if filtered
                 if (statusFilter || searchFilter) {
-                    showNotification(تم العثور على ${visibleCount} طلب, 'info');
+                    showNotification('تم العثور على ' + visibleCount + ' طلب', 'info');
                 }
             }, 300);
         }
@@ -684,6 +702,11 @@
             filterTable();
             showNotification('تم مسح جميع الفلاتر', 'info');
             updateBulkDeleteButton(); // تحديث أزرار التحديد بعد مسح الفلاتر
+        };
+        
+        // Submit filter form
+        window.submitFilterForm = function() {
+            document.getElementById('filterForm').submit();
         };
         
         // Enhanced notification system
