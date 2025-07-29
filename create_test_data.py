@@ -220,19 +220,16 @@ NATIONALITIES_LIST = [
 
 
 
-
 def create_test_data():
     """إنشاء بيانات تجريبية"""
     
     with app.app_context():
-        # إنشاء الجداول إذا لم تكن موجودة
         print("إنشاء الجداول...")
         db.create_all()
         
         # حذف البيانات الموجودة بطريقة آمنة
         try:
             print("حذف البيانات الموجودة...")
-            # حذف البيانات من الجداول بالترتيب الصحيح لتجنب مشاكل التبعية الدائرية
             db.session.execute(db.text("SET FOREIGN_KEY_CHECKS = 0"))
             db.session.execute(db.text("DELETE FROM employee_departments"))
             db.session.execute(db.text("DELETE FROM user_accessible_departments"))
@@ -246,59 +243,80 @@ def create_test_data():
             db.session.rollback()
         
         print("إنشاء البيانات التجريبية...")
-        
-        # إنشاء قسم تجريبي باستخدام SQL مباشر
         try:
-            db.session.execute(db.text("""
-                INSERT INTO department (name, description, created_at, updated_at) 
+            # قسم تجريبي
+            db.session.execute(db.text(
+                """
+                INSERT INTO department (name, description, created_at, updated_at)
                 VALUES ('قسم تقنية المعلومات', 'قسم مختص بتقنية المعلومات والبرمجة', NOW(), NOW())
-            """))
+                """
+            ))
             db.session.commit()
-            
-            # الحصول على معرف القسم
-            result = db.session.execute(db.text("SELECT id FROM department WHERE name = 'قسم تقنية المعلومات'"))
-            dept_id = result.fetchone()[0]
-            
-            # إنشاء مستخدم إداري
-            db.session.execute(db.text("""
-                INSERT INTO user (email, name, role, is_active, auth_type, created_at, last_login) 
+
+            dept_id = db.session.execute(db.text(
+                "SELECT id FROM department WHERE name = 'قسم تقنية المعلومات'"
+            )).scalar()
+
+            # مستخدم إداري
+            db.session.execute(db.text(
+                """
+                INSERT INTO user (email, name, role, is_active, auth_type, created_at, last_login)
                 VALUES ('admin@nuzum.com', 'المدير العام', 'ADMIN', 1, 'local', NOW(), NULL)
-            """))
+                """
+            ))
             db.session.commit()
-            
-            # الحصول على معرف المستخدم
-            result = db.session.execute(db.text("SELECT id FROM user WHERE email = 'admin@nuzum.com'"))
-            user_id = result.fetchone()[0]
-            
-            # تحديث كلمة المرور للمستخدم
+
+            user_id = db.session.execute(db.text(
+                "SELECT id FROM user WHERE email = 'admin@nuzum.com'"
+            )).scalar()
+
             from werkzeug.security import generate_password_hash
             password_hash = generate_password_hash("admin123")
-            db.session.execute(db.text("""
-                UPDATE user SET password_hash = :password_hash WHERE id = :user_id
-            """), {"password_hash": password_hash, "user_id": user_id})
-            
-            # إنشاء موظف تجريبي
-            db.session.execute(db.text("""
-                INSERT INTO employee (employee_id, national_id, name, mobile, email, job_title, status, 
-                                   department_id, join_date, nationality, contract_type, basic_salary, 
-                                   created_at, updated_at, departments) 
-                VALUES ('EMP001', '1234567890', 'أحمد محمد علي', '0501234567', 'ahmed@nuzum.com', 
-                       'مطور برمجيات', 'active', :dept_id, '2024-01-15', 'سعودي', 'saudi', 8000.0, 
-                       NOW(), NOW(), :dept_id)
-            """), {"dept_id": dept_id})
-            
-            # إنشاء موظف آخر للاختبار
-            db.session.execute(db.text("""
-                INSERT INTO employee (employee_id, national_id, name, mobile, email, job_title, status, 
-                                   department_id, join_date, nationality, contract_type, basic_salary, 
-                                   created_at, updated_at, departments) 
-                VALUES ('EMP002', '0987654321', 'فاطمة أحمد السالم', '0509876543', 'fatima@nuzum.com', 
-                       'محللة أنظمة', 'active', :dept_id, '2024-02-01', 'سعودية', 'saudi', 7500.0, 
-                       NOW(), NOW(), :dept_id)
-            """), {"dept_id": dept_id})
-            
+            db.session.execute(db.text(
+                "UPDATE user SET password_hash = :password_hash WHERE id = :user_id"
+            ), {"password_hash": password_hash, "user_id": user_id})
             db.session.commit()
-            
+
+            # موظف 1
+            db.session.execute(db.text(
+                """
+                INSERT INTO employee (
+                    employee_id, national_id, name, mobile, email, job_title, status,
+                    department_id, join_date, nationality, contract_type, basic_salary,
+                    created_at, updated_at
+                ) VALUES (
+                    'EMP001', '1234567890', 'أحمد محمد علي', '0501234567', 'ahmed@nuzum.com',
+                    'مطور برمجيات', 'active', :dept_id, '2024-01-15', 'سعودي', 'saudi', 8000.0,
+                    NOW(), NOW()
+                )
+                """
+            ), {"dept_id": dept_id})
+            emp1_id = db.session.execute(db.text("SELECT LAST_INSERT_ID()")).scalar()
+            db.session.execute(db.text(
+                "INSERT INTO employee_departments (employee_id, department_id) VALUES (:emp_id, :dept_id)"
+            ), {"emp_id": emp1_id, "dept_id": dept_id})
+            db.session.commit()
+
+            # موظف 2
+            db.session.execute(db.text(
+                """
+                INSERT INTO employee (
+                    employee_id, national_id, name, mobile, email, job_title, status,
+                    department_id, join_date, nationality, contract_type, basic_salary,
+                    created_at, updated_at
+                ) VALUES (
+                    'EMP002', '0987654321', 'فاطمة أحمد السالم', '0509876543', 'fatima@nuzum.com',
+                    'محللة أنظمة', 'active', :dept_id, '2024-02-01', 'سعودية', 'saudi', 7500.0,
+                    NOW(), NOW()
+                )
+                """
+            ), {"dept_id": dept_id})
+            emp2_id = db.session.execute(db.text("SELECT LAST_INSERT_ID()")).scalar()
+            db.session.execute(db.text(
+                "INSERT INTO employee_departments (employee_id, department_id) VALUES (:emp_id, :dept_id)"
+            ), {"emp_id": emp2_id, "dept_id": dept_id})
+            db.session.commit()
+
             print("✓ تم إنشاء البيانات التجريبية بنجاح")
             print("📋 بيانات تسجيل الدخول:")
             print("   المستخدم: admin")
@@ -306,7 +324,7 @@ def create_test_data():
             print("📋 بيانات الموظفين للاختبار:")
             print("   الموظف 1: EMP001 / 1234567890")
             print("   الموظف 2: EMP002 / 0987654321")
-            
+
         except Exception as e:
             print(f"خطأ في إنشاء البيانات: {e}")
             db.session.rollback()

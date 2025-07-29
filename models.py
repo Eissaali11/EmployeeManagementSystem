@@ -26,12 +26,13 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text)
-    # manager_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
+    manager_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     employees = db.relationship('Employee', secondary=employee_departments, back_populates='departments')
+    manager = db.relationship('Employee', foreign_keys=[manager_id], backref='managed_departments')
 
     accessible_users = db.relationship('User', 
                                        secondary=user_accessible_departments,

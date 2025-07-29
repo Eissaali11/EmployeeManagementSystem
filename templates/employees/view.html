@@ -552,6 +552,14 @@
         height: 100%;
         background: linear-gradient(to bottom, #3b82f6, #1d4ed8);
     }
+
+
+
+    .dropdown-menu-center {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-top: 8px !important;
+  }
 </style>
 
 {% endblock %}
@@ -647,6 +655,20 @@
                 }
             });
         }
+
+        // Initialize tooltips
+        if (typeof bootstrap !== 'undefined') {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        }
+
+        // Function to show IBAN image modal
+        window.showIbanImageModal = function() {
+            const modal = new bootstrap.Modal(document.getElementById('ibanImageModal'));
+            modal.show();
+        };
     });
 </script>
 
@@ -830,165 +852,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <!-- قسم المعلومات البنكية - الإيبان -->
 
-    <div class="card mb-4 shadow-lg banking-section" style="border: none; border-radius: 15px; overflow: hidden;">
-        <div class="card-header" style="background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 50%, #3182ce 100%); color: white; border: none; padding: 20px;">
-            <div class="d-flex align-items-center">
-                <div class="me-3" style="background: rgba(255,255,255,0.2); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-university fa-lg"></i>
-                </div>
-                <div>
-                    <h5 class="card-title mb-0" style="font-weight: 600;">المعلومات البنكية</h5>
-                    <small style="opacity: 0.9;">إدارة الإيبان البنكي وصورة البطاقة</small>
-                </div>
-            </div>
-
-        </div>
-        <div class="card-body" style="padding: 30px; background: linear-gradient(145deg, #f8fafc 0%, #e2e8f0 100%);">
-            <div class="row g-4">
-                <!-- بطاقة رقم الإيبان البنكي -->
-                <div class="col-md-6">
-                    <div class="card h-100 banking-card" style="border: none; border-radius: 12px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                        <div class="card-header" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; border-radius: 12px 12px 0 0;">
-                            <h6 class="mb-0">
-                                <i class="fas fa-credit-card me-2"></i>رقم الإيبان البنكي
-                            </h6>
-                        </div>
-                        <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 140px;">
-                            {% if employee.bank_iban %}
-                                <div class="text-center">
-                                    <div class="mb-3">
-                                        <i class="fas fa-check-circle text-success fa-2x mb-2 success-check"></i>
-                                        <p class="text-muted mb-0">الإيبان متوفر</p>
-                                    </div>
-                                    <div class="iban-display">
-                                        <span class="fw-bold text-dark">{{ employee.bank_iban }}</span>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-exclamation-circle text-warning fa-3x mb-2"></i>
-                                    <h6 class="text-warning">لم يتم إدخال رقم الإيبان</h6>
-                                    <p class="small mb-0">يرجى إدخال رقم الإيبان البنكي أدناه</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- بطاقة صورة الإيبان البنكي -->
-                <div class="col-md-6">
-                    <div class="card h-100 banking-card" style="border: none; border-radius: 12px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                        <div class="card-header" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 12px 12px 0 0;">
-                            <h6 class="mb-0">
-                                <i class="fas fa-image me-2"></i>صورة بطاقة الإيبان
-                            </h6>
-                        </div>
-                        <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 140px;">
-                            {% if employee.bank_iban_image %}
-                                <div class="text-center">
-                                    <div class="position-relative d-inline-block iban-image-container">
-                                        <img src="{{ url_for('static', filename=employee.bank_iban_image) }}" 
-                                             alt="صورة الإيبان البنكي" 
-                                             class="img-fluid rounded shadow" 
-                                             style="max-height: 120px; width: auto; cursor: pointer; border: 3px solid #3b82f6;"
-                                             data-bs-toggle="modal" 
-                                             data-bs-target="#ibanImageModal">
-                                        <div class="position-absolute top-0 end-0" style="transform: translate(50%, -50%);">
-                                            <span class="badge bg-success rounded-pill success-check">
-                                                <i class="fas fa-check"></i>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2">
-                                        <form action="{{ url_for('employees.delete_iban_image', id=employee.id) }}" method="post" 
-                                              onsubmit="return confirm('هل أنت متأكد من حذف صورة الإيبان؟')" class="d-inline">
-                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill">
-                                                <i class="fas fa-trash me-1"></i>حذف الصورة
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-cloud-upload-alt text-info fa-3x mb-2"></i>
-                                    <h6 class="text-info">لا توجد صورة للإيبان</h6>
-                                    <p class="small mb-0">يرجى رفع صورة بطاقة الإيبان أدناه</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- نموذج إدخال/تحديث الإيبان -->
-            <div class="mt-4 p-4 rounded" style="background: white; border: 2px dashed #3b82f6; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                <div class="d-flex align-items-center mb-3">
-                    <div class="me-3" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-edit text-white"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-primary mb-0" style="font-weight: 600;">تحديث المعلومات البنكية</h6>
-                        <small class="text-muted">قم بإدخال أو تحديث رقم الإيبان وصورة البطاقة</small>
-                    </div>
-                </div>
-                
-                <form action="{{ url_for('employees.upload_iban', id=employee.id) }}" method="post" enctype="multipart/form-data">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="form-floating mb-3">
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="bank_iban" 
-                                       name="bank_iban" 
-                                       value="{{ employee.bank_iban or '' }}" 
-                                       placeholder="SA0000000000000000000000"
-                                       maxlength="34"
-                                       title="أدخل رقم الإيبان البنكي (اختياري)"
-                                       style="font-family: 'Courier New', monospace; font-size: 1.1em; letter-spacing: 1px; border: 2px solid #e2e8f0; border-radius: 10px; text-transform: uppercase;">
-                                <label for="bank_iban">
-                                    <i class="fas fa-credit-card me-1 text-primary"></i>رقم الإيبان البنكي
-                                </label>
-                            </div>
-                            <div class="alert alert-info alert-enhanced" style="border: none; background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%); border-radius: 8px;">
-                                <i class="fas fa-info-circle me-1"></i>
-                                <small>أدخل رقم الإيبان البنكي كاملاً - مثال: SA6710000111000467250</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="iban_image" class="form-label fw-bold text-primary">
-                                    <i class="fas fa-image me-1"></i>صورة بطاقة الإيبان البنكي
-                                </label>
-                                <input type="file" 
-                                       class="form-control" 
-                                       id="iban_image" 
-                                       name="iban_image" 
-                                       accept="image/*"
-                                       style="border: 2px solid #e2e8f0; border-radius: 10px; padding: 12px;">
-                            </div>
-                            <div class="alert alert-success alert-enhanced" style="border: none; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 8px;">
-                                <i class="fas fa-camera me-1"></i>
-                                <small>اختر صورة واضحة لبطاقة الإيبان البنكي (JPG, PNG, WebP)</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="text-center mt-4">
-                        <button type="submit" class="btn btn-lg px-5 py-3 rounded-pill banking-submit-btn" 
-                                style="background: linear-gradient(135deg, #1e3a5c 0%, #3182ce 100%); 
-                                       border: none; 
-                                       color: white; 
-                                       font-weight: 600; 
-                                       box-shadow: 0 4px 15px rgba(30, 58, 92, 0.3);
-                                       transition: all 0.3s ease;"
-                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(30, 58, 92, 0.4)'"
-                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(30, 58, 92, 0.3)'">
-                            <i class="fas fa-save me-2"></i>حفظ المعلومات البنكية
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    
 
     <!-- Modal لعرض صورة الإيبان -->
     {% if employee.bank_iban_image %}
@@ -1033,169 +897,20 @@ document.addEventListener('DOMContentLoaded', function() {
                        target="_blank" 
                        class="btn rounded-pill px-4"
                        style="background: linear-gradient(135deg, #1e3a5c 0%, #3182ce 100%); border: none; color: white;">
-                        <i class="fas fa-external-link-alt me-1"></i>فتح في تبويب جديد
+                       <i class="fas fa-external-link-alt me-1"></i>فتح في تبويب جديد
                     </a>
                 </div>
             </div>
         </div>
     </div>
     {% endif %}
-
-    <!-- لوحة معلومات أداء الموظف (داشبورد) -->
-    <div class="card mb-4">
-        <div class="card-header bg-dark text-white">
-
-            <h5 class="card-title mb-0">
-                <i class="fas fa-chart-bar me-2"></i>لوحة معلومات الأداء
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <!-- Attendance Statistics -->
-                <div class="col-md-6 mb-4">
-                    <div class="dashboard-card card">
-                        <div class="card-header">
-                            <h6 class="mb-0">إحصائيات الحضور للشهر الحالي</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
-                                {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
-                                {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
-                                {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
-                                {% set total_count = present_count + absent_count + leave_count + sick_count %}
-                                
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-success text-white rounded">
-                                        <h3 class="stat-value">{{ present_count }}</h3>
-                                        <small>أيام الحضور</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-danger text-white rounded">
-                                        <h3 class="stat-value">{{ absent_count }}</h3>
-                                        <small>أيام الغياب</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-warning text-white rounded">
-                                        <h3 class="stat-value">{{ leave_count }}</h3>
-                                        <small>إجازات</small>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 text-center mb-3">
-                                    <div class="stat-card p-3 bg-info text-white rounded">
-                                        <h3 class="stat-value">{{ sick_count }}</h3>
-                                        <small>إجازات مرضية</small>
-                                    </div>
-                                </div>
-                                
-                                <!-- Attendance Rate -->
-                                <div class="col-12 mt-3">
-                                    {% set attendance_rate = (present_count / total_count * 100)|round|int if total_count > 0 else 0 %}
-                                    <p class="mb-1">نسبة الحضور: {{ attendance_rate }}%</p>
-                                    <div class="progress">
-                                        <div class="progress-bar 
-                                            {% if attendance_rate >= 90 %}bg-success
-                                            {% elif attendance_rate >= 75 %}bg-info
-                                            {% elif attendance_rate >= 50 %}bg-warning
-                                            {% else %}bg-danger{% endif %}" 
-                                            role="progressbar" style="width: {{ attendance_rate }}%" 
-                                            aria-valuenow="{{ attendance_rate }}" aria-valuemin="0" aria-valuemax="100">
-                                            {{ attendance_rate }}%
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Average Working Hours -->
-                                <div class="col-12 mt-3">
-                                    <p class="mb-1">متوسط ساعات العمل اليومية: <span class="fw-bold">8.5</span> ساعة</p>
-                                    <div class="progress">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: 85%" 
-                                            aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
-                                            8.5 ساعة
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Attendance Chart -->
-                                <div class="col-12 mt-4">
-                                    <h6>توزيع حالات الحضور</h6>
-                                    <div class="chart-container">
-                                        <canvas id="attendanceChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Documents and Financial Status -->
-                <div class="col-md-6 mb-4">
-                    <div class="dashboard-card card">
-                        <div class="card-header">
-                            <h6 class="mb-0">حالة الوثائق والمعلومات المالية</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-2">
-                                <!-- Documents Status -->
-                                <div class="col-12 mb-3">
-                                    <h6>الوثائق المتوفرة</h6>
-                                    {% if employee.documents %}
-                                    <ul class="list-group">
-                                        {% for document in employee.documents %}
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            {% if document.document_type == 'national_id' %}الهوية الوطنية
-                                            {% elif document.document_type == 'passport' %}جواز السفر
-                                            {% elif document.document_type == 'health_certificate' %}الشهادة الصحية
-                                            {% elif document.document_type == 'work_permit' %}رخصة العمل
-                                            {% elif document.document_type == 'education_certificate' %}الشهادة التعليمية
-                                            {% elif document.document_type == 'driving_license' %}تصريح القيادة
-                                            {% elif document.document_type == 'annual_leave' %}إجازة سنوية
-                                            {% elif document.document_type == 'other' %}أخرى
-                                            {% else %}{{ document.document_type }}{% endif %}
-                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
-                                        </li>
-                                        {% endfor %}
-                                    </ul>
-                                    {% else %}
-                                    <p class="text-center text-muted my-2">لا توجد وثائق مسجلة</p>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- Financial Information -->
-                                <div class="col-12">
-                                    <h6>المعلومات المالية</h6>
-                                    {% if salaries %}
-                                    {% set last_salary = salaries|sort(attribute='id')|last %}
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>آخر راتب:</span>
-                                        <span class="fw-bold">{{ last_salary.net_salary }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span>الشهر:</span>
-                                        <span>{{ last_salary.month }}/{{ last_salary.year }}</span>
-                                    </div>
-                                    {% else %}
-                                    <p class="text-center text-muted my-2">لا توجد معلومات مالية مسجلة</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row">
         <!-- Basic Information Card -->
         <div class="col-md-6 mb-4">
             <div class="dashboard-card card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
-                        <i class="fas fa-user me-2"></i>المعلومات الأساسية
-                    </h5>
+                        <i class="fas fa-user me-2"></i>المعلومات الشخصية                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
@@ -1203,43 +918,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p class="mb-1 text-muted">الاسم الكامل</p>
                             <p class="fs-5 fw-bold">{{ employee.name }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">الرقم الوظيفي</p>
-                            <p class="fs-5 fw-bold">{{ employee.employee_id }}</p>
-                        </div>
+
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">رقم الهوية</p>
                             <p class="fs-5">{{ employee.national_id }}</p>
                         </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">رقم الجوال</p>
-                            <p class="fs-5">{{ employee.mobile }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">رقم الجوال العمل</p>
-                            <p class="fs-5">{{ employee.mobilePersonal or '-' }}</p>
-                        </div>
-                        {% if mobile_devices %}
-                        {% set primary_device = mobile_devices[0] %}
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-success"></i>رقم هاتف الجهاز</p>
-                            <p class="fs-5 fw-bold text-success">{{ primary_device.phone_number }}</p>
-                        </div>
-                        {% endif %}
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">البريد الإلكتروني</p>
-                            <p class="fs-5">{{ employee.email or '-' }}</p>
-                        </div>
-                        {% if mobile_devices %}
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-info"></i>نوع الموبايل</p>
-                            <p class="fs-5 fw-bold text-info">{{ primary_device.device_brand }} {{ primary_device.device_model or '' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted"><i class="fas fa-barcode me-1 text-primary"></i>IMEI</p>
-                            <p class="fs-5 fw-bold text-primary">{{ primary_device.imei }}</p>
-                        </div>
-                        {% endif %}
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">تاريخ الميلاد</p>
                             <p class="fs-5">
@@ -1256,7 +939,59 @@ document.addEventListener('DOMContentLoaded', function() {
                                 {% endif %}
                             </p>
                         </div>
+                     <div class="col-md-6">
+                        <p class="mb-1 text-muted">الجنسية</p>
+                        <p class="fs-5">{{ employee.nationality }}</p>
+                    </div>
                         <div class="col-md-6">
+                            <p class="mb-1 text-muted">رقم الجوال</p>
+                            <p class="fs-5">{{ employee.mobile }}</p>
+                        </div>
+                        <!-- <div class="col-md-6">
+                            <p class="mb-1 text-muted">رقم الجوال العمل</p>
+                            <p class="fs-5">{{ employee.mobilePersonal or '-' }}</p>
+                        </div> -->
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">رقم الايبان</p>
+                            {% if employee.bank_iban_image %}
+                            <p class="fs-5">
+                                <span class="text-primary fw-bold" 
+                                      style="cursor: pointer; text-decoration: underline; transition: all 0.3s ease; border-radius: 4px; padding: 2px 4px;"
+                                      onclick="showIbanImageModal()"
+                                      onmouseover="this.style.backgroundColor='#e3f2fd'; this.style.color='#0056b3'"
+                                      onmouseout="this.style.backgroundColor='transparent'; this.style.color='#0d6efd'"
+                                      title="انقر لعرض صورة الإيبان">
+                                    <i class="fas fa-eye me-1"></i>{{ employee.bank_iban }}
+                                </span>
+                            </p>
+                            {% else %}
+                            <p class="fs-5">{{ employee.bank_iban }}</p>
+                            {% endif %}
+                        </div>
+                      
+                        
+                        <!-- {% if mobile_devices %}
+                        {% set primary_device = mobile_devices[0] %}
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-success"></i>رقم هاتف الجهاز</p>
+                            <p class="fs-5 fw-bold text-success">{{ primary_device.phone_number }}</p>
+                        </div>
+                        {% endif %} -->
+                        <!-- <div class="col-md-6">
+                            <p class="mb-1 text-muted">البريد الإلكتروني</p>
+                            <p class="fs-5">{{ employee.email or '-' }}</p>
+                        </div> -->
+                        <!-- {% if mobile_devices %}
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted"><i class="fas fa-mobile-alt me-1 text-info"></i>نوع الموبايل</p>
+                            <p class="fs-5 fw-bold text-info">{{ primary_device.device_brand }} {{ primary_device.device_model or '' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted"><i class="fas fa-barcode me-1 text-primary"></i>IMEI</p>
+                            <p class="fs-5 fw-bold text-primary">{{ primary_device.imei }}</p>
+                        </div>
+                        {% endif %} -->
+                        <!-- <div class="col-md-6">
                             <p class="mb-1 text-muted">تاريخ الالتحاق</p>
                             <p class="fs-5">
                                 {% if employee.join_date %}
@@ -1268,11 +1003,130 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span class="text-muted">-</span>
                                 {% endif %}
                             </p>
-                        </div>
+                        </div> -->
                         
                         <!-- Employee Type and Custody -->
-                        <div class="col-12">
-                            <div class="border-top pt-3 mt-3">
+                       
+                        
+                        <!-- Sponsorship Information -->
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work Information Card -->
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-briefcase me-2"></i>معلومات العمل
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">المسمى الوظيفي</p>
+                            <p class="fs-5 fw-bold">{{ employee.job_title }}</p>
+                        </div>
+                                                <div class="col-md-6">
+                            <p class="mb-1 text-muted">الرقم الوظيفي</p>
+                            <p class="fs-5 fw-bold">{{ employee.employee_id }}</p>
+                        </div> 
+
+                        <div class="mb-3 col-md-6">
+                            <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
+                            
+                            <div class="department-pills-container">
+                                {% if employee.departments %}
+                                    {% for dept in employee.departments %}
+                                    <span class="department-pill active">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        {{ dept.name }}
+                                    </span>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted small m-1">لا يوجد أقسام مرتبطة بهذا الموظف.</p>
+                                {% endif %}
+                            </div>
+                            <div class="form-text mt-2">الأقسام التي يعمل بها الموظف حالياً.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">الحالة</p>
+                            <p class="fs-5">
+                                {% if employee.status == 'active' %}
+                                <span class="badge-enhanced bg-success">نشط</span>
+                                {% elif employee.status == 'inactive' %}
+                                <span class="badge-enhanced bg-danger">غير نشط</span>
+                                {% elif employee.status == 'on_leave' %}
+                                <span class="badge-enhanced bg-warning">في إجازة</span>
+                                {% else %}
+                                <span class="badge-enhanced bg-secondary">{{ employee.status }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">المدير</p>
+                            <p class="fs-5">
+                                {% if employee.department and employee.department.manager %}
+                                {{ employee.department.manager.name }}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted">الموقع</p>
+                            <p class="fs-5">{{ employee.location or '-' }}</p>
+                        </div>
+                        <!-- <div class="col-md-6"> -->
+                            <!-- <p class="mb-1 text-muted">المشروع</p> -->
+                            <!-- <p class="fs-5">{{ employee.project or '-' }}</p> -->
+                        <!-- </div> -->
+                    </div>
+                </div>
+                <div class="col-12">
+                            <div class="border-top pt-3 mt-3 px-3">
+                                <h6 class="mb-3 text-warning">
+                                    <i class="fas fa-user-tie me-2"></i>معلومات الكفالة
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <p class="mb-1 text-muted">حالة الكفالة</p>
+                                        <p class="fs-5">
+                                            {% if employee.sponsorship_status == 'outside' %}
+                                            <span class="badge-enhanced bg-danger">
+                                                <i class="fas fa-times-circle me-1"></i>خارج الكفالة
+                                            </span>
+                                            {% else %}
+                                            <span class="badge-enhanced bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>على الكفالة
+                                            </span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                    {% if employee.sponsorship_status != 'outside' and employee.current_sponsor_name %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1 text-muted">اسم الكفيل الحالي</p>
+                                        <p class="fs-5 fw-bold">
+                                            <i class="fas fa-user-shield me-2 text-primary"></i>{{ employee.current_sponsor_name }}
+                                        </p>
+                                    </div>
+                                    {% elif employee.sponsorship_status != 'outside' %}
+                                    <div class="col-md-6">
+                                        <p class="mb-1 text-muted">اسم الكفيل الحالي</p>
+                                        <p class="fs-5 text-muted">
+                                            <i class="fas fa-question-circle me-2"></i>غير محدد
+                                        </p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div> 
+                          <div class="col-12">
+                            <div class="border-top pt-3 mt-3 px-3 py-3">
                                 <h6 class="mb-3 text-primary">
                                     <i class="fas fa-user-tag me-2"></i>نوع الموظف والعهدة
                                 </h6>
@@ -1355,7 +1209,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     {% endif %}
                                     
                                     <!-- Device and SIM Assignment Information -->
-                                    {% if device_assignments %}
+                                     {% if device_assignments %}
                                     <div class="col-12 mt-3">
                                         <div class="border-top pt-3">
                                             <h6 class="mb-3 text-primary">
@@ -1410,136 +1264,91 @@ document.addEventListener('DOMContentLoaded', function() {
                                             </div>
                                         </div>
                                     </div>
-                                    {% endif %}
+                                    {% endif %} 
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- Sponsorship Information -->
-                        <div class="col-12">
-                            <div class="border-top pt-3 mt-3">
-                                <h6 class="mb-3 text-warning">
-                                    <i class="fas fa-user-tie me-2"></i>معلومات الكفالة
-                                </h6>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <p class="mb-1 text-muted">حالة الكفالة</p>
-                                        <p class="fs-5">
-                                            {% if employee.sponsorship_status == 'outside' %}
-                                            <span class="badge-enhanced bg-danger">
-                                                <i class="fas fa-times-circle me-1"></i>خارج الكفالة
-                                            </span>
-                                            {% else %}
-                                            <span class="badge-enhanced bg-success">
-                                                <i class="fas fa-check-circle me-1"></i>على الكفالة
-                                            </span>
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                    
-                                    {% if employee.sponsorship_status != 'outside' and employee.current_sponsor_name %}
-                                    <div class="col-md-6">
-                                        <p class="mb-1 text-muted">اسم الكفيل الحالي</p>
-                                        <p class="fs-5 fw-bold">
-                                            <i class="fas fa-user-shield me-2 text-primary"></i>{{ employee.current_sponsor_name }}
-                                        </p>
-                                    </div>
-                                    {% elif employee.sponsorship_status != 'outside' %}
-                                    <div class="col-md-6">
-                                        <p class="mb-1 text-muted">اسم الكفيل الحالي</p>
-                                        <p class="fs-5 text-muted">
-                                            <i class="fas fa-question-circle me-2"></i>غير محدد
-                                        </p>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                        </div> 
 
-        <!-- Work Information Card -->
-        <div class="col-md-6 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-briefcase me-2"></i>معلومات العمل
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">المسمى الوظيفي</p>
-                            <p class="fs-5 fw-bold">{{ employee.job_title }}</p>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">الأقسام المرتبط بها الموظف</label>
-                            <div class="department-pills-container">
-                                {% if departments %}
-                                    {% set assigned_dept_ids = employee.departments|map(attribute='id')|list %}
-                                    
-                                    {% for dept in departments %}
-                                    <div class="d-none">
-                                        <input class="form-check-input department-checkbox" type="checkbox" name="department_ids" value="{{ dept.id }}" id="dept-edit-{{ employee.id }}-{{ dept.id }}"
-                                               {% if dept.id in assigned_dept_ids %}checked{% endif %}>
-                                    </div>
-                                    <span class="department-pill {% if dept.id in assigned_dept_ids %}active{% endif %}" data-target-id="dept-edit-{{ employee.id }}-{{ dept.id }}">
-                                        <i class="fas fa-check-circle me-1"></i>
-                                        {{ dept.name }}
-                                    </span>
-                                    {% endfor %}
-                                {% else %}
-                                    <p class="text-muted small m-1">لا توجد أقسام معرفة في النظام لتعيينها.</p>
-                                {% endif %}
-                            </div>
-                            <div class="form-text mt-2">انقر على اسم القسم لتحديده أو إلغاء تحديده.</div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">الحالة</p>
-                            <p class="fs-5">
-                                {% if employee.status == 'active' %}
-                                <span class="badge-enhanced bg-success">نشط</span>
-                                {% elif employee.status == 'inactive' %}
-                                <span class="badge-enhanced bg-danger">غير نشط</span>
-                                {% elif employee.status == 'on_leave' %}
-                                <span class="badge-enhanced bg-warning">في إجازة</span>
-                                {% else %}
-                                <span class="badge-enhanced bg-secondary">{{ employee.status }}</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">المدير</p>
-                            <p class="fs-5">
-                                {% if employee.department and employee.department.manager %}
-                                {{ employee.department.manager.name }}
-                                {% else %}
-                                -
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">الموقع</p>
-                            <p class="fs-5">{{ employee.location or '-' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="mb-1 text-muted">المشروع</p>
-                            <p class="fs-5">{{ employee.project or '-' }}</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 
+    <!-- لوحة معلومات أداء الموظف (داشبورد) -->
+    <!-- <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+
+            <h5 class="card-title mb-0">
+                <i class="fas fa-chart-bar me-2"></i>لوحة معلومات الأداء
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row"> -->
+                <!-- Attendance Statistics -->
+                
+                
+                <!-- Documents and Financial Status -->
+                <!-- <div class="col-md-6 mb-4"> -->
+                    <!-- <div class="dashboard-card card">
+                        <div class="card-header">
+                            <h6 class="mb-0">حالة الوثائق والمعلومات المالية</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                <!-- Documents Status -->
+                                <!-- <div class="col-12 mb-3">
+                                    <h6>الوثائق المتوفرة</h6>
+                                    {% if employee.documents %}
+                                    <ul class="list-group">
+                                        {% for document in employee.documents %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            {% if document.document_type == 'national_id' %}الهوية الوطنية
+                                            {% elif document.document_type == 'passport' %}جواز السفر
+                                            {% elif document.document_type == 'health_certificate' %}الشهادة الصحية
+                                            {% elif document.document_type == 'work_permit' %}رخصة العمل
+                                            {% elif document.document_type == 'education_certificate' %}الشهادة التعليمية
+                                            {% elif document.document_type == 'driving_license' %}تصريح القيادة
+                                            {% elif document.document_type == 'annual_leave' %}إجازة سنوية
+                                            {% elif document.document_type == 'other' %}أخرى
+                                            {% else %}{{ document.document_type }}{% endif %}
+                                            <span class="badge-enhanced bg-success"><i class="fas fa-check"></i></span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% else %}
+                                    <p class="text-center text-muted my-2">لا توجد وثائق مسجلة</p>
+                                    {% endif %}
+                                </div>
+                                 -->
+                                <!-- Financial Information -->
+                                <!-- <div class="col-12">
+                                    <h6>المعلومات المالية</h6>
+                                    {% if salaries %}
+                                    {% set last_salary = salaries|sort(attribute='id')|last %}
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>آخر راتب:</span>
+                                        <span class="fw-bold">{{ last_salary.net_salary }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>الشهر:</span>
+                                        <span>{{ last_salary.month }}/{{ last_salary.year }}</span>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-center text-muted my-2">لا توجد معلومات مالية مسجلة</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div> -->
+                    <!-- </div> --> 
+                <!-- </div> -->
+            <!-- </div> -->
+        <!-- </div> -->
+    <!-- </div> -->
+
+
     <!-- Additional Information Cards -->
     <div class="row">
         <!-- Attendance Records -->
-        <div class="col-md-4 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="dashboard-card card">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -1606,8 +1415,49 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         </div>
 
+        <div class="col-md-6 mb-4">
+            <div class="dashboard-card card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-money-bill-wave me-2"></i>سجلات الرواتب
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if salaries %}
+                    <div class="table-responsive">
+                        <table class="enhanced-table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>الشهر/السنة</th>
+                                    <th>الراتب الأساسي</th>
+                                    <th>إجمالي المستحقات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for salary in salaries[:5] %}
+                                <tr>
+                                    <td data-label="الشهر/السنة">{{ salary.month }}/{{ salary.year }}</td>
+                                    <td data-label="الراتب الأساسي">{{ salary.basic_salary }}</td>
+                                    <td data-label="إجمالي المستحقات">{{ salary.net_salary }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-2">
+                        <a href="{{ url_for('salaries.index', employee_id=employee.id) }}" class="btn-enhanced btn-success-enhanced btn-sm">
+                            عرض جميع الرواتب
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="text-center my-4">لا توجد سجلات رواتب</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
         <!-- Documents -->
-        <div class="col-md-12 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="dashboard-card card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -1634,7 +1484,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     {% if existing_documents %}
                     <div class="row">
                         {% for doc_type, doc_name in existing_documents %}
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <div class="dashboard-card card h-100 border-{{ documents_by_type[doc_type].status_class }}">
                                 <div class="card-header bg-{{ documents_by_type[doc_type].status_class }} text-white">
                                     <h6 class="card-title mb-0">{{ doc_name }}</h6>
@@ -1679,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button class="btn-enhanced btn-success-enhanced dropdown-toggle" type="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-plus me-2"></i>إضافة وثيقة جديدة
                             </button>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-center ">
                                 {% for doc_type, doc_name in document_types_map.items() %}
                                 {% if not documents_by_type[doc_type] %}
                                 <li>
@@ -1697,49 +1547,88 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 </div>
             </div>
-        </div>
+            <div class="col-md-6 mb-4">
+                <div class="dashboard-card card">
+                        <div class="card-header">
+                            <h6 class="mb-0">إحصائيات الحضور للشهر الحالي</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-2">
+                                {% set present_count = attendances|selectattr('status', 'eq', 'present')|list|length %}
+                                {% set absent_count = attendances|selectattr('status', 'eq', 'absent')|list|length %}
+                                {% set leave_count = attendances|selectattr('status', 'eq', 'leave')|list|length %}
+                                {% set sick_count = attendances|selectattr('status', 'eq', 'sick')|list|length %}
+                                {% set total_count = present_count + absent_count + leave_count + sick_count %}
+                                
+                                <div class="col-md-3 text-center mb-3">
+                                    <div class="stat-card p-3 bg-success text-white rounded">
+                                        <h3 class="stat-value">{{ present_count }}</h3>
+                                        <small>أيام الحضور</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center mb-3">
+                                    <div class="stat-card p-3 bg-danger text-white rounded">
+                                        <h3 class="stat-value">{{ absent_count }}</h3>
+                                        <small>أيام الغياب</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center mb-3">
+                                    <div class="stat-card p-3 bg-warning text-white rounded">
+                                        <h3 class="stat-value">{{ leave_count }}</h3>
+                                        <small>إجازات</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 text-center mb-3">
+                                    <div class="stat-card p-3 bg-info text-white rounded">
+                                        <h3 class="stat-value">{{ sick_count }}</h3>
+                                        <small>إجازات مرضية</small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Attendance Rate -->
+                                <div class="col-12 mt-3">
+                                    {% set attendance_rate = (present_count / total_count * 100)|round|int if total_count > 0 else 0 %}
+                                    <p class="mb-1">نسبة الحضور: {{ attendance_rate }}%</p>
+                                    <div class="progress">
+                                        <div class="progress-bar 
+                                            {% if attendance_rate >= 90 %}bg-success
+                                            {% elif attendance_rate >= 75 %}bg-info
+                                            {% elif attendance_rate >= 50 %}bg-warning
+                                            {% else %}bg-danger{% endif %}" 
+                                            role="progressbar" style="width: {{ attendance_rate }}%" 
+                                            aria-valuenow="{{ attendance_rate }}" aria-valuemin="0" aria-valuemax="100">
+                                            {{ attendance_rate }}%
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Average Working Hours -->
+                                <div class="col-12 mt-3">
+                                    <p class="mb-1">متوسط ساعات العمل اليومية: <span class="fw-bold">8.5</span> ساعة</p>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 85%" 
+                                            aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
+                                            8.5 ساعة
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Attendance Chart -->
+                                <div class="col-12 mt-4">
+                                    <h6>توزيع حالات الحضور</h6>
+                                    <div class="chart-container">
+                                        <canvas id="attendanceChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
 
-        <!-- Salary Records -->
-        <div class="col-md-4 mb-4">
-            <div class="dashboard-card card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-money-bill-wave me-2"></i>سجلات الرواتب
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% if salaries %}
-                    <div class="table-responsive">
-                        <table class="enhanced-table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>الشهر/السنة</th>
-                                    <th>الراتب الأساسي</th>
-                                    <th>إجمالي المستحقات</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for salary in salaries[:5] %}
-                                <tr>
-                                    <td data-label="الشهر/السنة">{{ salary.month }}/{{ salary.year }}</td>
-                                    <td data-label="الراتب الأساسي">{{ salary.basic_salary }}</td>
-                                    <td data-label="إجمالي المستحقات">{{ salary.net_salary }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="text-center mt-2">
-                        <a href="{{ url_for('salaries.index', employee_id=employee.id) }}" class="btn-enhanced btn-success-enhanced btn-sm">
-                            عرض جميع الرواتب
-                        </a>
-                    </div>
-                    {% else %}
-                    <p class="text-center my-4">لا توجد سجلات رواتب</p>
-                    {% endif %}
-                </div>
             </div>
-        </div>
+        <!-- Salary Records -->
+       
     </div>
 
     <!-- Vehicle Handover Records -->
@@ -1903,6 +1792,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         }
+
+        // Function to show IBAN image modal
+        window.showIbanImageModal = function() {
+            const modal = new bootstrap.Modal(document.getElementById('ibanImageModal'));
+            modal.show();
+        };
     });
 </script>
 {% endblock %}
