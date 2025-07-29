@@ -284,6 +284,47 @@
             width: 100%;
         }
     }
+
+
+    /* يجعل أعمدة الرأس والجسم بنفس العرض */
+    .fixed-header-table {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    .fixed-header-table th,
+    .fixed-header-table td {
+        word-wrap: break-word; /* لمنع الكلمات الطويلة من تخريب التنسيق */
+    }
+
+    .table-body-scrollable {
+        display: block; /* ضروري لجعل max-height و overflow يعملان */
+        max-height: 500px; /* يمكنك تعديل هذا الارتفاع حسب ما يناسبك */
+        overflow-y: auto;   /* يظهر شريط التمرير العمودي فقط عند الحاجة */
+    }
+
+    /* حيلة لمحاذاة الأعمدة بشكل صحيح بين الرأس والجسم */
+    .fixed-header-table > thead,
+    .fixed-header-table > tbody > tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    /* لتخصيص شكل شريط التمرير (اختياري) */
+    .table-body-scrollable::-webkit-scrollbar {
+        width: 8px;
+    }
+    .table-body-scrollable::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-body-scrollable::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    .table-body-scrollable::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
 </style>
 {% endblock %}
 
