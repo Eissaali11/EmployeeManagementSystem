@@ -525,31 +525,188 @@ function showImageModal(imageSrc, caption) {
     imageModal.show();
 }
 
-// مشاركة تفاصيل الورشة
-function shareWorkshopDetails() {
-    const shareData = {
-        title: 'تفاصيل سجل الورشة - {{ vehicle.plate_number }}',
-        text: `🚗 تفاصيل سجل الورشة للسيارة {{ vehicle.plate_number }}
+// مشاركة تفاصيل الورشة مع الصور
+async function shareWorkshopDetails() {
+    try {
+        // جمع معلومات الصور
+        const beforeImages = [];
+        const afterImages = [];
+        const imageFiles = [];
+        
+        {% if record.images %}
+        {% for image in record.images %}
+        {% if image.image_type == 'before' %}
+        beforeImages.push({
+            src: '/static/{{ image.image_path }}',
+            description: '{{ image.notes or "صورة قبل الإصلاح" }}'
+        });
+        {% elif image.image_type == 'after' %}
+        afterImages.push({
+            src: '/static/{{ image.image_path }}',
+            description: '{{ image.notes or "صورة بعد الإصلاح" }}'
+        });
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        // تحويل الصور إلى ملفات للمشاركة
+        for (const beforeImg of beforeImages) {
+            try {
+                const response = await fetch(beforeImg.src);
+                const blob = await response.blob();
+                const file = new File([blob], `قبل_الإصلاح_{{ vehicle.plate_number }}.jpg`, {type: blob.type});
+                imageFiles.push(file);
+            } catch (e) {
+                console.log('خطأ في تحميل صورة قبل الإصلاح:', e);
+            }
+        }
+        
+        for (const afterImg of afterImages) {
+            try {
+                const response = await fetch(afterImg.src);
+                const blob = await response.blob();
+                const file = new File([blob], `بعد_الإصلاح_{{ vehicle.plate_number }}.jpg`, {type: blob.type});
+                imageFiles.push(file);
+            } catch (e) {
+                console.log('خطأ في تحميل صورة بعد الإصلاح:', e);
+            }
+        }
+
+        // إنشاء رسالة منظمة
+        let shareText = `🚗 تقرير سجل الورشة - {{ vehicle.plate_number }}
+═══════════════════════════════
+
+📋 معلومات السيارة:
+• رقم اللوحة: {{ vehicle.plate_number }}
+• النوع: {{ vehicle.make }} {{ vehicle.model }}
+
+🏪 معلومات الورشة:
+• اسم الورشة: {{ record.workshop_name or 'غير محدد' }}
+• تاريخ الدخول: {{ record.formatted_entry_date or 'غير محدد' }}`;
+
+{% if record.exit_date %}
+shareText += `
+• تاريخ الخروج: {{ record.formatted_exit_date }}`;
+{% endif %}
+
+shareText += `
+• حالة الإصلاح: {% if record.repair_status == 'completed' %}✅ تم الإصلاح{% elif record.repair_status == 'in_progress' %}🔄 قيد التنفيذ{% elif record.repair_status == 'pending_approval' %}⏳ بانتظار الموافقة{% else %}{{ record.repair_status or 'غير محدد' }}{% endif %}`;
+
+{% if record.cost and record.cost > 0 %}
+shareText += `
+• التكلفة: {{ '{:,.0f}'.format(record.cost) }} ريال سعودي`;
+{% endif %}
+
+{% if record.technician_name %}
+shareText += `
+• الفني المسؤول: {{ record.technician_name }}`;
+{% endif %}
+
+{% if record.description %}
+shareText += `
+
+🔧 وصف المشكلة:
+{{ record.description }}`;
+{% endif %}
+
+        // إضافة معلومات الصور
+        if (beforeImages.length > 0 || afterImages.length > 0) {
+            shareText += `
+
+📸 الصور المرفقة:`;
+            
+            if (beforeImages.length > 0) {
+                shareText += `
+• صور قبل الإصلاح: ${beforeImages.length} صورة`;
+                beforeImages.forEach((img, index) => {
+                    if (img.description && img.description !== 'صورة قبل الإصلاح') {
+                        shareText += `
+  - ${img.description}`;
+                    }
+                });
+            }
+            
+            if (afterImages.length > 0) {
+                shareText += `
+• صور بعد الإصلاح: ${afterImages.length} صورة`;
+                afterImages.forEach((img, index) => {
+                    if (img.description && img.description !== 'صورة بعد الإصلاح') {
+                        shareText += `
+  - ${img.description}`;
+                    }
+                });
+            }
+        }
+
+{% if record.delivery_link %}
+shareText += `
+
+🔗 رابط تسليم الورشة:
+{{ record.delivery_link }}`;
+{% endif %}
+
+{% if record.reception_link %}
+shareText += `
+
+🔗 رابط استلام من الورشة:
+{{ record.reception_link }}`;
+{% endif %}
+
+{% if record.notes %}
+shareText += `
+
+📝 ملاحظات إضافية:
+{{ record.notes }}`;
+{% endif %}
+
+        shareText += `
+
+═══════════════════════════════
+📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}
+🕒 وقت التقرير: ${new Date().toLocaleTimeString('ar-SA')}`;
+
+        // محاولة المشاركة مع الملفات
+        const shareData = {
+            title: 'تقرير سجل الورشة - {{ vehicle.plate_number }}',
+            text: shareText
+        };
+
+        // إضافة الملفات إذا كان المتصفح يدعمها
+        if (imageFiles.length > 0 && navigator.canShare && navigator.canShare({files: imageFiles})) {
+            shareData.files = imageFiles;
+        }
+
+        if (navigator.share) {
+            await navigator.share(shareData);
+            
+            // عرض رسالة نجاح
+            const toast = document.createElement('div');
+            toast.className = 'toast show position-fixed bottom-0 end-0 m-3';
+            toast.style.backgroundColor = '#198754';
+            toast.style.color = 'white';
+            toast.innerHTML = `
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    تم مشاركة التقرير مع ${imageFiles.length} صورة بنجاح
+                </div>
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => document.body.removeChild(toast), 3000);
+            
+        } else {
+            fallbackShare(shareText);
+        }
+        
+    } catch (error) {
+        console.log('خطأ في المشاركة:', error);
+        // في حالة الخطأ، مشاركة النص فقط
+        fallbackShare(`🚗 تقرير سجل الورشة - {{ vehicle.plate_number }}
 
 🏪 الورشة: {{ record.workshop_name or 'غير محدد' }}
 📅 تاريخ الدخول: {{ record.formatted_entry_date or 'غير محدد' }}
-{% if record.exit_date %}📅 تاريخ الخروج: {{ record.formatted_exit_date }}{% endif %}
-🔧 حالة الإصلاح: {% if record.repair_status == 'completed' %}تم الإصلاح{% elif record.repair_status == 'in_progress' %}قيد التنفيذ{% elif record.repair_status == 'pending_approval' %}بانتظار الموافقة{% else %}{{ record.repair_status or 'غير محدد' }}{% endif %}
-{% if record.cost and record.cost > 0 %}💰 التكلفة: {{ '{:,.2f}'.format(record.cost) }} ريال{% endif %}
-{% if record.technician_name %}👨‍🔧 الفني المسؤول: {{ record.technician_name }}{% endif %}
+🔧 حالة الإصلاح: {% if record.repair_status == 'completed' %}تم الإصلاح{% elif record.repair_status == 'in_progress' %}قيد التنفيذ{% else %}{{ record.repair_status or 'غير محدد' }}{% endif %}
 
-{{ record.notes or '' }}`
-    };
-
-    if (navigator.share) {
-        navigator.share(shareData).then(() => {
-            console.log('تم مشاركة التفاصيل بنجاح');
-        }).catch((error) => {
-            console.log('خطأ في المشاركة:', error);
-            fallbackShare(shareData.text);
-        });
-    } else {
-        fallbackShare(shareData.text);
+{% if record.images %}صور مرفقة: {{ record.images|length }} صورة{% endif %}`);
     }
 }
 

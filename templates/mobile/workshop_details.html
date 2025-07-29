@@ -267,68 +267,200 @@ function showImageModal(imageSrc, imageTitle) {
     modal.show();
 }
 
-// مشاركة تفاصيل الورشة
-function shareWorkshopDetails() {
-    const workshopData = {
-        plateNumber: "{{ vehicle.plate_number }}",
-        vehicleInfo: "{{ vehicle.make }} {{ vehicle.model }}",
-        entryDate: "{{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else 'غير محدد' }}",
-        exitDate: "{{ workshop_record.exit_date.strftime('%Y-%m-%d') if workshop_record.exit_date else 'لا يزال في الورشة' }}",
-        reason: "{{ workshop_record.reason or 'غير محدد' }}",
-        status: "{{ workshop_record.repair_status or 'غير محدد' }}",
-        description: "{{ workshop_record.description or 'لا يوجد وصف' }}",
-        workshop: "{{ workshop_record.workshop_name or 'غير محدد' }}",
-        technician: "{{ workshop_record.technician_name or 'غير محدد' }}",
-        cost: "{{ '{:,.2f}'.format(workshop_record.cost) if workshop_record.cost and workshop_record.cost > 0 else 'غير محدد' }}",
-        notes: "{{ workshop_record.notes or 'لا توجد ملاحظات' }}",
-        detailsUrl: window.location.href,
-        imagesCount: {{ workshop_record.images|length if workshop_record.images else 0 }}
-    };
+// مشاركة تفاصيل الورشة مع الصور المنظمة
+async function shareWorkshopDetails() {
+    try {
+        // جمع معلومات الصور
+        const beforeImages = [];
+        const afterImages = [];
+        
+        {% if workshop_record.images %}
+        {% for image in workshop_record.images %}
+        {% if image.image_type == 'before' %}
+        beforeImages.push({
+            path: '{{ image.image_path }}',
+            notes: '{{ image.notes or "" }}'
+        });
+        {% elif image.image_type == 'after' %}
+        afterImages.push({
+            path: '{{ image.image_path }}',
+            notes: '{{ image.notes or "" }}'
+        });
+        {% endif %}
+        {% endfor %}
+        {% endif %}
 
-    const shareText = `مرحباً 👋
+        const workshopData = {
+            plateNumber: "{{ vehicle.plate_number }}",
+            vehicleInfo: "{{ vehicle.make }} {{ vehicle.model }}",
+            entryDate: "{{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else 'غير محدد' }}",
+            exitDate: "{{ workshop_record.exit_date.strftime('%Y-%m-%d') if workshop_record.exit_date else 'لا يزال في الورشة' }}",
+            reason: "{{ workshop_record.reason or 'غير محدد' }}",
+            status: "{{ workshop_record.repair_status or 'غير محدد' }}",
+            description: "{{ workshop_record.description or 'لا يوجد وصف' }}",
+            workshop: "{{ workshop_record.workshop_name or 'غير محدد' }}",
+            technician: "{{ workshop_record.technician_name or 'غير محدد' }}",
+            cost: "{{ '{:,.0f}'.format(workshop_record.cost) if workshop_record.cost and workshop_record.cost > 0 else '0' }}",
+            notes: "{{ workshop_record.notes or 'لا توجد ملاحظات' }}",
+            deliveryLink: "{{ workshop_record.delivery_link or '' }}",
+            receptionLink: "{{ workshop_record.reception_link or '' }}"
+        };
 
-🚗 تفاصيل سجل الورشة
-━━━━━━━━━━━━━━━━━━━━━━━━
+        // تكوين حالة الإصلاح
+        let statusText = '';
+        if (workshopData.status === 'completed') {
+            statusText = '✅ تم الإصلاح بنجاح';
+        } else if (workshopData.status === 'in_progress') {
+            statusText = '🔄 قيد التنفيذ';
+        } else if (workshopData.status === 'pending_approval') {
+            statusText = '⏳ بانتظار الموافقة';
+        } else {
+            statusText = workshopData.status;
+        }
+
+        // تكوين سبب دخول الورشة
+        let reasonText = '';
+        if (workshopData.reason === 'maintenance') {
+            reasonText = '🔧 صيانة دورية';
+        } else if (workshopData.reason === 'breakdown') {
+            reasonText = '⚠️ عطل مفاجئ';
+        } else if (workshopData.reason === 'accident') {
+            reasonText = '🚨 حادث مروري';
+        } else {
+            reasonText = workshopData.reason;
+        }
+
+        let shareText = `🚗 تقرير سجل الورشة - ${workshopData.plateNumber}
+═══════════════════════════════
 
 📋 معلومات السيارة:
-• رقم السيارة: ${workshopData.plateNumber}
-• نوع السيارة: ${workshopData.vehicleInfo}
+• رقم اللوحة: ${workshopData.plateNumber}
+• النوع: ${workshopData.vehicleInfo}
 
 📅 تواريخ العملية:
 • دخول الورشة: ${workshopData.entryDate}
 • خروج الورشة: ${workshopData.exitDate}
 
-⚙️ تفاصيل العملية:
-• السبب: ${workshopData.reason}
-• حالة الإصلاح: ${workshopData.status}
-• الوصف: ${workshopData.description}
-
-🔧 معلومات الورشة:
+🏪 معلومات الورشة:
 • اسم الورشة: ${workshopData.workshop}
 • الفني المسؤول: ${workshopData.technician}
-• التكلفة: ${workshopData.cost} ريال
+• سبب الدخول: ${reasonText}
+• حالة الإصلاح: ${statusText}`;
+
+        if (workshopData.cost !== '0') {
+            shareText += `
+• التكلفة: ${workshopData.cost} ريال سعودي`;
+        }
+
+        if (workshopData.description !== 'لا يوجد وصف') {
+            shareText += `
+
+🔧 وصف المشكلة:
+${workshopData.description}`;
+        }
+
+        // إضافة معلومات الصور المنظمة
+        const totalImages = beforeImages.length + afterImages.length;
+        if (totalImages > 0) {
+            shareText += `
+
+📸 الصور المرفقة (${totalImages} صورة):`;
+            
+            if (beforeImages.length > 0) {
+                shareText += `
+• صور قبل الإصلاح: ${beforeImages.length} صورة`;
+                beforeImages.forEach((img, index) => {
+                    if (img.notes && img.notes.trim() !== '') {
+                        shareText += `
+  - ${img.notes}`;
+                    }
+                });
+            }
+            
+            if (afterImages.length > 0) {
+                shareText += `
+• صور بعد الإصلاح: ${afterImages.length} صورة`;
+                afterImages.forEach((img, index) => {
+                    if (img.notes && img.notes.trim() !== '') {
+                        shareText += `
+  - ${img.notes}`;
+                    }
+                });
+            }
+        }
+
+        // إضافة الروابط الخارجية
+        if (workshopData.deliveryLink || workshopData.receptionLink) {
+            shareText += `
+
+🔗 روابط خارجية:`;
+            if (workshopData.deliveryLink) {
+                shareText += `
+• رابط تسليم الورشة: ${workshopData.deliveryLink}`;
+            }
+            if (workshopData.receptionLink) {
+                shareText += `
+• رابط استلام من الورشة: ${workshopData.receptionLink}`;
+            }
+        }
+
+        if (workshopData.notes !== 'لا توجد ملاحظات') {
+            shareText += `
 
 📝 ملاحظات إضافية:
-${workshopData.notes}
+${workshopData.notes}`;
+        }
 
-📸 عدد الصور المرفقة: ${workshopData.imagesCount}
+        shareText += `
 
-━━━━━━━━━━━━━━━━━━━━━━━━
-نُظم - نظام إدارة المركبات`;
+═══════════════════════════════
+📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-SA')}
+🕒 وقت التقرير: ${new Date().toLocaleTimeString('ar-SA')}
+🏢 نُظم - نظام إدارة المركبات`;
 
-    if (navigator.share) {
-        navigator.share({
-            title: 'تفاصيل سجل الورشة - ' + workshopData.plateNumber,
-            text: shareText
-        }).then(() => {
-            console.log('تم المشاركة بنجاح');
-        }).catch((error) => {
-            console.log('خطأ في المشاركة:', error);
+        // محاولة المشاركة
+        if (navigator.share) {
+            await navigator.share({
+                title: `تقرير سجل الورشة - ${workshopData.plateNumber}`,
+                text: shareText
+            });
+            
+            // عرض رسالة نجاح
+            showSuccessToast('تم مشاركة التقرير بنجاح');
+            
+        } else {
             fallbackShare(shareText);
-        });
-    } else {
-        fallbackShare(shareText);
+        }
+        
+    } catch (error) {
+        console.log('خطأ في المشاركة:', error);
+        fallbackShare(`🚗 تقرير سجل الورشة - {{ vehicle.plate_number }}
+
+🏪 الورشة: {{ workshop_record.workshop_name or 'غير محدد' }}
+📅 دخول الورشة: {{ workshop_record.entry_date.strftime('%Y-%m-%d') if workshop_record.entry_date else 'غير محدد' }}
+🔧 حالة الإصلاح: {{ workshop_record.repair_status or 'غير محدد' }}
+
+📸 صور مرفقة: {{ workshop_record.images|length if workshop_record.images else 0 }} صورة`);
     }
+}
+
+// عرض رسالة نجاح
+function showSuccessToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast show position-fixed bottom-0 end-0 m-3 bg-success text-white';
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="toast-body">
+            <i class="fas fa-check-circle me-2"></i>
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        if (document.body.contains(toast)) {
+            document.body.removeChild(toast);
+        }
+    }, 3000);
 }
 
 function fallbackShare(text) {
