@@ -4093,6 +4093,7 @@ def edit_workshop_record(workshop_id):
     current_app.logger.debug(f"الملاحظات: {workshop_record.notes}")
     
     current_app.logger.info(f"Method received: {request.method}")
+    print(f"DEBUG: Method received: {request.method}")
 
     if request.method == 'POST':
         try:
