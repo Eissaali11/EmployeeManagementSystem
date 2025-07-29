@@ -297,11 +297,14 @@
             <div class="row">
                 <div class="col-md-2 mb-3">
                     <label class="form-label text-light mb-1">رقم السيارة:</label>
-                    <input type="text" 
-                           class="form-control filter-input-enhanced" 
-                           name="vehicle_filter" 
-                           value="{{ vehicle_filter }}"
-                           placeholder="ابحث برقم اللوحة">
+                    <select class="form-control filter-input-enhanced" name="vehicle_filter">
+                        <option value="">جميع السيارات</option>
+                        {% for vehicle in vehicles %}
+                        <option value="{{ vehicle.plate_number }}" {% if vehicle_filter == vehicle.plate_number %}selected{% endif %}>
+                            {{ vehicle.plate_number }} - {{ vehicle.vehicle_type or 'غير محدد' }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
                 
                 <div class="col-md-2 mb-3">
@@ -425,7 +428,7 @@
                                     <i class="fas fa-eye"></i>
                                 </a>
                                 {% elif operation.type == 'workshop' %}
-                                <a href="{{ url_for('mobile.view_workshop_details', record_id=operation.id) }}" 
+                                <a href="{{ url_for('mobile.view_workshop_details', workshop_id=operation.id) }}" 
                                    class="btn btn-action-enhanced btn-view btn-sm" 
                                    title="عرض التفاصيل">
                                     <i class="fas fa-eye"></i>

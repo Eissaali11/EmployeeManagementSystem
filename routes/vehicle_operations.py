@@ -37,14 +37,14 @@ def vehicle_operations_list():
             
             if date_from:
                 try:
-                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
                     handover_query = handover_query.filter(VehicleHandover.handover_date >= date_from_obj)
                 except ValueError:
                     pass
             
             if date_to:
                 try:
-                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
                     handover_query = handover_query.filter(VehicleHandover.handover_date <= date_to_obj)
                 except ValueError:
                     pass
@@ -77,14 +77,14 @@ def vehicle_operations_list():
             
             if date_from:
                 try:
-                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                    date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
                     workshop_query = workshop_query.filter(VehicleWorkshop.entry_date >= date_from_obj)
                 except ValueError:
                     pass
             
             if date_to:
                 try:
-                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                    date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
                     workshop_query = workshop_query.filter(VehicleWorkshop.entry_date <= date_to_obj)
                 except ValueError:
                     pass
