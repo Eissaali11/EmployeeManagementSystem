@@ -459,7 +459,8 @@
         <form method="GET" id="filterForm">
             <div class="row">
                 <div class="col-md-3 mb-3">
-                    <select class="form-control filter-input-enhanced" name="status_filter" onchange="submitFilterForm()">
+                    <label class="form-label text-light mb-1">الحالة:</label>
+                    <select class="form-control filter-input-enhanced" name="status_filter">
                         <option value="">جميع الحالات</option>
                         <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>قيد المراجعة</option>
                         <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>معتمدة</option>
@@ -467,7 +468,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <select class="form-control filter-input-enhanced" name="vehicle_filter" onchange="submitFilterForm()">
+                    <label class="form-label text-light mb-1">السيارة:</label>
+                    <select class="form-control filter-input-enhanced" name="vehicle_filter">
                         <option value="">جميع السيارات</option>
                         {% for vehicle in vehicles_list %}
                         <option value="{{ vehicle }}" {% if vehicle_filter == vehicle %}selected{% endif %}>{{ vehicle }}</option>
@@ -475,7 +477,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <select class="form-control filter-input-enhanced" name="department_filter" onchange="submitFilterForm()">
+                    <label class="form-label text-light mb-1">القسم:</label>
+                    <select class="form-control filter-input-enhanced" name="department_filter">
                         <option value="">جميع الأقسام</option>
                         {% for department in departments_list %}
                         <option value="{{ department }}" {% if department_filter == department %}selected{% endif %}>{{ department }}</option>
@@ -483,10 +486,15 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <button type="button" class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
-                            onclick="clearFilters()">
-                        <i class="fas fa-times"></i> مسح الفلاتر
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-action-enhanced" style="background: var(--info-gradient);">
+                            <i class="fas fa-search"></i> تطبيق الفلاتر
+                        </button>
+                        <button type="button" class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
+                                onclick="clearFilters()">
+                            <i class="fas fa-times"></i> مسح
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
@@ -506,7 +514,13 @@
         <!-- Enhanced Info Alert -->
         <div class="alert alert-info" style="background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 12px;">
             <i class="fas fa-info-circle"></i>
-            <strong>تلميح:</strong> يمكنك التمرير داخل الجدول لعرض جميع البيانات والأعمدة
+            <strong>عدد النتائج:</strong> {{ safety_checks|length }} من أصل {{ total_checks }} طلب
+            {% if status_filter or vehicle_filter or department_filter %}
+            | <strong>مطبق فلاتر:</strong>
+            {% if status_filter %}<span class="badge badge-secondary ms-1">الحالة: {{ status_filter }}</span>{% endif %}
+            {% if vehicle_filter %}<span class="badge badge-secondary ms-1">السيارة: {{ vehicle_filter }}</span>{% endif %}
+            {% if department_filter %}<span class="badge badge-secondary ms-1">القسم: {{ department_filter }}</span>{% endif %}
+            {% endif %}
         </div>
     </div>
     
@@ -695,17 +709,42 @@
         document.getElementById('statusFilter').addEventListener('change', filterTable);
         document.getElementById('searchFilter').addEventListener('input', filterTable);
         
-        // Make clearFilters globally accessible
-        window.clearFilters = function() {
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('searchFilter').value = '';
-            filterTable();
-            showNotification('تم مسح جميع الفلاتر', 'info');
-            updateBulkDeleteButton(); // تحديث أزرار التحديد بعد مسح الفلاتر
+        // تحديث عدد العناصر المحددة لحذف مجمع
+        window.updateBulkDeleteButton = function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-check-id]');
+            const checked = document.querySelectorAll('input[type="checkbox"][data-check-id]:checked');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (checked.length > 0) {
+                bulkDeleteBtn.style.display = 'inline-block';
+                selectedCount.textContent = checked.length;
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+                selectedCount.textContent = '0';
+            }
         };
         
-        // Submit filter form
+        // Submit filter form - دالة إرسال الفلاتر
         window.submitFilterForm = function() {
+            const form = document.getElementById('filterForm');
+            if (form) {
+                form.submit();
+            }
+        };
+        
+        // Clear filters function - دالة مسح الفلاتر
+        window.clearFilters = function() {
+            // إعادة تعيين جميع الفلاتر
+            const statusFilter = document.querySelector('select[name="status_filter"]');
+            const vehicleFilter = document.querySelector('select[name="vehicle_filter"]');
+            const departmentFilter = document.querySelector('select[name="department_filter"]');
+            
+            if (statusFilter) statusFilter.value = '';
+            if (vehicleFilter) vehicleFilter.value = '';
+            if (departmentFilter) departmentFilter.value = '';
+            
+            // إرسال النموذج فوراً
             document.getElementById('filterForm').submit();
         };
         
