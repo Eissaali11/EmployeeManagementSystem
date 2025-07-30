@@ -107,11 +107,8 @@
             {# نفترض أن handover_types هو ['delivery', 'receive'] #}
             {% for type in handover_types %}
             <option value="{{ type }}" {% if default_handover_type == type %}selected{% endif %}>
-                {% if type == 'delivery' %}تسليم السيارة
-                {% elif type == 'receive' or type == 'return' %}استلام السيارة
-                {% elif type == 'inspection' %}تفتيش
-                {% elif type == 'weekly_inspection' %}تفتيش اسبوعي
-                {% elif type == 'monthly_inspection' %} تفتيش شهري
+                {% if type == 'delivery' %}تسليم سيارة لسائق 
+                {% elif type == 'receive' or type == 'return' %}استلام سيارة من سائق
                 {% else %}{{ type }}{% endif %}
             </option>
             {% endfor %}

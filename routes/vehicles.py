@@ -135,10 +135,7 @@ REPAIR_STATUS_CHOICES = [
 # قائمة بأنواع عمليات التسليم والاستلام
 HANDOVER_TYPE_CHOICES = [
         'delivery',  # تسليم
-        'return',  # استلام
-    'inspection',  # تفتيش
-        'weekly_inspection',  # تفتيش اسبةعي
-    'monthly_inspection'  # تفتيش شهري
+        'return'  # استلام
 ]
 
 # قائمة بأنواع الفحص الدوري

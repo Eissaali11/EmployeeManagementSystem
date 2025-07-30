@@ -399,6 +399,7 @@
                             <th>رقم اللوحة</th>
                             <th>النوع</th>
                             <th>اللون</th>
+                            <th>اسم السائق</th>
                             <th>المشروع</th>
                             <th>الحالة</th>
                             <th>الإجراءات</th>
@@ -414,6 +415,19 @@
                             <td>
                                 <span class="color-badge" style="background-color: {{ vehicle.color }};"></span>
                                 {{ vehicle.color }}
+                            </td>
+                            <td>
+                                {% if all_current_drivers_with_emil[vehicle.id] %}
+                                    <span class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle text-primary me-2"></i>
+                                        <strong>{{ all_current_drivers_with_emil[vehicle.id].name }}</strong>
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted fst-italic">
+                                        <i class="fas fa-user-slash text-secondary me-2"></i>
+                                        غير مسند لسائق
+                                    </span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if vehicle.project %}
@@ -589,7 +603,7 @@
         buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
 
         try {
-            const response = await fetch('/api/send-email', {
+            const response = await fetch('/external-safety/api/send-email', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -683,6 +697,7 @@
     /**
      * إرسال طلب فحص السلامة عبر واتساب.
      */
+    
     async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, vehicleModel) {
         const driver = allDriversDataWithEmil[vehicleId];
 
@@ -695,7 +710,7 @@
         buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
 
         try {
-            const response = await fetch('/api/send-whatsapp', {
+            const response = await fetch('/external-safety/api/send-whatsapp', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
