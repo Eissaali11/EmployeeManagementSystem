@@ -944,42 +944,45 @@ def view(id):
         today = datetime.now().date()
 
         # استخراج معلومات السائق الحالي والسائقين السابقين
-        current_driver = None
+        current_driver_info = None
+
+        if vehicle.driver_name:
+                # إذا كان هناك اسم سائق، نبحث عن آخر سجل تسليم له لنعرض التفاصيل
+                latest_delivery_to_current_driver = VehicleHandover.query.filter(
+                    VehicleHandover.vehicle_id == id,
+                    VehicleHandover.handover_type.in_(['delivery', 'تسليم']),
+                    VehicleHandover.person_name == vehicle.driver_name
+                ).order_by(VehicleHandover.created_at.desc()).first()
+
+                if latest_delivery_to_current_driver:
+                    current_driver_info = {
+                        'name': latest_delivery_to_current_driver.person_name,
+                        'date': latest_delivery_to_current_driver.handover_date,
+                        'formatted_date': format_date_arabic(latest_delivery_to_current_driver.handover_date),
+                        'handover_id': latest_delivery_to_current_driver.id,
+                        'mobile': latest_delivery_to_current_driver.driver_phone_number,
+                        'employee_id': latest_delivery_to_current_driver.employee_id
+                    }
+
+            # جلب كل سجلات التسليم السابقة لـ "السائقين السابقين"
         previous_drivers = []
+        
+        all_delivery_records = VehicleHandover.query.filter(
+                VehicleHandover.vehicle_id == id,
+                VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+            ).order_by(VehicleHandover.created_at.desc()).all()
 
-        # البحث عن آخر سجل تسليم (من حيث التاريخ) للعثور على السائق الحالي
-        delivery_records = [rec for rec in handover_records if rec.handover_type in ['delivery', 'تسليم', 'handover']]
-        delivery_records.sort(key=lambda x: x.handover_date, reverse=True)  # ترتيب حسب التاريخ (الأحدث أولاً)
+            # أول سجل في القائمة (الأحدث) هو إما للسائق الحالي أو آخر سائق إذا كانت متاحة
+            # نبدأ من السجل الثاني فصاعداً كسائقين سابقين
+        for record in all_delivery_records[1:]:
+                previous_drivers.append({
+                    'name': record.person_name,
+                    'date': record.handover_date,
+                    'formatted_date': format_date_arabic(record.handover_date),
+                    'handover_id': record.id,
+                    'mobile': record.driver_phone_number
+                })
 
-        # تعيين أحدث سجل تسليم كسائق حالي والباقي كسائقين سابقين
-        for i, record in enumerate(delivery_records):
-                # الحصول على رقم هاتف الموظف إذا كان متوفراً
-                phone_number = None
-                if record.driver_employee and record.driver_employee.mobile:
-                        phone_number = record.driver_employee.mobile
-
-                if i == 0:  # أول سجل بعد الترتيب (الأحدث)
-                        current_driver = {
-                                'name': record.person_name,
-                                'date': record.handover_date,
-                                'formatted_date': format_date_arabic(record.handover_date),
-                                'handover_id': record.id,
-                                'mobile': phone_number,
-                                'employee_id': record.employee_id,
-                                'handover_type': record.handover_type,
-                                'handover_type_ar': 'تسليم' if record.handover_type in ['delivery', 'تسليم', 'handover'] else 'استلام'
-                        }
-                else:
-                        previous_drivers.append({
-                                'name': record.person_name,
-                                'date': record.handover_date,
-                                'formatted_date': format_date_arabic(record.handover_date),
-                                'handover_id': record.id,
-                                'mobile': phone_number,
-                                'employee_id': record.employee_id,
-                                'handover_type': record.handover_type,
-                                'handover_type_ar': 'تسليم' if record.handover_type in ['delivery', 'تسليم', 'handover'] else 'استلام'
-                        })
 
         # تنسيق التواريخ
         for record in workshop_records:
@@ -1065,10 +1068,13 @@ def view(id):
                 total_maintenance_cost=total_maintenance_cost,
                 days_in_workshop=days_in_workshop,
                 inspection_warnings=inspection_warnings,
-                current_driver=current_driver,
+                current_driver=current_driver_info,
                 previous_drivers=previous_drivers,
                 today=today
         )
+
+
+
 
 @vehicles_bp.route('/documents/view/<int:id>', methods=['GET'])
 @login_required
@@ -2361,11 +2367,12 @@ def create_handover(id):
                 custom_company_name=custom_company_name, custom_logo_path=saved_custom_logo_path
             )
 
+            update_vehicle_state(id)
             db.session.add(handover)
             db.session.commit()
 
             # 3. تحديث حالة السيارة والسائق وحفظ الملفات
-            update_vehicle_state(id)
+            
 
             files = request.files.getlist('files')
             for file in files:

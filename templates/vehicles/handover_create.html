@@ -47,6 +47,28 @@
     margin-right: -3.5em;
 }
 
+.signature-pad-container { border: 1px dashed #ced4da; cursor: crosshair; background-color: #f8f9fa; height: 150px; width: 100%; border-radius: .375rem; }
+        .signature-pad-container canvas { display: block; }
+        @media (min-width: 1200px){ .container, .container-lg, .container-md, .container-sm, .container-xl { max-width: 1400px; }}
+        .form-check { padding-right: 2.5em; }
+        .form-check .form-check-input { float: right; margin-right: -2.5em; }
+        .form-switch.form-check { padding-right: 3.5em; }
+        .form-switch.form-check .form-check-input { margin-right: -3.5em; }
+
+        /* ===== ستايل جديد لجعل الحقول المعطلة أكثر وضوحاً ===== */
+        .form-control:disabled, .form-select:disabled {
+            background-color: #263749;
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        
+        .select-auto-width {
+            width: auto !important; /* استخدام !important لضمان تجاوز استايلات Bootstrap إذا لزم الأمر */
+            display: inline-block; /* ضروري أحياناً ليعمل width: auto بشكل صحيح مع عناصر block */
+        }
+
+        
     </style>
 {% endblock %}
 
@@ -127,17 +149,26 @@
 
     <!-- الصف الأول: نوع العملية، التاريخ، الوقت -->
     <div class="col-md-4">
-        <label for="handover_type" class="form-label required">نوع العملية</label>
-        <select class="form-select" id="handover_type" name="handover_type" required>
-            {# نفترض أن handover_types هو ['delivery', 'receive'] #}
-            {% for type in handover_types %}
-            <option value="{{ type }}" {% if default_handover_type == type %}selected{% endif %}>
-                {% if type == 'delivery' %}تسليم سيارة لسائق 
-                {% elif type == 'receive' or type == 'return' %}استلام سيارة من سائق
-                {% else %}{{ type }}{% endif %}
-            </option>
-            {% endfor %}
-        </select>
+
+        <div class="col-md-4">
+            <label for="handover_type" class="form-label required">نوع العملية</label>
+
+            <!-- تم إضافة الكلاس "select-auto-width" هنا -->
+            <select class="form-select select-auto-width" id="handover_type" name="handover_type" required {% if force_mode %}disabled{% endif %}>
+                <option value="delivery" {% if force_mode == 'delivery' %}selected{% endif %}>
+                    تسليم سيارة لسائق
+                </option>
+                <option value="return" {% if force_mode == 'return' %}selected{% endif %}>
+                    استلام سيارة من سائق
+                </option>
+            </select>
+
+            {% if force_mode %}
+                {# حقل مخفي لإرسال القيمة لأن الحقول المعطلة لا تُرسل #}
+                <input type="hidden" name="handover_type" value="{{ force_mode }}" />
+            {% endif %}
+        </div>
+
     </div>
     <div class="col-md-4">
         <label for="handover_date" class="form-label required">التاريخ</label>
@@ -184,70 +215,95 @@
 </div>
 <!-- نهاية قسم المعلومات الأساسية المعاد ترتيبه -->
                         
-                        
-                  
+                    
 
-
-
-
-
-
-
-
-                        <!-- قسم اختيار الموظف -->
                         <div class="card border mb-4">
                             <div class="card-header "><h5 class="mb-0">السائق</h5></div>
                             <div class="card-body">
-                                <div class="mb-3">
-                                    <label for="person_name" class="form-label required">الاسم</label>
-                                    <input type="text" class="form-control" id="person_name" name="person_name" required autocomplete="off" placeholder="اكتب الاسم أو اختر موظف من القائمة أدناه">
-                                    <input type="hidden" id="employee_id" name="employee_id">
-                                </div>
-                                <div class="accordion" id="employeeSearchAccordion">
-                                    <div class="accordion-item">
-                                        <h2 class="accordion-header"><button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEmployeeSearch">بحث عن السواق</button></h2>
-                                        <div id="collapseEmployeeSearch" class="accordion-collapse collapse" data-bs-parent="#employeeSearchAccordion">
-                                            <div class="accordion-body">
-                                                <div class="row mb-3">
-                                                    <div class="col-md-4"><select class="form-select form-select-sm" id="departmentSelect"><option value="">كل الأقسام</option>{% for department in departments %}<option value="{{ department.id }}">{{ department.name }}</option>{% endfor %}</select></div>
-                                                    <div class="col-md-8"><div class="input-group"><input type="text" class="form-control form-control-sm" id="employeeSearchInput" placeholder="بحث بالاسم أو الرقم.."><button class="btn btn-outline-primary btn-sm" id="searchEmployeeBtn" type="button"><i class="fas fa-search"></i></button></div></div>
+
+                                {# --- يبدأ المنطق هنا --- #}
+                                {% if force_mode == 'return' and current_driver_info %}
+
+                                    <!-- **الحالة أ: عرض بيانات السائق الحالي (في وضع الاستلام)** -->
+                                    <div class="mb-3">
+                                        <label class="form-label">الاسم</label>
+                                        <input type="text" class="form-control" value="{{ current_driver_info.person_name }}" readonly disabled>
+                                        <div class="form-text text-primary fw-bold">
+                                            يتم استلام السيارة من السائق الحالي. لا يمكن تغيير هذه البيانات.
+                                        </div>
+                                        {# حقول مخفية مهمة لإرسال بيانات السائق الصحيحة مع النموذج #}
+                                        <input type="hidden" id="person_name" name="person_name" value="{{ current_driver_info.person_name }}">
+                                        <input type="hidden" id="employee_id" name="employee_id" value="{{ current_driver_info.employee_id or '' }}">
+                                    </div>
+
+                                {% else %}
+
+                                    <!-- **الحالة ب: عرض نموذج البحث العادي (في وضع التسليم)** -->
+                                    <div class="mb-3">
+                                        <label for="person_name" class="form-label required">الاسم</label>
+                                        <input type="text" class="form-control" id="person_name" name="person_name" required autocomplete="off" placeholder="اكتب الاسم أو اختر موظف من القائمة أدناه">
+                                        <input type="hidden" id="employee_id" name="employee_id">
+                                    </div>
+
+                                    <div class="accordion" id="employeeSearchAccordion">
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header">
+                                                <button class="accordion-button collapsed py-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEmployeeSearch">
+                                                    بحث عن سائق من القائمة
+                                                </button>
+                                            </h2>
+                                            <div id="collapseEmployeeSearch" class="accordion-collapse collapse" data-bs-parent="#employeeSearchAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-4">
+                                                            <select class="form-select form-select-sm" id="departmentSelect">
+                                                                <option value="">كل الأقسام</option>
+                                                                {% for department in departments %}<option value="{{ department.id }}">{{ department.name }}</option>{% endfor %}
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-8">
+                                                            <div class="input-group">
+                                                                <input type="text" class="form-control form-control-sm" id="employeeSearchInput" placeholder="بحث بالاسم أو الرقم..">
+                                                                <button class="btn btn-outline-primary btn-sm" id="searchEmployeeBtn" type="button"><i class="fas fa-search"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                                                        <table class="table table-sm table-striped table-hover">
+                                                            <thead>
+                                                                <tr><th>الاسم</th><th>الرقم الوظيفي</th><th>القسم</th><th>الإجراء</th></tr>
+                                                            </thead>
+                                                            <tbody id="employeesTableBody">
+                                                                {% for employee in employees %}
+                                                                    {% set dept_names = employee.departments|map(attribute='name')|join(', ') %}
+                                                                    {% set dept_ids = employee.departments|map(attribute='id')|join(',') %}
+                                                                    <tr class="employee-row" data-name="{{ employee.name }}" data-employee-id="{{ employee.employee_id or '' }}" data-national-id="{{ employee.national_id or '' }}" data-department="{{ dept_names }}" data-department-id="{{ dept_ids }}" data-id="{{ employee.id }}">
+                                                                        <td>{{ employee.name }}</td>
+                                                                        <td>{{ employee.employee_id or '-' }}</td>
+                                                                        <td>
+                                                                            {% for dept in employee.departments %}
+                                                                                <span class="badge bg-secondary me-1">{{ dept.name }}</span>
+                                                                            {% else %}
+                                                                                <span class="text-muted">غير محدد</span>
+                                                                            {% endfor %}
+                                                                        </td>
+                                                                        <td>
+                                                                            <button type="button" class="btn btn-sm btn-success select-employee-btn" data-name="{{ employee.name }}"><i class="fas fa-check"></i></button>
+                                                                        </td>
+                                                                    </tr>
+                                                                {% endfor %}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="alert alert-secondary p-2 text-center mt-2 d-none" id="noResultsAlert">لا توجد نتائج مطابقة.</div>
                                                 </div>
-                                                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                                                    <table class="table table-sm table-striped table-hover">
-                                                        <thead><tr><th>الاسم</th><th>الرقم الوظيفي</th><th>القسم</th><th>الإجراء</th></tr></thead>
-                                                        <tbody id="employeesTableBody">
-                                                        {% for employee in employees %}
-                                                            {% set dept_names = employee.departments|map(attribute='name')|join(', ') if employee.departments else 'غير محدد' %}
-                                                            {% set dept_ids = employee.departments|map(attribute='id')|join(',') if employee.departments else '' %}
-                                                            <tr class="employee-row" 
-                                                                data-name="{{ employee.name }}" 
-                                                                data-employee-id="{{ employee.employee_id or '' }}" 
-                                                                data-national-id="{{ employee.national_id or '' }}" 
-                                                                data-department="{{ dept_names }}" 
-                                                                data-department-id="{{ dept_ids }}" 
-                                                                data-id="{{ employee.id }}">
-                                                                <td>{{ employee.name }}</td>
-                                                                <td>{{ employee.employee_id or '-' }}</td>
-                                                                <td>
-                                                                    {% if employee.departments %}
-                                                                        {% for dept in employee.departments %}
-                                                                            <span class="badge bg-secondary me-1">{{ dept.name }}</span>
-                                                                        {% endfor %}
-                                                                    {% else %}
-                                                                        <span class="text-muted">غير محدد</span>
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td><button type="button" class="btn btn-sm btn-success select-employee-btn" data-name="{{ employee.name }}"><i class="fas fa-check"></i></button></td>
-                                                            </tr>
-                                                        {% endfor %}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                                <div class="alert alert-secondary p-2 text-center mt-2 d-none" id="noResultsAlert">لا توجد نتائج مطابقة.</div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+
+                                {% endif %}
+                                {# --- ينتهي المنطق هنا --- #}
+
                             </div>
                         </div>
 
