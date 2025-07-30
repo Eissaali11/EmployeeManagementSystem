@@ -4,7 +4,11 @@
 
 {% block extra_css %}
 <style>
-    /* Modern Share Links Styles */
+    /*
+     * =========================================
+     * Variables and Root Styles
+     * =========================================
+     */
     :root {
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
         --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
@@ -17,15 +21,24 @@
         --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
-    /* Enhanced Header */
-    .share-header {
+    /*
+     * =========================================
+     * General Page Components (Your original styles)
+     * =========================================
+     */
+    .share-header,
+    .info-alert,
+    .filter-card {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         box-shadow: var(--card-shadow);
-        padding: 2rem;
         margin-bottom: 2rem;
+    }
+
+    .share-header {
+        padding: 2rem;
         position: relative;
         overflow: hidden;
         animation: slideDown 0.6s ease-out;
@@ -54,27 +67,6 @@
         gap: 10px;
     }
 
-    /* Enhanced Alert */
-    .info-alert {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        margin-bottom: 2rem;
-    }
-
-    /* Enhanced Filter Card */
-    .filter-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        margin-bottom: 2rem;
-        overflow: hidden;
-    }
-
     .filter-card .card-header {
         background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
         color: white;
@@ -90,7 +82,12 @@
         gap: 10px;
     }
 
-    /* Enhanced Table */
+
+    /*
+     * =========================================
+     * Vehicles Table Styles (Simplified and Corrected)
+     * =========================================
+     */
     .vehicles-table-container {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
@@ -104,7 +101,6 @@
         background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
         color: white;
         padding: 1rem 1.5rem;
-        border-bottom: none;
     }
 
     .vehicles-table-container .card-header h5 {
@@ -115,21 +111,31 @@
         gap: 10px;
     }
 
-    .table-responsive {
-        border-radius: 0 0 12px 12px;
-        overflow: hidden;
+    .vehicles-table-container .card-body {
+        padding: 0;
     }
+
+    /* === هذا هو كل الكود المطلوب للجدول === */
+
+    /* 1. الكود لتفعيل التمرير العمودي */
+    .table-wrapper-scroll-y {
+        display: block;
+        max-height: 65vh; /* يمكنك تعديل هذا الارتفاع. مثلا 500px أو 65vh (65% من ارتفاع الشاشة) */
+        overflow-y: auto;
+    }
+
+    /* 2. الكود لتثبيت رأس الجدول أثناء التمرير */
+    .table-wrapper-scroll-y thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2; /* للتأكد من أن الرأس يظهر فوق المحتوى عند التمرير */
+    }
+
+    /* 3. استرجاع الأنماط الأصلية الخاصة بك للجدول */
+    /* .table-responsive هو كلاس Bootstrap للتمرير الأفقي فقط وسيعمل بشكل طبيعي */
 
     .table {
         margin-bottom: 0;
-    }
-
-    .table thead th {
-        background: rgba(102, 126, 234, 0.1);
-        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
-        padding: 1rem;
-        font-weight: 600;
-        text-align: right;
     }
 
     .table tbody td {
@@ -142,48 +148,21 @@
         background-color: rgba(102, 126, 234, 0.05);
     }
 
-    /* Enhanced Action Buttons */
+    /* سيتم تطبيق تصميم thead من خلال كلاس table-dark من Bootstrap مباشرة */
+    /* === نهاية كود الجدول === */
+
+
+    /*
+     * =========================================
+     * Other UI Elements (Buttons, Badges, etc.)
+     * =========================================
+     */
     .action-btn-group {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
     }
 
-    .action-btn {
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--card-shadow-hover);
-    }
-
-    .btn-primary-enhanced {
-        background: var(--primary-gradient);
-        color: white;
-        border: none;
-    }
-
-    .btn-success-enhanced {
-        background: var(--success-gradient);
-        color: white;
-        border: none;
-    }
-
-    .btn-secondary-enhanced {
-        background: var(--glass-bg);
-        border: 1px solid #6c757d;
-        color: #6c757d;
-    }
-
-    /* Enhanced Copy Button */
     .copy-btn {
         display: inline-flex;
         align-items: center;
@@ -214,13 +193,11 @@
     .copy-btn .icon-success { display: none; }
     .copy-btn .text-success { display: none; }
     .copy-btn .text-original { display: inline-block; }
-
     .copy-btn.copied .icon-copy { display: none; }
     .copy-btn.copied .icon-success { display: inline-block; }
     .copy-btn.copied .text-success { display: inline-block; }
     .copy-btn.copied .text-original { display: none; }
 
-    /* Enhanced Status Badges */
     .status-badge {
         padding: 0.5rem 0.75rem;
         border-radius: 20px;
@@ -230,7 +207,6 @@
         text-align: center;
     }
 
-    /* Color Badges */
     .color-badge {
         width: 24px;
         height: 24px;
@@ -242,7 +218,11 @@
         border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-    /* Animations */
+    /*
+     * =========================================
+     * Animations, Responsive & Scrollbar
+     * =========================================
+     */
     @keyframes slideDown {
         from {
             opacity: 0;
@@ -254,75 +234,34 @@
         }
     }
 
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Responsive Design */
     @media (max-width: 768px) {
         .share-header {
             padding: 1.5rem;
         }
-
         .share-header h2 {
             font-size: 1.8rem;
         }
-
         .action-btn-group {
             flex-direction: column;
             align-items: flex-start;
         }
-
         .action-btn {
             width: 100%;
         }
     }
 
-
-    /* يجعل أعمدة الرأس والجسم بنفس العرض */
-    .fixed-header-table {
-        table-layout: fixed;
-        width: 100%;
-    }
-
-    .fixed-header-table th,
-    .fixed-header-table td {
-        word-wrap: break-word; /* لمنع الكلمات الطويلة من تخريب التنسيق */
-    }
-
-    .table-body-scrollable {
-        display: block; /* ضروري لجعل max-height و overflow يعملان */
-        max-height: 500px; /* يمكنك تعديل هذا الارتفاع حسب ما يناسبك */
-        overflow-y: auto;   /* يظهر شريط التمرير العمودي فقط عند الحاجة */
-    }
-
-    /* حيلة لمحاذاة الأعمدة بشكل صحيح بين الرأس والجسم */
-    .fixed-header-table > thead,
-    .fixed-header-table > tbody > tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-    }
-
     /* لتخصيص شكل شريط التمرير (اختياري) */
-    .table-body-scrollable::-webkit-scrollbar {
+    .table-wrapper-scroll-y::-webkit-scrollbar {
         width: 8px;
     }
-    .table-body-scrollable::-webkit-scrollbar-track {
+    .table-wrapper-scroll-y::-webkit-scrollbar-track {
         background: #f1f1f1;
     }
-    .table-body-scrollable::-webkit-scrollbar-thumb {
+    .table-wrapper-scroll-y::-webkit-scrollbar-thumb {
         background: #888;
         border-radius: 4px;
     }
-    .table-body-scrollable::-webkit-scrollbar-thumb:hover {
+    .table-wrapper-scroll-y::-webkit-scrollbar-thumb:hover {
         background: #555;
     }
 </style>
@@ -633,14 +572,19 @@
     /**
      * إرسال طلب فحص السلامة عبر البريد الإلكتروني.
      */
+    /**
+     * إرسال طلب فحص السلامة عبر البريد الإلكتروني.
+     * (نسخة معدلة لتشخيص الأخطاء بشكل أفضل)
+     */
     async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
+        // جلب بيانات السائق
         const driver = allDriversDataWithEmil[vehicleId];
-
         if (!driver || !driver.email) {
             showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
             return;
         }
 
+        // تعطيل الزر وإظهار مؤشر التحميل
         buttonElement.disabled = true;
         buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
 
@@ -653,27 +597,89 @@
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
-                    form_url: `${window.location.origin}/external-safety/external-safety-check/${vehicleId}`
+                    // هام جداً: تأكد من أن هذا الرابط صحيح ويطابق المسار في Flask
+                    form_url: `${window.location.origin}/external-safety-check/${vehicleId}`
                 })
             });
 
-            const result = await response.json();
+            // ======================= الجزء الجديد للتشخيص =======================
+            const contentType = response.headers.get("content-type");
 
-            if (response.ok && result.success) {
-                showToast(result.message, 'success');
+            // التحقق مما إذا كان الرد هو JSON كما هو متوقع
+            if (response.ok && contentType && contentType.indexOf("application/json") !== -1) {
+                // الحالة الناجحة: الرد هو JSON
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, 'success');
+                } else {
+                    // إذا كان JSON ولكنه يحمل رسالة خطأ من طرفنا
+                    showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف.'}`, 'danger');
+                }
             } else {
-                showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+                // الحالة غير الطبيعية: الرد ليس JSON (غالباً صفحة خطأ HTML من Flask)
+                // سنقرأ الرد كنص عادي ونطبعه في الـ console
+                const errorText = await response.text();
+                console.error("الخادم أعاد رداً غير متوقع (ليس JSON). محتوى الرد:", errorText);
+
+                // عرض رسالة خطأ واضحة للمستخدم
+                showToast('حدث خطأ فادح في الخادم! يرجى مراجعة Console لمعرفة التفاصيل.', 'danger');
             }
+            // ===================== نهاية الجزء الجديد للتشخيص =====================
 
         } catch (error) {
+            // هذا الخطأ يحدث فقط إذا فشل الاتصال بالشبكة تماماً
             console.error('فشل الاتصال بالخادم:', error);
-            showToast(`فشل الإرسال: ${error}`, 'danger');
+            showToast('فشل الاتصال بالخادم. تحقق من الشبكة.', 'danger');
         } finally {
+            // إعادة الزر إلى حالته الطبيعية في كل الأحوال
             buttonElement.disabled = false;
             buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال بالبريد';
         }
     }
 
+    
+    // async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
+    //     const driver = allDriversDataWithEmil[vehicleId];
+
+    //     if (!driver || !driver.email) {
+    //         showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
+    //         return;
+    //     }
+
+    //     buttonElement.disabled = true;
+    //     buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+
+    //     try {
+    //         const response = await fetch('/api/send-email', {
+    //             method: 'POST',
+    //             headers: {'Content-Type': 'application/json'},
+    //             body: JSON.stringify({
+    //                 driver_email: driver.email,
+    //                 driver_name: driver.name,
+    //                 plate_number: plateNumber,
+    //                 vehicle_model: vehicleModel,
+    //                 form_url: `${window.location.origin}/external-safety/external-safety-check/${vehicleId}`
+    //             })
+    //         });
+
+    //         const result = await response.json();
+
+    //         if (response.ok && result.success) {
+    //             showToast(result.message, 'success');
+    //         } else {
+    //             showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+    //         }
+
+    //     } catch (error) {
+    //         console.error('فشل الاتصال بالخادم:', error);
+    //         showToast(`فشل الإرسال: ${error}`, 'danger');
+    //     } finally {
+    //         buttonElement.disabled = false;
+    //         buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال بالبريد';
+    //     }
+    // }
+
+    //
     /**
      * إرسال طلب فحص السلامة عبر واتساب.
      */
@@ -782,5 +788,4 @@ ${formUrl}
         }
     }
 </script>
-python
 {% endblock %}
