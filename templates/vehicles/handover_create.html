@@ -1,6 +1,15 @@
 {% extends 'layout.html' %}
 
-{% block title %}إضافة نموذج تسليم/استلام - {{ vehicle.plate_number }}{% endblock %}
+{% block title %}
+    {% if force_mode == 'return' %}
+        نموذج استلام مركبة - {{ vehicle.plate_number }}
+    {% else %}
+        نموذج تسليم مركبة - {{ vehicle.plate_number }}
+    {% endif %}
+{% endblock %}
+
+
+
 {% block styles %}
     {{ super() }} <!-- هذا يحافظ على أي ستايلات معرفة في الملف الأساسي -->
     <style>
@@ -49,7 +58,11 @@
         <div class="card-header d-flex justify-content-between align-items-center py-3">
             <h3 class="mb-0" id="form-main-title">
                 <i class="fas fa-file-alt me-2 text-primary"></i>
-                نموذج تسليم/استلام: <span class="text-dark">{{ vehicle.plate_number }}</span>
+                {% if force_mode == 'return' %}
+                    نموذج استلام: <span class="text-dark">{{ vehicle.plate_number }}</span>
+                {% else %}
+                    نموذج تسليم: <span class="text-dark">{{ vehicle.plate_number }}</span>
+                {% endif %}
             </h3>
             <div>
                 <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary btn-sm">
@@ -63,6 +76,18 @@
 
         <div class="card-body p-lg-4">
             <form method="post" action="{{ url_for('vehicles.create_handover', id=vehicle.id) }}" enctype="multipart/form-data" id="main-handover-form">
+
+                {% if info_message %}
+                <div class="alert alert-info border-0 shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">ملاحظة هامة!</h5>
+                            <p class="mb-0">{{ info_message }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 
                 <div class="row">
                     <!-- عمود معلومات السيارة (على اليمين، ثابت) -->

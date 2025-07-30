@@ -85,6 +85,95 @@ def update_vehicle_driver(vehicle_id):
                 # لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
                 pass
 
+# في ملف vehicles_bp.py
+
+# ... (بعد الاستيرادات وقبل تعريف أول راوت)
+
+def update_vehicle_state(vehicle_id):
+    """
+    الدالة المركزية الذكية لتحديد وتحديث الحالة النهائية للمركبة وسائقها
+    بناءً على هرم أولويات الحالات (ورشة > إيجار > تسليم > متاحة).
+    """
+    try:
+        vehicle = Vehicle.query.get(vehicle_id)
+        if not vehicle:
+            return
+
+        # -- هرم أولوية الحالات (من الأعلى إلى الأدنى) --
+
+        # 1. حالة "خارج الخدمة": لها أعلى أولوية ولا تتغير تلقائياً
+        if vehicle.status == 'out_of_service':
+            # لا تفعل شيئاً، هذه الحالة لا تتغير إلا يدوياً
+            return
+
+        # 2. حالة "الحادث"
+        # يجب تعديل منطق الحادث بحيث تبقى الحالة accident حتى يتم إغلاق السجل
+        active_accident = VehicleAccident.query.filter(
+            VehicleAccident.vehicle_id == vehicle_id,
+            VehicleAccident.accident_status != 'مغلق' # نفترض أن 'مغلق' هي الحالة النهائية
+        ).first()
+        if active_accident:
+            vehicle.status = 'accident'
+            # (منطق السائق يبقى كما هو أدناه لأنه قد يكون هناك سائق وقت الحادث)
+
+        # 3. حالة "الورشة"
+        in_workshop = VehicleWorkshop.query.filter(
+            VehicleWorkshop.vehicle_id == vehicle_id,
+            VehicleWorkshop.exit_date.is_(None) # لا يزال في الورشة
+        ).first()
+        if in_workshop:
+            vehicle.status = 'in_workshop'
+            db.session.commit() # نحفظ الحالة وننهي لأنها ذات أولوية
+            return # إنهاء الدالة، لأن الورشة لها الأسبقية على الإيجار والتسليم
+
+        # --- إذا لم تكن السيارة في ورشة، ننتقل للحالات التشغيلية ---
+
+        # 4. حالة "مؤجرة"
+        active_rental = VehicleRental.query.filter(
+            VehicleRental.vehicle_id == vehicle_id,
+            VehicleRental.is_active == True
+        ).first()
+        if active_rental:
+            vehicle.status = 'rented'
+            # لا ننهي هنا، سنكمل لتحديد السائق
+
+        # 5. حالة "التسليم" و "متاحة" (نفس منطق الدالة السابقة)
+        latest_delivery = VehicleHandover.query.filter(
+            VehicleHandover.vehicle_id == vehicle_id,
+            VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+        ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+        latest_return = VehicleHandover.query.filter(
+            VehicleHandover.vehicle_id == vehicle_id,
+            VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+        ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+        is_currently_handed_out = False
+        if latest_delivery:
+            if not latest_return or latest_delivery.created_at > latest_return.created_at:
+                 is_currently_handed_out = True
+
+        if is_currently_handed_out:
+            # مسلمة لسائق
+            vehicle.driver_name = latest_delivery.person_name
+            # إذا لم تكن مؤجرة، فستكون في مشروع
+            if not active_rental: 
+                vehicle.status = 'in_project'
+        else:
+            # تم استلامها أو لم تسلم أبداً
+            vehicle.driver_name = None
+            # إذا لم تكن مؤجرة، فستكون متاحة
+            if not active_rental:
+                vehicle.status = 'available'
+
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في تحديث حالة المركبة {vehicle_id}: {e}")
+            
+
+
 def update_all_vehicle_drivers():
         """تحديث أسماء جميع السائقين في جدول السيارات"""
         vehicles = Vehicle.query.all()
@@ -1609,176 +1698,269 @@ def create_workshop(id):
                 statuses=REPAIR_STATUS_CHOICES
         )
 
+
+# في ملف vehicles_bp.py
+
 @vehicles_bp.route('/workshop/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_workshop(id):
-        """تعديل سجل ورشة"""
-        current_app.logger.info(f"تم استدعاء edit_workshop مع معرف: {id}, طريقة: {request.method}")
+    """تعديل سجل ورشة مع منطق ذكي لتحديث حالة السيارة."""
+    workshop = VehicleWorkshop.query.get_or_404(id)
+    vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
 
-        # الحصول على سجل الورشة والسيارة
-        workshop = VehicleWorkshop.query.get_or_404(id)
-        vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
-        current_app.logger.info(f"تم العثور على سجل الورشة: {workshop.id} للسيارة: {vehicle.plate_number}")
+    if request.method == 'POST':
+        try:
+            # --- 1. حفظ الحالة الحالية لسجل الورشة (قبل التعديل) ---
+            exit_date_before_update = workshop.exit_date
 
-        # الحصول على الصور الحالية
-        before_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='before').all()
-        after_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='after').all()
-        current_app.logger.info(f"تم العثور على {len(before_images)} صور قبل و {len(after_images)} صور بعد")
+            # --- 2. استخراج البيانات الجديدة من النموذج ---
+            entry_date_str = request.form.get('entry_date')
+            exit_date_str = request.form.get('exit_date')
+            # ... استخراج باقي البيانات ...
+            reason = request.form.get('reason')
+            description = request.form.get('description')
+            repair_status = request.form.get('repair_status')
+            cost_str = request.form.get('cost', '0')
+            workshop_name = request.form.get('workshop_name')
+            technician_name = request.form.get('technician_name')
+            notes = request.form.get('notes')
 
-        if request.method == 'POST':
-                try:
-                        # تسجيل معلومات النموذج للتصحيح
-                        current_app.logger.info(f"تم استقبال طلب POST لتعديل سجل الورشة {id}")
-                        current_app.logger.info(f"بيانات النموذج: {request.form}")
-                        current_app.logger.info(f"الملفات: {request.files}")
-                        current_app.logger.info(f"عدد الملفات المرفقة: {len(request.files)}")
+            # تحويل البيانات
+            new_entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
+            new_exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
+            new_cost = float(cost_str) if cost_str else 0.0
 
-                        # الحصول على البيانات من الطلب
-                        entry_date_str = request.form.get('entry_date')
-                        exit_date_str = request.form.get('exit_date')
-                        reason = request.form.get('reason')
-                        description = request.form.get('description')
-                        repair_status = request.form.get('repair_status')
-                        cost_str = request.form.get('cost', '0')
-                        workshop_name = request.form.get('workshop_name')
-                        technician_name = request.form.get('technician_name')
-                        delivery_link = request.form.get('delivery_link')
-                        reception_link = request.form.get('reception_link')
-                        notes = request.form.get('notes')
+            # --- 3. تحديث بيانات سجل الورشة ---
+            workshop.entry_date = new_entry_date
+            workshop.exit_date = new_exit_date
+            workshop.reason = reason
+            workshop.description = description
+            workshop.repair_status = repair_status
+            workshop.cost = new_cost
+            workshop.workshop_name = workshop_name
+            workshop.technician_name = technician_name
+            workshop.notes = notes
+            workshop.updated_at = datetime.utcnow()
+            # (يمكن إضافة باقي الحقول مثل الروابط والصور بنفس الطريقة)
 
-                        current_app.logger.info(f"البيانات المستخرجة: entry_date={entry_date_str}, reason={reason}, description={description}, repair_status={repair_status}")
+            db.session.commit()
 
-                        # تحويل التواريخ والتكلفة
-                        entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
-                        exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
-                        try:
-                                cost = float(cost_str.replace(',', '.')) if cost_str and cost_str.strip() else 0.0
-                        except ValueError:
-                                cost = 0.0
+            # --- 4. تطبيق المنطق الذكي لتحديث حالة السيارة ---
+            #
+            # نتحقق مما إذا كان الحدث هو "الخروج من الورشة"
+            # (أي أن تاريخ الخروج لم يكن موجوداً، وأصبح موجوداً الآن)
+            if exit_date_before_update is None and new_exit_date is not None:
+                # هذا هو السيناريو 1: تم إخراج السيارة من الورشة الآن
+                # نستدعي الدالة المركزية لتقرر الحالة الجديدة للسيارة.
+                current_app.logger.info(f"السيارة {vehicle.plate_number} خرجت من الورشة. يتم تحديث الحالة...")
+                update_vehicle_state(vehicle.id)
 
-                        # تحديث سجل الورشة
-                        workshop.entry_date = entry_date
-                        workshop.exit_date = exit_date
-                        workshop.reason = reason
-                        workshop.description = description
-                        workshop.repair_status = repair_status
-                        workshop.cost = cost
-                        workshop.workshop_name = workshop_name
-                        workshop.technician_name = technician_name
-                        workshop.delivery_link = delivery_link
-                        workshop.reception_link = reception_link
-                        workshop.notes = notes
-                        workshop.updated_at = datetime.utcnow()
+            # السيناريو 4 (حالة نادرة): تم حذف تاريخ الخروج، أي إعادة السيارة للورشة
+            elif exit_date_before_update is not None and new_exit_date is None:
+                vehicle.status = 'in_workshop'
+                db.session.commit()
+                current_app.logger.info(f"تم إعادة السيارة {vehicle.plate_number} إلى حالة الورشة.")
 
-                        current_app.logger.info("تم تحديث بيانات سجل الورشة")
+            # في جميع الحالات الأخرى (تعديل بيانات فقط)، لن يتم تغيير حالة السيارة.
 
-                        # تحديث حالة السيارة إذا خرجت من الورشة
-                        if exit_date and repair_status == 'completed':
-                                other_active_records = VehicleWorkshop.query.filter(
-                                        VehicleWorkshop.vehicle_id == vehicle.id,
-                                        VehicleWorkshop.id != id,
-                                        VehicleWorkshop.exit_date.is_(None)
-                                ).count()
+            log_audit('update', 'vehicle_workshop', workshop.id, f'تم تعديل سجل الورشة للسيارة {vehicle.plate_number}')
+            flash('تم تعديل سجل الورشة بنجاح!', 'success')
+            return redirect(url_for('vehicles.view', id=vehicle.id))
 
-                                if other_active_records == 0:
-                                        # لا توجد سجلات ورشة نشطة أخرى
-                                        active_rental = VehicleRental.query.filter_by(vehicle_id=vehicle.id, is_active=True).first()
-                                        active_project = VehicleProject.query.filter_by(vehicle_id=vehicle.id, is_active=True).first()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"خطأ في تعديل سجل الورشة: {str(e)}")
+            flash(f'حدث خطأ أثناء حفظ التعديلات: {str(e)}', 'danger')
 
-                                        if active_rental:
-                                                vehicle.status = 'rented'
-                                        elif active_project:
-                                                vehicle.status = 'in_project'
-                                        else:
-                                                vehicle.status = 'available'
+    # --- منطق GET لعرض النموذج (لا تغيير هنا) ---
+    before_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='before').all()
+    after_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='after').all()
 
-                        # تحديث السيارة
-                        vehicle.updated_at = datetime.utcnow()
-                        db.session.commit()
+    return render_template(
+        'vehicles/workshop_edit.html', 
+        workshop=workshop, 
+        vehicle=vehicle,
+        before_images=before_images,
+        after_images=after_images,
+        reasons=WORKSHOP_REASON_CHOICES,
+        statuses=REPAIR_STATUS_CHOICES
+    )
 
-                        current_app.logger.info("تم حفظ البيانات الأساسية")
 
-                        # معالجة الصور المرفقة
-                        before_image_files = request.files.getlist('before_images')
-                        after_image_files = request.files.getlist('after_images')
+# @vehicles_bp.route('/workshop/<int:id>/edit', methods=['GET', 'POST'])
+# @login_required
+# def edit_workshop(id):
+#         """تعديل سجل ورشة"""
+#         current_app.logger.info(f"تم استدعاء edit_workshop مع معرف: {id}, طريقة: {request.method}")
 
-                        current_app.logger.info(f"عدد صور قبل الإصلاح: {len(before_image_files)}")
-                        current_app.logger.info(f"عدد صور بعد الإصلاح: {len(after_image_files)}")
+#         # الحصول على سجل الورشة والسيارة
+#         workshop = VehicleWorkshop.query.get_or_404(id)
+#         vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
+#         current_app.logger.info(f"تم العثور على سجل الورشة: {workshop.id} للسيارة: {vehicle.plate_number}")
 
-                        for i, image in enumerate(before_image_files):
-                                if image and image.filename:
-                                        current_app.logger.info(f"معالجة صورة قبل الإصلاح {i+1}: {image.filename}")
-                                        try:
-                                                image_path = save_image(image, 'workshop')
-                                                if image_path:
-                                                        workshop_image = VehicleWorkshopImage(
-                                                                workshop_record_id=id,
-                                                                image_type='before',
-                                                                image_path=image_path
-                                                        )
-                                                        db.session.add(workshop_image)
-                                                        current_app.logger.info(f"تم حفظ صورة قبل الإصلاح: {image_path}")
-                                                else:
-                                                        current_app.logger.error(f"فشل في حفظ صورة قبل الإصلاح: {image.filename}")
-                                        except Exception as e:
-                                                current_app.logger.error(f"خطأ في حفظ صورة قبل الإصلاح {image.filename}: {str(e)}")
+#         # الحصول على الصور الحالية
+#         before_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='before').all()
+#         after_images = VehicleWorkshopImage.query.filter_by(workshop_record_id=id, image_type='after').all()
+#         current_app.logger.info(f"تم العثور على {len(before_images)} صور قبل و {len(after_images)} صور بعد")
 
-                        for i, image in enumerate(after_image_files):
-                                if image and image.filename:
-                                        current_app.logger.info(f"معالجة صورة بعد الإصلاح {i+1}: {image.filename}")
-                                        try:
-                                                image_path = save_image(image, 'workshop')
-                                                if image_path:
-                                                        workshop_image = VehicleWorkshopImage(
-                                                                workshop_record_id=id,
-                                                                image_type='after',
-                                                                image_path=image_path
-                                                        )
-                                                        db.session.add(workshop_image)
-                                                        current_app.logger.info(f"تم حفظ صورة بعد الإصلاح: {image_path}")
-                                                else:
-                                                        current_app.logger.error(f"فشل في حفظ صورة بعد الإصلاح: {image.filename}")
-                                        except Exception as e:
-                                                current_app.logger.error(f"خطأ في حفظ صورة بعد الإصلاح {image.filename}: {str(e)}")
+#         if request.method == 'POST':
+#                 try:
+#                         # تسجيل معلومات النموذج للتصحيح
+#                         current_app.logger.info(f"تم استقبال طلب POST لتعديل سجل الورشة {id}")
+#                         current_app.logger.info(f"بيانات النموذج: {request.form}")
+#                         current_app.logger.info(f"الملفات: {request.files}")
+#                         current_app.logger.info(f"عدد الملفات المرفقة: {len(request.files)}")
 
-                        db.session.commit()
-                        current_app.logger.info("تم حفظ جميع البيانات بنجاح")
+#                         # الحصول على البيانات من الطلب
+#                         entry_date_str = request.form.get('entry_date')
+#                         exit_date_str = request.form.get('exit_date')
+#                         reason = request.form.get('reason')
+#                         description = request.form.get('description')
+#                         repair_status = request.form.get('repair_status')
+#                         cost_str = request.form.get('cost', '0')
+#                         workshop_name = request.form.get('workshop_name')
+#                         technician_name = request.form.get('technician_name')
+#                         delivery_link = request.form.get('delivery_link')
+#                         reception_link = request.form.get('reception_link')
+#                         notes = request.form.get('notes')
 
-                        # تسجيل الإجراء
-                        log_audit('update', 'vehicle_workshop', workshop.id, 
-                                         f'تم تعديل سجل الورشة للسيارة {vehicle.plate_number}')
+#                         current_app.logger.info(f"البيانات المستخرجة: entry_date={entry_date_str}, reason={reason}, description={description}, repair_status={repair_status}")
 
-                        flash('تم تعديل سجل الورشة بنجاح!', 'success')
-                        return redirect(url_for('vehicles.view', id=vehicle.id))
+#                         # تحويل التواريخ والتكلفة
+#                         entry_date = datetime.strptime(entry_date_str, '%Y-%m-%d').date() if entry_date_str else None
+#                         exit_date = datetime.strptime(exit_date_str, '%Y-%m-%d').date() if exit_date_str else None
+#                         try:
+#                                 cost = float(cost_str.replace(',', '.')) if cost_str and cost_str.strip() else 0.0
+#                         except ValueError:
+#                                 cost = 0.0
 
-                except Exception as e:
-                        current_app.logger.error(f"خطأ في حفظ سجل الورشة: {str(e)}")
-                        current_app.logger.error(f"تفاصيل الخطأ: {type(e).__name__}")
-                        import traceback
-                        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-                        db.session.rollback()
-                        flash(f'حدث خطأ أثناء حفظ التعديلات: {str(e)}', 'danger')
-                        # إعادة العرض مع البيانات الحالية
-                        return render_template(
-                                'vehicles/workshop_edit.html', 
-                                workshop=workshop, 
-                                vehicle=vehicle,
-                                before_images=before_images,
-                                after_images=after_images,
-                                reasons=WORKSHOP_REASON_CHOICES,
-                                statuses=REPAIR_STATUS_CHOICES
-                        )
+#                         # تحديث سجل الورشة
+#                         workshop.entry_date = entry_date
+#                         workshop.exit_date = exit_date
+#                         workshop.reason = reason
+#                         workshop.description = description
+#                         workshop.repair_status = repair_status
+#                         workshop.cost = cost
+#                         workshop.workshop_name = workshop_name
+#                         workshop.technician_name = technician_name
+#                         workshop.delivery_link = delivery_link
+#                         workshop.reception_link = reception_link
+#                         workshop.notes = notes
+#                         workshop.updated_at = datetime.utcnow()
 
-        # عرض النموذج
-        return render_template(
-                'vehicles/workshop_edit.html', 
-                workshop=workshop, 
-                vehicle=vehicle,
-                before_images=before_images,
-                after_images=after_images,
-                reasons=WORKSHOP_REASON_CHOICES,
-                statuses=REPAIR_STATUS_CHOICES
-        )
+#                         current_app.logger.info("تم تحديث بيانات سجل الورشة")
+
+#                         # تحديث حالة السيارة إذا خرجت من الورشة
+#                         if exit_date and repair_status == 'completed':
+#                                 other_active_records = VehicleWorkshop.query.filter(
+#                                         VehicleWorkshop.vehicle_id == vehicle.id,
+#                                         VehicleWorkshop.id != id,
+#                                         VehicleWorkshop.exit_date.is_(None)
+#                                 ).count()
+
+#                                 if other_active_records == 0:
+#                                         # لا توجد سجلات ورشة نشطة أخرى
+#                                         active_rental = VehicleRental.query.filter_by(vehicle_id=vehicle.id, is_active=True).first()
+#                                         active_project = VehicleProject.query.filter_by(vehicle_id=vehicle.id, is_active=True).first()
+
+#                                         if active_rental:
+#                                                 vehicle.status = 'rented'
+#                                         elif active_project:
+#                                                 vehicle.status = 'in_project'
+#                                         else:
+#                                                 vehicle.status = 'available'
+
+#                         # تحديث السيارة
+#                         vehicle.updated_at = datetime.utcnow()
+#                         db.session.commit()
+
+#                         current_app.logger.info("تم حفظ البيانات الأساسية")
+
+#                         # معالجة الصور المرفقة
+#                         before_image_files = request.files.getlist('before_images')
+#                         after_image_files = request.files.getlist('after_images')
+
+#                         current_app.logger.info(f"عدد صور قبل الإصلاح: {len(before_image_files)}")
+#                         current_app.logger.info(f"عدد صور بعد الإصلاح: {len(after_image_files)}")
+
+#                         for i, image in enumerate(before_image_files):
+#                                 if image and image.filename:
+#                                         current_app.logger.info(f"معالجة صورة قبل الإصلاح {i+1}: {image.filename}")
+#                                         try:
+#                                                 image_path = save_image(image, 'workshop')
+#                                                 if image_path:
+#                                                         workshop_image = VehicleWorkshopImage(
+#                                                                 workshop_record_id=id,
+#                                                                 image_type='before',
+#                                                                 image_path=image_path
+#                                                         )
+#                                                         db.session.add(workshop_image)
+#                                                         current_app.logger.info(f"تم حفظ صورة قبل الإصلاح: {image_path}")
+#                                                 else:
+#                                                         current_app.logger.error(f"فشل في حفظ صورة قبل الإصلاح: {image.filename}")
+#                                         except Exception as e:
+#                                                 current_app.logger.error(f"خطأ في حفظ صورة قبل الإصلاح {image.filename}: {str(e)}")
+
+#                         for i, image in enumerate(after_image_files):
+#                                 if image and image.filename:
+#                                         current_app.logger.info(f"معالجة صورة بعد الإصلاح {i+1}: {image.filename}")
+#                                         try:
+#                                                 image_path = save_image(image, 'workshop')
+#                                                 if image_path:
+#                                                         workshop_image = VehicleWorkshopImage(
+#                                                                 workshop_record_id=id,
+#                                                                 image_type='after',
+#                                                                 image_path=image_path
+#                                                         )
+#                                                         db.session.add(workshop_image)
+#                                                         current_app.logger.info(f"تم حفظ صورة بعد الإصلاح: {image_path}")
+#                                                 else:
+#                                                         current_app.logger.error(f"فشل في حفظ صورة بعد الإصلاح: {image.filename}")
+#                                         except Exception as e:
+#                                                 current_app.logger.error(f"خطأ في حفظ صورة بعد الإصلاح {image.filename}: {str(e)}")
+
+#                         db.session.commit()
+#                         current_app.logger.info("تم حفظ جميع البيانات بنجاح")
+
+#                         # تسجيل الإجراء
+#                         log_audit('update', 'vehicle_workshop', workshop.id, 
+#                                          f'تم تعديل سجل الورشة للسيارة {vehicle.plate_number}')
+
+#                         flash('تم تعديل سجل الورشة بنجاح!', 'success')
+#                         return redirect(url_for('vehicles.view', id=vehicle.id))
+
+#                 except Exception as e:
+#                         current_app.logger.error(f"خطأ في حفظ سجل الورشة: {str(e)}")
+#                         current_app.logger.error(f"تفاصيل الخطأ: {type(e).__name__}")
+#                         import traceback
+#                         current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+#                         db.session.rollback()
+#                         flash(f'حدث خطأ أثناء حفظ التعديلات: {str(e)}', 'danger')
+#                         # إعادة العرض مع البيانات الحالية
+#                         return render_template(
+#                                 'vehicles/workshop_edit.html', 
+#                                 workshop=workshop, 
+#                                 vehicle=vehicle,
+#                                 before_images=before_images,
+#                                 after_images=after_images,
+#                                 reasons=WORKSHOP_REASON_CHOICES,
+#                                 statuses=REPAIR_STATUS_CHOICES
+#                         )
+
+#         # عرض النموذج
+#         return render_template(
+#                 'vehicles/workshop_edit.html', 
+#                 workshop=workshop, 
+#                 vehicle=vehicle,
+#                 before_images=before_images,
+#                 after_images=after_images,
+#                 reasons=WORKSHOP_REASON_CHOICES,
+#                 statuses=REPAIR_STATUS_CHOICES
+#         )
+
+
+
+
 
 @vehicles_bp.route('/workshop/image/<int:id>/confirm-delete')
 @login_required
@@ -2004,34 +2186,97 @@ def save_uploaded_file(file, subfolder):
 
 # هذا هو الكود الكامل والنهائي للدالة، يمكنك استبدال دالة create_handover القديمة به
 
+# في ملف vehicles_bp.py
+
 @vehicles_bp.route('/<int:id>/handover/create', methods=['GET', 'POST'])
 @login_required
 def create_handover(id):
-    """إنشاء نموذج تسليم/استلام للسيارة مع حفظ نسخة كاملة من البيانات"""
-
+    """
+    إنشاء نموذج تسليم/استلام للسيارة مع قيود ذكية تمنع العملية
+    إذا كانت السيارة في الورشة أو في حالة غير مناسبة، وتفرض المنطق الصحيح للعملية.
+    """
     vehicle = Vehicle.query.get_or_404(id)
 
-    # فحص قيود العمليات للسيارات خارج الخدمة
-    restrictions = check_vehicle_operation_restrictions(vehicle)
-    if restrictions['blocked']:
-        flash(restrictions['message'], 'error')
-        return redirect(url_for('vehicles.view', id=id))
+    # ==================== طبقة التحقق الأولى: فحص الحالات الحرجة ====================
+    # هذا الفحص يعمل قبل كل شيء، لكل من طلبات GET و POST.
 
-    # هذا الجزء يعمل عند إرسال النموذج (طلب POST)
+    unsuitable_statuses = {
+        'in_workshop': {
+            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنها حالياً في الورشة. يجب إخراجها أولاً.',
+            'redirect_to': url_for('vehicles.view', id=id, _anchor='workshop-records-section') # يوجه إلى قسم الورشة
+        },
+        'accident': {
+            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنه مسجل عليها حادث نشط. يجب إغلاق ملف الحادث أولاً.',
+            'redirect_to': url_for('vehicles.view', id=id, _anchor='accidents-section')
+        },
+        'out_of_service': {
+            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنها "خارج الخدمة". يرجى تعديل حالة المركبة أولاً.',
+            'redirect_to': url_for('vehicles.edit', id=id) # يوجه لصفحة تعديل السيارة
+        }
+    }
+
+    if vehicle.status in unsuitable_statuses:
+        status_info = unsuitable_statuses[vehicle.status]
+        flash(status_info['message'], 'danger')
+        return redirect(status_info['redirect_to'])
+    # ===================== نهاية طبقة التحقق الأولى =====================
+
+
+    # --- إذا تجاوز الفحص أعلاه، نكمل المنطق العادي ---
+
+    if request.method == 'GET':
+        # (منطق GET الذي يحدد ما إذا كان يجب عرض نموذج تسليم أم استلام)
+
+        latest_delivery = VehicleHandover.query.filter(
+            VehicleHandover.vehicle_id == id,
+            VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+        ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+        latest_return = VehicleHandover.query.filter(
+            VehicleHandover.vehicle_id == id,
+            VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+        ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+        force_mode = None
+        info_message = None
+        current_driver_info = None
+
+        is_currently_handed_out = False
+        if latest_delivery:
+            if not latest_return or latest_delivery.created_at > latest_return.created_at:
+                is_currently_handed_out = True
+
+        if is_currently_handed_out:
+            force_mode = 'return'
+            current_driver_info = latest_delivery
+            info_message = f"تنبيه: المركبة مسلمة حالياً لـِ '{latest_delivery.person_name}'. النموذج معد لعملية الاستلام فقط."
+            flash(info_message, 'info')
+        else:
+            force_mode = 'delivery'
+            info_message = "المركبة متاحة حالياً. النموذج معد لعملية التسليم لسائق جديد."
+
+        employees = Employee.query.options(db.joinedload(Employee.departments)).order_by(Employee.name).all()
+        departments = Department.query.order_by(Department.name).all()
+
+        return render_template(
+            'vehicles/handover_create.html', 
+            vehicle=vehicle,
+            handover_types=['delivery', 'return'],
+            employees=employees,
+            departments=departments,
+            force_mode=force_mode,
+            info_message=info_message,
+            current_driver_info=current_driver_info
+        )
+
     if request.method == 'POST':
         try:
-            # === 1. استخراج كل البيانات من النموذج (Forms) ===
-
-            # --- البيانات الأساسية للعملية ---
+            # 1. استخراج كل البيانات من النموذج (Forms)
             handover_type = request.form.get('handover_type')
             handover_date_str = request.form.get('handover_date')
             handover_time_str = request.form.get('handover_time')
-
-            # --- معرفات الموظفين (السائق والمشرف) ---
             employee_id_str = request.form.get('employee_id')
             supervisor_employee_id_str = request.form.get('supervisor_employee_id')
-
-            # --- البيانات النصية والمتغيرة الأخرى ---
             person_name_from_form = request.form.get('person_name', '').strip()
             supervisor_name_from_form = request.form.get('supervisor_name', '').strip()
             mileage = int(request.form.get('mileage', 0))
@@ -2047,7 +2292,7 @@ def create_handover(id):
             form_link = request.form.get('form_link')
             custom_company_name = request.form.get('custom_company_name', '').strip() or None
 
-            # --- بيانات قائمة الفحص (Checklist) ---
+            # Checklist
             has_spare_tire = 'has_spare_tire' in request.form
             has_fire_extinguisher = 'has_fire_extinguisher' in request.form
             has_first_aid_kit = 'has_first_aid_kit' in request.form
@@ -2064,38 +2309,28 @@ def create_handover(id):
             has_lights_issue = 'has_lights_issue' in request.form
             has_ac_issue = 'has_ac_issue' in request.form
 
-            # --- معالجة التواريخ والأوقات ---
+            # معالجة التواريخ والأوقات
             handover_date = datetime.strptime(handover_date_str, '%Y-%m-%d').date() if handover_date_str else date.today()
             handover_time = datetime.strptime(handover_time_str, '%H:%M').time() if handover_time_str else None
 
-            # --- معالجة الصور والتواقيع والملفات المرفوعة (باستخدام دوالك المساعدة) ---
+            # معالجة الصور والتواقيع
             saved_diagram_path = save_base64_image(request.form.get('damage_diagram_data'), 'diagrams')
             saved_supervisor_sig_path = save_base64_image(request.form.get('supervisor_signature_data'), 'signatures')
             saved_driver_sig_path = save_base64_image(request.form.get('driver_signature_data'), 'signatures')
             movement_officer_signature_path = save_base64_image(request.form.get('movement_officer_signature'), 'signatures')
-
             custom_logo_file = request.files.get('custom_logo_file')
             saved_custom_logo_path = save_uploaded_file(custom_logo_file, 'logos')
 
-            # === 2. جلب الكائنات الكاملة من قاعدة البيانات ===
+            # جلب كائنات الموظفين
             driver = Employee.query.get(employee_id_str) if employee_id_str and employee_id_str.isdigit() else None
             supervisor = Employee.query.get(supervisor_employee_id_str) if supervisor_employee_id_str and supervisor_employee_id_str.isdigit() else None
 
-            # === 3. إنشاء كائن VehicleHandover وتعبئته بالبيانات المنسوخة ===
+            # 2. إنشاء كائن VehicleHandover وتعبئته بالبيانات
             handover = VehicleHandover(
-                vehicle_id=id,
-                handover_type=handover_type,
-                handover_date=handover_date,
-                handover_time=handover_time,
-                mileage=mileage,
-                project_name=project_name,
-                city=city,
-
-                vehicle_car_type=f"{vehicle.make} {vehicle.model}",
-                vehicle_plate_number=vehicle.plate_number,
-                vehicle_model_year=str(vehicle.year),
-
-                employee_id=driver.id if driver else None,
+                vehicle_id=id, handover_type=handover_type, handover_date=handover_date,
+                handover_time=handover_time, mileage=mileage, project_name=project_name, city=city,
+                vehicle_car_type=f"{vehicle.make} {vehicle.model}", vehicle_plate_number=vehicle.plate_number,
+                vehicle_model_year=str(vehicle.year), employee_id=driver.id if driver else None,
                 person_name=driver.name if driver else person_name_from_form,
                 driver_company_id=driver.employee_id if driver else None,
                 driver_phone_number=driver.mobile if driver else None,
@@ -2103,7 +2338,6 @@ def create_handover(id):
                 driver_contract_status=driver.contract_status if driver else None,
                 driver_license_status=driver.license_status if driver else None,
                 driver_signature_path=saved_driver_sig_path,
-
                 supervisor_employee_id=supervisor.id if supervisor else None,
                 supervisor_name=supervisor.name if supervisor else supervisor_name_from_form,
                 supervisor_company_id=supervisor.employee_id if supervisor else None,
@@ -2111,43 +2345,27 @@ def create_handover(id):
                 supervisor_residency_number=supervisor.national_id if supervisor else None,
                 supervisor_contract_status=supervisor.contract_status if supervisor else None,
                 supervisor_license_status=supervisor.license_status if supervisor else None,
-                supervisor_signature_path=saved_supervisor_sig_path,
-
-                reason_for_change=reason_for_change,
-                vehicle_status_summary=vehicle_status_summary,
-                notes=notes,
-                reason_for_authorization=reason_for_authorization,
-                authorization_details=authorization_details,
-                fuel_level=fuel_level,
-                has_spare_tire=has_spare_tire,
-                has_fire_extinguisher=has_fire_extinguisher,
-                has_first_aid_kit=has_first_aid_kit,
-                has_warning_triangle=has_warning_triangle,
-                has_tools=has_tools,
-                has_oil_leaks=has_oil_leaks,
-                has_gear_issue=has_gear_issue,
-                has_clutch_issue=has_clutch_issue,
-                has_engine_issue=has_engine_issue,
-                has_windows_issue=has_windows_issue,
-                has_tires_issue=has_tires_issue,
-                has_body_issue=has_body_issue,
-                has_electricity_issue=has_electricity_issue,
-                has_lights_issue=has_lights_issue,
-                has_ac_issue=has_ac_issue,
-
+                supervisor_signature_path=saved_supervisor_sig_path, reason_for_change=reason_for_change,
+                vehicle_status_summary=vehicle_status_summary, notes=notes,
+                reason_for_authorization=reason_for_authorization, authorization_details=authorization_details,
+                fuel_level=fuel_level, has_spare_tire=has_spare_tire, has_fire_extinguisher=has_fire_extinguisher,
+                has_first_aid_kit=has_first_aid_kit, has_warning_triangle=has_warning_triangle,
+                has_tools=has_tools, has_oil_leaks=has_oil_leaks, has_gear_issue=has_gear_issue,
+                has_clutch_issue=has_clutch_issue, has_engine_issue=has_engine_issue,
+                has_windows_issue=has_windows_issue, has_tires_issue=has_tires_issue,
+                has_body_issue=has_body_issue, has_electricity_issue=has_electricity_issue,
+                has_lights_issue=has_lights_issue, has_ac_issue=has_ac_issue,
                 movement_officer_name=movement_officer_name,
                 movement_officer_signature_path=movement_officer_signature_path,
-                damage_diagram_path=saved_diagram_path,
-                form_link=form_link,
-                custom_company_name=custom_company_name,
-                custom_logo_path=saved_custom_logo_path
+                damage_diagram_path=saved_diagram_path, form_link=form_link,
+                custom_company_name=custom_company_name, custom_logo_path=saved_custom_logo_path
             )
 
             db.session.add(handover)
             db.session.commit()
 
-            # === 4. حفظ الملفات المرفقة وتحديث حالة السائق (لا تغيير في المنطق) ===
-            update_vehicle_driver(id)
+            # 3. تحديث حالة السيارة والسائق وحفظ الملفات
+            update_vehicle_state(id)
 
             files = request.files.getlist('files')
             for file in files:
@@ -2156,20 +2374,14 @@ def create_handover(id):
                     if file_path:
                         file_description = request.form.get(f'description_{file.filename}', '')
                         file_record = VehicleHandoverImage(
-                            handover_record_id=handover.id,
-                            file_path=file_path,
-                            file_type=file_type,
-                            file_description=file_description,
-                            image_path=file_path,  # للتوافق
-                            image_description=file_description # للتوافق
+                            handover_record_id=handover.id, file_path=file_path, file_type=file_type, file_description=file_description,
+                            image_path=file_path, image_description=file_description
                         )
                         db.session.add(file_record)
-
             db.session.commit()
 
             action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
             log_audit('create', 'vehicle_handover', handover.id, f'تم إنشاء نموذج {action_type} للسيارة: {vehicle.plate_number}')
-
             flash(f'تم إنشاء نموذج {action_type} بنجاح!', 'success')
             return redirect(url_for('vehicles.view', id=id))
 
@@ -2178,49 +2390,7 @@ def create_handover(id):
             import traceback
             traceback.print_exc()
             flash(f'حدث خطأ غير متوقع أثناء الحفظ: {str(e)}', 'danger')
-            # إعادة عرض الصفحة مرة أخرى في حالة الخطأ لتجنب فقدان البيانات
-            # استرجاع البيانات لعرضها مرة أخرى في القالب
-            employees_for_template = Employee.query.order_by(Employee.name).all()
-            departments_for_template = Department.query.order_by(Department.name).all()
-            # ... جلب handover_types ...
-
-            return render_template(
-                'vehicles/handover_create.html', 
-                vehicle=vehicle,
-                handover_types=HANDOVER_TYPE_CHOICES,
-                default_handover_type=request.form.get('handover_type'),
-                # default_handover_type=...
-                employees=employees_for_template,
-                departments=departments_for_template,
-                form_data=request.form # إعادة إرسال بيانات النموذج للملء التلقائي
-            )
-
-    # هذا الجزء يعمل عند فتح الصفحة لأول مرة (طلب GET)
-    # تحديد نوع النموذج (تسليم أو استلام) من معلمة الاستعلام
-    default_type = request.args.get('type', '')
-    if default_type == 'delivery':
-        default_handover_type = 'delivery'
-    elif default_type == 'receive':
-        default_handover_type = 'receive'
-    else:
-        default_handover_type = 'delivery' # أو أي قيمة افتراضية أخرى
-
-    # جلب قائمة الموظفين مع أقسامهم والأقسام للاختيار منهم
-    employees = Employee.query.options(
-        db.joinedload(Employee.departments)
-    ).order_by(Employee.name).all()
-    departments = Department.query.order_by(Department.name).all()
-
-    return render_template(
-        'vehicles/handover_create.html', 
-        vehicle=vehicle,
-        handover_types=HANDOVER_TYPE_CHOICES, # تأكد من أن هذا المتغير معرف أو قم بتمرير قائمة
-        default_handover_type=default_handover_type,
-        employees=employees,
-        departments=departments
-    )
-
-
+            return redirect(url_for('vehicles.create_handover', id=id))
 
 
 
@@ -2617,6 +2787,11 @@ def view_handover(id, vehicle_id=None):
                 handover_type_name=handover_type_name
         )
 
+
+
+
+
+
 @vehicles_bp.route('/handover/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_handover(id):
@@ -2675,6 +2850,7 @@ def edit_handover(id):
                         handover.updated_at = datetime.utcnow()
 
                         db.session.commit()
+                        update_vehicle_state(id)
 
                         # تسجيل الإجراء
                         log_audit('update', 'vehicle_handover', handover.id, f'تم تعديل نموذج {handover_type_name} للسيارة: {vehicle.plate_number}')
@@ -2731,6 +2907,8 @@ def confirm_delete_handovers(vehicle_id):
         for record in records:
                 record.formatted_handover_date = format_date_arabic(record.handover_date)
 
+        
+
         return render_template(
                 'vehicles/confirm_delete_handovers.html',
                 vehicle=vehicle,
@@ -2775,6 +2953,8 @@ def delete_handovers(vehicle_id):
                 db.session.delete(record)
 
         db.session.commit()
+
+        update_vehicle_state(id)
 
         # رسالة نجاح
         if len(records) == 1:
