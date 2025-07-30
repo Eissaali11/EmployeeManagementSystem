@@ -712,80 +712,66 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
         }
+    });
+</script>
+
+<script>
+function exportToExcel() {
+    // الحصول على معلمات الفلتر الحالية من URL
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // بناء رابط التصدير مع نفس الفلاتر
+    let exportUrl = '{{ url_for("documents.export_excel") }}?';
+    
+    // إضافة معلمات الفلتر
+    if (urlParams.get('document_type')) {
+        exportUrl += `document_type=${urlParams.get('document_type')}&`;
     }
+    if (urlParams.get('employee_id')) {
+        exportUrl += `employee_id=${urlParams.get('employee_id')}&`;
+    }
+    if (urlParams.get('department_id')) {
+        exportUrl += `department_id=${urlParams.get('department_id')}&`;
+    }
+    if (urlParams.get('sponsorship_status')) {
+        exportUrl += `sponsorship_status=${urlParams.get('sponsorship_status')}&`;
+    }
+    if (urlParams.get('expiring')) {
+        exportUrl += `expiring=${urlParams.get('expiring')}&`;
+    }
+    if (urlParams.get('show_all')) {
+        exportUrl += `show_all=${urlParams.get('show_all')}&`;
+    }
+    
+    // إزالة & الأخير إذا كان موجوداً
+    if (exportUrl.endsWith('&')) {
+        exportUrl = exportUrl.slice(0, -1);
+    }
+    
+    // فتح الرابط في نافذة جديدة
+    window.open(exportUrl, '_blank');
+    
+    // عرض رسالة نجاح
+    showToast('جاري تصدير البيانات إلى Excel...', 'success');
+}
 
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    toast.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;';
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
 
+    document.body.appendChild(toast);
 
-    // دالة الطباعة المحسنة
-    function printPage() {
-        // إضافة تاريخ ووقت الطباعة
-        const container = document.querySelector('.container');
-        if (container) {
-            const now = new Date();
-            const currentDate = now.toLocaleDateString('ar-SA');
-            const currentTime = now.toLocaleTimeString('ar-SA');
-            container.setAttribute('data-print-date', currentDate);
-            container.setAttribute('data-print-time', currentTime);
+    // إزالة الرسالة تلقائياً بعد 5 ثوانٍ
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
         }
-        
-        // إخفاء جميع العناصر غير المرغوب فيها
-        const elementsToHide = [
-            '.card:first-of-type',
-            '.navbar',
-            '.sidebar', 
-            '.btn:not(.print-btn)',
-            '.pagination',
-            '.breadcrumb'
-        ];
-        
-        const hiddenElements = [];
-        elementsToHide.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-                if (element && element.style.display !== 'none') {
-                    hiddenElements.push({element, originalDisplay: element.style.display});
-                    element.style.display = 'none';
-                }
-            });
-        });
-        
-        // تحسين عنوان الصفحة للطباعة
-        const originalTitle = document.title;
-        document.title = 'تقرير الوثائق - شركة نُظم';
-        
-        // بدء عملية الطباعة
-        setTimeout(() => {
-            window.print();
-            
-            // استعادة العنوان الأصلي والعناصر المخفية
-            document.title = originalTitle;
-            hiddenElements.forEach(({element, originalDisplay}) => {
-                element.style.display = originalDisplay || 'block';
-            });
-        }, 100);
-    }
-
-    // دالة تصدير Excel
-    function exportToExcel() {
-        // جمع الفلاتر الحالية
-        const urlParams = new URLSearchParams(window.location.search);
-        const exportUrl = '{{ url_for("documents.export_excel") }}' + '?' + urlParams.toString();
-        
-        // إظهار رسالة تأكيد
-        if (confirm('هل تريد تصدير البيانات الحالية إلى ملف Excel؟')) {
-            // إنشاء رابط للتحميل
-            const link = document.createElement('a');
-            link.href = exportUrl;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // إظهار رسالة نجاح
-            setTimeout(() => {
-                alert('تم بدء تحميل الملف بنجاح!');
-            }, 500);
-        }
-    }
+    }, 5000);
+}
 </script>
 {% endblock %}
