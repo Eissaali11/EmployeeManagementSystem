@@ -1,0 +1,922 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة بطاقات SIM{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        font-family: 'Cairo', 'Segoe UI', sans-serif;
+        direction: rtl;
+        min-height: 100vh;
+    }
+
+    .container-fluid {
+        background: rgba(255, 255, 255, 0.95);
+        margin: 20px;
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .stats-card:hover::before {
+        left: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+
+    .stats-card.available {
+        background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
+    }
+
+    .stats-card.assigned {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    }
+
+    .stats-card.device-assigned {
+        background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .table {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        border: none;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+        background: rgba(108, 117, 125, 0.1);
+        transform: scale(1.01);
+    }
+
+    .btn {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .badge {
+        border-radius: 20px;
+        padding: 8px 12px;
+        font-size: 0.85em;
+    }
+
+    .back-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+    }
+
+    .back-to-top:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        color: white;
+    }
+
+    /* إصلاح مشكلة النوافذ المنبثقة */
+    .modal-backdrop {
+        z-index: 1040 !important;
+    }
+
+    .modal {
+        z-index: 1050 !important;
+    }
+
+    .modal-dialog {
+        z-index: 1060 !important;
+    }
+
+    /* التأكد من ظهور المحتوى */
+    .modal.show {
+        display: block !important;
+    }
+
+    .modal.show .modal-dialog {
+        transform: none !important;
+        opacity: 1 !important;
+    }
+
+    /* إصلاح خلفية Modal */
+    .modal-backdrop.show {
+        opacity: 0.5 !important;
+    }
+    
+    .carrier-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    
+    .carrier-stc { background-color: #007bff; color: white; }
+    .carrier-mobily { background-color: #28a745; color: white; }
+    .carrier-zain { background-color: #6f42c1; color: white; }
+    
+    .status-available { color: #28a745; font-weight: bold; }
+    .status-assigned { color: #dc3545; font-weight: bold; }
+    .status-device-assigned { color: #fd7e14; font-weight: bold; }
+    
+    .status-badge {
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-align: center;
+        display: inline-block;
+        min-width: 120px;
+    }
+    
+    .status-badge.status-assigned {
+        background-color: #dc3545;
+        color: white;
+    }
+    
+    .status-badge.status-device-assigned {
+        background-color: #fd7e14;
+        color: white;
+    }
+    
+    .status-badge.status-available {
+        background-color: #28a745;
+        color: white;
+    }
+    
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+    
+    .search-filters {
+        background: white;
+        padding: 25px;
+        border-radius: 20px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border: none;
+    }
+
+    .card {
+        background: white;
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .card:hover {
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        border: none;
+        border-radius: 20px 20px 0 0 !important;
+        padding: 20px;
+    }
+
+    .btn {
+        border-radius: 15px;
+        padding: 12px 24px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+    }
+
+    .table {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 18px 15px;
+        font-weight: 600;
+        font-size: 0.95em;
+        text-align: center;
+        vertical-align: middle;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .table thead th::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .table:hover thead th::before {
+        left: 100%;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s ease;
+        border-bottom: 1px solid #f1f3f4;
+    }
+
+    .table tbody tr:hover {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .table td {
+        padding: 18px 15px;
+        border: none;
+        vertical-align: middle;
+        font-size: 0.95em;
+    }
+
+    .phone-number {
+        font-weight: 700;
+        font-size: 1.1em;
+        color: #667eea;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .carrier-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-align: center;
+        display: inline-block;
+        min-width: 80px;
+    }
+
+    .carrier-stc {
+        background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        color: white;
+    }
+
+    .carrier-mobily {
+        background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+        color: white;
+    }
+
+    .carrier-zain {
+        background: linear-gradient(135deg, #e17055 0%, #fdcb6e 100%);
+        color: white;
+    }
+
+    .carrier-unknown {
+        background: linear-gradient(135deg, #636e72 0%, #b2bec3 100%);
+        color: white;
+    }
+
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 100px;
+        justify-content: center;
+    }
+
+    .status-available {
+        background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
+        color: white;
+    }
+
+    .status-assigned {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+        color: white;
+    }
+
+    .status-device-assigned {
+        background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+        color: white;
+    }
+
+    .employee-info {
+        font-size: 0.9em;
+    }
+
+    .employee-name {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 2px;
+    }
+
+    .employee-id {
+        color: #6c757d;
+        font-size: 0.85em;
+    }
+
+    .btn-group .btn {
+        border-radius: 8px;
+        margin: 0 2px;
+        padding: 8px 12px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-group .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .cost-display {
+        font-weight: 600;
+        color: #28a745;
+        font-size: 0.95em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-4">
+                <i class="fas fa-sim-card me-2"></i>
+                إدارة بطاقات SIM
+            </h2>
+            
+            <!-- الإحصائيات -->
+            <div class="row mb-4">
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <div class="stats-card text-center">
+                        <i class="fas fa-sim-card fa-2x mb-2"></i>
+                        <h3>{{ stats.total_sims or 0 }}</h3>
+                        <p class="mb-0">إجمالي البطاقات</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <div class="stats-card available text-center">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <h3>{{ stats.available_sims or 0 }}</h3>
+                        <p class="mb-0">متاحة</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <div class="stats-card assigned text-center">
+                        <i class="fas fa-user fa-2x mb-2"></i>
+                        <h3>{{ stats.assigned_sims or 0 }}</h3>
+                        <p class="mb-0">مربوطة بموظفين</p>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-3">
+                    <div class="stats-card device-assigned text-center">
+                        <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+                        <h3>{{ stats.device_assigned_sims or 0 }}</h3>
+                        <p class="mb-0">مربوطة بأجهزة</p>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-12">
+                    <div class="stats-card text-center" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                        <div class="row g-2">
+                            <div class="col-12 mb-2">
+                                <a href="{{ url_for('sim_management.create') }}" class="btn btn-light btn-lg w-100">
+                                    <i class="fas fa-plus me-2"></i>
+                                    إضافة رقم جديد
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{{ url_for('sim_management.import_excel') }}" class="btn btn-info btn-sm w-100">
+                                    <i class="fas fa-file-import me-1"></i>
+                                    استيراد Excel
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="{{ url_for('sim_management.export_excel', search=search, carrier=carrier_filter, status=status_filter, employee=employee_filter) }}" 
+                                   class="btn btn-warning btn-sm w-100"
+                                   title="تصدير البيانات المفلترة حالياً">
+                                    <i class="fas fa-file-export me-1"></i>
+                                    تصدير Excel
+                                    {% if search or carrier_filter or status_filter or employee_filter %}
+                                        <i class="fas fa-filter ms-1" style="font-size: 0.7em;"></i>
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- فلاتر البحث -->
+            <div class="search-filters">
+                <form method="GET" class="row">
+                    <div class="col-md-3">
+                        <label class="form-label">شركة الاتصالات</label>
+                        <select name="carrier" class="form-select">
+                            <option value="">جميع الشركات</option>
+                            <option value="STC" {{ 'selected' if carrier_filter == 'STC' }}>STC</option>
+                            <option value="موبايلي" {{ 'selected' if carrier_filter == 'موبايلي' }}>موبايلي</option>
+                            <option value="زين" {{ 'selected' if carrier_filter == 'زين' }}>زين</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">الحالة</label>
+                        <select name="status" class="form-select">
+                            <option value="">جميع الحالات</option>
+                            <option value="available" {{ 'selected' if status_filter == 'available' }}>متاح</option>
+                            <option value="assigned" {{ 'selected' if status_filter == 'assigned' }}>مربوط</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">البحث برقم الهاتف</label>
+                        <input type="text" name="search" class="form-control" 
+                               placeholder="ادخل رقم الهاتف..." value="{{ search_term }}">
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search"></i> بحث
+                        </button>
+                        <a href="{{ url_for('sim_management.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- الجدول -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-white">
+                            <i class="fas fa-sim-card me-2"></i>
+                            قائمة بطاقات SIM
+                        </h5>
+                        <span class="badge bg-light text-dark fs-6">
+                            {{ sim_cards|length }} بطاقة
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if sim_cards %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>رقم الهاتف</th>
+                                    <th>الشركة</th>
+                                    <th>نوع الباقة</th>
+                                    <th>التكلفة الشهرية</th>
+                                    <th>الحالة</th>
+                                    <th>الموظف المربوط</th>
+                                    <th>تاريخ الربط</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sim in sim_cards %}
+                                <tr>
+                                    <td class="text-center">
+                                        <div class="phone-number">{{ sim.phone_number }}</div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="carrier-badge carrier-{{ sim.carrier.lower().replace(' ', '') if sim.carrier else 'unknown' }}">
+                                            {{ sim.carrier or 'غير محدد' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">{{ sim.plan_type or 'غير محدد' }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if sim.monthly_cost %}
+                                            <span class="cost-display">{{ "%.2f"|format(sim.monthly_cost) }} ريال</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if sim.employee_id %}
+                                            <span class="status-badge status-assigned">
+                                                <i class="fas fa-user"></i> مربوط بموظف
+                                            </span>
+                                        {% elif sim.is_device_assigned %}
+                                            <span class="status-badge status-device-assigned">
+                                                <i class="fas fa-mobile-alt"></i> مربوط بجهاز
+                                            </span>
+                                        {% else %}
+                                            <span class="status-badge status-available">
+                                                <i class="fas fa-check-circle"></i> متاح
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if sim.employee %}
+                                            <!-- مربوط بموظف مباشرة -->
+                                            <div class="employee-info">
+                                                <div class="employee-name">
+                                                    <i class="fas fa-user text-success me-1"></i>
+                                                    {{ sim.employee.name }}
+                                                </div>
+                                                <div class="employee-id">{{ sim.employee.employee_id }}</div>
+                                                <small class="text-muted">مربوط مباشرة</small>
+                                            </div>
+                                        {% elif sim.device_employee_name %}
+                                            <!-- مربوط بجهاز موظف -->
+                                            <div class="employee-info">
+                                                <div class="employee-name">
+                                                    <i class="fas fa-mobile-alt text-warning me-1"></i>
+                                                    {{ sim.device_employee_name }}
+                                                </div>
+                                                <small class="text-muted">مربوط بجهاز</small>
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">غير مربوط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if sim.assignment_date %}
+                                            <span class="badge bg-secondary">{{ sim.assignment_date.strftime('%Y-%m-%d') }}</span>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <!-- زر عرض تفاصيل -->
+                                            <a href="{{ url_for('sim_management.details', sim_id=sim.id) }}" 
+                                               class="btn btn-info btn-sm" 
+                                               title="عرض التفاصيل">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            <!-- زر تعديل -->
+                                            <a href="{{ url_for('sim_management.edit', sim_id=sim.id) }}" 
+                                               class="btn btn-primary btn-sm"
+                                               title="تعديل">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            
+                                            {% if not sim.employee_id and not sim.is_device_assigned %}
+                                                <!-- زر ربط بموظف -->
+                                                <a href="{{ url_for('sim_management.assign', sim_id=sim.id) }}" 
+                                                   class="btn btn-success btn-sm" 
+                                                   title="ربط بموظف">
+                                                    <i class="fas fa-link"></i>
+                                                </a>
+                                                
+                                                <!-- زر حذف -->
+                                                <button type="button" class="btn btn-danger btn-sm" 
+                                                        onclick="confirmDelete({{ sim.id }}, '{{ sim.phone_number }}')"
+                                                        title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            {% elif sim.employee_id %}
+                                                <!-- زر فك الربط -->
+                                                <button type="button" class="btn btn-warning btn-sm" 
+                                                        onclick="confirmUnassign({{ sim.id }}, '{{ sim.phone_number }}')"
+                                                        title="فك الربط">
+                                                    <i class="fas fa-unlink"></i>
+                                                </button>
+                                            {% elif sim.is_device_assigned %}
+                                                <!-- مربوط بجهاز - انتقال لصفحة إدارة الأجهزة -->
+                                                <a href="{{ url_for('device_assignment.index') }}" 
+                                                   class="btn btn-secondary btn-sm"
+                                                   title="إدارة الأجهزة">
+                                                    <i class="fas fa-mobile-alt"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Modal لعرض تفاصيل الربط -->
+                                <div class="modal fade" id="detailsModal{{ sim.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-info text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    تفاصيل رقم {{ sim.phone_number }}
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <!-- معلومات الرقم -->
+                                                    <div class="col-md-6">
+                                                        <div class="card bg-light">
+                                                            <div class="card-header bg-primary text-white">
+                                                                <i class="fas fa-sim-card me-2"></i>معلومات الرقم
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <p><strong>رقم الهاتف:</strong> {{ sim.phone_number }}</p>
+                                                                <p><strong>الشركة:</strong> {{ sim.carrier or 'غير محدد' }}</p>
+                                                                <p><strong>نوع الباقة:</strong> {{ sim.plan_type or 'غير محدد' }}</p>
+                                                                <p><strong>التكلفة الشهرية:</strong> {{ sim.monthly_cost or 'غير محدد' }} ريال</p>
+                                                                <p><strong>حالة الرقم:</strong> 
+                                                                    {% if sim.employee_id %}
+                                                                        <span class="badge bg-danger">مربوط بموظف</span>
+                                                                    {% elif sim.is_device_assigned %}
+                                                                        <span class="badge bg-warning">مربوط بجهاز</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-success">متاح</span>
+                                                                    {% endif %}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- معلومات الربط -->
+                                                    <div class="col-md-6">
+                                                        {% if sim.employee_id %}
+                                                            <div class="card bg-light">
+                                                                <div class="card-header bg-danger text-white">
+                                                                    <i class="fas fa-user me-2"></i>معلومات الموظف
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <p><strong>اسم الموظف:</strong> {{ sim.employee.name }}</p>
+                                                                    <p><strong>رقم الموظف:</strong> {{ sim.employee.employee_id }}</p>
+                                                                    <p><strong>المنصب:</strong> {{ sim.employee.job_title }}</p>
+                                                                    <p><strong>الأقسام:</strong> 
+                                                                        {% if sim.employee.departments %}
+                                                                            {% for dept in sim.employee.departments %}
+                                                                                <span class="badge bg-info">{{ dept.name }}</span>
+                                                                            {% endfor %}
+                                                                        {% else %}
+                                                                            غير محدد
+                                                                        {% endif %}
+                                                                    </p>
+                                                                    <p><strong>هاتف العمل:</strong> {{ sim.employee.mobile }}</p>
+                                                                </div>
+                                                            </div>
+                                                        {% elif sim.is_device_assigned %}
+                                                            <div class="card bg-light">
+                                                                <div class="card-header bg-warning text-white">
+                                                                    <i class="fas fa-mobile-alt me-2"></i>معلومات الجهاز
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <p><strong>الحالة:</strong> مربوط بجهاز محمول</p>
+                                                                    <p><strong>النظام:</strong> نظام إدارة الأجهزة المحمولة</p>
+                                                                    <div class="alert alert-info">
+                                                                        <i class="fas fa-info-circle me-2"></i>
+                                                                        لعرض تفاصيل الجهاز وإدارة الربط، يرجى الانتقال إلى 
+                                                                        <a href="{{ url_for('device_assignment.index') }}" class="alert-link">صفحة إدارة الأجهزة</a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% else %}
+                                                            <div class="card bg-light">
+                                                                <div class="card-header bg-success text-white">
+                                                                    <i class="fas fa-check-circle me-2"></i>رقم متاح
+                                                                </div>
+                                                                <div class="card-body">
+                                                                    <div class="alert alert-success">
+                                                                        <i class="fas fa-check-circle me-2"></i>
+                                                                        هذا الرقم متاح للربط ويمكن تخصيصه لموظف أو جهاز جديد
+                                                                    </div>
+                                                                    <div class="d-grid gap-2">
+                                                                        <button type="button" class="btn btn-success" 
+                                                                                data-bs-toggle="modal" 
+                                                                                data-bs-target="#assignModal{{ sim.id }}"
+                                                                                data-bs-dismiss="modal">
+                                                                            <i class="fas fa-link me-2"></i>ربط بموظف
+                                                                        </button>
+                                                                        <a href="{{ url_for('device_assignment.index') }}" class="btn btn-outline-info">
+                                                                            <i class="fas fa-mobile-alt me-2"></i>ربط بجهاز
+                                                                        </a>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- معلومات إضافية -->
+                                                <div class="row mt-3">
+                                                    <div class="col-12">
+                                                        <div class="card bg-light">
+                                                            <div class="card-header bg-secondary text-white">
+                                                                <i class="fas fa-clock me-2"></i>معلومات النظام
+                                                            </div>
+                                                            <div class="card-body">
+                                                                <div class="row">
+                                                                    <div class="col-md-6">
+                                                                        <p><strong>تاريخ الإضافة:</strong> {{ sim.created_at.strftime('%Y-%m-%d %H:%M') if sim.created_at else 'غير محدد' }}</p>
+                                                                        <p><strong>آخر تحديث:</strong> {{ sim.updated_at.strftime('%Y-%m-%d %H:%M') if sim.updated_at else 'غير محدد' }}</p>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <p><strong>معرف الرقم:</strong> {{ sim.id }}</p>
+                                                                        <p><strong>الحالة النشطة:</strong> 
+                                                                            <span class="badge bg-primary">نشط</span>
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+
+                                
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-sim-card fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">لا توجد بطاقات SIM</h5>
+                        <p class="text-muted">لم يتم العثور على أي بطاقات SIM بالفلاتر المحددة</p>
+                        <a href="{{ url_for('sim_management.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>إضافة أول بطاقة SIM
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- زر العودة للأعلى -->
+<button class="back-to-top" onclick="scrollToTop()" title="العودة للأعلى">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<!-- إضافة قائمة الموظفين للـ modals -->
+{% set employees = [] %}
+{% if employees %}
+<script>
+// قائمة الموظفين متاحة عالمياً للاستخدام في المودالز
+</script>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // تحسين واجهة المستخدم
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    
+    // إضافة تأثيرات للجدول
+    $('.table tbody tr').hover(function() {
+        $(this).addClass('table-active');
+    }, function() {
+        $(this).removeClass('table-active');
+    });
+
+    // دالة العودة للأعلى
+    window.scrollToTop = function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    }
+
+    // إظهار/إخفاء زر العودة للأعلى
+    $(window).scroll(function() {
+        if ($(this).scrollTop() > 300) {
+            $('.back-to-top').fadeIn();
+        } else {
+            $('.back-to-top').fadeOut();
+        }
+    });
+
+    // إخفاء الزر في البداية
+    $('.back-to-top').hide();
+
+    // إصلاح مشكلة النوافذ المنبثقة
+    $(document).on('click', '[data-bs-toggle="modal"]', function(e) {
+        e.preventDefault();
+        const targetModal = $($(this).data('bs-target'));
+        
+        // إزالة أي modal مفتوح
+        $('.modal').modal('hide');
+        
+        // انتظار قصير ثم فتح النافذة الجديدة
+        setTimeout(function() {
+            targetModal.modal('show');
+        }, 150);
+    });
+
+    // التأكد من إزالة backdrop عند إغلاق النافذة
+    $(document).on('hidden.bs.modal', '.modal', function() {
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open');
+        $('body').css('padding-right', '');
+    });
+
+    // إصلاح مشكلة التمرير
+    $(document).on('shown.bs.modal', '.modal', function() {
+        $('body').addClass('modal-open');
+    });
+});
+
+// دوال تأكيد الحذف وفك الربط
+function confirmDelete(simId, phoneNumber) {
+    if (confirm('هل أنت متأكد من حذف رقم SIM: ' + phoneNumber + '؟')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/sim-management/delete/' + simId;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function confirmUnassign(simId, phoneNumber) {
+    if (confirm('هل أنت متأكد من فك ربط رقم SIM: ' + phoneNumber + '؟')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/sim-management/unassign-from-employee/' + simId;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,357 @@
+{% extends 'layout.html' %}
+
+{% block title %}ربط جهاز بموظف{% endblock %}
+
+{% block extra_css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<style>
+.select2-container--bootstrap-5 .select2-selection {
+    min-height: 38px;
+}
+.select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+    line-height: 36px;
+}
+.select2-dropdown {
+    direction: rtl;
+}
+.select2-results__option {
+    text-align: right;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- صف العنوان -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="h3 mb-1">ربط جهاز بموظف</h2>
+                    <p class="text-muted mb-0">ربط الجهاز المحمول بموظف مع إمكانية ربط رقم هاتف</p>
+                </div>
+                <a href="{{ url_for('device_management.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات الجهاز -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>معلومات الجهاز
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>IMEI:</strong><br>
+                            <code class="h6">{{ device.imei }}</code>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>العلامة التجارية:</strong><br>
+                            <span class="badge bg-info">{{ device.device_brand or 'غير محدد' }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>الموديل:</strong><br>
+                            {{ device.device_model or 'غير محدد' }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>رقم الهاتف الحالي:</strong><br>
+                            {% if device.phone_number %}
+                                <span class="badge bg-success">{{ device.phone_number }}</span>
+                            {% else %}
+                                <span class="text-muted">غير محدد</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج الربط -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-link me-2"></i>تفاصيل الربط
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('device_assignment.process_assign_device', device_id=device.id) }}">
+                        <div class="row">
+                            <!-- اختيار نوع الربط -->
+                            <div class="col-md-6 mb-3">
+                                <label for="assignment_type" class="form-label">
+                                    <i class="fas fa-cogs me-1"></i>نوع الربط <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="assignment_type" name="assignment_type" required>
+                                    <option value="">اختر نوع الربط</option>
+                                    <option value="device_only">جهاز فقط</option>
+                                    <option value="device_and_sim">جهاز ورقم</option>
+                                </select>
+                            </div>
+
+                            <!-- فلتر الأقسام -->
+                            <div class="col-md-6 mb-3">
+                                <label for="department_filter" class="form-label">
+                                    <i class="fas fa-building me-1"></i>فلترة حسب القسم
+                                </label>
+                                <select class="form-select" id="department_filter" onchange="filterEmployees()">
+                                    <option value="">جميع الأقسام</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.id }}">{{ department.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- اختيار الموظف -->
+                            <div class="col-md-6 mb-3">
+                                <label for="employee_id" class="form-label">
+                                    <i class="fas fa-user me-1"></i>الموظف <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="employee_id" name="employee_id" required>
+                                    <option value="">اختر الموظف</option>
+                                    {% for employee in employees %}
+                                    <option value="{{ employee.id }}" 
+                                            data-departments="{% for dept in employee.departments %}{{ dept.id }}{% if not loop.last %},{% endif %}{% endfor %}"
+                                            data-mobile="{{ employee.mobile }}"
+                                            data-employee-id="{{ employee.employee_id }}">
+                                        {{ employee.name }} ({{ employee.employee_id }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text" id="employee_info"></div>
+                            </div>
+
+                            <!-- اختيار الرقم (يظهر عند اختيار device_and_sim) -->
+                            <div class="col-md-6 mb-3" id="sim_selection" style="display: none;">
+                                <label for="sim_card_id" class="form-label">
+                                    <i class="fas fa-sim-card me-1"></i>رقم الهاتف <span class="text-success">({{ available_sims|length }} رقم متاح)</span>
+                                </label>
+                                <select class="form-select searchable-phone" id="sim_card_id" name="sim_card_id">
+                                    <option value="">اختر رقم هاتف من الأرقام المتاحة</option>
+                                    {% for sim in available_sims %}
+                                    <option value="{{ sim.id }}" 
+                                            data-carrier="{{ sim.carrier or 'غير محدد' }}"
+                                            data-type="{{ sim.plan_type or 'عادي' }}"
+                                            data-phone="{{ sim.phone_number }}">
+                                        {{ sim.phone_number }}
+                                        {% if sim.carrier %} - {{ sim.carrier }}{% endif %}
+                                        {% if sim.plan_type %} ({{ sim.plan_type }}){% endif %}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text text-success">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    يتم عرض الأرقام المتاحة فقط (غير مربوطة بموظفين)
+                                </div>
+                            </div>
+
+                            <!-- ملاحظات -->
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">
+                                    <i class="fas fa-sticky-note me-1"></i>ملاحظات
+                                </label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                          placeholder="أي ملاحظات إضافية حول عملية الربط..."></textarea>
+                            </div>
+
+                            <!-- أزرار الإجراءات -->
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-link me-2"></i>ربط الجهاز
+                                    </button>
+                                    <a href="{{ url_for('device_management.index') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>إلغاء
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tom Select - بديل أخف من Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+// تهيئة Tom Select للموظفين وأرقام الهاتف
+document.addEventListener('DOMContentLoaded', function() {
+    // إنشاء Searchable Dropdown للموظفين
+    const employeeSelect = new TomSelect('#employee_id', {
+        plugins: ['clear_button'],
+        placeholder: 'اختر الموظف',
+        searchField: ['text', 'value'],
+        sortField: {
+            field: 'text',
+            direction: 'asc'
+        },
+        render: {
+            option: function(data, escape) {
+                const option = document.querySelector(`option[value="${data.value}"]`);
+                if (!option || !data.value) return '<div>' + escape(data.text) + '</div>';
+                
+                const mobile = option.getAttribute('data-mobile') || '';
+                const employeeId = option.getAttribute('data-employee-id') || '';
+                
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-2" style="direction: rtl;">
+                        <div>
+                            <div class="fw-bold">${escape(data.text.split(' (')[0])}</div>
+                            <small class="text-muted">رقم الموظف: ${escape(employeeId)}</small>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-info">${escape(mobile)}</small>
+                        </div>
+                    </div>
+                `;
+            },
+            item: function(data, escape) {
+                return '<div>' + escape(data.text) + '</div>';
+            }
+        },
+        onChange: function(value) {
+            const infoDiv = document.getElementById('employee_info');
+            if (value) {
+                const option = document.querySelector(`option[value="${value}"]`);
+                if (option) {
+                    const mobile = option.getAttribute('data-mobile') || '';
+                    const employeeId = option.getAttribute('data-employee-id') || '';
+                    
+                    infoDiv.innerHTML = `<i class="fas fa-info-circle me-1"></i>رقم الموظف: ${employeeId} | الجوال: ${mobile}`;
+                    infoDiv.className = 'form-text text-info';
+                }
+            } else {
+                infoDiv.innerHTML = '';
+            }
+        }
+    });
+    
+    // إنشاء Searchable Dropdown لأرقام الهاتف
+    const phoneSelect = new TomSelect('#sim_card_id', {
+        plugins: ['clear_button'],
+        placeholder: 'ابحث واختر رقم الهاتف...',
+        searchField: ['text', 'value'],
+        sortField: {
+            field: 'text',
+            direction: 'asc'
+        },
+        render: {
+            option: function(data, escape) {
+                const option = document.querySelector(`option[value="${data.value}"]`);
+                if (!option || !data.value) return '<div>' + escape(data.text) + '</div>';
+                
+                const carrier = option.getAttribute('data-carrier') || 'غير محدد';
+                const type = option.getAttribute('data-type') || 'عادي';
+                const phone = option.getAttribute('data-phone') || '';
+                
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-2" style="direction: rtl;">
+                        <div>
+                            <div class="fw-bold text-primary">${escape(phone)}</div>
+                            <small class="text-muted">
+                                <i class="fas fa-building me-1"></i>${escape(carrier)}
+                                <span class="mx-2">|</span>
+                                <i class="fas fa-tag me-1"></i>${escape(type)}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-success">متاح</span>
+                        </div>
+                    </div>
+                `;
+            },
+            item: function(data, escape) {
+                return '<div>' + escape(data.text) + '</div>';
+            }
+        },
+        onItemAdd: function(value) {
+            // إضافة معلومات إضافية عند اختيار الرقم
+            const option = document.querySelector(`option[value="${value}"]`);
+            if (option) {
+                const phone = option.getAttribute('data-phone');
+                console.log('تم اختيار الرقم:', phone);
+            }
+        }
+    });
+    
+    // حفظ مراجع لـ TomSelect
+    window.employeeSelectInstance = employeeSelect;
+    window.phoneSelectInstance = phoneSelect;
+});
+
+// فلترة الموظفين حسب القسم
+function filterEmployees() {
+    const departmentFilter = document.getElementById('department_filter').value;
+    
+    // مسح الاختيار الحالي
+    if (window.employeeSelectInstance) {
+        window.employeeSelectInstance.clear();
+    }
+    document.getElementById('employee_info').innerHTML = '';
+    
+    // إخفاء/إظهار الخيارات بناءً على القسم المختار
+    const employeeSelect = document.getElementById('employee_id');
+    const options = employeeSelect.querySelectorAll('option');
+    
+    options.forEach(option => {
+        if (option.value === '') {
+            return; // تخطي الخيار الفارغ
+        }
+        
+        const employeeDepartments = option.getAttribute('data-departments');
+        if (!employeeDepartments) return;
+        
+        const departmentsList = employeeDepartments.split(',');
+        
+        if (!departmentFilter || departmentsList.includes(departmentFilter)) {
+            option.style.display = 'block';
+        } else {
+            option.style.display = 'none';
+        }
+    });
+    
+    // إعادة تحديث Tom Select
+    if (window.employeeSelectInstance) {
+        window.employeeSelectInstance.sync();
+    }
+}
+
+// إظهار/إخفاء اختيار الرقم حسب نوع الربط
+document.getElementById('assignment_type').addEventListener('change', function() {
+    const simSelection = document.getElementById('sim_selection');
+    const simSelect = document.getElementById('sim_card_id');
+    
+    if (this.value === 'device_and_sim') {
+        simSelection.style.display = 'block';
+        simSelect.required = true;
+        // تفعيل Tom Select للأرقام عند الحاجة
+        if (window.phoneSelectInstance) {
+            window.phoneSelectInstance.enable();
+        }
+    } else {
+        simSelection.style.display = 'none';
+        simSelect.required = false;
+        // مسح الاختيار الحالي
+        if (window.phoneSelectInstance) {
+            window.phoneSelectInstance.clear();
+            window.phoneSelectInstance.disable();
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,2519 @@
+
+
+{% extends 'layout.html' %}
+
+{% block extra_css %}
+<style>
+    /* Modern Vehicle Management Styles */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Enhanced Page Header */
+    .vehicle-header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        animation: slideDown 0.6s ease-out;
+    }
+
+    .vehicle-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+    }
+
+    .vehicle-header h2 {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Enhanced Action Buttons */
+    .btn-vehicle-action {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 140px;
+        justify-content: center;
+    }
+
+    .btn-vehicle-action::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .btn-vehicle-action:hover::before {
+        left: 100%;
+    }
+
+    .btn-vehicle-action:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+        text-decoration: none;
+    }
+
+    .btn-warning-enhanced {
+        background: var(--warning-gradient);
+        color: white;
+    }
+
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+    }
+
+    .btn-success-enhanced {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    .btn-info-enhanced {
+        background: var(--info-gradient);
+        color: white;
+    }
+
+    .btn-danger-enhanced {
+        background: var(--danger-gradient);
+        color: white;
+    }
+
+    /* Enhanced Tabs */
+    .nav-tabs-enhanced {
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-tabs-enhanced .nav-link {
+        border: none;
+        border-radius: 8px 8px 0 0;
+        padding: 1rem 1.5rem;
+        font-weight: 600;
+        color: #6c757d;
+        transition: all 0.3s ease;
+        margin-right: 0.5rem;
+    }
+
+    .nav-tabs-enhanced .nav-link:hover {
+        color: #05122D;
+        transform: translateY(-2px);
+    }
+
+    .nav-tabs-enhanced .nav-link.active {
+        color: white;
+        background: var(--primary-gradient);
+        box-shadow: var(--card-shadow);
+        transform: translateY(0);
+    }
+
+    /* Enhanced Cards */
+    .vehicle-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        height: 100%;
+        position: relative;
+        animation: slideUp 0.6s ease-out both;
+    }
+
+    .vehicle-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .vehicle-card:hover::before {
+        transform: translateX(100%);
+    }
+
+    .vehicle-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .vehicle-card-header {
+        background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
+        color: white;
+        padding: 1.5rem;
+        position: relative;
+    }
+
+    .vehicle-card-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    }
+
+    .vehicle-card-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    /* Enhanced Badges */
+    .badge-enhanced {
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .badge-enhanced:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Enhanced Alert */
+    .alert-enhanced {
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        backdrop-filter: blur(10px);
+        animation: slideInRight 0.5s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #17a2b8, #20c997, #17a2b8);
+    }
+
+    .alert-warning-enhanced::before {
+        background: linear-gradient(90deg, #ffc107, #fd7e14, #ffc107);
+    }
+
+    /* Animations */
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Staggered Animation for Cards */
+    .vehicle-item:nth-child(1) { animation-delay: 0.1s; }
+    .vehicle-item:nth-child(2) { animation-delay: 0.2s; }
+    .vehicle-item:nth-child(3) { animation-delay: 0.3s; }
+    .vehicle-item:nth-child(4) { animation-delay: 0.4s; }
+    .vehicle-item:nth-child(5) { animation-delay: 0.5s; }
+    .vehicle-item:nth-child(6) { animation-delay: 0.6s; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+        
+        .vehicle-header {
+            padding: 1.5rem;
+        }
+        
+        .vehicle-header h2 {
+            font-size: 2rem;
+        }
+        
+        .vehicle-card-header,
+        .vehicle-card-body {
+            padding: 1rem;
+        }
+        
+        .btn-group-enhanced {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .btn-group-enhanced .btn {
+            width: 100%;
+            margin: 0;
+        }
+    }
+
+    /* Safety Checks Table Enhancement */
+    .safety-table-container {
+        max-height: 70vh;
+        overflow-x: auto;
+        overflow-y: auto;
+        border: 2px solid #4a6b8a;
+        border-radius: 15px;
+        background-color: #2d4a6b;
+        padding: 5px;
+    }
+
+    .safety-table {
+        background-color: #2d4a6b;
+        color: white;
+        min-width: 1400px;
+        white-space: nowrap;
+    }
+
+    .safety-table th {
+        color: white;
+        border-color: #4a6b8a;
+        background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%);
+    }
+
+    .safety-table td {
+        color: white;
+        border-color: #4a6b8a;
+        background-color: rgba(45, 74, 107, 0.8);
+    }
+
+    /* Enhanced Document Cards */
+    .document-card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .document-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+
+    .document-card .card-body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .document-card .document-preview {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Enhanced Status Indicators */
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+
+    .status-active {
+        background: #28a745;
+        box-shadow: 0 0 10px #28a745;
+    }
+
+    .status-pending {
+        background: #ffc107;
+        box-shadow: 0 0 10px #ffc107;
+    }
+
+    .status-expired {
+        background: #dc3545;
+        box-shadow: 0 0 10px #dc3545;
+    }
+
+    /* Enhanced Form Controls */
+    .form-control-enhanced {
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-control-enhanced:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block title %}تفاصيل السيارة: {{ vehicle.plate_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Enhanced Header -->
+    <div class="vehicle-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h2>
+                    <i class="fas fa-car ms-2"></i>
+                    تفاصيل السيارة: {{ vehicle.plate_number }}
+                </h2>
+                <p class="text-muted mb-0">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.year }}</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn-vehicle-action btn-warning-enhanced">
+                    <i class="fas fa-edit"></i>
+                    تعديل السيارة
+                </a>
+                <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" class="btn-vehicle-action btn-primary-enhanced">
+                    <i class="fas fa-id-card"></i>
+                    وثائق المركبة
+                </a>
+                <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
+                   class="btn-vehicle-action btn-success-enhanced" target="_blank">
+                    <i class="fas fa-shield-alt"></i>
+                    فحص السلامة
+                </a>
+                <button class="btn-vehicle-action btn-info-enhanced"
+                    onclick="shareSafetyCheckForm({{ vehicle.id }}, '{{ vehicle.plate_number }}')">
+                    <i class="fas fa-share-alt"></i>
+                    مشاركة رابط الفحص
+                </button>
+                <a href="{{ url_for('vehicles.index') }}" class="btn-vehicle-action btn-outline-secondary">
+                    <i class="fas fa-arrow-right"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if inspection_warnings %}
+    <div class="alert alert-warning alert-enhanced mb-4">
+        <i class="fas fa-exclamation-triangle ms-2"></i>
+        {% for warning in inspection_warnings %}
+        <span>{{ warning }}</span>{% if not loop.last %} | {% endif %} 
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Enhanced Tabs -->
+    <ul class="nav nav-tabs nav-tabs-enhanced mb-4" id="vehicleTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="true">
+                <i class="fas fa-info-circle me-1"></i> معلومات السيارة
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
+                <i class="fas fa-file-alt me-1"></i> الوثائق
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="inspections-tab" data-bs-toggle="tab" data-bs-target="#inspections" type="button" role="tab" aria-controls="inspections" aria-selected="false">
+                <i class="fas fa-clipboard-check me-1"></i> الفحوصات
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="workshop-tab" data-bs-toggle="tab" data-bs-target="#workshop" type="button" role="tab" aria-controls="workshop" aria-selected="false">
+                <i class="fas fa-tools me-1"></i> الورشة
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="drivers-tab" data-bs-toggle="tab" data-bs-target="#drivers" type="button" role="tab" aria-controls="drivers" aria-selected="false">
+                <i class="fas fa-user-tie me-1"></i> السائقين
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="projects-tab" data-bs-toggle="tab" data-bs-target="#projects" type="button" role="tab" aria-controls="projects" aria-selected="false">
+                <i class="fas fa-project-diagram me-1"></i> المشاريع
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="accidents-tab" data-bs-toggle="tab" data-bs-target="#accidents" type="button" role="tab" aria-controls="accidents" aria-selected="false">
+                <i class="fas fa-car-crash me-1"></i> الحوادث
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="authorizations-tab" data-bs-toggle="tab" data-bs-target="#authorizations" type="button" role="tab" aria-controls="authorizations" aria-selected="false">
+                <i class="fas fa-file-signature me-1"></i> التفويضات
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="vehicleTabsContent">
+        <!-- تبويب معلومات السيارة -->
+        <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+            <div class="row mb-4">
+                <!-- تفاصيل السيارة الأساسية -->
+                <div class="col-md-6 mb-4">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-info-circle ms-2"></i>
+                                معلومات السيارة
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">رقم اللوحة:</div>
+                                <div class="col-sm-8">
+                                    {{ vehicle.plate_number }}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">النوع:</div>
+                                <div class="col-sm-8">
+                                    {{ vehicle.make }} {{ vehicle.model }}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">سنة الصنع:</div>
+                                <div class="col-sm-8">{{ vehicle.year }}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">اللون:</div>
+                                <div class="col-sm-8">
+                                    <span class="badge-enhanced rounded-pill" 
+                                          style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
+                                        {{ vehicle.color }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">الحالة:</div>
+                                <div class="col-sm-8">
+                                    {% if vehicle.status == 'available' %}
+                                    <span class="badge-enhanced bg-success">متاحة</span>
+                                    {% elif vehicle.status == 'rented' %}
+                                    <span class="badge-enhanced bg-primary">مؤجرة</span>
+                                    {% elif vehicle.status == 'in_project' %}
+                                    <span class="badge-enhanced bg-info">في المشروع</span>
+                                    {% elif vehicle.status == 'in_workshop' %}
+                                    <span class="badge-enhanced bg-warning text-dark">في الورشة</span>
+                                    {% elif vehicle.status == 'accident' %}
+                                    <span class="badge-enhanced bg-danger">حادث</span>
+                                    {% else %}
+                                    <span class="badge-enhanced bg-secondary">{{ vehicle.status }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">تاريخ الإضافة:</div>
+                                <div class="col-sm-8">
+                                    {{ vehicle.created_at.strftime('%Y-%m-%d') }}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">آخر تحديث:</div>
+                                <div class="col-sm-8">
+                                    {{ vehicle.updated_at.strftime('%Y-%m-%d') }}
+                                </div>
+                            </div>
+                            {% if vehicle.project %}
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">المشروع:</div>
+                                <div class="col-sm-8">
+                                    <span class="badge-enhanced bg-info">{{ vehicle.project }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <div class="row mb-3">
+                                <div class="col-sm-4 fw-bold">السائق الحالي:</div>
+                                <div class="col-sm-8">
+                                    {% if current_driver %}
+                                    <span class="text-success fw-bold">{{ current_driver.name }}</span>
+                                    <small class="text-muted d-block">منذ {{ current_driver.formatted_date }}</small>
+                                    <div class="mt-2">
+                                        <a href="{{ url_for('vehicles.view_handover', id=current_driver.handover_id) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye ms-1"></i>
+                                            مشاهدة سجل التسليم
+                                        </a>
+                                        {% if current_driver.mobile %}
+                                        <button onclick="redirectToWhatsApp('{{ current_driver.mobile }}', '{{ current_driver.name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
+                                           class="btn btn-sm btn-success ms-1"
+                                           target="_blank"
+                                           title="إرسال رسالة واتساب">
+                                            <i class="fab fa-whatsapp ms-1"></i>
+                                            واتساب
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-muted">غير محدد</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if vehicle.notes %}
+                            <div class="row mb-2">
+                                <div class="col-12 fw-bold">ملاحظات:</div>
+                                <div class="col-12 mt-2">
+                                    <div class="alert alert-secondary">
+                                        {{ vehicle.notes }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- ملفات Google Drive داخل معلومات السيارة -->
+                            <hr class="my-3" />
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">
+                                    <i class="fab fa-google-drive text-info ms-1"></i>
+                                    ملفات Google Drive:
+                                </div>
+                                <div class="col-sm-8">
+                                    {% if vehicle.drive_folder_link %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge-enhanced bg-success me-2">مرتبط</span>
+                                        <a href="{{ vehicle.drive_folder_link }}" 
+                                           target="_blank" 
+                                           class="btn btn-sm btn-success me-2">
+                                            <i class="fab fa-google-drive me-1"></i>
+                                            فتح المجلد
+                                        </a>
+                                        <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-cog me-1"></i>
+                                            إدارة
+                                        </a>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">تم ربط مجلد لتنظيم ملفات المركبة</small>
+                                    {% else %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge-enhanced bg-warning text-dark me-2">غير مرتبط</span>
+                                        <a href="{{ url_for('vehicles.drive_management', vehicle_id=vehicle.id) }}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-link me-1"></i>
+                                            ربط مجلد
+                                        </a>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">لم يتم ربط مجلد Google Drive بعد</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- معلومات الإيجار -->
+                <div class="col-md-6 mb-4">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-money-bill-wave ms-2"></i>
+                                معلومات الإيجار
+                            </h5>
+                            <a href="{{ url_for('vehicles.create_rental', id=vehicle.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                {% if rental %}تعديل الإيجار{% else %}إضافة إيجار{% endif %}
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if rental %}
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">تاريخ البداية:</div>
+                                <div class="col-sm-8">
+                                    {{ rental.formatted_start_date }}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">تاريخ النهاية:</div>
+                                <div class="col-sm-8">
+                                    {% if rental.end_date %} 
+                                    {{ rental.formatted_end_date }} 
+                                    {% else %}
+                                    <span class="badge-enhanced bg-info">مستمر</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">قيمة الإيجار الشهري:</div>
+                                <div class="col-sm-8">
+                                    {{ "{:,.2f}".format(rental.monthly_cost) }} ريال
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">حالة الإيجار:</div>
+                                <div class="col-sm-8">
+                                    {% if rental.is_active %}
+                                    <span class="badge-enhanced bg-success">نشط</span>
+                                    {% else %}
+                                    <span class="badge-enhanced bg-danger">منتهي</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">المؤجر:</div>
+                                <div class="col-sm-8">
+                                    {{ rental.lessor_name or 'غير محدد' }}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">معلومات الاتصال:</div>
+                                <div class="col-sm-8">
+                                    {{ rental.lessor_contact or 'غير محدد' }}
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-4 fw-bold">رقم العقد:</div>
+                                <div class="col-sm-8">
+                                    {{ rental.contract_number or 'غير محدد' }}
+                                </div>
+                            </div>
+                            {% if rental.notes %}
+                            <div class="row mb-2">
+                                <div class="col-12 fw-bold">ملاحظات الإيجار:</div>
+                                <div class="col-12 mt-2">
+                                    <div class="alert alert-secondary">
+                                        {{ rental.notes }}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{{ url_for('vehicles.edit_rental', id=rental.id) }}" 
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit ms-1"></i>
+                                    تعديل معلومات الإيجار
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-file-contract fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا يوجد إيجار نشط حالياً</h5>
+                                <p class="text-muted">
+                                    يمكنك إضافة معلومات الإيجار للسيارة من خلال النقر على زر "إضافة إيجار"
+                                </p>
+                                <a href="{{ url_for('vehicles.create_rental', id=vehicle.id) }}" 
+                                   class="btn btn-primary mt-2">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة إيجار
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الوثائق -->
+        <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+            <div class="row mb-4">
+                <div class="col-md-12 mb-4">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-alt ms-2"></i>
+                                إدارة الوثائق
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- صورة الاستمارة -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="document-card card h-100 border-primary">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-file-alt me-2"></i>
+                                                صورة الاستمارة
+                                            </h6>
+                                            {% if vehicle.registration_form_image %}
+                                            <div class="document-preview mb-3">
+                                                <img src="{{ '/' + vehicle.registration_form_image }}" 
+                                                     alt="صورة الاستمارة" 
+                                                     class="img-fluid rounded" 
+                                                     style="max-height: 200px; cursor: pointer;"
+                                                     onclick="openImageModal('{{ '/' + vehicle.registration_form_image }}', 'صورة الاستمارة')">
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        onclick="openImageModal('{{ '/' + vehicle.registration_form_image }}', 'صورة الاستمارة')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <form method="POST" 
+                                                      action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" 
+                                                      class="d-inline">
+                                                    <input type="hidden" name="document_type" value="registration_form">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('هل أنت متأكد من حذف صورة الاستمارة؟')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            {% else %}
+                                            <div class="document-preview text-muted mb-3">
+                                                <i class="fas fa-file-alt fa-3x"></i>
+                                                <p class="mt-2">لم يتم رفع صورة الاستمارة</p>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- نموذج رفع الصورة -->
+                                            <form method="POST" 
+                                                  action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" 
+                                                  enctype="multipart/form-data" 
+                                                  class="mt-3">
+                                                <input type="hidden" name="document_type" value="registration_form">
+                                                <div class="input-group">
+                                                    <input type="file" 
+                                                           name="file" 
+                                                           class="form-control form-control-sm" 
+                                                           accept="image/*,application/pdf" 
+                                                           required>
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- صورة اللوحة -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="document-card card h-100 border-success">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-id-card me-2"></i>
+                                                صورة اللوحة
+                                            </h6>
+                                            {% if vehicle.plate_image %}
+                                            <div class="document-preview mb-3">
+                                                <img src="{{ '/' + vehicle.plate_image }}" 
+                                                     alt="صورة اللوحة" 
+                                                     class="img-fluid rounded" 
+                                                     style="max-height: 200px; cursor: pointer;"
+                                                     onclick="openImageModal('{{ '/' + vehicle.plate_image }}', 'صورة اللوحة')">
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        onclick="openImageModal('{{ '/' + vehicle.plate_image }}', 'صورة اللوحة')">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <form method="POST" 
+                                                      action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" 
+                                                      class="d-inline">
+                                                    <input type="hidden" name="document_type" value="plate">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('هل أنت متأكد من حذف صورة اللوحة؟')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            {% else %}
+                                            <div class="document-preview text-muted mb-3">
+                                                <i class="fas fa-id-card fa-3x"></i>
+                                                <p class="mt-2">لم يتم رفع صورة اللوحة</p>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- نموذج رفع الصورة -->
+                                            <form method="POST" 
+                                                  action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" 
+                                                  enctype="multipart/form-data" 
+                                                  class="mt-3">
+                                                <input type="hidden" name="document_type" value="plate">
+                                                <div class="input-group">
+                                                    <input type="file" 
+                                                           name="file" 
+                                                           class="form-control form-control-sm" 
+                                                           accept="image/*,application/pdf" 
+                                                           required>
+                                                    <button type="submit" class="btn btn-sm btn-success">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ملف التأمين -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="document-card card h-100 border-warning">
+                                        <div class="card-body text-center">
+                                            <h6 class="card-title">
+                                                <i class="fas fa-shield-alt me-2"></i>
+                                                ملف التأمين
+                                            </h6>
+                                            {% if vehicle.insurance_file %}
+                                            <div class="document-preview mb-3">
+                                                {% if vehicle.insurance_file.lower().endswith('.pdf') %}
+                                                <div class="text-center">
+                                                    <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                                    <p class="small">ملف PDF</p>
+                                                </div>
+                                                {% else %}
+                                                <img src="{{ '/' + vehicle.insurance_file }}" 
+                                                     alt="ملف التأمين" 
+                                                     class="img-fluid rounded" 
+                                                     style="max-height: 200px; cursor: pointer;"
+                                                     onclick="openImageModal('{{ '/' + vehicle.insurance_file }}', 'ملف التأمين')">
+                                                {% endif %}
+                                            </div>
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a href="{{ '/' + vehicle.insurance_file }}" 
+                                                   target="_blank" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <form method="POST" 
+                                                      action="{{ url_for('vehicles.delete_document', id=vehicle.id) }}" 
+                                                      class="d-inline">
+                                                    <input type="hidden" name="document_type" value="insurance">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-outline-danger"
+                                                            onclick="return confirm('هل أنت متأكد من حذف ملف التأمين؟')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                            {% else %}
+                                            <div class="document-preview text-muted mb-3">
+                                                <i class="fas fa-shield-alt fa-3x"></i>
+                                                <p class="mt-2">لم يتم رفع ملف التأمين</p>
+                                            </div>
+                                            {% endif %}
+
+                                            <!-- نموذج رفع الملف -->
+                                            <form method="POST" 
+                                                  action="{{ url_for('vehicles.upload_document', id=vehicle.id) }}" 
+                                                  enctype="multipart/form-data" 
+                                                  class="mt-3">
+                                                <input type="hidden" name="document_type" value="insurance">
+                                                <div class="input-group">
+                                                    <input type="file" 
+                                                           name="file" 
+                                                           class="form-control form-control-sm" 
+                                                           accept="image/*,application/pdf,.doc,.docx" 
+                                                           required>
+                                                    <button type="submit" class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-upload"></i>
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <!-- بطاقة معلومات وثائق المركبة -->
+                <div class="col-md-12 mb-4">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-id-card ms-2"></i>
+                                وثائق المركبة
+                            </h5>
+                            <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit ms-1"></i>
+                                تعديل تواريخ الوثائق
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- تفويض المركبة -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="document-card card h-100 {% if vehicle.authorization_expiry_date %} {% if (vehicle.authorization_expiry_date - today).days < 0 %} border-danger {% elif (vehicle.authorization_expiry_date - today).days <= 30 %} border-warning {% else %} border-success {% endif %} {% else %} border-light {% endif %}">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title mb-3">
+                                                <i class="fas fa-file-contract me-1"></i>
+                                                تفويض المركبة
+                                            </h5>
+                                            {% if vehicle.authorization_expiry_date %}
+                                            <p class="mb-1">تاريخ الانتهاء:</p>
+                                            <h4 class="mb-2">
+                                                {{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') }}
+                                            </h4>
+
+                                            {% set days_remaining = (vehicle.authorization_expiry_date - today).days %}
+                                            {% if days_remaining < 0 %}
+                                            <div class="badge-enhanced bg-danger p-2 mb-2 w-100">
+                                                منتهي منذ {{ days_remaining|abs }} يوم
+                                            </div>
+                                            {% elif days_remaining <= 30 %}
+                                            <div class="badge-enhanced bg-warning text-dark p-2 mb-2 w-100">
+                                                يتبقى {{ days_remaining }} يوم
+                                            </div>
+                                            {% else %}
+                                            <div class="badge-enhanced bg-success p-2 mb-2 w-100">
+                                                يتبقى {{ days_remaining }} يوم
+                                            </div>
+                                            {% endif %}
+
+                                            <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" 
+                                               class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="fas fa-eye ms-1"></i>
+                                                التفاصيل
+                                            </a>
+                                            {% else %}
+                                            <div class="text-muted mb-3">
+                                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                                                <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                            </div>
+                                            <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" 
+                                               class="btn btn-sm btn-primary w-100">
+                                                <i class="fas fa-plus ms-1"></i>
+                                                إضافة التاريخ
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- استمارة السيارة -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="document-card card h-100 {% if vehicle.registration_expiry_date %} {% if (vehicle.registration_expiry_date - today).days < 0 %} border-danger {% elif (vehicle.registration_expiry_date - today).days <= 30 %} border-warning {% else %} border-success {% endif %} {% else %} border-light {% endif %}">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title mb-3">
+                                                <i class="fas fa-clipboard-list me-1"></i>
+                                                استمارة السيارة
+                                            </h5>
+                                            {% if vehicle.registration_expiry_date %}
+                                            <p class="mb-1">تاريخ الانتهاء:</p>
+                                            <h4 class="mb-2">
+                                                {{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') }}
+                                            </h4>
+
+                                            {% set days_remaining = (vehicle.registration_expiry_date - today).days %}
+                                            {% if days_remaining < 0 %}
+                                            <div class="badge-enhanced bg-danger p-2 mb-2 w-100">
+                                                منتهي منذ {{ days_remaining|abs }} يوم
+                                            </div>
+                                            {% elif days_remaining <= 30 %}
+                                            <div class="badge-enhanced bg-warning text-dark p-2 mb-2 w-100">
+                                                يتبقى {{ days_remaining }} يوم
+                                            </div>
+                                            {% else %}
+                                            <div class="badge-enhanced bg-success p-2 mb-2 w-100">
+                                                يتبقى {{ days_remaining }} يوم
+                                            </div>
+                                            {% endif %}
+
+                                            <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" 
+                                               class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="fas fa-eye ms-1"></i>
+                                                التفاصيل
+                                            </a>
+                                            {% else %}
+                                            <div class="text-muted mb-3">
+                                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                                                <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                            </div>
+                                            <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" 
+                                               class="btn btn-sm btn-primary w-100">
+                                                <i class="fas fa-plus ms-1"></i>
+                                                إضافة التاريخ
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- الفحص الدوري -->
+                                <div class="col-md-4 mb-3">
+                                    <div class="document-card card h-100 {% if vehicle.inspection_expiry_date %} {% if (vehicle.inspection_expiry_date - today).days < 0 %} border-danger {% elif (vehicle.inspection_expiry_date - today).days <= 30 %} border-warning {% else %} border-success {% endif %} {% else %} border-light {% endif %}">
+                                        <div class="card-body text-center">
+                                            <h5 class="card-title mb-3">
+                                                <i class="fas fa-clipboard-check me-1"></i>
+                                                الفحص الدوري
+                                            </h5>
+                                            {% if vehicle.inspection_expiry_date %}
+                                            <p class="mb-1">تاريخ الانتهاء:</p>
+                                            <h4 class="mb-2">
+                                                {{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') }}
+                                            </h4>
+
+                                            {% set days_remaining = (vehicle.inspection_expiry_date - today).days %}
+                                            {% if days_remaining < 0 %}
+                                            <div class="badge-enhanced bg-danger p-2 mb-2 w-100">
+                                                منتهي منذ {{ days_remaining|abs }} يوم
+                                            </div>
+                                            {% elif days_remaining <= 30 %}
+                                            <div class="badge-enhanced bg-warning text-dark p-2 mb-2 w-100">
+                                                يتبقى {{ days_remaining }} يوم
+                                            </div>
+                                            {% else %}
+                                            <div class="badge-enhanced bg-success p-2 mb-2 w-100">
+                                                يتبقى {{ days_remaining }} يوم
+                                            </div>
+                                            {% endif %}
+
+                                            <a href="{{ url_for('vehicles.view_documents', id=vehicle.id) }}" 
+                                               class="btn btn-sm btn-outline-primary w-100">
+                                                <i class="fas fa-eye ms-1"></i>
+                                                التفاصيل
+                                            </a>
+                                            {% else %}
+                                            <div class="text-muted mb-3">
+                                                <i class="fas fa-exclamation-circle fa-2x"></i>
+                                                <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                            </div>
+                                            <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" 
+                                               class="btn btn-sm btn-primary w-100">
+                                                <i class="fas fa-plus ms-1"></i>
+                                                إضافة التاريخ
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الفحوصات -->
+        <div class="tab-pane fade" id="inspections" role="tabpanel" aria-labelledby="inspections-tab">
+            <div class="row mb-4">
+                <div class="col-md-12 mb-4">
+                    <div class="vehicle-card card h-100">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-clipboard-check ms-2"></i>
+                                الفحص الدوري 
+                                {% if periodic_inspections %}
+                                <span class="badge-enhanced bg-secondary">{{ periodic_inspections|length }}</span>
+                                {% endif %}
+                            </h5>
+                            <div>
+                                <a href="{{ url_for('vehicles.vehicle_inspections', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye ms-1"></i>
+                                    عرض الكل
+                                </a>
+                                <a href="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-success me-1">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة فحص
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if periodic_inspections %}
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>رقم الفحص</th>
+                                            <th>تاريخ الفحص</th>
+                                            <th>تاريخ الانتهاء</th>
+                                            <th>النوع</th>
+                                            <th>الحالة</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for inspection in periodic_inspections[:3] %}
+                                        <tr class="{% if inspection.is_expired %}table-danger{% elif inspection.is_expiring_soon %}table-warning{% endif %}">
+                                            <td>{{ inspection.inspection_number }}</td>
+                                            <td>{{ inspection.formatted_inspection_date }}</td>
+                                            <td>{{ inspection.formatted_expiry_date }}</td>
+                                            <td>
+                                                {% if inspection.inspection_type == 'technical' %}
+                                                <span class="badge-enhanced bg-info">فحص فني</span>
+                                                {% elif inspection.inspection_type == 'periodic' %}
+                                                <span class="badge-enhanced bg-primary">فحص دوري</span>
+                                                {% elif inspection.inspection_type == 'safety' %}
+                                                <span class="badge-enhanced bg-warning text-dark">فحص أمان</span>
+                                                {% else %}
+                                                <span class="badge-enhanced bg-secondary">{{ inspection.inspection_type }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if inspection.inspection_status == 'valid' %}
+                                                <span class="badge-enhanced bg-success">ساري</span>
+                                                {% elif inspection.inspection_status == 'expired' %}
+                                                <span class="badge-enhanced bg-danger">منتهي</span>
+                                                {% elif inspection.inspection_status == 'expiring_soon' %}
+                                                <span class="badge-enhanced bg-warning text-dark">ينتهي قريبًا</span>
+                                                {% else %}
+                                                <span class="badge-enhanced bg-secondary">{{ inspection.inspection_status }}</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if periodic_inspections|length > 3 %}
+                            <div class="text-center mt-2">
+                                <a href="{{ url_for('vehicles.vehicle_inspections', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    عرض كل السجلات ({{ periodic_inspections|length }})
+                                </a>
+                            </div>
+                            {% endif %} 
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-clipboard fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا توجد سجلات فحص دوري</h5>
+                                <p class="text-muted">
+                                    يمكنك إضافة سجل فحص دوري جديد من خلال النقر على زر "إضافة فحص"
+                                </p>
+                                <a href="{{ url_for('vehicles.create_inspection', id=vehicle.id) }}" 
+                                   class="btn btn-success mt-2">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة فحص دوري
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 mb-4">
+                    <div class="vehicle-card card h-100">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-shield-alt ms-2"></i>
+                                فحوصات السلامة 
+                                {% if vehicle_safety_checks %}
+                                <span class="badge-enhanced bg-secondary">{{ vehicle_safety_checks|length }}</span>
+                                {% endif %}
+                            </h5>
+                            <div>
+                                <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye ms-1"></i>
+                                    عرض الكل
+                                </a>
+                                <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-success me-1">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة فحص
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if vehicle_safety_checks %}
+                            <div class="safety-table-container">
+                                <table class="table table-striped table-hover safety-table" id="safetyChecksTable">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>رقم اللوحة</th>
+                                            <th>نوع السيارة</th>
+                                            <th>اسم السائق</th>
+                                            <th>القسم</th>
+                                            <th>المدينة</th>
+                                            <th>تاريخ الفحص</th>
+                                            <th>الحالة</th>
+                                            <th>الصور</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for vehicle_safety_checks in vehicle_safety_checks %}
+                                        <tr data-status="{{ vehicle_safety_checks.approval_status }}">
+                                            <td>{{ vehicle_safety_checks.id }}</td>
+                                            <td>{{ vehicle_safety_checks.vehicle_plate_number }}</td>
+                                            <td>{{ vehicle_safety_checks.vehicle_make_model }}</td>
+                                            <td>{{ vehicle_safety_checks.driver_name }}</td>
+                                            <td>{{ vehicle_safety_checks.driver_department }}</td>
+                                            <td>{{ vehicle_safety_checks.driver_city }}</td>
+                                            <td>{{ vehicle_safety_checks.inspection_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>
+                                                {% if vehicle_safety_checks.is_pending %}
+                                                    <span class="badge-enhanced" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white;">قيد المراجعة</span>
+                                                {% elif vehicle_safety_checks.is_approved %}
+                                                    <span class="badge-enhanced" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white;">معتمدة</span>
+                                                {% elif vehicle_safety_checks.is_rejected %}
+                                                    <span class="badge-enhanced" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white;">مرفوضة</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <span class="badge-enhanced" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white;">{{ vehicle_safety_checks.safety_images | length }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ url_for('external_safety.admin_view_safety_check', check_id=vehicle_safety_checks.id) }}" 
+                                                       class="btn btn-sm" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none;">
+                                                        <i class="fas fa-eye"></i> عرض
+                                                    </a>
+                                                    
+                                                    {% if vehicle_safety_checks.is_pending %}
+                                                    <form method="POST" 
+                                                          action="{{ url_for('external_safety.approve_safety_check', check_id=vehicle_safety_checks.id) }}" 
+                                                          style="display: inline-block;">
+                                                        <button type="submit" 
+                                                                class="btn btn-sm" style="background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); color: white; border: none;"
+                                                                onclick="return confirm('هل أنت متأكد من اعتماد هذا الطلب؟')">
+                                                            <i class="fas fa-check"></i> اعتماد
+                                                        </button>
+                                                    </form>
+                                                    
+                                                    <a href="{{ url_for('external_safety.reject_safety_check_page', check_id=vehicle_safety_checks.id) }}" 
+                                                       class="btn btn-sm" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none;">
+                                                        <i class="fas fa-times"></i> رفض
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {% if vehicle_safety_checks|length >= 1 %}
+                            <div class="text-center mt-2">
+                                <a href="{{ url_for('vehicles.vehicle_safety_checks', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    عرض كل السجلات ({{ vehicle_safety_checks|length }})
+                                </a>
+                            </div>
+                            {% endif %} 
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-shield-alt fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا توجد سجلات فحص سلامة</h5>
+                                <p class="text-muted">
+                                    يمكنك إضافة سجل فحص سلامة جديد من خلال النقر على زر "إضافة فحص"
+                                </p>
+                                <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
+                                   class="btn btn-success mt-2">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة فحص سلامة
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vehicle-card card mb-4">
+                <div class="vehicle-card-header bg-warning">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt ms-2"></i>
+                        فحص السلامة الخارجي
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-info-circle text-info me-2"></i>
+                                <span>يمكنك مشاركة رابط نموذج فحص السلامة الخارجي مع الآخرين</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-link text-primary me-2"></i>
+                                <small class="text-muted">الرابط: {{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-mobile-alt text-success me-2"></i>
+                                <small class="text-muted">يمكن الوصول للنموذج من الهاتف المحمول أو الكمبيوتر</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-warning btn-lg"
+                                onclick="shareSafetyCheckForm({{ vehicle.id }}, '{{ vehicle.plate_number }}')">
+                                <i class="fas fa-share-alt ms-2"></i>
+                                مشاركة النموذج
+                            </button>
+                            <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}"
+                                class="btn btn-outline-warning btn-lg ms-2"
+                                target="_blank">
+                                <i class="fas fa-external-link-alt ms-2"></i>
+                                فتح النموذج
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- تبويب الورشة -->
+        <div class="tab-pane fade" id="workshop" role="tabpanel" aria-labelledby="workshop-tab">
+            <div class="row mb-4">
+                <!-- سجلات الورشة -->
+                <div class="col-md-12 mb-4">
+                    <div class="vehicle-card card h-100">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-tools ms-2"></i>
+                                سجلات الورشة
+                                <span class="badge-enhanced bg-secondary">{{ workshop_records|length }}</span>
+                            </h5>
+                            <div>
+                                <div class="dropdown d-inline-block me-2">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-file-export ms-1"></i>
+                                        تصدير / مشاركة
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                                        <li>
+                                            <a class="dropdown-item fw-bold" href="{{ url_for('vehicles.export_workshop_to_pdf', id=vehicle.id) }}">
+                                                <i class="fas fa-file-pdf text-success ms-1"></i>
+                                                تصدير PDF
+                                                <span class="badge bg-success ms-1">محسن</span>
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('vehicles.export_workshop_to_excel', id=vehicle.id) }}">
+                                                <i class="fas fa-file-excel text-success ms-1"></i>
+                                                تصدير Excel
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <hr class="dropdown-divider" />
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('vehicles.print_workshop_records', id=vehicle.id) }}" target="_blank">
+                                                <i class="fas fa-print text-primary ms-1"></i>
+                                                طباعة
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ url_for('vehicles.share_workshop_options', id=vehicle.id) }}">
+                                                <i class="fas fa-share-alt text-info ms-1"></i>
+                                                مشاركة
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <a href="{{ url_for('vehicles.create_workshop', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة سجل جديد
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if workshop_records %}
+                            <div class="list-group">
+                                {% for record in workshop_records %}
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3">
+                                    <div class="w-75">
+                                        <div class="fw-bold d-flex align-items-center mb-1">
+                                            {% if record.reason == 'maintenance' %}
+                                            <span class="badge-enhanced bg-info me-2">صيانة دورية</span>
+                                            {% elif record.reason == 'breakdown' %}
+                                            <span class="badge-enhanced bg-warning text-dark me-2">عطل</span>
+                                            {% elif record.reason == 'accident' %}
+                                            <span class="badge-enhanced bg-danger me-2">حادث</span>
+                                            {% else %}
+                                            <span class="badge-enhanced bg-secondary me-2">{{ record.reason }}</span>
+                                            {% endif %}
+
+                                            <!-- حالة الإصلاح -->
+                                            {% if record.repair_status == 'in_progress' %}
+                                            <span class="badge-enhanced rounded-pill bg-warning text-dark me-2">قيد التنفيذ</span>
+                                            {% elif record.repair_status == 'completed' %}
+                                            <span class="badge-enhanced rounded-pill bg-success me-2">تم الإصلاح</span>
+                                            {% elif record.repair_status == 'pending_approval' %}
+                                            <span class="badge-enhanced rounded-pill bg-info me-2">بانتظار الموافقة</span>
+                                            {% endif %}
+
+                                            <!-- اسم الورشة -->
+                                            {% if record.workshop_name %}
+                                            <span class="small ms-2">{{ record.workshop_name }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="small mb-1 d-flex align-items-center">
+                                            <i class="fas fa-calendar-alt text-muted me-1"></i>
+                                            <span class="text-muted me-1">الدخول:</span>
+                                            <span class="fw-bold me-3">{{ record.formatted_entry_date }}</span>
+
+                                            {% if record.exit_date %}
+                                            <i class="fas fa-calendar-check text-success me-1"></i>
+                                            <span class="text-muted me-1">الخروج:</span>
+                                            <span class="fw-bold">{{ record.formatted_exit_date }}</span>
+                                            {% else %}
+                                            <i class="fas fa-tools text-warning me-1"></i>
+                                            <span class="text-warning fw-bold">ما زالت في الورشة</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="small d-flex align-items-center">
+                                            <i class="fas fa-coins text-muted me-1"></i>
+                                            <span class="text-muted me-1">التكلفة:</span>
+                                            <span class="fw-bold">{{ "{:,.2f}".format(record.cost) }} ريال</span>
+
+                                            {% if record.technician_name %}
+                                            <span class="mx-2">|</span>
+                                            <i class="fas fa-user-cog text-muted me-1"></i>
+                                            <span class="text-muted me-1">الفني:</span>
+                                            <span>{{ record.technician_name }}</span>
+                                            {% endif %}
+                                        </div>
+
+                                        <!-- الروابط إن وجدت -->
+                                        {% if record.delivery_link or record.reception_link %}
+                                        <div class="mt-2">
+                                            {% if record.delivery_link %}
+                                            <a href="{{ record.delivery_link }}" 
+                                               target="_blank" 
+                                               class="btn btn-sm btn-outline-primary me-2">
+                                                <i class="fas fa-file-export me-1"></i>
+                                                نموذج التسليم
+                                            </a>
+                                            {% endif %} 
+                                            {% if record.reception_link %}
+                                            <a href="{{ record.reception_link }}" 
+                                               target="_blank" 
+                                               class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-file-import me-1"></i>
+                                                نموذج الاستلام
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="d-flex flex-column align-items-center">
+                                        <!-- زر عرض التفاصيل -->
+                                        <a href="{{ url_for('vehicles.workshop_details', workshop_id=record.id) }}" 
+                                           class="btn btn-sm btn-info mb-2 w-100" 
+                                           title="عرض التفاصيل">
+                                            <i class="fas fa-eye ms-1"></i>
+                                            عرض
+                                        </a>
+
+                                        <!-- زر التعديل -->
+                                        <a href="{{ url_for('vehicles.edit_workshop', id=record.id) }}" 
+                                           class="btn btn-sm btn-warning w-100" 
+                                           title="تعديل">
+                                            <i class="fas fa-edit ms-1"></i>
+                                            تعديل
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <div class="d-flex justify-content-between mt-3">
+                                <div>
+                                    <span class="fw-bold">إجمالي تكاليف الصيانة:</span>
+                                    <span class="badge-enhanced bg-primary">{{ "{:,.2f}".format(total_maintenance_cost) }} ريال</span>
+                                </div>
+                                <div>
+                                    <span class="fw-bold">إجمالي الأيام في الورشة:</span>
+                                    <span class="badge-enhanced bg-danger">{{ days_in_workshop }} يوم</span>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-wrench fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا توجد سجلات ورشة لهذه السيارة</h5>
+                                <p class="text-muted">
+                                    يمكنك إضافة سجل جديد من خلال النقر على زر "إضافة سجل جديد"
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب السائقين -->
+        <div class="tab-pane fade" id="drivers" role="tabpanel" aria-labelledby="drivers-tab">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="vehicle-card card h-100">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-tie ms-2"></i>
+                                السائق الحالي
+                            </h5>
+                            <a href="{{ url_for('vehicles.create_handover', id=vehicle.id) }}?type=delivery" 
+                               class="btn btn-sm btn-success">
+                                <i class="fas fa-exchange-alt ms-1"></i>
+                                تسليم لسائق جديد
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if current_driver %}
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="h5 mb-1">{{ current_driver.name }}</div>
+                                    <div class="small text-muted">منذ {{ current_driver.formatted_date }}</div>
+                                </div>
+                                <div>
+                                    <a href="{{ url_for('vehicles.view_handover', id=current_driver.handover_id) }}" 
+                                       class="btn btn-sm btn-outline-primary ms-1" 
+                                       title="مشاهدة التفاصيل">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id) }}" 
+                                       class="btn btn-sm btn-outline-danger ms-1" 
+                                       target="_blank" 
+                                       title="تحميل PDF">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </a>
+                                    {% if current_driver.mobile %}
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                لا يوجد معلومات عن السائق الحالي
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="vehicle-card card h-100">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-history ms-2"></i>
+                                السائقين السابقين
+                                <span class="badge-enhanced bg-secondary">{{ previous_drivers|length }}</span>
+                            </h5>
+                            <a href="{{ url_for('vehicles.create_handover', id=vehicle.id) }}?type=receive" 
+                               class="btn btn-sm btn-info">
+                                <i class="fas fa-exchange-alt ms-1"></i>
+                                استلام من سائق
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if previous_drivers %}
+                            <div class="list-group">
+                                {% for driver in previous_drivers %}
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">{{ driver.name }}</div>
+                                        <div class="small text-muted">{{ driver.formatted_date }}</div>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('vehicles.view_handover', id=driver.handover_id) }}" 
+                                           class="btn btn-sm btn-outline-primary ms-1" 
+                                           title="مشاهدة التفاصيل">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('vehicles.handover_pdf_public', id=driver.handover_id) }}" 
+                                           class="btn btn-sm btn-outline-danger ms-1" 
+                                           target="_blank" 
+                                           title="تحميل PDF">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                        {% if driver.mobile %}
+<<<<<<< HEAD
+                                        <a href="https://wa.me/{{ driver.mobile | replace('+', '') | replace(' ', '') | replace('-', '') }}?text={{ (
+                                            'مرحباً ' ~ driver.name ~ '\n\n' ~
+                                            'بخصوص المركبة رقم: ' ~ vehicle.plate_number ~ '\n' ~
+                                            'تاريخ ' ~ driver.handover_type_ar ~ ': ' ~ driver.formatted_date ~ '\n\n' ~
+                                            '🚗 عزيزي السائق، نتمنى لك قيادة آمنة\n\n' ~
+                                            '⚠️ تنبيهات مهمة:\n' ~
+                                            '• تأكد من تغيير زيت السيارة في موعده\n' ~
+                                            '• حافظ على السيارة فهي أمانة ومسؤوليتك\n' ~
+                                            '• تفقد مستوى الوقود والماء بانتظام\n' ~
+                                            '• التزم بقوانين المرور وحدود السرعة\n\n' ~
+                                            '📞 أرقام الطوارئ المهمة:\n' ~
+                                            '• نجم (المساعدة على الطريق): 920000560\n' ~
+                                            '• المرور: 993\n' ~
+                                            '• الهلال الأحمر: 997\n' ~
+                                            '• الشرطة: 999\n' ~
+                                            '• أمن الطرق: 996\n\n' ~
+                                            '📄 المستندات والروابط:\n' ~
+                                            '• ملف PDF للتسليم/الاستلام:\n' ~ url_for('vehicles.handover_pdf_public', id=driver.handover_id, _external=True) ~
+                                            (('\n• صورة الاستمارة:\n' ~ request.url_root ~ 'static/' ~ vehicle.registration_form_image) if vehicle.registration_form_image else '') ~
+                                            '\n\n🙏 شكراً لك والسلامة في الطريق'
+                                        ) | urlencode }}"
+                                           class="btn btn-sm btn-success ms-1"
+                                           target="_blank"
+                                           title="إرسال رسالة واتساب">
+                                            <i class="fab fa-whatsapp"></i>
+=======
+                                        <a href="https://wa.me/{{ driver.mobile | replace('+', '') | replace(' ', '') | replace('-', '') }}?text={{ (
+                                            'مرحباً ' ~ driver.name ~ '\n\n' ~
+                                            'بخصوص المركبة رقم: ' ~ vehicle.plate_number ~ '\n' ~
+                                            'تاريخ ' ~ driver.handover_type_ar ~ ': ' ~ driver.formatted_date ~ '\n\n' ~
+                                            '🚗 عزيزي السائق، نتمنى لك قيادة آمنة\n\n' ~
+                                            '⚠️ تنبيهات مهمة:\n' ~
+                                            '• تأكد من تغيير زيت السيارة في موعده\n' ~
+                                            '• حافظ على السيارة فهي أمانة ومسؤوليتك\n' ~
+                                            '• تفقد مستوى الوقود والماء بانتظام\n' ~
+                                            '• التزم بقوانين المرور وحدود السرعة\n\n' ~
+                                            '📞 أرقام الطوارئ المهمة:\n' ~
+                                            '• نجم (المساعدة على الطريق): 920000560\n' ~
+                                            '• المرور: 993\n' ~
+                                            '• الهلال الأحمر: 997\n' ~
+                                            '• الشرطة: 999\n' ~
+                                            '• أمن الطرق: 996\n\n' ~
+                                            '📄 المستندات والروابط:\n' ~
+                                            '• ملف PDF للتسليم/الاستلام:\n' ~ url_for('vehicles.handover_pdf_public', id=driver.handover_id, _external=True) ~
+                                            (('\n• صورة الاستمارة:\n' ~ request.url_root ~ 'static/' ~ vehicle.registration_form_image) if vehicle.registration_form_image else '') ~
+                                            '\n\n🙏 شكراً لك والسلامة في الطريق'
+                                        ) | urlencode }}"
+                                           class="btn btn-sm btn-success ms-1"
+                                           target="_blank"
+                                           title="إرسال رسالة واتساب">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </a>
+
+>>>>>>> 8ba0f07203de4aca19118a407c33c104859872a3
+                                        </a>
+
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-muted">
+                                <i class="fas fa-info-circle ms-1"></i>
+                                لا يوجد سائقين سابقين
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-exchange-alt ms-2"></i>
+                                سجلات التسليم والاستلام
+                                <span class="badge-enhanced bg-secondary">{{ handover_records|length }}</span>
+                            </h5>
+                            <a href="{{ url_for('vehicles.create_handover', id=vehicle.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus ms-1"></i>
+                                إضافة سجل تسليم/استلام
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if handover_records %}
+                            <form action="{{ url_for('vehicles.confirm_delete_handovers', vehicle_id=vehicle.id) }}" 
+                                  method="post" 
+                                  id="handover-delete-form">
+                                <div class="mb-3 d-flex justify-content-end">
+                                    <button type="submit" 
+                                            class="btn btn-sm btn-danger" 
+                                            id="delete-selected-btn" 
+                                            disabled>
+                                        <i class="fas fa-trash-alt ms-1"></i>
+                                        حذف المحدد
+                                    </button>
+                                </div>
+
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="40">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="select-all">
+                                                    </div>
+                                                </th>
+                                                <th>التاريخ</th>
+                                                <th>النوع</th>
+                                                <th>الشخص</th>
+                                                <th>العداد</th>
+                                                <th>مستوى الوقود</th>
+                                                <th>الإجراءات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for record in handover_records %}
+                                            <tr>
+                                                <td>
+                                                    <div class="form-check">
+                                                        <input class="form-check-input handover-checkbox" 
+                                                               type="checkbox" 
+                                                               name="handover_ids[]" 
+                                                               value="{{ record.id }}">
+                                                    </div>
+                                                </td>
+                                                <td>{{ record.formatted_handover_date }}</td>
+                                                <td>
+                                                    {% if record.handover_type == 'delivery' %}
+                                                    <span class="badge-enhanced bg-success">تسليم</span>
+                                                    {% else %}
+                                                    <span class="badge-enhanced bg-info">استلام</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td>{{ record.person_name }}</td>
+                                                <td>{{ record.mileage }} كم</td>
+                                                <td>{{ record.fuel_level }}</td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <a href="{{ url_for('vehicles.view_handover', id=record.id) }}" 
+                                                           class="btn btn-outline-primary">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                        <a href="{{ url_for('vehicles.edit_handover', id=record.id) }}" 
+                                                           class="btn btn-outline-success">
+                                                            <i class="fas fa-edit"></i>
+                                                            تعديل
+                                                        </a>
+                                                        {% if record.mobile %}
+                                                        <a href="https://wa.me/{{ record.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ record.person_name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ record.handover_type_ar }}: {{ record.formatted_handover_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=record.id, _external=True) }}%0A%0Aشكراً لك"
+                                                           class="btn btn-outline-success" 
+                                                           target="_blank" 
+                                                           title="إرسال رسالة واتساب">
+                                                            <i class="fab fa-whatsapp"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                        <a href="{{ url_for('vehicles.handover_pdf_public', id=record.id) }}" 
+                                                           class="btn btn-outline-danger" 
+                                                           target="_blank">
+                                                            <i class="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </form>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-file-signature fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا توجد سجلات تسليم واستلام</h5>
+                                <p class="text-muted">
+                                    يمكنك إضافة سجل تسليم أو استلام من خلال النقر على زر "إضافة سجل تسليم/استلام"
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب المشاريع -->
+        <div class="tab-pane fade" id="projects" role="tabpanel" aria-labelledby="projects-tab">
+            <div class="row mb-4">
+                <!-- تخصيصات المشاريع -->
+                <div class="col-md-12 mb-4">
+                    <div class="vehicle-card card h-100">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-project-diagram ms-2"></i>
+                                تخصيصات المشاريع
+                                <span class="badge-enhanced bg-secondary">{{ project_assignments|length }}</span>
+                            </h5>
+                            <a href="{{ url_for('vehicles.create_project', id=vehicle.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus ms-1"></i>
+                                تخصيص لمشروع
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if project_assignments %}
+                            <div class="list-group">
+                                {% for assignment in project_assignments %}
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ assignment.project_name }} 
+                                            {% if assignment.is_active %}
+                                            <span class="badge-enhanced bg-success">نشط</span>
+                                            {% else %}
+                                            <span class="badge-enhanced bg-danger">منتهي</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="small">
+                                            البداية: {{ assignment.formatted_start_date }}
+                                            {% if assignment.end_date %} |
+                                            النهاية: {{ assignment.formatted_end_date }} 
+                                            {% else %} |
+                                            <span class="text-success">مستمر</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="small">
+                                            المسؤول: {{ assignment.manager_name }} | الموقع: {{ assignment.location }}
+                                        </div>
+                                    </div>
+                                    <a href="{{ url_for('vehicles.edit_project', id=assignment.id) }}" 
+                                       class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-building fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا توجد تخصيصات لمشاريع</h5>
+                                <p class="text-muted">
+                                    يمكنك تخصيص السيارة لمشروع من خلال النقر على زر "تخصيص لمشروع"
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب الحوادث -->
+        <div class="tab-pane fade" id="accidents" role="tabpanel" aria-labelledby="accidents-tab">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-car-crash ms-2"></i>
+                                الحوادث المرورية 
+                                {% if accidents %}
+                                <span class="badge-enhanced bg-secondary">{{ accidents|length }}</span>
+                                {% endif %}
+                            </h5>
+                            <div>
+                                <a href="{{ url_for('vehicles.create_accident', id=vehicle.id) }}" 
+                                   class="btn btn-sm btn-success">
+                                    <i class="fas fa-plus ms-1"></i>
+                                    إضافة حادث جديد
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            {% if accidents %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>تاريخ الحادث</th>
+                                            <th>اسم السائق</th>
+                                            <th>حالة الحادث</th>
+                                            <th>حالة السيارة</th>
+                                            <th>نسبة التحمل</th>
+                                            <th>مبلغ الخصم</th>
+                                            <th>حالة الخصم</th>
+                                            <th>المستندات</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for accident in accidents %}
+                                        <tr>
+                                            <td>{{ accident.accident_date|display_date }}</td>
+                                            <td>{{ accident.driver_name }}</td>
+                                            <td>
+                                                {% if accident.accident_status == 'قيد المعالجة' %}
+                                                <span class="badge-enhanced bg-warning text-dark">قيد المعالجة</span>
+                                                {% elif accident.accident_status == 'مغلق' %}
+                                                <span class="badge-enhanced bg-success">مغلق</span>
+                                                {% elif accident.accident_status == 'معلق' %}
+                                                <span class="badge-enhanced bg-secondary">معلق</span>
+                                                {% elif accident.accident_status == 'في التأمين' %}
+                                                <span class="badge-enhanced bg-info">في التأمين</span>
+                                                {% else %}
+                                                <span class="badge-enhanced bg-secondary">{{ accident.accident_status }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ accident.vehicle_condition or 'غير محدد' }}</td>
+                                            <td>
+                                                {% if accident.liability_percentage > 0 %} 
+                                                {% if accident.liability_percentage == 25 %}
+                                                <span class="badge-enhanced bg-info">تحمل جزئي (25%)</span>
+                                                {% elif accident.liability_percentage == 50 %}
+                                                <span class="badge-enhanced bg-warning text-dark">تحمل متوسط (50%)</span>
+                                                {% elif accident.liability_percentage == 75 %}
+                                                <span class="badge-enhanced bg-danger">تحمل كبير (75%)</span>
+                                                {% elif accident.liability_percentage == 100 %}
+                                                <span class="badge-enhanced bg-dark">تحمل كامل (100%)</span>
+                                                {% else %}
+                                                <span class="badge-enhanced bg-secondary">{{ accident.liability_percentage }}%</span>
+                                                {% endif %} 
+                                                {% else %}
+                                                <span class="badge-enhanced bg-light text-dark">لا يوجد تحمل (0%)</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if accident.deduction_amount > 0 %} 
+                                                {{ "{:,.2f}".format(accident.deduction_amount) }} ريال 
+                                                {% else %}
+                                                <span class="text-muted">لا يوجد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if accident.deduction_amount > 0 %} 
+                                                {% if accident.deduction_status %}
+                                                <span class="badge-enhanced bg-success">تم الخصم</span>
+                                                {% else %}
+                                                <span class="badge-enhanced bg-danger">لم يتم الخصم</span>
+                                                {% endif %} 
+                                                {% else %}
+                                                <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if accident.accident_file_link %}
+                                                <a href="{{ accident.accident_file_link }}" 
+                                                   target="_blank" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-file-alt"></i>
+                                                </a>
+                                                {% else %}
+                                                <span class="text-muted">لا يوجد</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('vehicles.edit_accident', id=accident.id) }}" 
+                                                       class="btn btn-sm btn-warning">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('vehicles.confirm_delete_accident', id=accident.id) }}" 
+                                                       class="btn btn-sm btn-danger">
+                                                        <i class="fas fa-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <div class="mb-3">
+                                    <i class="fas fa-car-crash fa-4x text-muted"></i>
+                                </div>
+                                <h5>لا توجد سجلات حوادث مسجلة</h5>
+                                <p class="text-muted">
+                                    يمكنك إضافة سجل حادث جديد من خلال النقر على زر "إضافة حادث جديد"
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- تبويب التفويضات -->
+        <div class="tab-pane fade" id="authorizations" role="tabpanel" aria-labelledby="authorizations-tab">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="vehicle-card card">
+                        <div class="vehicle-card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-signature ms-2"></i>
+                                التفويضات الخارجية
+                                <span class="badge-enhanced bg-secondary">{{ external_authorizations|length }}</span>
+                            </h5>
+                            <a href="{{ url_for('vehicles.create_external_authorization', vehicle_id=vehicle.id) }}" 
+                               class="btn btn-sm btn-primary">
+                                <i class="fas fa-plus ms-1"></i>
+                                إضافة تفويض جديد
+                            </a>
+                        </div>
+                        <div class="card-body">
+                            {% if external_authorizations %}
+                            <!-- إحصائيات التفويضات -->
+                            <div class="row mb-3">
+                                <div class="col-4 text-center">
+                                    <div class="fw-bold text-warning h5">
+                                        {{ external_authorizations|selectattr('status', 'equalto', 'pending')|list|length }}
+                                    </div>
+                                    <small class="text-muted">في الانتظار</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="fw-bold text-success h5">
+                                        {{ external_authorizations|selectattr('status', 'equalto', 'approved')|list|length }}
+                                    </div>
+                                    <small class="text-muted">مُوافق عليه</small>
+                                </div>
+                                <div class="col-4 text-center">
+                                    <div class="fw-bold text-danger h5">
+                                        {{ external_authorizations|selectattr('status', 'equalto', 'rejected')|list|length }}
+                                    </div>
+                                    <small class="text-muted">مرفوض</small>
+                                </div>
+                            </div>
+                            <hr />
+
+                            <!-- جدول التفويضات -->
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>الموظف</th>
+                                            <th>المشروع</th>
+                                            <th>نوع التفويض</th>
+                                            <th>الحالة</th>
+                                            <th>تاريخ الإنشاء</th>
+                                            <th>الإجراءات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for auth in external_authorizations %}
+                                        <tr>
+                                            <td>{{ auth.employee.name }}</td>
+                                            <td>{{ auth.project_name or 'غير محدد' }}</td>
+                                            <td>
+                                                <span class="badge-enhanced bg-info">{{ auth.authorization_type }}</span>
+                                            </td>
+                                            <td>
+                                                {% if auth.status == 'pending' %}
+                                                <span class="badge-enhanced bg-warning">قيد المراجعة</span>
+                                                {% elif auth.status == 'approved' %}
+                                                <span class="badge-enhanced bg-success">مُوافق عليه</span>
+                                                {% elif auth.status == 'rejected' %}
+                                                <span class="badge-enhanced bg-danger">مرفوض</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ auth.created_at.strftime('%Y-%m-%d') if auth.created_at else 'غير محدد' }}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{{ url_for('vehicles.view_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                                       class="btn btn-outline-primary" 
+                                                       title="عرض التفاصيل">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('vehicles.edit_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                                       class="btn btn-outline-warning" 
+                                                       title="تعديل">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    {% if auth.file_path %}
+                                                    <a href="{{ url_for('static', filename='uploads/authorizations/' + auth.file_path) }}" 
+                                                       target="_blank" 
+                                                       class="btn btn-outline-info" 
+                                                       title="عرض الملف">
+                                                        <i class="fas fa-file-alt"></i>
+                                                    </a>
+                                                    {% endif %} 
+                                                    {% if auth.external_link %}
+                                                    <a href="{{ auth.external_link }}" 
+                                                       target="_blank" 
+                                                       class="btn btn-outline-success" 
+                                                       title="فتح الرابط">
+                                                        <i class="fas fa-external-link-alt"></i>
+                                                    </a>
+                                                    {% endif %} 
+                                                    {% if auth.status == 'pending' %}
+                                                    <a href="{{ url_for('vehicles.approve_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                                       class="btn btn-outline-success" 
+                                                       onclick="return confirm('هل أنت متأكد من الموافقة على هذا التفويض؟')" 
+                                                       title="موافقة">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('vehicles.reject_external_authorization', vehicle_id=vehicle.id, auth_id=auth.id) }}" 
+                                                       class="btn btn-outline-danger" 
+                                                       onclick="return confirm('هل أنت متأكد من رفض هذا التفويض؟')" 
+                                                       title="رفض">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-file-signature fa-3x text-muted mb-3"></i>
+                                <h6>لا توجد تفويضات خارجية</h6>
+                                <p class="text-muted small">
+                                    يمكنك إضافة تفويض خارجي جديد من خلال النقر على زر "إضافة تفويض جديد"
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // حفظ التبويب النشط عند التحديث
+    const activeTab = localStorage.getItem("activeVehicleTab");
+    if (activeTab) {
+        const tabTrigger = new bootstrap.Tab(document.querySelector(activeTab));
+        tabTrigger.show();
+    }
+
+    // تحديث التبويب النشط عند التغيير
+    const tabLinks = document.querySelectorAll('[data-bs-toggle="tab"]');
+    tabLinks.forEach((tabLink) => {
+        tabLink.addEventListener("shown.bs.tab", (event) => {
+            localStorage.setItem(
+                "activeVehicleTab",
+                event.target.getAttribute("data-bs-target")
+            );
+        });
+    });
+
+    // تحديد العناصر
+    const selectAllCheckbox = document.getElementById("select-all");
+    const handoverCheckboxes = document.querySelectorAll(".handover-checkbox");
+    const deleteSelectedBtn = document.getElementById("delete-selected-btn");
+    const handoverDeleteForm = document.getElementById("handover-delete-form");
+
+    if (selectAllCheckbox && handoverCheckboxes.length > 0 && deleteSelectedBtn) {
+        // تحديث زر الحذف بناءً على الخانات المحددة
+        function updateDeleteButtonState() {
+            const checkedCount = document.querySelectorAll(".handover-checkbox:checked").length;
+            deleteSelectedBtn.disabled = checkedCount === 0;
+
+            // تحديث نص الزر ليعكس عدد العناصر المحددة
+            if (checkedCount > 0) {
+                deleteSelectedBtn.innerHTML = `<i class="fas fa-trash-alt ms-1"></i> حذف المحدد (${checkedCount})`;
+            } else {
+                deleteSelectedBtn.innerHTML = `<i class="fas fa-trash-alt ms-1"></i> حذف المحدد`;
+            }
+        }
+
+        // تحديد/إلغاء تحديد الكل
+        selectAllCheckbox.addEventListener("change", function () {
+            handoverCheckboxes.forEach((checkbox) => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateDeleteButtonState();
+        });
+
+        // تحديث زر الحذف عند تغيير حالة أي خانة
+        handoverCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener("change", function () {
+                // تحديث حالة خانة تحديد الكل
+                const allChecked = document.querySelectorAll(".handover-checkbox:checked").length === handoverCheckboxes.length;
+                selectAllCheckbox.checked = allChecked;
+
+                // تحديث زر الحذف
+                updateDeleteButtonState();
+            });
+        });
+
+        // تحديث حالة الزر في البداية
+        updateDeleteButtonState();
+    }
+
+    // تأكيد الحذف قبل الإرسال
+    if (handoverDeleteForm) {
+        handoverDeleteForm.addEventListener("submit", function (e) {
+            const checkedBoxes = document.querySelectorAll(".handover-checkbox:checked");
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert("يرجى تحديد السجلات المراد حذفها");
+                return false;
+            }
+
+            const confirmMessage = `هل أنت متأكد من حذف ${checkedBoxes.length} سجل من سجلات التسليم والاستلام؟\n\nهذا الإجراء لا يمكن التراجع عنه.`;
+            if (!confirm(confirmMessage)) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    }
+
+    // دالة مشاركة رابط نموذج فحص السلامة الخارجي
+    function shareSafetyCheckForm(vehicleId, plateNumber) {
+        // إنشاء رابط باستخدام النطاق الحالي
+        const formUrl = window.location.origin + "/external-safety/external-safety-check/" + vehicleId;
+
+        const shareData = {
+            title: "نموذج فحص السلامة الخارجي - نُظم",
+            text: `مرحباً 👋
+
+يرجى تعبئة نموذج فحص السلامة الخارجي للمركبة التالية:
+
+🚗 رقم اللوحة: ${plateNumber}
+📋 نوع النموذج: فحص السلامة الخارجي
+🏢 نظام نُظم لإدارة المركبات
+
+يرجى الضغط على الرابط أدناه لتعبئة النموذج:
+${formUrl}
+
+⚠️ ملاحظة: يرجى تعبئة النموذج بعناية وإرفاق جميع الصور المطلوبة للفحص.
+
+شكراً لتعاونكم`,
+            url: formUrl,
+        };
+
+        // استخدام Web Share API إذا كان متاحاً
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => {
+                    showToast("تم مشاركة الرابط بنجاح!", "success");
+                })
+                .catch((error) => {
+                    console.error("خطأ في المشاركة:", error);
+                    fallbackShare(shareData);
+                });
+        } else {
+            // استخدام النسخ للحافظة كبديل
+            fallbackShare(shareData);
+        }
+    }
+
+    // دالة بديلة للمشاركة
+    function fallbackShare(shareData) {
+        const textToCopy = shareData.text;
+
+        // محاولة نسخ النص للحافظة
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(textToCopy)
+                .then(() => {
+                    showToast("تم نسخ رابط الفحص للحافظة!", "success");
+                })
+                .catch(() => {
+                    showShareModal(shareData);
+                });
+        } else {
+            showShareModal(shareData);
+        }
+    }
+
+    // عرض نافذة منبثقة للمشاركة
+    function showShareModal(shareData) {
+        const modal = document.createElement("div");
+        modal.className = "modal fade";
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">مشاركة رابط فحص السلامة</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-3">انسخ الرابط والرسالة التالية لمشاركتها:</p>
+                        <textarea class="form-control" rows="8" readonly>${shareData.text}</textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="copyToClipboard(this, '${shareData.text}')">
+                            <i class="fas fa-copy ms-1"></i>
+                            نسخ النص
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        const bootstrapModal = new bootstrap.Modal(modal);
+        bootstrapModal.show();
+
+        // إزالة النافذة عند الإغلاق
+        modal.addEventListener("hidden.bs.modal", () => {
+            document.body.removeChild(modal);
+        });
+    }
+
+    // دالة نسخ النص للحافظة
+    function copyToClipboard(button, text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+
+        // تغيير نص الزر مؤقتاً
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check ms-1"></i> تم النسخ!';
+        button.className = "btn btn-success";
+
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.className = "btn btn-primary";
+        }, 2000);
+    }
+
+    // دالة عرض رسائل Toast
+    function showToast(message, type = "info") {
+        const toast = document.createElement("div");
+        toast.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+        toast.style.cssText = "top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;";
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(toast);
+
+        // إزالة الرسالة تلقائياً بعد 5 ثوانٍ
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 5000);
+    }
+});
+</script>
+
+<!-- نافذة إدارة Google Drive -->
+<div class="modal fade" id="driveModal" tabindex="-1" aria-labelledby="driveModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="driveModalLabel">
+                    <i class="fab fa-google-drive me-2"></i>
+                    إدارة ملفات Google Drive
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ url_for('vehicles.update_drive_link', vehicle_id=vehicle.id) }}" id="driveForm">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mb-3">
+                                <label for="driveLink" class="form-label">
+                                    <i class="fas fa-link me-1"></i>
+                                    رابط مجلد Google Drive
+                                </label>
+                                <input type="url" 
+                                       class="form-control" 
+                                       id="driveLink" 
+                                       name="drive_link" 
+                                       value="{{ vehicle.drive_folder_link or '' }}" 
+                                       placeholder="https://drive.google.com/drive/folders/..." 
+                                       dir="ltr">
+                                <div class="form-text">
+                                    قم بإنشاء مجلد في Google Drive وانسخ رابط المشاركة هنا
+                                </div>
+                            </div>
+
+                            <div id="previewContainer" style="display: none" class="alert">
+                                <!-- سيتم ملؤها بواسطة JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <h6>
+                            <i class="fas fa-info-circle me-1"></i> كيفية إنشاء رابط Google Drive:
+                        </h6>
+                        <ol class="mb-0">
+                            <li>
+                                انتقل إلى
+                                <a href="https://drive.google.com" target="_blank">Google Drive</a>
+                            </li>
+                            <li>انقر بزر الماوس الأيمن واختر "مجلد جديد"</li>
+                            <li>
+                                اسم المجلد باسم السيارة: "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}"
+                            </li>
+                            <li>
+                                انقر بزر الماوس الأيمن على المجلد واختر "مشاركة"
+                            </li>
+                            <li>
+                                غير الإذن إلى "أي شخص لديه الرابط يمكنه العرض"
+                            </li>
+                            <li>انسخ الرابط والصقه هنا</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>
+                        إلغاء
+                    </button>
+                    <button type="submit" class="btn btn-info">
+                        <i class="fas fa-save me-1"></i>
+                        حفظ الرابط
+                    </button>
+                    {% if vehicle.drive_folder_link %}
+                    <button type="submit" name="action" value="remove" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>
+                        حذف الرابط
+                    </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "layout.html" %}
+
+{% block title %}إضافة جهاز محمول جديد{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Page Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-plus-circle text-primary me-2"></i>
+                        إضافة جهاز محمول جديد
+                    </h2>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('device_management.index') }}">الأجهزة المحمولة</a></li>
+                            <li class="breadcrumb-item active">إضافة جهاز جديد</li>
+                        </ol>
+                    </nav>
+                </div>
+                <a href="{{ url_for('device_management.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للقائمة
+                </a>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Device Form -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        معلومات الجهاز الجديد
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        <div class="row">
+                            <!-- IMEI -->
+                            <div class="col-md-6 mb-3">
+                                <label for="imei" class="form-label">
+                                    <i class="fas fa-hashtag me-2"></i>
+                                    رقم IMEI *
+                                </label>
+                                <input type="text" class="form-control" id="imei" name="imei" 
+                                       placeholder="123456789012345" maxlength="15" pattern="[0-9]{15}" required>
+                                <div class="form-text">15 رقم فقط</div>
+                                <div class="invalid-feedback">يرجى إدخال رقم IMEI صحيح (15 رقم)</div>
+                            </div>
+                            
+                            <!-- Phone Number -->
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number" class="form-label">
+                                    <i class="fas fa-phone me-2"></i>
+                                    رقم الهاتف (اختياري)
+                                </label>
+                                <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                       placeholder="0501234567 (اختياري)">
+                                <div class="form-text text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    يمكن ترك هذا الحقل فارغاً للأجهزة بدون أرقام هاتف
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Brand -->
+                            <div class="col-md-6 mb-3">
+                                <label for="brand" class="form-label">
+                                    <i class="fas fa-tag me-2"></i>
+                                    العلامة التجارية *
+                                </label>
+                                <select class="form-select" id="brand" name="brand" required>
+                                    <option value="">-- اختر العلامة التجارية --</option>
+                                    <option value="iPhone">iPhone</option>
+                                    <option value="Samsung">Samsung</option>
+                                    <option value="Huawei">Huawei</option>
+                                    <option value="Xiaomi">Xiaomi</option>
+                                    <option value="OPPO">OPPO</option>
+                                    <option value="Vivo">Vivo</option>
+                                    <option value="OnePlus">OnePlus</option>
+                                    <option value="Nokia">Nokia</option>
+                                    <option value="Sony">Sony</option>
+                                    <option value="LG">LG</option>
+                                </select>
+                                <div class="invalid-feedback">يرجى اختيار العلامة التجارية</div>
+                            </div>
+                            
+                            <!-- Model -->
+                            <div class="col-md-6 mb-3">
+                                <label for="model" class="form-label">
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    الموديل *
+                                </label>
+                                <input type="text" class="form-control" id="model" name="model" 
+                                       placeholder="مثال: iPhone 13 Pro, Galaxy S21" required>
+                                <div class="invalid-feedback">يرجى إدخال موديل الجهاز</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <!-- Purchase Date -->
+                            <div class="col-md-6 mb-3">
+                                <label for="purchase_date" class="form-label">
+                                    <i class="fas fa-shopping-cart me-2"></i>
+                                    تاريخ الشراء
+                                </label>
+                                <input type="date" class="form-control" id="purchase_date" name="purchase_date">
+                                <div class="form-text">اختياري</div>
+                            </div>
+                            
+                            <!-- Warranty Expiry -->
+                            <div class="col-md-6 mb-3">
+                                <label for="warranty_expiry" class="form-label">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    انتهاء الضمان
+                                </label>
+                                <input type="date" class="form-control" id="warranty_expiry" name="warranty_expiry">
+                                <div class="form-text">اختياري</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                <i class="fas fa-comment me-2"></i>
+                                الوصف أو الملاحظات
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="أي ملاحظات إضافية حول الجهاز..."></textarea>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('device_management.index') }}" class="btn btn-outline-secondary me-md-2">
+                                <i class="fas fa-times me-2"></i>
+                                إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                حفظ الجهاز
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// IMEI validation
+document.getElementById('imei').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, ''); // Only numbers
+    if (value.length > 15) {
+        value = value.substr(0, 15);
+    }
+    e.target.value = value;
+});
+</script>
+{% endblock %}

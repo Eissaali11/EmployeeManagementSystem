@@ -1,0 +1,333 @@
+{% extends "layout.html" %}
+
+{% block title %}إضافة جهاز محمول جديد{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- رأس الصفحة -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-0">
+                                <i class="fas fa-plus-circle me-3"></i>
+                                إضافة جهاز محمول جديد
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">أدخل بيانات الجهاز المحمول الجديد</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-light">
+                                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نموذج إضافة الجهاز -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>بيانات الجهاز
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <!-- البيانات الأساسية -->
+                            {% if imported_numbers %}
+                            <div class="col-md-6 mb-3">
+                                <label for="imported_phone_search" class="form-label">
+                                    اختر من الأرقام المستوردة
+                                </label>
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="imported_phone_search" 
+                                           placeholder="ابحث برقم الهاتف أو الاسم..." onkeyup="filterImportedNumbers()">
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-list"></i>
+                                    </span>
+                                    <select class="form-select" id="imported_phone_id" name="imported_phone_id" 
+                                            onchange="selectImportedPhone()" size="5" style="height: auto;">
+                                        <option value="">اختر رقم من القائمة المستوردة</option>
+                                        {% for number in imported_numbers %}
+                                        <option value="{{ number.id }}" data-phone="{{ number.phone_number }}" 
+                                                data-description="{{ number.description or '' }}" class="imported-option">
+                                            {{ number.phone_number }}
+                                            {% if number.description %} - {{ number.description }}{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <small class="form-text text-muted">
+                                    <span id="imported_count">{{ imported_numbers|length }}</span> رقم متاح من الاستيراد
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number" class="form-label">
+                                    رقم الهاتف <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="phone_number" name="phone_number" 
+                                           placeholder="966501234567" required maxlength="20"
+                                           pattern="[0-9+\-\s]+" title="يسمح بالأرقام والرموز + - ومسافات فقط">
+                                </div>
+                                <small class="form-text text-muted">أدخل رقم يدوياً أو اختر من القائمة أعلاه</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="imei" class="form-label">
+                                    رقم IMEI <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-barcode"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="imei" name="imei" 
+                                           placeholder="123456789012345" required maxlength="20"
+                                           pattern="[0-9]+" title="الأرقام فقط">
+                                </div>
+                                <small class="form-text text-muted">رقم IMEI فريد للجهاز (أرقام فقط)</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">الإيميل</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="user@example.com" maxlength="100">
+                                </div>
+                                <small class="form-text text-muted">الإيميل المرتبط بالجهاز (اختياري)</small>
+                            </div>
+
+                            <!-- معلومات الجهاز -->
+                            <div class="col-md-6 mb-3">
+                                <label for="device_brand" class="form-label">ماركة الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-tag"></i>
+                                    </span>
+                                    <select class="form-select" id="device_brand" name="device_brand">
+                                        <option value="">اختر الماركة</option>
+                                        <option value="Samsung">Samsung</option>
+                                        <option value="Apple">Apple</option>
+                                        <option value="Huawei">Huawei</option>
+                                        <option value="Xiaomi">Xiaomi</option>
+                                        <option value="Oppo">Oppo</option>
+                                        <option value="Vivo">Vivo</option>
+                                        <option value="OnePlus">OnePlus</option>
+                                        <option value="Nokia">Nokia</option>
+                                        <option value="Sony">Sony</option>
+                                        <option value="LG">LG</option>
+                                        <option value="أخرى">أخرى</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="device_model" class="form-label">نوع الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="device_model" name="device_model" 
+                                           placeholder="Galaxy S21, iPhone 13, ..." maxlength="50">
+                                </div>
+                                <small class="form-text text-muted">مثال: Galaxy S21, iPhone 13</small>
+                            </div>
+
+                            <!-- ملاحظات -->
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">ملاحظات</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </span>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3" 
+                                              placeholder="أي ملاحظات إضافية حول الجهاز..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- أزرار الإجراءات -->
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save me-2"></i>حفظ الجهاز
+                                        </button>
+                                        <button type="reset" class="btn btn-outline-secondary btn-lg ms-2">
+                                            <i class="fas fa-undo me-2"></i>إعادة تعيين
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-outline-dark btn-lg">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- معلومات مساعدة -->
+            <div class="card border-0 shadow-sm mt-4" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-2"></i>معلومات مساعدة
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-dark">البيانات المطلوبة:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-check text-success me-2"></i>رقم الهاتف</li>
+                                <li><i class="fas fa-check text-success me-2"></i>رقم IMEI (فريد)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-dark">البيانات الاختيارية:</h6>
+                            <ul class="list-unstyled text-muted">
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>الإيميل</li>
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>ماركة الجهاز</li>
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>نوع الجهاز</li>
+                                <li><i class="fas fa-circle text-info me-2" style="font-size: 0.5rem;"></i>ملاحظات</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// دالة لاختيار رقم من القائمة المستوردة
+function selectImportedPhone() {
+    const select = document.getElementById('imported_phone_id');
+    const phoneInput = document.getElementById('phone_number');
+    
+    if (select && phoneInput && select.value) {
+        const selectedOption = select.options[select.selectedIndex];
+        const phoneNumber = selectedOption.getAttribute('data-phone');
+        phoneInput.value = phoneNumber;
+        phoneInput.readOnly = true;
+        phoneInput.style.backgroundColor = '#e9ecef';
+    } else if (phoneInput) {
+        phoneInput.value = '';
+        phoneInput.readOnly = false;
+        phoneInput.style.backgroundColor = '';
+    }
+}
+
+// السماح بإلغاء التحديد
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone_number');
+    if (phoneInput) {
+        phoneInput.addEventListener('click', function() {
+            if (this.readOnly) {
+                const confirmClear = confirm('هل تريد إلغاء الرقم المحدد والإدخال يدوياً؟');
+                if (confirmClear) {
+                    const selectElement = document.getElementById('imported_phone_id');
+                    if (selectElement) {
+                        selectElement.value = '';
+                    }
+                    this.value = '';
+                    this.readOnly = false;
+                    this.style.backgroundColor = '';
+                    this.focus();
+                }
+            }
+        });
+    }
+});
+
+// التحقق من صحة IMEI
+document.getElementById('imei').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, ''); // إزالة غير الأرقام
+    e.target.value = value;
+    
+    if (value.length > 15) {
+        e.target.value = value.substring(0, 15);
+    }
+});
+
+// التحقق من صحة رقم الهاتف
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^0-9+\-\s]/g, ''); // السماح بالأرقام والرموز المطلوبة فقط
+    e.target.value = value;
+});
+
+// وظائف البحث في الأرقام المستوردة
+function filterImportedNumbers() {
+    const searchInput = document.getElementById('imported_phone_search');
+    const select = document.getElementById('imported_phone_id');
+    
+    if (!searchInput || !select) return;
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    let visibleCount = 0;
+    
+    // إخفاء جميع الخيارات أولاً
+    for (let i = 0; i < select.options.length; i++) {
+        const option = select.options[i];
+        
+        if (i === 0) { // الخيار الأول (اختر رقم...)
+            option.style.display = 'block';
+            continue;
+        }
+        
+        const phoneNumber = option.dataset.phone || '';
+        const description = option.dataset.description || '';
+        const optionText = option.textContent.toLowerCase();
+        
+        // البحث في رقم الهاتف والوصف والنص الكامل
+        if (phoneNumber.includes(searchTerm) || 
+            description.toLowerCase().includes(searchTerm) ||
+            optionText.includes(searchTerm)) {
+            option.style.display = 'block';
+            visibleCount++;
+        } else {
+            option.style.display = 'none';
+        }
+    }
+    
+    // تحديث العداد
+    const countElement = document.getElementById('imported_count');
+    if (countElement) {
+        countElement.textContent = visibleCount;
+    }
+    
+    // إعادة تعيين الاختيار إذا كان الخيار المحدد مخفياً
+    if (select.value && select.options[select.selectedIndex].style.display === 'none') {
+        select.value = '';
+        selectImportedPhone(); // إعادة تعيين حقل رقم الهاتف
+    }
+}
+
+// مسح البحث
+function clearSearch() {
+    const searchInput = document.getElementById('imported_phone_search');
+    if (searchInput) {
+        searchInput.value = '';
+        filterImportedNumbers();
+    }
+}
+</script>
+{% endblock %}

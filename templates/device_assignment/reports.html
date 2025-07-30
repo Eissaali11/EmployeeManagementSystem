@@ -1,0 +1,701 @@
+{% extends "layout.html" %}
+
+{% block title %}تقارير الأجهزة المحمولة والأرقام{% endblock %}
+
+{% block styles %}
+<style>
+    .reports-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+    
+    .welcome-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        margin-bottom: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .welcome-card h1 {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        font-weight: 700;
+    }
+    
+    .welcome-card p {
+        color: #7f8c8d;
+        font-size: 1.2rem;
+        margin: 0;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+    
+    .stat-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card .icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        display: block;
+    }
+    
+    .stat-card.devices .icon { color: #3498db; }
+    .stat-card.sims .icon { color: #2ecc71; }
+    .stat-card.available .icon { color: #f39c12; }
+    .stat-card.assigned .icon { color: #e74c3c; }
+    
+    .stat-card h3 {
+        color: #2c3e50;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 10px 0;
+    }
+    
+    .stat-card p {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    
+    .export-section {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .export-section h2 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .export-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .export-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .export-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .export-btn.devices-btn {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+    }
+    
+    .export-btn.devices-btn:hover {
+        box-shadow: 0 10px 25px rgba(0, 123, 255, 0.4);
+    }
+    
+    .export-btn.combined-btn {
+        background: linear-gradient(135deg, #6f42c1, #5a2d91);
+        box-shadow: 0 5px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    .export-btn.combined-btn:hover {
+        box-shadow: 0 10px 25px rgba(111, 66, 193, 0.4);
+    }
+    
+    .export-btn i {
+        margin-left: 10px;
+        font-size: 1.3rem;
+    }
+    
+    .departments-section {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .departments-section h2 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .dept-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    
+    .dept-card {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+        padding: 25px;
+        text-align: center;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+    
+    .dept-card:hover {
+        transform: translateY(-3px);
+        border-color: #007bff;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .dept-card h4 {
+        color: #2c3e50;
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .dept-stats {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    
+    .dept-stat {
+        text-align: center;
+    }
+    
+    .dept-stat .number {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #007bff;
+        margin-bottom: 5px;
+    }
+    
+    .dept-stat .label {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    
+    .back-btn {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #2c3e50;
+        border: none;
+        border-radius: 50px;
+        padding: 15px 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+    }
+    
+    .back-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        color: #007bff;
+        text-decoration: none;
+    }
+    
+    .back-btn i {
+        margin-left: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-card {
+            padding: 30px 20px;
+        }
+        
+        .welcome-card h1 {
+            font-size: 2rem;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 20px;
+        }
+        
+        .export-buttons {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .dept-grid {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .back-btn {
+            position: static;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+    }
+    
+    /* أنماط قوائم الأجهزة والأرقام */
+    .devices-lists-section, .sims-lists-section {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .devices-lists-section h2, .sims-lists-section h2 {
+        color: #2c3e50;
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+    
+    .list-card {
+        background: rgba(248, 249, 250, 0.95);
+        border-radius: 12px;
+        padding: 25px;
+        border: 2px solid #dee2e6;
+        transition: all 0.3s ease;
+        height: 100%;
+        max-height: 500px;
+        overflow: hidden;
+    }
+    
+    .list-card:hover {
+        transform: translateY(-3px);
+        border-color: #007bff;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    
+    .list-card h3 {
+        color: #2c3e50;
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .list-card .table-responsive {
+        max-height: 350px;
+        overflow-y: auto;
+    }
+    
+    .list-card .table {
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+    
+    .list-card .table th {
+        background-color: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        border-top: none;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .list-card .table td {
+        vertical-align: middle;
+        padding: 8px 12px;
+    }
+    
+    .list-card .table code {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reports-container">
+    <div class="container">
+        <!-- زر العودة -->
+        <a href="{{ url_for('device_assignment.index') }}" class="back-btn">
+            <i class="fas fa-arrow-right"></i>
+            العودة للقائمة الرئيسية
+        </a>
+
+        <!-- بطاقة الترحيب -->
+        <div class="welcome-card">
+            <h1><i class="fas fa-chart-bar"></i> تقارير الأجهزة المحمولة والأرقام</h1>
+            <p>نظرة شاملة على حالة الأجهزة والأرقام وتوزيعها على الأقسام</p>
+        </div>
+
+        <!-- الإحصائيات الرئيسية -->
+        <div class="stats-grid">
+            <div class="stat-card devices">
+                <span class="icon"><i class="fas fa-mobile-alt"></i></span>
+                <h3>{{ total_devices }}</h3>
+                <p>إجمالي الأجهزة</p>
+            </div>
+            
+            <div class="stat-card assigned">
+                <span class="icon"><i class="fas fa-user-check"></i></span>
+                <h3>{{ assigned_devices }}</h3>
+                <p>الأجهزة المربوطة</p>
+            </div>
+            
+            <div class="stat-card available">
+                <span class="icon"><i class="fas fa-mobile-alt"></i></span>
+                <h3>{{ available_devices }}</h3>
+                <p>الأجهزة المتاحة</p>
+            </div>
+            
+            <div class="stat-card sims">
+                <span class="icon"><i class="fas fa-sim-card"></i></span>
+                <h3>{{ total_sims }}</h3>
+                <p>إجمالي الأرقام</p>
+            </div>
+            
+            <div class="stat-card assigned">
+                <span class="icon"><i class="fas fa-phone-alt"></i></span>
+                <h3>{{ assigned_sims }}</h3>
+                <p>الأرقام المربوطة</p>
+            </div>
+            
+            <div class="stat-card available">
+                <span class="icon"><i class="fas fa-phone-alt"></i></span>
+                <h3>{{ available_sims }}</h3>
+                <p>الأرقام المتاحة</p>
+            </div>
+        </div>
+
+        <!-- قسم التصدير -->
+        <div class="export-section">
+            <h2><i class="fas fa-download"></i> تصدير التقارير</h2>
+            <div class="export-buttons">
+                <a href="{{ url_for('device_assignment.export_available_sims') }}" class="export-btn">
+                    <span>تصدير الأرقام المتاحة</span>
+                    <i class="fas fa-file-excel"></i>
+                </a>
+                
+                <a href="{{ url_for('device_assignment.export_available_devices') }}" class="export-btn devices-btn">
+                    <span>تصدير الأجهزة المتاحة</span>
+                    <i class="fas fa-file-excel"></i>
+                </a>
+                
+                <a href="{{ url_for('device_assignment.export_available_combined') }}" class="export-btn combined-btn">
+                    <span>تصدير الأجهزة والأرقام معاً</span>
+                    <i class="fas fa-file-excel"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- إحصائيات الأقسام -->
+        <div class="departments-section">
+            <h2><i class="fas fa-building"></i> توزيع الأجهزة والأرقام حسب الأقسام</h2>
+            <div class="dept-grid">
+                {% for dept in department_stats %}
+                <div class="dept-card">
+                    <h4>{{ dept.name }}</h4>
+                    <div class="dept-stats">
+                        <div class="dept-stat">
+                            <span class="number">{{ dept.devices }}</span>
+                            <span class="label">أجهزة</span>
+                        </div>
+                        <div class="dept-stat">
+                            <span class="number">{{ dept.sims }}</span>
+                            <span class="label">أرقام</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not department_stats %}
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        لا توجد بيانات أقسام متاحة
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- قوائم الأجهزة المربوطة والمتاحة -->
+    <div class="devices-lists-section">
+        <h2><i class="fas fa-mobile-alt"></i> قوائم الأجهزة المحمولة</h2>
+        
+        <div class="row">
+            <!-- الأجهزة المربوطة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-link text-success"></i> الأجهزة المربوطة ({{ assigned_devices }})</h3>
+                    {% if assigned_devices_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>IMEI</th>
+                                        <th>الماركة</th>
+                                        <th>الموديل</th>
+                                        <th>مربوط مع</th>
+                                        <th>تاريخ الربط</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for device, assignment, employee in assigned_devices_list %}
+                                    <tr>
+                                        <td><code>{{ device.imei }}</code></td>
+                                        <td>{{ device.device_brand or 'غير محدد' }}</td>
+                                        <td>{{ device.device_model or 'غير محدد' }}</td>
+                                        <td>
+                                            {% if employee %}
+                                                <span class="badge bg-info">{{ employee.name }}</span>
+                                            {% elif assignment.department %}
+                                                <span class="badge bg-warning">{{ assignment.department.name }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">غير محدد</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ assignment.assignment_date.strftime('%Y-%m-%d') if assignment.assignment_date else 'غير محدد' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أجهزة مربوطة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- الأجهزة المتاحة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-circle text-success"></i> الأجهزة المتاحة ({{ available_devices }})</h3>
+                    {% if available_devices_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>IMEI</th>
+                                        <th>الماركة</th>
+                                        <th>الموديل</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإضافة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for device in available_devices_list %}
+                                    <tr>
+                                        <td><code>{{ device.imei }}</code></td>
+                                        <td>{{ device.device_brand or 'غير محدد' }}</td>
+                                        <td>{{ device.device_model or 'غير محدد' }}</td>
+                                        <td><span class="badge bg-success">{{ device.status or 'متاح' }}</span></td>
+                                        <td>{{ device.created_at.strftime('%Y-%m-%d') if device.created_at else 'غير محدد' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أجهزة متاحة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قوائم الأرقام المربوطة والمتاحة -->
+    <div class="sims-lists-section">
+        <h2><i class="fas fa-sim-card"></i> قوائم أرقام SIM</h2>
+        
+        <div class="row">
+            <!-- الأرقام المربوطة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-link text-success"></i> الأرقام المربوطة ({{ assigned_sims }})</h3>
+                    {% if assigned_sims_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الهاتف</th>
+                                        <th>مزود الخدمة</th>
+                                        <th>نوع الباقة</th>
+                                        <th>مربوط مع</th>
+                                        <th>القسم</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sim, employee in assigned_sims_list %}
+                                    <tr>
+                                        <td><code>{{ sim.phone_number }}</code></td>
+                                        <td>{{ sim.carrier or 'غير محدد' }}</td>
+                                        <td>{{ sim.plan_type or 'غير محدد' }}</td>
+                                        <td><span class="badge bg-info">{{ employee.name }}</span></td>
+                                        <td>
+                                            {% set dept_names = employee.departments|map(attribute='name')|list %}
+                                            {% if dept_names %}
+                                                {{ dept_names|join(', ') }}
+                                            {% else %}
+                                                غير محدد
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أرقام مربوطة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- الأرقام المتاحة -->
+            <div class="col-md-6">
+                <div class="list-card">
+                    <h3><i class="fas fa-circle text-success"></i> الأرقام المتاحة ({{ available_sims }})</h3>
+                    {% if available_sims_list %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الهاتف</th>
+                                        <th>مزود الخدمة</th>
+                                        <th>نوع الباقة</th>
+                                        <th>الحالة</th>
+                                        <th>تاريخ الإضافة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sim in available_sims_list %}
+                                    <tr>
+                                        <td><code>{{ sim.phone_number }}</code></td>
+                                        <td>{{ sim.carrier or 'غير محدد' }}</td>
+                                        <td>{{ sim.plan_type or 'غير محدد' }}</td>
+                                        <td><span class="badge bg-success">{{ sim.status or 'متاحة' }}</span></td>
+                                        <td>{{ sim.created_at.strftime('%Y-%m-%d') if sim.created_at else 'غير محدد' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>لا توجد أرقام متاحة حالياً</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تأثيرات تفاعلية للبطاقات
+    const cards = document.querySelectorAll('.stat-card, .dept-card');
+    
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // تأكيد التصدير
+    const exportButtons = document.querySelectorAll('.export-btn');
+    
+    exportButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const exportType = this.textContent.trim();
+            
+            // عرض رسالة تحميل
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التصدير...';
+            this.style.pointerEvents = 'none';
+            
+            // استعادة النص بعد ثانيتين
+            setTimeout(() => {
+                this.innerHTML = originalText;
+                this.style.pointerEvents = 'auto';
+            }, 2000);
+        });
+    });
+});
+</script>
+{% endblock %}

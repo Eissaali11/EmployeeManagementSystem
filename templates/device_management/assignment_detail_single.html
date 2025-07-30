@@ -1,0 +1,624 @@
+{% extends "layout.html" %}
+
+{% block title %}تفاصيل ربط الجهاز - {{ device.imei }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --card-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        --hover-transform: translateY(-3px);
+        --border-radius: 20px;
+    }
+    
+    body {
+        background: var(--primary-gradient);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    .container-fluid {
+        background: transparent;
+        padding: 30px;
+    }
+    
+    .page-header {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        border-radius: var(--border-radius);
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: var(--card-shadow);
+        text-align: center;
+    }
+    
+    .page-header h2 {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        margin: 0;
+        font-size: 2.2rem;
+    }
+    
+    .detail-card {
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(10px);
+        border-radius: var(--border-radius);
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .detail-card:hover {
+        transform: var(--hover-transform);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    }
+    
+    .card-header {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 20px 25px;
+        margin: -25px -25px 25px -25px;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+    
+    .info-item {
+        padding: 15px;
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s ease;
+    }
+    
+    .info-item:hover {
+        background: rgba(102, 126, 234, 0.1);
+        transform: translateX(5px);
+    }
+    
+    .info-label {
+        color: #7f8c8d;
+        font-size: 0.9em;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        color: #2c3e50;
+        font-size: 1.1em;
+        font-weight: 700;
+    }
+    
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        min-width: 100px;
+        justify-content: center;
+    }
+    
+    .status-active {
+        background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
+        color: white;
+    }
+    
+    .status-inactive {
+        background: linear-gradient(135deg, #ffbb33 0%, #ff8800 100%);
+        color: white;
+    }
+    
+    .assignment-type-device-only {
+        background: linear-gradient(135deg, #ffbb33 0%, #ff8800 100%);
+        color: white;
+    }
+    
+    .assignment-type-sim-only {
+        background: linear-gradient(135deg, #33b5e5 0%, #0099cc 100%);
+        color: white;
+    }
+    
+    .assignment-type-device-and-sim {
+        background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
+        color: white;
+    }
+    
+    .brand-badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+        text-align: center;
+        display: inline-block;
+        min-width: 80px;
+    }
+    
+    .brand-iphone {
+        background: linear-gradient(135deg, #007aff 0%, #5856d6 100%);
+        color: white;
+    }
+    
+    .brand-samsung {
+        background: linear-gradient(135deg, #1428a0 0%, #0056b3 100%);
+        color: white;
+    }
+    
+    .brand-galaxy {
+        background: linear-gradient(135deg, #1428a0 0%, #0056b3 100%);
+        color: white;
+    }
+    
+    .brand-huawei {
+        background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+        color: white;
+    }
+    
+    .brand-other {
+        background: linear-gradient(135deg, #636e72 0%, #2d3436 100%);
+        color: white;
+    }
+    
+    .btn {
+        border-radius: 15px;
+        padding: 12px 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn:hover {
+        transform: var(--hover-transform);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+    
+    .btn-primary {
+        background: var(--primary-gradient);
+        color: white;
+    }
+    
+    .btn-success {
+        background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
+        color: white;
+    }
+    
+    .btn-info {
+        background: linear-gradient(135deg, #33b5e5 0%, #0099cc 100%);
+        color: white;
+    }
+    
+    .btn-warning {
+        background: linear-gradient(135deg, #ffbb33 0%, #ff8800 100%);
+        color: white;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+        color: white;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .imei-text {
+        font-family: 'Courier New', monospace;
+        font-weight: 600;
+        color: #667eea;
+        font-size: 1.1em;
+        background: rgba(102, 126, 234, 0.1);
+        padding: 8px 12px;
+        border-radius: 8px;
+        display: inline-block;
+    }
+    
+    .phone-number {
+        font-weight: 700;
+        color: #667eea;
+        direction: ltr;
+        unicode-bidi: bidi-override;
+        font-family: 'Courier New', monospace;
+        font-size: 1.1em;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #7f8c8d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: #bdc3c7;
+    }
+    
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .btn {
+            justify-content: center;
+        }
+        
+        .page-header h2 {
+            font-size: 1.8rem;
+        }
+        
+        .container-fluid {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رأس الصفحة -->
+    <div class="page-header">
+        <h2>
+            <i class="fas fa-mobile-alt me-3"></i>
+            تفاصيل ربط الجهاز
+        </h2>
+        <p class="text-muted mt-2 mb-0">عرض شامل لتفاصيل ربط الجهاز بالموظف ورقم الهاتف</p>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="action-buttons">
+        <a href="{{ url_for('device_management.index') }}" class="btn btn-info">
+            <i class="fas fa-arrow-right"></i>
+            العودة للأجهزة
+        </a>
+        
+        {% if device.is_assigned %}
+        <a href="{{ url_for('device_management.edit', device_id=device.id) }}" class="btn btn-primary">
+            <i class="fas fa-edit"></i>
+            تعديل الجهاز
+        </a>
+        
+        <button type="button" class="btn btn-warning" 
+                onclick="confirmUnassign({{ device.id }}, '{{ device.imei }}')">
+            <i class="fas fa-unlink"></i>
+            فك الربط
+        </button>
+        {% endif %}
+        
+        <a href="{{ url_for('device_management.assignment_details') }}" class="btn btn-success">
+            <i class="fas fa-list"></i>
+            جميع الربطات
+        </a>
+    </div>
+
+    <!-- معلومات الجهاز -->
+    <div class="detail-card">
+        <div class="card-header">
+            <i class="fas fa-mobile-alt"></i>
+            معلومات الجهاز
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">IMEI</div>
+                <div class="info-value">
+                    <span class="imei-text">{{ device.imei }}</span>
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">العلامة التجارية</div>
+                <div class="info-value">
+                    {% set brand_lower = (device.device_brand or '').lower() %}
+                    {% if 'iphone' in brand_lower %}
+                        <span class="brand-badge brand-iphone">{{ device.device_brand }}</span>
+                    {% elif 'samsung' in brand_lower or 'galaxy' in brand_lower %}
+                        <span class="brand-badge brand-samsung">{{ device.device_brand }}</span>
+                    {% elif 'huawei' in brand_lower %}
+                        <span class="brand-badge brand-huawei">{{ device.device_brand }}</span>
+                    {% else %}
+                        <span class="brand-badge brand-other">{{ device.device_brand or 'غير محدد' }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">الموديل</div>
+                <div class="info-value">{{ device.device_model or 'غير محدد' }}</div>
+            </div>
+            
+            {% if device.serial_number %}
+            <div class="info-item">
+                <div class="info-label">الرقم التسلسلي</div>
+                <div class="info-value">{{ device.serial_number }}</div>
+            </div>
+            {% endif %}
+            
+            {% if device.storage %}
+            <div class="info-item">
+                <div class="info-label">سعة التخزين</div>
+                <div class="info-value">{{ device.storage }}</div>
+            </div>
+            {% endif %}
+            
+            <div class="info-item">
+                <div class="info-label">رقم الهاتف</div>
+                <div class="info-value">
+                    {% if device.phone_number %}
+                        <span class="phone-number">{{ device.phone_number }}</span>
+                    {% else %}
+                        <span class="text-muted">بدون رقم</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات الربط -->
+    {% if assignment %}
+    <div class="detail-card">
+        <div class="card-header">
+            <i class="fas fa-link"></i>
+            تفاصيل الربط
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">نوع الربط</div>
+                <div class="info-value">
+                    {% if assignment.assignment_type == 'device_only' %}
+                        <span class="status-badge assignment-type-device-only">
+                            <i class="fas fa-mobile-alt"></i> جهاز فقط
+                        </span>
+                    {% elif assignment.assignment_type == 'sim_only' %}
+                        <span class="status-badge assignment-type-sim-only">
+                            <i class="fas fa-sim-card"></i> رقم فقط
+                        </span>
+                    {% elif assignment.assignment_type == 'device_and_sim' %}
+                        <span class="status-badge assignment-type-device-and-sim">
+                            <i class="fas fa-plus-circle"></i> جهاز ورقم
+                        </span>
+                    {% else %}
+                        <span class="text-muted">غير محدد</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">تاريخ الربط</div>
+                <div class="info-value">
+                    {% if assignment.assignment_date %}
+                        {{ assignment.assignment_date.strftime('%Y-%m-%d %H:%M') }}
+                    {% else %}
+                        <span class="text-muted">غير محدد</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">حالة الربط</div>
+                <div class="info-value">
+                    {% if assignment.is_active %}
+                        <span class="status-badge status-active">
+                            <i class="fas fa-check-circle"></i> نشط
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="fas fa-times-circle"></i> غير نشط
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if assignment.assigned_by %}
+            <div class="info-item">
+                <div class="info-label">تم الربط بواسطة</div>
+                <div class="info-value">{{ assignment.assigned_by }}</div>
+            </div>
+            {% endif %}
+            
+            {% if assignment.notes %}
+            <div class="info-item" style="grid-column: 1 / -1;">
+                <div class="info-label">ملاحظات</div>
+                <div class="info-value">{{ assignment.notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- معلومات الموظف -->
+    {% if device.assigned_employee %}
+    <div class="detail-card">
+        <div class="card-header">
+            <i class="fas fa-user"></i>
+            معلومات الموظف المربوط
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">اسم الموظف</div>
+                <div class="info-value">{{ device.assigned_employee.name }}</div>
+            </div>
+            
+            <div class="info-item">
+                <div class="info-label">رقم الموظف</div>
+                <div class="info-value">{{ device.assigned_employee.employee_id }}</div>
+            </div>
+            
+            {% if device.assigned_employee.departments %}
+            <div class="info-item">
+                <div class="info-label">القسم</div>
+                <div class="info-value">
+                    {% for dept in device.assigned_employee.departments %}
+                        <span class="badge bg-secondary me-1">{{ dept.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if device.assigned_employee.position %}
+            <div class="info-item">
+                <div class="info-label">المنصب</div>
+                <div class="info-value">{{ device.assigned_employee.position }}</div>
+            </div>
+            {% endif %}
+            
+            {% if device.assigned_employee.mobile %}
+            <div class="info-item">
+                <div class="info-label">رقم الجوال الشخصي</div>
+                <div class="info-value">
+                    <span class="phone-number">{{ device.assigned_employee.mobile }}</span>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="info-item">
+                <div class="info-label">حالة الموظف</div>
+                <div class="info-value">
+                    {% if device.assigned_employee.status in ['نشط', 'active'] %}
+                        <span class="status-badge status-active">
+                            <i class="fas fa-check-circle"></i> نشط
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="fas fa-times-circle"></i> غير نشط
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- معلومات بطاقة SIM -->
+    {% if sim_card %}
+    <div class="detail-card">
+        <div class="card-header">
+            <i class="fas fa-sim-card"></i>
+            معلومات بطاقة SIM
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">رقم الهاتف</div>
+                <div class="info-value">
+                    <span class="phone-number">{{ sim_card.phone_number }}</span>
+                </div>
+            </div>
+            
+            {% if sim_card.operator %}
+            <div class="info-item">
+                <div class="info-label">المشغل</div>
+                <div class="info-value">{{ sim_card.operator }}</div>
+            </div>
+            {% endif %}
+            
+            <div class="info-item">
+                <div class="info-label">حالة الاستخدام</div>
+                <div class="info-value">
+                    {% if sim_card.is_used %}
+                        <span class="status-badge status-active">
+                            <i class="fas fa-check-circle"></i> مستخدم
+                        </span>
+                    {% else %}
+                        <span class="status-badge status-inactive">
+                            <i class="fas fa-times-circle"></i> متاح
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if sim_card.created_at %}
+            <div class="info-item">
+                <div class="info-label">تاريخ الإضافة</div>
+                <div class="info-value">{{ sim_card.created_at.strftime('%Y-%m-%d') }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- حالة فارغة إذا لم يكن هناك ربط -->
+    {% if not assignment %}
+    <div class="detail-card">
+        <div class="empty-state">
+            <i class="fas fa-unlink"></i>
+            <h4>الجهاز غير مربوط</h4>
+            <p>هذا الجهاز غير مربوط بأي موظف حالياً</p>
+            <a href="{{ url_for('device_assignment.assign_device', device_id=device.id) }}" class="btn btn-success">
+                <i class="fas fa-link"></i>
+                ربط بموظف
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function confirmUnassign(deviceId, imei) {
+    if (confirm(`هل أنت متأكد من فك ربط الجهاز؟\nIMEI: ${imei}`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/device-management/unassign/${deviceId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// تأثيرات التحميل
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.detail-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+        card.classList.add('animate-fadeInUp');
+    });
+});
+
+// إضافة الأنيميشن CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

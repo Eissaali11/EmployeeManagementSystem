@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+
+{% block title %}إضافة رقم SIM جديد{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px 15px 0 0;
+        margin: -30px -30px 30px -30px;
+        text-align: center;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <div class="form-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-sim-card me-2"></i>
+                        إضافة رقم SIM جديد
+                    </h3>
+                </div>
+                
+                <form method="POST" novalidate>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone_number" class="form-label required-field">رقم الهاتف</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="phone_number" 
+                                       name="phone_number" 
+                                       placeholder="مثال: 966501234567"
+                                       required
+                                       pattern="[0-9+]+"
+                                       title="يجب أن يحتوي على أرقام فقط">
+                                <div class="form-text">ادخل رقم الهاتف بالكامل مع رمز الدولة</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="carrier" class="form-label required-field">شركة الاتصالات</label>
+                                <select class="form-select" id="carrier" name="carrier" required>
+                                    <option value="">-- اختر الشركة --</option>
+                                    <option value="STC">STC</option>
+                                    <option value="موبايلي">موبايلي</option>
+                                    <option value="زين">زين</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan_type" class="form-label">نوع الباقة</label>
+                                <select class="form-select" id="plan_type" name="plan_type">
+                                    <option value="">-- اختياري --</option>
+                                    <option value="مفوتر">مفوتر</option>
+                                    <option value="مدفوع مسبقاً">مدفوع مسبقاً</option>
+                                    <option value="باقة بيانات">باقة بيانات</option>
+                                    <option value="باقة مكالمات">باقة مكالمات</option>
+                                    <option value="باقة شاملة">باقة شاملة</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="monthly_cost" class="form-label">التكلفة الشهرية</label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="monthly_cost" 
+                                           name="monthly_cost" 
+                                           placeholder="0.00"
+                                           step="0.01"
+                                           min="0">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" 
+                                  id="description" 
+                                  name="description" 
+                                  rows="3" 
+                                  placeholder="أي ملاحظات إضافية..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('sim_management.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>العودة للقائمة
+                        </a>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>حفظ الرقم
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // تنسيق رقم الهاتف أثناء الكتابة
+    $('#phone_number').on('input', function() {
+        let value = $(this).val().replace(/\D/g, ''); // إزالة كل شيء عدا الأرقام
+        $(this).val(value);
+    });
+    
+    // التحقق من صحة النموذج
+    $('form').on('submit', function(e) {
+        let phoneNumber = $('#phone_number').val();
+        let carrier = $('#carrier').val();
+        
+        if (!phoneNumber) {
+            e.preventDefault();
+            alert('يرجى إدخال رقم الهاتف');
+            $('#phone_number').focus();
+            return false;
+        }
+        
+        if (!carrier) {
+            e.preventDefault();
+            alert('يرجى اختيار شركة الاتصالات');
+            $('#carrier').focus();
+            return false;
+        }
+        
+        if (phoneNumber.length < 10) {
+            e.preventDefault();
+            alert('رقم الهاتف قصير جداً');
+            $('#phone_number').focus();
+            return false;
+        }
+    });
+    
+    // إضافة تأثيرات بصرية
+    $('.form-control, .form-select').on('focus', function() {
+        $(this).closest('.mb-3').find('.form-label').addClass('text-primary');
+    });
+    
+    $('.form-control, .form-select').on('blur', function() {
+        $(this).closest('.mb-3').find('.form-label').removeClass('text-primary');
+    });
+});
+</script>
+{% endblock %}

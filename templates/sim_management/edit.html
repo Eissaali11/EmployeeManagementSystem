@@ -1,0 +1,221 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل رقم SIM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 15px 15px 0 0;
+        margin: -30px -30px 30px -30px;
+        text-align: center;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .form-control:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .assignment-info {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="form-container">
+                <div class="form-header">
+                    <h3 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>
+                        تعديل رقم SIM: {{ sim_card.phone_number }}
+                    </h3>
+                </div>
+                
+                <!-- معلومات الربط الحالي -->
+                {% if sim_card.employee %}
+                <div class="assignment-info">
+                    <h6 class="text-primary mb-2">
+                        <i class="fas fa-link me-2"></i>معلومات الربط الحالي
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>الموظف:</strong> {{ sim_card.employee.name }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>رقم الموظف:</strong> {{ sim_card.employee.employee_id }}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>تاريخ الربط:</strong> 
+                            {% if sim_card.assignment_date %}
+                                {{ sim_card.assignment_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                غير محدد
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <strong>الحالة:</strong> 
+                            <span class="badge bg-success">مربوط</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <form method="POST" novalidate>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone_number" class="form-label required-field">رقم الهاتف</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="phone_number" 
+                                       name="phone_number" 
+                                       value="{{ sim_card.phone_number }}"
+                                       placeholder="مثال: 966501234567"
+                                       required
+                                       pattern="[0-9+]+"
+                                       title="يجب أن يحتوي على أرقام فقط">
+                                <div class="form-text">ادخل رقم الهاتف بالكامل مع رمز الدولة</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="carrier" class="form-label required-field">شركة الاتصالات</label>
+                                <select class="form-select" id="carrier" name="carrier" required>
+                                    <option value="">-- اختر الشركة --</option>
+                                    <option value="STC" {{ 'selected' if sim_card.carrier == 'STC' }}>STC</option>
+                                    <option value="موبايلي" {{ 'selected' if sim_card.carrier == 'موبايلي' }}>موبايلي</option>
+                                    <option value="زين" {{ 'selected' if sim_card.carrier == 'زين' }}>زين</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="plan_type" class="form-label">نوع الباقة</label>
+                                <select class="form-select" id="plan_type" name="plan_type">
+                                    <option value="">-- اختياري --</option>
+                                    <option value="مفوتر" {{ 'selected' if sim_card.plan_type == 'مفوتر' }}>مفوتر</option>
+                                    <option value="مدفوع مسبقاً" {{ 'selected' if sim_card.plan_type == 'مدفوع مسبقاً' }}>مدفوع مسبقاً</option>
+                                    <option value="باقة بيانات" {{ 'selected' if sim_card.plan_type == 'باقة بيانات' }}>باقة بيانات</option>
+                                    <option value="باقة مكالمات" {{ 'selected' if sim_card.plan_type == 'باقة مكالمات' }}>باقة مكالمات</option>
+                                    <option value="باقة شاملة" {{ 'selected' if sim_card.plan_type == 'باقة شاملة' }}>باقة شاملة</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="monthly_cost" class="form-label">التكلفة الشهرية</label>
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="monthly_cost" 
+                                           name="monthly_cost" 
+                                           value="{{ sim_card.monthly_cost or '' }}"
+                                           placeholder="0.00"
+                                           step="0.01"
+                                           min="0">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">ملاحظات</label>
+                        <textarea class="form-control" 
+                                  id="description" 
+                                  name="description" 
+                                  rows="3" 
+                                  placeholder="أي ملاحظات إضافية...">{{ sim_card.description or '' }}</textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('sim_management.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>العودة للقائمة
+                        </a>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>حفظ التغييرات
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // تنسيق رقم الهاتف أثناء الكتابة
+    $('#phone_number').on('input', function() {
+        let value = $(this).val().replace(/\D/g, ''); // إزالة كل شيء عدا الأرقام
+        $(this).val(value);
+    });
+    
+    // التحقق من صحة النموذج
+    $('form').on('submit', function(e) {
+        let phoneNumber = $('#phone_number').val();
+        let carrier = $('#carrier').val();
+        
+        if (!phoneNumber) {
+            e.preventDefault();
+            alert('يرجى إدخال رقم الهاتف');
+            $('#phone_number').focus();
+            return false;
+        }
+        
+        if (!carrier) {
+            e.preventDefault();
+            alert('يرجى اختيار شركة الاتصالات');
+            $('#carrier').focus();
+            return false;
+        }
+        
+        if (phoneNumber.length < 10) {
+            e.preventDefault();
+            alert('رقم الهاتف قصير جداً');
+            $('#phone_number').focus();
+            return false;
+        }
+    });
+    
+    // إضافة تأثيرات بصرية
+    $('.form-control, .form-select').on('focus', function() {
+        $(this).closest('.mb-3').find('.form-label').addClass('text-primary');
+    });
+    
+    $('.form-control, .form-select').on('blur', function() {
+        $(this).closest('.mb-3').find('.form-label').removeClass('text-primary');
+    });
+});
+</script>
+{% endblock %}

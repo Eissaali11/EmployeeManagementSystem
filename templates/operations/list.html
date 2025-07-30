@@ -1,0 +1,290 @@
+{% extends "layout.html" %}
+
+{% block title %}قائمة العمليات{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2>
+                    <i class="fas fa-list me-2"></i>
+                    قائمة العمليات
+                </h2>
+                <a href="{{ url_for('operations.operations_dashboard') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-right me-2"></i>
+                    العودة للوحة الإدارة
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>
+                        فلترة العمليات
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">الحالة</label>
+                            <select name="status" class="form-select">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>جميع الحالات</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>معلقة</option>
+                                <option value="under_review" {% if status_filter == 'under_review' %}selected{% endif %}>تحت المراجعة</option>
+                                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>موافق عليها</option>
+                                <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>مرفوضة</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">نوع العملية</label>
+                            <select name="operation_type" class="form-select">
+                                <option value="all" {% if operation_type_filter == 'all' %}selected{% endif %}>جميع الأنواع</option>
+                                <option value="handover" {% if operation_type_filter == 'handover' %}selected{% endif %}>تسليم/استلام</option>
+                                <option value="workshop" {% if operation_type_filter == 'workshop' %}selected{% endif %}>ورشة</option>
+                                <option value="external_authorization" {% if operation_type_filter == 'external_authorization' %}selected{% endif %}>تفويض خارجي</option>
+                                <option value="safety_inspection" {% if operation_type_filter == 'safety_inspection' %}selected{% endif %}>فحص سلامة</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">الأولوية</label>
+                            <select name="priority" class="form-select">
+                                <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>جميع الأولويات</option>
+                                <option value="urgent" {% if priority_filter == 'urgent' %}selected{% endif %}>عاجل</option>
+                                <option value="high" {% if priority_filter == 'high' %}selected{% endif %}>عالي</option>
+                                <option value="normal" {% if priority_filter == 'normal' %}selected{% endif %}>عادي</option>
+                                <option value="low" {% if priority_filter == 'low' %}selected{% endif %}>منخفض</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">البحث حسب السيارة</label>
+                            <input type="text" name="vehicle_search" class="form-control" 
+                                   placeholder="رقم اللوحة أو نوع السيارة..." 
+                                   value="{{ vehicle_search or '' }}">
+                        </div>
+                        
+                        <div class="col-md-12 mt-3">
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-2"></i>
+                                    بحث وفلترة
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Operations List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        العمليات
+                    </h5>
+                    <span class="badge bg-primary">{{ operations|length }} عملية</span>
+                </div>
+                <div class="card-body p-0">
+                    {% if operations %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>نوع العملية</th>
+                                    <th>العنوان</th>
+                                    <th>السيارة</th>
+                                    <th>الطالب</th>
+                                    <th>التاريخ</th>
+                                    <th>الحالة</th>
+                                    <th>الأولوية</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for operation in operations %}
+                                <tr>
+                                    <td><span class="badge bg-secondary">#{{ operation.id }}</span></td>
+                                    <td>
+                                        {% if operation.operation_type == 'handover' %}
+                                            <span class="badge bg-info">تسليم/استلام</span>
+                                        {% elif operation.operation_type == 'workshop' %}
+                                            <span class="badge bg-warning">ورشة</span>
+                                        {% elif operation.operation_type == 'external_authorization' %}
+                                            <span class="badge bg-primary">تفويض خارجي</span>
+                                        {% elif operation.operation_type == 'safety_inspection' %}
+                                            <span class="badge bg-success">فحص سلامة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 200px;" title="{{ operation.title }}">
+                                            {{ operation.title }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if operation.vehicle %}
+                                            <span class="badge bg-secondary">{{ operation.vehicle.plate_number }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if operation.requester %}
+                                            {{ operation.requester.username }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ operation.requested_at.strftime('%Y/%m/%d %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if operation.status == 'pending' %}
+                                            <span class="badge bg-warning">معلقة</span>
+                                        {% elif operation.status == 'under_review' %}
+                                            <span class="badge bg-info">تحت المراجعة</span>
+                                        {% elif operation.status == 'approved' %}
+                                            <span class="badge bg-success">موافق عليها</span>
+                                        {% elif operation.status == 'rejected' %}
+                                            <span class="badge bg-danger">مرفوضة</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if operation.priority == 'urgent' %}
+                                            <span class="badge bg-danger">عاجل</span>
+                                        {% elif operation.priority == 'high' %}
+                                            <span class="badge bg-warning">عالي</span>
+                                        {% elif operation.priority == 'normal' %}
+                                            <span class="badge bg-info">عادي</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">منخفض</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('operations.view_operation', operation_id=operation.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" title="عرض التفاصيل">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            
+                                            {% if operation.status == 'pending' %}
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    onclick="setUnderReview({{ operation.id }})" title="تحت المراجعة">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success btn-sm" 
+                                                    onclick="quickApprove({{ operation.id }})" title="موافقة">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    onclick="quickReject({{ operation.id }})" title="رفض">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div class="text-muted mb-3">
+                            <i class="fas fa-search fa-3x"></i>
+                        </div>
+                        <h5 class="text-muted">لا توجد عمليات</h5>
+                        <p class="text-muted">لم يتم العثور على عمليات بالفلاتر المحددة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function setUnderReview(operationId) {
+    if (confirm('هل تريد وضع هذه العملية تحت المراجعة؟')) {
+        fetch(`/operations/${operationId}/under-review`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم وضع العملية تحت المراجعة');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+
+function quickApprove(operationId) {
+    if (confirm('هل أنت متأكد من الموافقة على هذه العملية؟')) {
+        const formData = new FormData();
+        formData.append('review_notes', 'موافقة سريعة');
+        
+        fetch(`/operations/${operationId}/approve`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تمت الموافقة بنجاح');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+
+function quickReject(operationId) {
+    const reason = prompt('أدخل سبب الرفض:');
+    if (reason && reason.trim()) {
+        const formData = new FormData();
+        formData.append('review_notes', reason.trim());
+        
+        fetch(`/operations/${operationId}/reject`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم رفض العملية');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+</script>
+{% endblock %}

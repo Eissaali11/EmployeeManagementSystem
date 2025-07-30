@@ -1,0 +1,544 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    /* Modern Vehicle Operations Styles */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%);
+        --success-gradient: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        --warning-gradient: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        --danger-gradient: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        --info-gradient: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        --secondary-gradient: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        --glass-bg: rgba(30, 58, 92, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
+        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background: linear-gradient(135deg, #0f1c2e 0%, #1e3a5c 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        color: white;
+    }
+
+    .page-header-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .page-header-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--info-gradient);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
+    }
+
+    .filter-card-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .filter-input-enhanced {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        color: white;
+        padding: 0.75rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .filter-input-enhanced:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #3498db;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        color: white;
+    }
+
+    .filter-input-enhanced::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .table-container-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        /* overflow: hidden; */
+    }
+
+    .table-enhanced {
+        margin: 0;
+        color: white;
+    }
+
+    .table-enhanced thead {
+        background: linear-gradient(135deg, rgba(30, 58, 92, 0.8) 0%, rgba(45, 74, 107, 0.8) 100%);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .table-enhanced th,
+    .table-enhanced td {
+        border-color: var(--glass-border);
+        padding: 1rem;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .table-enhanced tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .badge-enhanced {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .badge-handover { background: var(--info-gradient); color: white; }
+    .badge-workshop { background: var(--warning-gradient); color: white; }
+    .badge-safety { background: var(--success-gradient); color: white; }
+    .badge-maintenance { background: var(--secondary-gradient); color: white; }
+
+    .btn-action-enhanced {
+        border: none;
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: var(--card-shadow);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-width: 90px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-action-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-view { background: var(--info-gradient); }
+    .btn-filter { background: var(--primary-gradient); }
+    .btn-clear { background: var(--secondary-gradient); }
+    .btn-export { background: var(--success-gradient); }
+
+    .empty-state {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 3rem;
+        text-align: center;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .table-responsive-enhanced {
+            font-size: 0.85rem;
+        }
+        
+        .btn-action-enhanced {
+            min-width: auto;
+            padding: 0.4rem 0.75rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportOperations() {
+    // جلب القيم من الفلاتر الحالية
+    const vehicleFilter = document.getElementById('vehicle_filter')?.value || '';
+    const operationType = document.getElementById('operation_type')?.value || '';
+    const dateFrom = document.getElementById('date_from')?.value || '';
+    const dateTo = document.getElementById('date_to')?.value || '';
+    const employeeFilter = document.getElementById('employee_filter')?.value || '';
+    const departmentFilter = document.getElementById('department_filter')?.value || '';
+    
+    // إنشاء URL مع المعاملات
+    const params = new URLSearchParams({
+        vehicle_filter: vehicleFilter,
+        operation_type: operationType,
+        date_from: dateFrom,
+        date_to: dateTo,
+        employee_filter: employeeFilter,
+        department_filter: departmentFilter
+    });
+    
+    // فتح التصدير في نافذة جديدة
+    window.open(`{{ url_for('vehicle_operations.export_simple') }}?${params.toString()}`, '_blank');
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Enhanced Header -->
+    <div class="page-header-enhanced fade-in">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h3><i class="fas fa-history ml-2"></i>سجل العمليات الشامل للمركبات</h3>
+                <p class="text-muted mb-0">عرض جميع العمليات المتعلقة بالمركبات مع فلاتر متقدمة</p>
+            </div>
+            <div>
+                <button onclick="exportOperations(); return false;" 
+                        class="btn btn-action-enhanced btn-export">
+                    <i class="fas fa-download"></i> تصدير Excel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Stats Cards -->
+    <div class="stats-grid fade-in">
+        <div class="stat-card-enhanced">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>إجمالي العمليات</h5>
+                    <h2>{{ total_operations }}</h2>
+                </div>
+                <div style="font-size: 2rem; opacity: 0.7;">
+                    <i class="fas fa-list"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-enhanced">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>تسليم واستلام</h5>
+                    <h2>{{ handover_count }}</h2>
+                </div>
+                <div style="font-size: 2rem; opacity: 0.7; color: #3498db;">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-enhanced">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>عمليات الورشة</h5>
+                    <h2>{{ workshop_count }}</h2>
+                </div>
+                <div style="font-size: 2rem; opacity: 0.7; color: #f39c12;">
+                    <i class="fas fa-tools"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-enhanced">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>فحوصات السلامة</h5>
+                    <h2>{{ safety_count }}</h2>
+                </div>
+                <div style="font-size: 2rem; opacity: 0.7; color: #27ae60;">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card-enhanced">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5>الصيانة</h5>
+                    <h2>{{ maintenance_count }}</h2>
+                </div>
+                <div style="font-size: 2rem; opacity: 0.7; color: #6c757d;">
+                    <i class="fas fa-wrench"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Enhanced Filter Section -->
+    <div class="filter-card-enhanced fade-in">
+        <form method="GET" id="filterForm">
+            <div class="row">
+                <div class="col-md-2 mb-3">
+                    <label class="form-label text-light mb-1">رقم السيارة:</label>
+                    <select class="form-control filter-input-enhanced bg-black" name="vehicle_filter">
+                        <option value="">جميع السيارات</option>
+                        {% for vehicle in vehicles %}
+                        <option value="{{ vehicle.plate_number }}" {% if vehicle_filter == vehicle.plate_number %}selected{% endif %}>
+                            {{ vehicle.plate_number }} - {{ vehicle.make or 'غير محدد' }} {{ vehicle.model or '' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <label class="form-label text-light mb-1 ">نوع العملية:</label>
+                    <select class="form-control filter-input-enhanced bg-black" name="operation_type">
+                        <option value="">جميع العمليات</option>
+                        <option value="handover" {% if operation_type == 'handover' %}selected{% endif %}>تسليم واستلام</option>
+                        <option value="workshop" {% if operation_type == 'workshop' %}selected{% endif %}>ورشة</option>
+                        <option value="safety_check" {% if operation_type == 'safety_check' %}selected{% endif %}>فحص سلامة</option>
+                        <option value="maintenance" {% if operation_type == 'maintenance' %}selected{% endif %}>صيانة</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <label class="form-label text-light mb-1 ">من تاريخ:</label>
+                    <input type="date" 
+                           class="form-control filter-input-enhanced bg-black" 
+                           name="date_from" 
+                           value="{{ date_from }}">
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <label class="form-label text-light mb-1 ">إلى تاريخ:</label>
+                    <input type="date" 
+                           class="form-control filter-input-enhanced bg-black" 
+                           name="date_to" 
+                           value="{{ date_to }}">
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <label class="form-label text-light mb-1 ">اسم الشخص:</label>
+                    <input type="text" 
+                           class="form-control filter-input-enhanced bg-black" 
+                           name="employee_filter" 
+                           value="{{ employee_filter }}"
+                           placeholder="ابحث بالاسم">
+                </div>
+                
+                <div class="col-md-2 mb-3">
+                    <label class="form-label text-light mb-1 ">القسم:</label>
+                    <select class="form-control filter-input-enhanced bg-black" name="department_filter">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments %}
+                        <option value="{{ department.name }}" {% if department_filter == department.name %}selected{% endif %}>{{ department.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-action-enhanced btn-filter">
+                            <i class="fas fa-search"></i> تطبيق الفلاتر
+                        </button>
+                        <button type="button" class="btn btn-action-enhanced btn-clear" onclick="clearFilters()">
+                            <i class="fas fa-times"></i> مسح الفلاتر
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Enhanced Info Alert -->
+        <div class="alert alert-info mt-3" style="background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 12px;">
+            <i class="fas fa-info-circle"></i>
+            <strong>عدد النتائج:</strong> {{ operations|length }} عملية
+            {% if vehicle_filter or operation_type or date_from or date_to or employee_filter or department_filter %}
+            | <strong>مطبق فلاتر:</strong>
+            {% if vehicle_filter %}<span class="badge badge-secondary ms-1">السيارة: {{ vehicle_filter }}</span>{% endif %}
+            {% if operation_type %}<span class="badge badge-secondary ms-1">النوع: {{ operation_type }}</span>{% endif %}
+            {% if date_from %}<span class="badge badge-secondary ms-1">من: {{ date_from }}</span>{% endif %}
+            {% if date_to %}<span class="badge badge-secondary ms-1">إلى: {{ date_to }}</span>{% endif %}
+            {% if employee_filter %}<span class="badge badge-secondary ms-1">الشخص: {{ employee_filter }}</span>{% endif %}
+            {% if department_filter %}<span class="badge badge-secondary ms-1">القسم: {{ department_filter }}</span>{% endif %}
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Enhanced Table Section -->
+    <div class="table-container-enhanced fade-in">
+        {% if operations %}
+        <div class="table-responsive">
+            <table class="table table-enhanced table-hover" id="operationsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>نوع العملية</th>
+                        <th>رقم السيارة</th>
+                        <th>التاريخ</th>
+                        <th>اسم الشخص</th>
+                        <th>تفاصيل العملية</th>
+                        <th>الحالة</th>
+                        <th>القسم</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for operation in operations %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <span class="badge-enhanced badge-{{ operation.type }}">
+                                {{ operation.type_ar }}
+                            </span>
+                        </td>
+                        <td><strong>{{ operation.vehicle_plate }}</strong></td>
+                        <td>{{ operation.operation_date.strftime('%Y-%m-%d %H:%M') if operation.operation_date else 'غير محدد' }}</td>
+                        <td>{{ operation.person_name }}</td>
+                        <td>{{ operation.details }}</td>
+                        <td>
+                            <span class="badge badge-info">{{ operation.status }}</span>
+                        </td>
+                        <td>{{ operation.department }}</td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                {% if operation.type == 'handover' %}
+                                <a href="{{ url_for('vehicles.view_handover', id=operation.id) }}" 
+                                   class="btn btn-action-enhanced btn-view btn-sm" 
+                                   title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% elif operation.type == 'workshop' %}
+                                <a href="{{ url_for('vehicles.workshop_details', workshop_id=operation.id) }}" 
+                                   class="btn btn-action-enhanced btn-view btn-sm" 
+                                   title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% elif operation.type == 'safety_check' %}
+                                <a href="{{ url_for('external_safety.admin_view_safety_check', check_id=operation.id) }}" 
+                                   class="btn btn-action-enhanced btn-view btn-sm" 
+                                   title="عرض التفاصيل">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-search fa-4x text-muted mb-3"></i>
+            <h4>لا توجد عمليات</h4>
+            <p class="text-muted">
+                {% if vehicle_filter or operation_type or date_from or date_to or employee_filter or department_filter %}
+                لم يتم العثور على عمليات تطابق معايير البحث المحددة.
+                {% else %}
+                لم يتم تسجيل أي عمليات حتى الآن.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear filters function
+    window.clearFilters = function() {
+        const form = document.getElementById('filterForm');
+        const inputs = form.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            if (input.type === 'text' || input.type === 'date') {
+                input.value = '';
+            } else if (input.tagName === 'SELECT') {
+                input.selectedIndex = 0;
+            }
+        });
+        form.submit();
+    };
+    
+    // Auto-submit on filter change (optional)
+    const autoSubmitElements = document.querySelectorAll('select[name="operation_type"], select[name="department_filter"]');
+    autoSubmitElements.forEach(element => {
+        element.addEventListener('change', function() {
+            // Optional: Auto-submit form on change
+            // document.getElementById('filterForm').submit();
+        });
+    });
+    
+    // Enhanced notification system
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} position-fixed`;
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '9999';
+        notification.style.minWidth = '300px';
+        notification.innerHTML = message;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    
+    // Initialize tooltips if Bootstrap is available
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+});
+</script>
+{% endblock %}

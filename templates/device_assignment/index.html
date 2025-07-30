@@ -1,0 +1,1003 @@
+{% extends "layout.html" %}
+
+{% block title %}ربط الأجهزة والموظفين{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --info-gradient: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        --warning-gradient: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        --danger-gradient: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        --dark-gradient: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        font-family: 'Cairo', 'Segoe UI', sans-serif;
+        direction: rtl;
+    }
+
+    .stats-card {
+        background: var(--success-gradient);
+        color: white;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .stats-card:hover::before {
+        left: 100%;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+    
+    .assignment-card {
+        background: white;
+        border: none;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .assignment-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--primary-gradient);
+    }
+    
+    .assignment-card:hover {
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        transform: translateY(-3px);
+    }
+    
+    .device-status-available { 
+        color: #28a745; 
+        font-weight: bold;
+        background: rgba(40, 167, 69, 0.1);
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.85em;
+    }
+    
+    .device-status-assigned { 
+        color: #dc3545; 
+        font-weight: bold;
+        background: rgba(220, 53, 69, 0.1);
+        padding: 4px 8px;
+        border-radius: 20px;
+        font-size: 0.85em;
+    }
+    
+    .search-filters {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    
+    .search-filters h5 {
+        background: var(--primary-gradient);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        margin: -10px -10px 20px -10px;
+        text-align: center;
+    }
+    
+    .search-filters .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+    
+    .search-filters .form-control,
+    .search-filters .form-select {
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .search-filters .form-control:focus,
+    .search-filters .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    }
+    
+    .search-filters .btn {
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+    }
+    
+    .assignment-form {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .form-control, .form-select {
+        margin-bottom: 10px;
+    }
+    
+    .active-assignments {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    /* إصلاح backdrop الـ modal */
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        /* position: fixed !important; */
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 1040 !important;
+    }
+    
+    .modal {
+        z-index: 1050 !important;
+    }
+    
+    .modal.show {
+        display: block !important;
+    }
+    
+    /* تنسيق قائمة البحث المنسدلة */
+    .employee-search-container {
+        position: relative;
+    }
+    
+    .employee-search-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+    
+    .employee-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .employee-dropdown.show {
+        display: block;
+    }
+    
+    .employee-option {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f8f9fa;
+        transition: background-color 0.2s;
+        font-size: 14px;
+    }
+    
+    .employee-option:hover,
+    .employee-option.selected {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .employee-option:last-child {
+        border-bottom: none;
+    }
+    
+    .employee-name {
+        font-weight: 500;
+        color: inherit;
+    }
+    
+    .no-results {
+        padding: 15px;
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+    }
+    
+    /* تنسيق الأجهزة والSIM المنسدلة */
+    .device-dropdown-item:hover,
+    .sim-dropdown-item:hover {
+        background-color: #f8f9fa !important;
+        color: #2c3e50 !important;
+    }
+    .device-dropdown-item:last-child,
+    .sim-dropdown-item:last-child {
+        border-bottom: none !important;
+    }
+    .device-dropdown-item div,
+    .sim-dropdown-item div {
+        color: inherit !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-link me-2"></i>
+                    ربط الأجهزة والموظفين
+                </h2>
+                <div>
+                    <a href="{{ url_for('device_assignment.departments_view') }}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-building me-2"></i>عرض حسب الأقسام
+                    </a>
+                    <a href="{{ url_for('device_assignment.department_management') }}" class="btn btn-outline-warning">
+                        <i class="fas fa-sitemap me-2"></i>ربط بالأقسام
+                    </a>
+                </div>
+            </div>
+            
+            <!-- الإحصائيات -->
+            <div class="row mb-4">
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.total_devices or 0 }}</h4>
+                        <p class="mb-0">إجمالي الأجهزة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.available_devices or 0 }}</h4>
+                        <p class="mb-0">أجهزة متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.total_sims or 0 }}</h4>
+                        <p class="mb-0">إجمالي SIM</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ stats.available_sims or 0 }}</h4>
+                        <p class="mb-0">SIM متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="stats-card text-center">
+                        <h4>{{ active_assignments|length }}</h4>
+                        <p class="mb-0">ربطات نشطة</p>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="text-center">
+                        <a href="{{ url_for('device_assignment.history') }}" class="btn btn-info btn-sm">
+                            <i class="fas fa-history me-1"></i>
+                            التاريخ
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <div class="text-center">
+                        <a href="{{ url_for('device_assignment.reports') }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            التقارير
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- فلاتر البحث -->
+            <div class="search-filters mb-4">
+                <h5 class="mb-3">
+                    <i class="fas fa-filter me-2"></i>
+                    فلاتر البحث والعرض
+                </h5>
+                
+                <form method="GET" action="{{ url_for('device_assignment.index') }}">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">القسم</label>
+                            <select name="department_id" class="form-select">
+                                <option value="">جميع الأقسام</option>
+                                {% for dept in departments %}
+                                <option value="{{ dept.id }}" {% if department_filter == dept.id|string %}selected{% endif %}>
+                                    {{ dept.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">حالة الأجهزة</label>
+                            <select name="device_status" class="form-select">
+                                <option value="">جميع الأجهزة</option>
+                                <option value="available" {% if device_status == 'available' %}selected{% endif %}>متاحة</option>
+                                <option value="assigned" {% if device_status == 'assigned' %}selected{% endif %}>مربوطة</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">حالة أرقام SIM</label>
+                            <select name="sim_status" class="form-select">
+                                <option value="">جميع الأرقام</option>
+                                <option value="available" {% if sim_status == 'available' %}selected{% endif %}>متاحة</option>
+                                <option value="assigned" {% if sim_status == 'assigned' %}selected{% endif %}>مربوطة</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">البحث برقم الهاتف</label>
+                            <input type="text" name="phone_search" class="form-control" 
+                                   placeholder="أدخل رقم الهاتف أو جزء منه..." 
+                                   value="{{ phone_search }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label class="form-label">البحث في الموظفين</label>
+                            <input type="text" name="employee_search" class="form-control" 
+                                   placeholder="اسم الموظف أو رقم الموظف..." 
+                                   value="{{ employee_search }}">
+                        </div>
+                        
+                        <div class="col-md-9 d-flex align-items-end gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search me-2"></i>بحث وفلترة
+                            </button>
+                            
+                            <a href="{{ url_for('device_assignment.index') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>مسح الفلاتر
+                            </a>
+                            
+                            <!-- عرض الفلاتر النشطة -->
+                            {% set active_filters = [] %}
+                            {% if department_filter %}
+                                {% set _ = active_filters.append('القسم: ' + departments|selectattr('id', 'equalto', department_filter|int)|map(attribute='name')|first) %}
+                            {% endif %}
+                            {% if device_status %}
+                                {% set _ = active_filters.append('الأجهزة: ' + ('متاحة' if device_status == 'available' else 'مربوطة')) %}
+                            {% endif %}
+                            {% if sim_status %}
+                                {% set _ = active_filters.append('SIM: ' + ('متاحة' if sim_status == 'available' else 'مربوطة')) %}
+                            {% endif %}
+                            {% if phone_search %}
+                                {% set _ = active_filters.append('رقم الهاتف: ' + phone_search) %}
+                            {% endif %}
+                            {% if employee_search %}
+                                {% set _ = active_filters.append('الموظف: ' + employee_search) %}
+                            {% endif %}
+                            
+                            {% if active_filters %}
+                            <div class="ms-3">
+                                <small class="text-muted">الفلاتر النشطة:</small>
+                                {% for filter in active_filters %}
+                                <span class="badge bg-info me-1">{{ filter }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- نموذج الربط الجديد -->
+            <div class="assignment-form">
+                <h4 class="mb-3">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    إنشاء ربط جديد
+                </h4>
+                
+                <form method="POST" action="{{ url_for('device_assignment.assign') }}">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label">نوع الربط</label>
+                            <select name="assignment_type" class="form-select" id="assignment_type" required>
+                                <option value="">-- اختر النوع --</option>
+                                <option value="device_only">جهاز فقط</option>
+                                <option value="sim_only">رقم SIM فقط</option>
+                                <option value="device_and_sim">جهاز + رقم SIM</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label">الموظف</label>
+                            <div class="employee-search-container">
+                                <input type="text" 
+                                       class="employee-search-input form-control" 
+                                       id="employee-search"
+                                       placeholder="ابحث عن اسم الموظف..." 
+                                       autocomplete="off">
+                                <input type="hidden" name="employee_id" id="selected-employee-id" required>
+                                <div class="employee-dropdown" id="employee-dropdown">
+                                    <!-- سيتم ملؤها ديناميكياً -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3" id="device_select" style="display: none;">
+                            <label class="form-label">الجهاز</label>
+                            <div class="device-search-container" style="position: relative;">
+                                <input type="text" 
+                                       class="form-control device-search-input" 
+                                       id="device-search"
+                                       placeholder="ابحث عن IMEI أو اكتب رقم جديد..." 
+                                       autocomplete="off">
+                                <input type="hidden" name="device_id" id="selected-device-id">
+                                
+                                <div class="device-dropdown" id="device-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                    {% for device in available_devices %}
+                                        {% if not device.is_assigned %}
+                                        <div class="device-dropdown-item" data-id="{{ device.id }}" data-imei="{{ device.imei }}" 
+                                             style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                            <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ device.imei }}</div>
+                                            {% if device.device_brand or device.device_model %}
+                                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                                {{ device.device_brand or 'غير محدد' }} {{ device.device_model or 'غير محدد' }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3" id="sim_select" style="display: none;">
+                            <label class="form-label">رقم SIM</label>
+                            <div class="sim-search-container" style="position: relative;">
+                                <input type="text" 
+                                       class="form-control sim-search-input" 
+                                       id="sim-search"
+                                       placeholder="ابحث عن رقم الهاتف أو اكتب رقم جديد..." 
+                                       autocomplete="off">
+                                <input type="hidden" name="sim_id" id="selected-sim-id">
+                                
+                                <div class="sim-dropdown" id="sim-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                    {% for sim in available_sims %}
+                                        {% if not sim.employee_id %}
+                                        <div class="sim-dropdown-item" data-id="{{ sim.id }}" data-number="{{ sim.phone_number }}" 
+                                             style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                            <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ sim.phone_number }}</div>
+                                            {% if sim.carrier or sim.plan_type %}
+                                            <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                                {% if sim.carrier %}{{ sim.carrier }}{% endif %}
+                                                {% if sim.plan_type %} - {{ sim.plan_type }}{% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-9">
+                            <label class="form-label">ملاحظات</label>
+                            <input type="text" name="notes" class="form-control" placeholder="ملاحظات إضافية (اختياري)">
+                        </div>
+                        
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="fas fa-link me-2"></i>إنشاء الربط
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="row">
+                <!-- قائمة الربطات النشطة -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-link me-2"></i>
+                                الربطات النشطة ({{ active_assignments|length }})
+                            </h5>
+                        </div>
+                        <div class="card-body active-assignments">
+                            {% if active_assignments %}
+                                {% for assignment in active_assignments %}
+                                <div class="assignment-card">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="text-primary">{{ assignment.employee.name }}</h6>
+                                            <small class="text-muted">{{ assignment.employee.employee_id }}</small>
+                                            
+                                            <div class="mt-2">
+                                                {% if assignment.device %}
+                                                    <div class="mb-1">
+                                                        <i class="fas fa-mobile-alt text-success me-2"></i>
+                                                        <strong>الجهاز:</strong> {{ assignment.device.imei }}
+                                                        <br><small class="text-muted ms-4">{{ assignment.device.device_brand or 'غير محدد' }} {{ assignment.device.device_model or 'غير محدد' }}</small>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                {% if assignment.sim_card %}
+                                                    <div class="mb-1">
+                                                        <i class="fas fa-sim-card text-info me-2"></i>
+                                                        <strong>SIM:</strong> {{ assignment.sim_card.phone_number }}
+                                                        <br><small class="text-muted ms-4">{{ assignment.sim_card.carrier }}</small>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <small class="text-muted">
+                                                <i class="fas fa-calendar me-1"></i>
+                                                {{ assignment.assignment_date.strftime('%Y-%m-%d') if assignment.assignment_date }}
+                                            </small>
+                                        </div>
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                                    type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a class="dropdown-item text-danger" 
+                                                       href="{{ url_for('device_assignment.confirm_unassign', assignment_id=assignment.id) }}">
+                                                        <i class="fas fa-unlink me-2"></i>فك الربط
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-link fa-2x text-muted mb-3"></i>
+                                    <p class="text-muted">لا توجد ربطات نشطة حالياً</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- معلومات الأجهزة والأرقام المتاحة -->
+                <div class="col-md-6">
+                    <div class="row">
+                        <!-- الأجهزة المتاحة -->
+                        <div class="col-12 mb-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-mobile-alt me-2"></i>
+                                        الأجهزة المتاحة ({{ available_devices|selectattr('is_assigned', 'equalto', false)|list|length }})
+                                    </h6>
+                                </div>
+                                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                    {% set available_devices_list = available_devices|selectattr('is_assigned', 'equalto', false)|list %}
+                                    {% if available_devices_list %}
+                                        {% for device in available_devices_list[:5] %}
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong>{{ device.imei or 'غير محدد' }}</strong><br>
+                                                <small class="text-muted">{{ device.device_brand or 'غير محدد' }} {{ device.device_model or 'غير محدد' }}</small>
+                                            </div>
+                                            <span class="badge bg-success">متاح</span>
+                                        </div>
+                                        {% endfor %}
+                                        {% if available_devices_list|length > 5 %}
+                                            <small class="text-muted">و {{ available_devices_list|length - 5 }} أجهزة أخرى...</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0 text-center">لا توجد أجهزة متاحة</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- أرقام SIM المتاحة -->
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-sim-card me-2"></i>
+                                        أرقام SIM المتاحة ({{ available_sims|length }})
+                                    </h6>
+                                </div>
+                                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                    {% if available_sims %}
+                                        {% for sim in available_sims[:5] %}
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <strong>{{ sim.phone_number }}</strong><br>
+                                                <small class="text-muted">{{ sim.carrier }} - {{ sim.plan_type or 'غير محدد' }}</small>
+                                            </div>
+                                            <span class="badge bg-success">متاح</span>
+                                        </div>
+                                        {% endfor %}
+                                        {% if available_sims|length > 5 %}
+                                            <small class="text-muted">و {{ available_sims|length - 5 }} أرقام أخرى...</small>
+                                        {% endif %}
+                                    {% else %}
+                                        <p class="text-muted mb-0 text-center">لا توجد أرقام متاحة</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // قائمة الموظفين للبحث
+    const employees = [
+        {% for employee in employees %}
+        {
+            id: {{ employee.id }},
+            name: "{{ employee.name|e }}",
+            employee_id: "{{ employee.employee_id|e }}",
+            national_id: "{{ employee.national_id|e if employee.national_id else '' }}",
+            departments: "{% for dept in employee.departments %}{{ dept.name|e }}{% if not loop.last %}, {% endif %}{% endfor %}"
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    
+    // تشخيص البيانات
+    console.log('Employee data loaded:', employees);
+    console.log('Total employees:', employees.length);
+    
+    const employeeSearchInput = document.getElementById('employee-search');
+    const employeeDropdown = document.getElementById('employee-dropdown');
+    const selectedEmployeeId = document.getElementById('selected-employee-id');
+    
+    let currentSelection = -1;
+    let filteredEmployees = [];
+    
+    // عرض جميع الموظفين عند النقر على حقل البحث
+    employeeSearchInput.addEventListener('focus', function() {
+        if (this.value === '' && selectedEmployeeId.value === '') {
+            showAllEmployees();
+        }
+    });
+    
+    // البحث أثناء الكتابة
+    employeeSearchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        if (searchTerm === '') {
+            showAllEmployees();
+            selectedEmployeeId.value = '';
+            this.classList.remove('is-valid');
+            return;
+        }
+        
+        // فلترة الموظفين بناءً على الاسم أو رقم الموظف أو رقم الهوية أو القسم
+        filteredEmployees = employees.filter(emp => 
+            emp.name.toLowerCase().includes(searchTerm) ||
+            emp.employee_id.toLowerCase().includes(searchTerm) ||
+            emp.national_id.toLowerCase().includes(searchTerm) ||
+            emp.departments.toLowerCase().includes(searchTerm)
+        );
+        
+        displayEmployees(filteredEmployees);
+        currentSelection = -1;
+    });
+    
+    // التنقل بالمفاتيح
+    employeeSearchInput.addEventListener('keydown', function(e) {
+        const visibleOptions = employeeDropdown.querySelectorAll('.employee-option');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            currentSelection = Math.min(currentSelection + 1, visibleOptions.length - 1);
+            updateSelection(visibleOptions);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            currentSelection = Math.max(currentSelection - 1, -1);
+            updateSelection(visibleOptions);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentSelection >= 0 && visibleOptions[currentSelection]) {
+                selectEmployee(visibleOptions[currentSelection]);
+            }
+        } else if (e.key === 'Escape') {
+            hideDropdown();
+        }
+    });
+    
+    // إخفاء القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!employeeSearchInput.contains(e.target) && !employeeDropdown.contains(e.target)) {
+            hideDropdown();
+        }
+    });
+    
+    function showAllEmployees() {
+        filteredEmployees = employees;
+        displayEmployees(filteredEmployees);
+    }
+    
+    function displayEmployees(employeeList) {
+        console.log('Displaying employees:', employeeList);
+        employeeDropdown.innerHTML = '';
+        
+        if (employeeList.length === 0) {
+            employeeDropdown.innerHTML = '<div class="no-results">لا توجد نتائج مطابقة</div>';
+            employeeDropdown.classList.add('show');
+            return;
+        }
+        
+        employeeList.forEach((employee, index) => {
+            const option = document.createElement('div');
+            option.className = 'employee-option';
+            option.setAttribute('data-employee-id', employee.id);
+            
+            // تشخيص البيانات لكل موظف
+            console.log('Employee data:', employee);
+            
+            const employeeName = employee.name || 'غير محدد';
+            const employeeId = employee.employee_id || 'غير محدد';
+            const nationalId = employee.national_id || '';
+            const departments = employee.departments || '';
+            
+            option.innerHTML = `
+                <div class="employee-name" style="font-size: 14px; padding: 8px; color: #333;">${employeeName}</div>
+            `;
+            
+            option.addEventListener('click', function() {
+                selectEmployee(this);
+            });
+            
+            employeeDropdown.appendChild(option);
+        });
+        
+        employeeDropdown.classList.add('show');
+        currentSelection = -1;
+    }
+    
+    function updateSelection(options) {
+        options.forEach((option, index) => {
+            option.classList.toggle('selected', index === currentSelection);
+        });
+        
+        // تمرير العنصر المحدد إلى المنظور
+        if (currentSelection >= 0 && options[currentSelection]) {
+            options[currentSelection].scrollIntoView({
+                block: 'nearest',
+                behavior: 'smooth'
+            });
+        }
+    }
+    
+    function selectEmployee(option) {
+        const employeeId = option.getAttribute('data-employee-id');
+        const employeeName = option.querySelector('.employee-name').textContent;
+        
+        employeeSearchInput.value = employeeName;
+        selectedEmployeeId.value = employeeId;
+        
+        hideDropdown();
+        
+        // إضافة تأثير بصري للتأكيد
+        employeeSearchInput.classList.add('is-valid');
+        setTimeout(() => {
+            employeeSearchInput.classList.remove('is-valid');
+        }, 2000);
+    }
+    
+    function hideDropdown() {
+        employeeDropdown.classList.remove('show');
+        currentSelection = -1;
+    }
+    
+    // إعداد البحث في الأجهزة
+    initializeDeviceSearch();
+    
+    // إعداد البحث في SIM
+    initializeSimSearch();
+    
+    // JavaScript لإظهار/إخفاء حقول الجهاز والرقم حسب نوع الربط
+    document.getElementById('assignment_type').addEventListener('change', function() {
+        const deviceSelect = document.getElementById('device_select');
+        const simSelect = document.getElementById('sim_select');
+        
+        switch(this.value) {
+            case 'device_only':
+                deviceSelect.style.display = 'block';
+                simSelect.style.display = 'none';
+                break;
+            case 'sim_only':
+                deviceSelect.style.display = 'none';
+                simSelect.style.display = 'block';
+                break;
+            case 'device_and_sim':
+                deviceSelect.style.display = 'block';
+                simSelect.style.display = 'block';
+                break;
+            default:
+                deviceSelect.style.display = 'none';
+                simSelect.style.display = 'none';
+        }
+    });
+    
+    // التحقق من صحة النموذج قبل الإرسال
+    const assignmentForm = document.querySelector('form[action*="assign"]');
+    if (assignmentForm) {
+        assignmentForm.addEventListener('submit', function(e) {
+            if (!selectedEmployeeId.value) {
+                e.preventDefault();
+                alert('يرجى اختيار موظف من القائمة');
+                employeeSearchInput.focus();
+                return false;
+            }
+        });
+    }
+    
+    // دالة إعداد البحث في الأجهزة
+    function initializeDeviceSearch() {
+        const deviceSearchInput = document.getElementById('device-search');
+        const deviceDropdown = document.getElementById('device-dropdown');
+        const selectedDeviceId = document.getElementById('selected-device-id');
+        
+        if (!deviceSearchInput || !deviceDropdown || !selectedDeviceId) return;
+        
+        // عرض القائمة عند التركيز
+        deviceSearchInput.addEventListener('focus', function() {
+            deviceDropdown.style.display = 'block';
+        });
+        
+        // البحث أثناء الكتابة
+        deviceSearchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            const items = deviceDropdown.querySelectorAll('.device-dropdown-item');
+            let hasVisible = false;
+            
+            items.forEach(item => {
+                const imei = item.dataset.imei.toLowerCase();
+                const text = item.textContent.toLowerCase();
+                
+                if (imei.includes(searchValue) || text.includes(searchValue)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            deviceDropdown.style.display = hasVisible ? 'block' : 'none';
+            
+            // إذا كان النص مختلف عن المحدد حالياً، امسح القيمة المخفية
+            const selectedItem = deviceDropdown.querySelector('[data-imei="' + searchValue + '"]');
+            if (!selectedItem) {
+                selectedDeviceId.value = '';
+            }
+        });
+        
+        // اختيار عنصر من القائمة
+        deviceDropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.device-dropdown-item');
+            if (item) {
+                deviceSearchInput.value = item.dataset.imei;
+                selectedDeviceId.value = item.dataset.id;
+                deviceDropdown.style.display = 'none';
+                deviceSearchInput.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    deviceSearchInput.style.backgroundColor = '';
+                }, 1000);
+            }
+        });
+        
+        // إخفاء القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (!deviceSearchInput.contains(e.target) && !deviceDropdown.contains(e.target)) {
+                deviceDropdown.style.display = 'none';
+            }
+        });
+    }
+    
+    // دالة إعداد البحث في أرقام SIM
+    function initializeSimSearch() {
+        const simSearchInput = document.getElementById('sim-search');
+        const simDropdown = document.getElementById('sim-dropdown');
+        const selectedSimId = document.getElementById('selected-sim-id');
+        
+        if (!simSearchInput || !simDropdown || !selectedSimId) return;
+        
+        // عرض القائمة عند التركيز
+        simSearchInput.addEventListener('focus', function() {
+            simDropdown.style.display = 'block';
+        });
+        
+        // البحث أثناء الكتابة
+        simSearchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            const items = simDropdown.querySelectorAll('.sim-dropdown-item');
+            let hasVisible = false;
+            
+            items.forEach(item => {
+                const number = item.dataset.number.toLowerCase();
+                const text = item.textContent.toLowerCase();
+                
+                if (number.includes(searchValue) || text.includes(searchValue)) {
+                    item.style.display = 'block';
+                    hasVisible = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            simDropdown.style.display = hasVisible ? 'block' : 'none';
+            
+            // إذا كان النص مختلف عن المحدد حالياً، امسح القيمة المخفية
+            const selectedItem = simDropdown.querySelector('[data-number="' + searchValue + '"]');
+            if (!selectedItem) {
+                selectedSimId.value = '';
+            }
+        });
+        
+        // اختيار عنصر من القائمة
+        simDropdown.addEventListener('click', function(e) {
+            const item = e.target.closest('.sim-dropdown-item');
+            if (item) {
+                simSearchInput.value = item.dataset.number;
+                selectedSimId.value = item.dataset.id;
+                simDropdown.style.display = 'none';
+                simSearchInput.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    simSearchInput.style.backgroundColor = '';
+                }, 1000);
+            }
+        });
+        
+        // إخفاء القائمة عند النقر خارجها
+        document.addEventListener('click', function(e) {
+            if (!simSearchInput.contains(e.target) && !simDropdown.contains(e.target)) {
+                simDropdown.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

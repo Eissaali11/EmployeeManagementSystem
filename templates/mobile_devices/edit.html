@@ -1,0 +1,807 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل بيانات الجهاز المحمول{% endblock %}
+
+{% block head %}
+<style>
+/* تنسيقات خاصة للقوائم المنسدلة */
+.dropup .dropdown-menu {
+    top: auto !important;
+    bottom: 100% !important;
+    margin-bottom: 5px !important;
+    box-shadow: 0 -4px 8px rgba(0,0,0,0.15) !important;
+}
+
+.dropup .dropdown-toggle::after {
+    border-top: 0;
+    border-bottom: 0.3em solid;
+}
+
+/* تحسينات حقل البحث */
+.search-input {
+    background: rgba(255,255,255,0.15) !important;
+    border: 2px solid rgba(255,255,255,0.3) !important;
+    color: white !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    padding: 10px 15px !important;
+    transition: all 0.3s ease !important;
+}
+
+.search-input:focus {
+    background: rgba(255,255,255,0.25) !important;
+    border-color: rgba(255,255,255,0.6) !important;
+    box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25) !important;
+    outline: none !important;
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* تحسينات عناصر القائمة */
+.employee-item {
+    transition: all 0.2s ease !important;
+    border-radius: 6px !important;
+    margin: 2px 4px !important;
+}
+
+.employee-item:hover {
+    background: rgba(255,255,255,0.2) !important;
+    transform: translateX(-2px) !important;
+}
+
+.employee-item.selected {
+    background: rgba(255,255,255,0.3) !important;
+}
+
+/* رسالة عدم وجود نتائج */
+.no-results {
+    color: rgba(255,255,255,0.7);
+    padding: 20px;
+    text-align: center;
+    font-style: italic;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    margin: 8px;
+}
+
+/* تحسين شريط التمرير */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* تحسين التحديد */
+.dropdown-toggle {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.selected-employee-info {
+    flex: 1;
+    text-align: right;
+}
+
+.selected-employee-name {
+    font-weight: bold;
+    color: #495057;
+}
+
+.selected-employee-details {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-top: 2px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- رأس الصفحة -->
+            <div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="h3 mb-0">
+                                <i class="fas fa-edit me-3"></i>
+                                تعديل بيانات الجهاز المحمول
+                            </h1>
+                            <p class="mb-0 mt-2 opacity-75">IMEI: {{ device.imei }}</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-light">
+                                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- نموذج تعديل الجهاز -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-mobile-alt me-2"></i>بيانات الجهاز
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <!-- البيانات الأساسية -->
+                            <div class="col-md-6 mb-3">
+                                <label for="phone_number" class="form-label">
+                                    رقم الهاتف <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-phone"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="phone_number" name="phone_number" 
+                                           value="{{ device.phone_number }}" required maxlength="20"
+                                           pattern="[0-9+\-\s]+" title="يسمح بالأرقام والرموز + - ومسافات فقط">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="imei" class="form-label">
+                                    رقم IMEI <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-barcode"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="imei" name="imei" 
+                                           value="{{ device.imei }}" required maxlength="20"
+                                           pattern="[0-9]+" title="الأرقام فقط">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">الإيميل</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="{{ device.email or '' }}" maxlength="100">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">حالة الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-info-circle"></i>
+                                    </span>
+                                    <select class="form-select" id="status" name="status" required>
+                                        <option value="متاح" {% if device.status == 'متاح' %}selected{% endif %}>متاح</option>
+                                        <option value="مرتبط" {% if device.status == 'مرتبط' %}selected{% endif %}>مرتبط</option>
+                                        <option value="معطل" {% if device.status == 'معطل' %}selected{% endif %}>معطل</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- معلومات الجهاز -->
+                            <div class="col-md-6 mb-3">
+                                <label for="device_brand" class="form-label">ماركة الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-tag"></i>
+                                    </span>
+                                    <select class="form-select" id="device_brand" name="device_brand">
+                                        <option value="">اختر الماركة</option>
+                                        <option value="Samsung" {% if device.device_brand == 'Samsung' %}selected{% endif %}>Samsung</option>
+                                        <option value="Apple" {% if device.device_brand == 'Apple' %}selected{% endif %}>Apple</option>
+                                        <option value="Huawei" {% if device.device_brand == 'Huawei' %}selected{% endif %}>Huawei</option>
+                                        <option value="Xiaomi" {% if device.device_brand == 'Xiaomi' %}selected{% endif %}>Xiaomi</option>
+                                        <option value="Oppo" {% if device.device_brand == 'Oppo' %}selected{% endif %}>Oppo</option>
+                                        <option value="Vivo" {% if device.device_brand == 'Vivo' %}selected{% endif %}>Vivo</option>
+                                        <option value="OnePlus" {% if device.device_brand == 'OnePlus' %}selected{% endif %}>OnePlus</option>
+                                        <option value="Nokia" {% if device.device_brand == 'Nokia' %}selected{% endif %}>Nokia</option>
+                                        <option value="Sony" {% if device.device_brand == 'Sony' %}selected{% endif %}>Sony</option>
+                                        <option value="LG" {% if device.device_brand == 'LG' %}selected{% endif %}>LG</option>
+                                        <option value="أخرى" {% if device.device_brand == 'أخرى' %}selected{% endif %}>أخرى</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="device_model" class="form-label">نوع الجهاز</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-mobile-alt"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="device_model" name="device_model" 
+                                           value="{{ device.device_model or '' }}" maxlength="50">
+                                </div>
+                            </div>
+
+                            <!-- ملاحظات -->
+                            <div class="col-12 mb-3">
+                                <label for="notes" class="form-label">ملاحظات</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </span>
+                                    <textarea class="form-control" id="notes" name="notes" rows="3">{{ device.notes or '' }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- إدارة الربط -->
+                        <div class="card mt-4 border-warning">
+                            <div class="card-header bg-warning bg-opacity-10">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-link me-2"></i>إدارة ربط الجهاز
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {% if device.employee %}
+                                <!-- معلومات الربط الحالية -->
+                                <div class="alert alert-info">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-user me-2"></i>معلومات الربط الحالية
+                                    </h6>
+                                    <p class="mb-2">
+                                        <strong>الموظف المربوط:</strong> {{ device.employee.name }}
+                                    </p>
+                                    <p class="mb-2">
+                                        <strong>رقم الموظف:</strong> {{ device.employee.employee_id or 'غير محدد' }}
+                                    </p>
+                                    {% if device.assigned_date %}
+                                    <p class="mb-0">
+                                        <strong>تاريخ الربط:</strong> {{ device.assigned_date.strftime('%Y-%m-%d') }}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- أزرار إدارة الربط -->
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-warning" onclick="changeAssignment()">
+                                        <i class="fas fa-exchange-alt me-2"></i>تغيير الربط
+                                    </button>
+                                    <button type="button" class="btn btn-danger" onclick="unassignDevice()">
+                                        <i class="fas fa-unlink me-2"></i>فك الربط
+                                    </button>
+                                </div>
+                                
+                                <!-- نموذج تغيير الربط -->
+                                <div id="changeAssignmentForm" class="mt-3" style="display: none;">
+                                    <div class="border rounded p-3 bg-light">
+                                        <h6>تغيير ربط الجهاز لموظف آخر:</h6>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="dropup">
+                                                    <button class="btn btn-outline-secondary dropdown-toggle w-100" 
+                                                            type="button" id="newEmployeeDropdown" 
+                                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <div class="selected-employee-info">
+                                                            <div id="selectedNewEmployee" class="selected-employee-name">اختر موظف جديد</div>
+                                                            <div id="selectedNewEmployeeDetails" class="selected-employee-details" style="display: none;"></div>
+                                                        </div>
+                                                    </button>
+                                                    <div class="dropdown-menu w-100 p-0 custom-scrollbar" style="max-height: 400px; overflow-y: auto; background: #4a6ba7; border: none; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.25);">
+                                                        <div class="p-3" style="background: #4a6ba7; border-bottom: 2px solid rgba(255,255,255,0.2);">
+                                                            <input type="text" 
+                                                                   id="newEmployeeSearchInput"
+                                                                   class="form-control search-input" 
+                                                                   placeholder="🔍 ابحث بالاسم، رقم الموظف، أو رقم الهوية..." 
+                                                                   oninput="filterNewEmployees(this)"
+                                                                   onclick="event.stopPropagation();"
+                                                                   autocomplete="off">
+                                                        </div>
+                                                        <div id="newEmployeeList" class="custom-scrollbar" style="max-height: 320px; overflow-y: auto; padding: 8px;">
+                                                            {% for employee in active_employees %}
+                                                            {% if employee.id != device.employee_id %}
+                                                            <a class="dropdown-item employee-item" href="#" 
+                                                               onclick="selectNewEmployee({{ employee.id }}, '{{ employee.name|replace("'", "\\'") }}', '{{ employee.employee_id or "" }}', '{{ employee.national_id or "" }}'); return false;"
+                                                               data-employee-name="{{ employee.name|lower }}"
+                                                               data-employee-id="{{ employee.employee_id or '' }}"
+                                                               data-national-id="{{ employee.national_id or '' }}"
+                                                               style="color: white; padding: 12px 16px; background: transparent; text-align: right; transition: all 0.2s ease; text-decoration: none;">
+                                                                <div style="font-size: 15px; font-weight: bold; margin-bottom: 4px;">
+                                                                    <i class="fas fa-user me-2"></i>{{ employee.name }}
+                                                                </div>
+                                                                <div style="font-size: 12px; opacity: 0.8; padding-right: 20px;">
+                                                                    {% if employee.employee_id %}
+                                                                        <i class="fas fa-id-badge me-1"></i>رقم الموظف: {{ employee.employee_id }}
+                                                                    {% endif %}
+                                                                    {% if employee.national_id %}
+                                                                        {% if employee.employee_id %}<br>{% endif %}
+                                                                        <i class="fas fa-id-card me-1"></i>رقم الهوية: {{ employee.national_id }}
+                                                                    {% endif %}
+                                                                </div>
+                                                            </a>
+                                                            {% endif %}
+                                                            {% endfor %}
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" id="newEmployeeSelect" value="">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-success" onclick="confirmChangeAssignment()">
+                                                    <i class="fas fa-check me-2"></i>تأكيد التغيير
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% else %}
+                                <!-- ربط جديد -->
+                                <div class="alert alert-warning">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>الجهاز غير مربوط
+                                    </h6>
+                                    <p class="mb-0">هذا الجهاز غير مربوط بأي موظف حالياً</p>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label for="employeeSelect" class="form-label">ربط الجهاز بموظف:</label>
+                                        <div class="dropup">
+                                            <button class="btn btn-outline-secondary dropdown-toggle w-100" 
+                                                    type="button" id="employeeDropdown" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                <div class="selected-employee-info">
+                                                    <div id="selectedEmployee" class="selected-employee-name">اختر موظف</div>
+                                                    <div id="selectedEmployeeDetails" class="selected-employee-details" style="display: none;"></div>
+                                                </div>
+                                            </button>
+                                            <div class="dropdown-menu w-100 p-0 custom-scrollbar" style="max-height: 400px; overflow-y: auto; background: #4a6ba7; border: none; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.25);">
+                                                <div class="p-3" style="background: #4a6ba7; border-bottom: 2px solid rgba(255,255,255,0.2);">
+                                                    <input type="text" 
+                                                           id="employeeSearchInput"
+                                                           class="form-control search-input" 
+                                                           placeholder="🔍 ابحث بالاسم، رقم الموظف، أو رقم الهوية..." 
+                                                           oninput="filterEmployees(this)"
+                                                           onclick="event.stopPropagation();"
+                                                           autocomplete="off">
+                                                </div>
+                                                <div id="employeeList" class="custom-scrollbar" style="max-height: 320px; overflow-y: auto; padding: 8px;">
+                                                    {% for employee in active_employees %}
+                                                    <a class="dropdown-item employee-item" href="#" 
+                                                       onclick="selectEmployee({{ employee.id }}, '{{ employee.name|replace("'", "\\'") }}', '{{ employee.employee_id or "" }}', '{{ employee.national_id or "" }}'); return false;"
+                                                       data-employee-name="{{ employee.name|lower }}"
+                                                       data-employee-id="{{ employee.employee_id or '' }}"
+                                                       data-national-id="{{ employee.national_id or '' }}"
+                                                       style="color: white; padding: 12px 16px; background: transparent; text-align: right; transition: all 0.2s ease; text-decoration: none;">
+                                                        <div style="font-size: 15px; font-weight: bold; margin-bottom: 4px;">
+                                                            <i class="fas fa-user me-2"></i>{{ employee.name }}
+                                                        </div>
+                                                        <div style="font-size: 12px; opacity: 0.8; padding-right: 20px;">
+                                                            {% if employee.employee_id %}
+                                                                <i class="fas fa-id-badge me-1"></i>رقم الموظف: {{ employee.employee_id }}
+                                                            {% endif %}
+                                                            {% if employee.national_id %}
+                                                                {% if employee.employee_id %}<br>{% endif %}
+                                                                <i class="fas fa-id-card me-1"></i>رقم الهوية: {{ employee.national_id }}
+                                                            {% endif %}
+                                                        </div>
+                                                    </a>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="employeeSelect" value="">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="button" class="btn btn-success d-block" onclick="assignToEmployee()">
+                                            <i class="fas fa-link me-2"></i>ربط الجهاز
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- أزرار الإجراءات -->
+                        <hr>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <button type="submit" class="btn btn-primary btn-lg">
+                                            <i class="fas fa-save me-2"></i>حفظ التغييرات
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('mobile_devices.index') }}" class="btn btn-outline-dark btn-lg">
+                                            <i class="fas fa-times me-2"></i>إلغاء
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- معلومات الجهاز -->
+            <div class="card border-0 shadow-sm mt-4" style="background-color: #f8f9fa;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="fas fa-info-circle me-2"></i>معلومات الجهاز
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>تاريخ الإضافة:</strong></p>
+                            <p class="text-muted">{{ device.created_at.strftime('%Y-%m-%d %H:%M') if device.created_at else 'غير محدد' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>آخر تحديث:</strong></p>
+                            <p class="text-muted">{{ device.updated_at.strftime('%Y-%m-%d %H:%M') if device.updated_at else 'غير محدد' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// متغيرات عامة لتخزين بيانات الموظفين
+let employeesData = [];
+let filteredEmployees = [];
+
+// تحضير البيانات عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // جمع بيانات الموظفين من العناصر
+    const employeeItems = document.querySelectorAll('.employee-item');
+    employeesData = Array.from(employeeItems).map(item => ({
+        id: item.onclick.toString().match(/selectEmployee\((\d+)/)?.[1] || item.onclick.toString().match(/selectNewEmployee\((\d+)/)?.[1],
+        name: item.getAttribute('data-employee-name'),
+        employeeId: item.getAttribute('data-employee-id'),
+        nationalId: item.getAttribute('data-national-id'),
+        element: item
+    }));
+});
+
+// التحقق من صحة IMEI
+document.getElementById('imei').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+    e.target.value = value;
+    
+    if (value.length > 15) {
+        e.target.value = value.substring(0, 15);
+    }
+});
+
+// التحقق من صحة رقم الهاتف
+document.getElementById('phone_number').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/[^0-9+\-\s]/g, '');
+    e.target.value = value;
+});
+
+// دوال اختيار الموظف المحسنة
+function selectEmployee(employeeId, employeeName, employeeIdNum, nationalId) {
+    document.getElementById('employeeSelect').value = employeeId;
+    document.getElementById('selectedEmployee').textContent = employeeName;
+    
+    // إظهار التفاصيل
+    const detailsElement = document.getElementById('selectedEmployeeDetails');
+    let details = '';
+    if (employeeIdNum) details += `رقم الموظف: ${employeeIdNum}`;
+    if (nationalId) {
+        if (details) details += ' | ';
+        details += `رقم الهوية: ${nationalId}`;
+    }
+    
+    if (details) {
+        detailsElement.textContent = details;
+        detailsElement.style.display = 'block';
+    } else {
+        detailsElement.style.display = 'none';
+    }
+    
+    // إضافة تأثير التحديد
+    document.querySelectorAll('#employeeList .employee-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    event.target.closest('.employee-item').classList.add('selected');
+    
+    // إغلاق الـ dropdown
+    setTimeout(() => {
+        const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('employeeDropdown'));
+        if (dropdown) dropdown.hide();
+    }, 150);
+}
+
+function selectNewEmployee(employeeId, employeeName, employeeIdNum, nationalId) {
+    document.getElementById('newEmployeeSelect').value = employeeId;
+    document.getElementById('selectedNewEmployee').textContent = employeeName;
+    
+    // إظهار التفاصيل
+    const detailsElement = document.getElementById('selectedNewEmployeeDetails');
+    let details = '';
+    if (employeeIdNum) details += `رقم الموظف: ${employeeIdNum}`;
+    if (nationalId) {
+        if (details) details += ' | ';
+        details += `رقم الهوية: ${nationalId}`;
+    }
+    
+    if (details) {
+        detailsElement.textContent = details;
+        detailsElement.style.display = 'block';
+    } else {
+        detailsElement.style.display = 'none';
+    }
+    
+    // إضافة تأثير التحديد
+    document.querySelectorAll('#newEmployeeList .employee-item').forEach(item => {
+        item.classList.remove('selected');
+    });
+    event.target.closest('.employee-item').classList.add('selected');
+    
+    // إغلاق الـ dropdown
+    setTimeout(() => {
+        const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('newEmployeeDropdown'));
+        if (dropdown) dropdown.hide();
+    }, 150);
+}
+
+// دوال البحث المتقدمة
+function filterEmployees(input) {
+    performSearch(input, 'employeeList');
+}
+
+function filterNewEmployees(input) {
+    performSearch(input, 'newEmployeeList');
+}
+
+function performSearch(input, listId) {
+    const filter = input.value.toLowerCase().trim();
+    const employeeList = document.getElementById(listId);
+    const items = employeeList.getElementsByClassName('employee-item');
+    let visibleCount = 0;
+    let searchTerms = filter.split(/\s+/).filter(term => term.length > 0);
+    
+    // إزالة رسائل "لا توجد نتائج" السابقة
+    const existingNoResults = employeeList.querySelector('.no-results');
+    if (existingNoResults) {
+        existingNoResults.remove();
+    }
+    
+    // إذا كان البحث فارغ، إظهار جميع الموظفين
+    if (filter === '') {
+        for (let i = 0; i < items.length; i++) {
+            items[i].style.display = 'block';
+            visibleCount++;
+        }
+        return;
+    }
+    
+    // البحث في البيانات
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const name = item.getAttribute('data-employee-name') || '';
+        const employeeId = item.getAttribute('data-employee-id') || '';
+        const nationalId = item.getAttribute('data-national-id') || '';
+        
+        // البحث الذكي - يدعم البحث الجزئي والمتعدد
+        let matches = false;
+        
+        if (searchTerms.length === 0) {
+            matches = true;
+        } else {
+            // البحث في جميع الحقول
+            const searchText = `${name} ${employeeId} ${nationalId}`.toLowerCase();
+            
+            // التحقق من وجود جميع كلمات البحث
+            matches = searchTerms.every(term => {
+                return name.includes(term) || 
+                       employeeId.includes(term) || 
+                       nationalId.includes(term) ||
+                       searchText.includes(term);
+            });
+        }
+        
+        if (matches) {
+            item.style.display = 'block';
+            visibleCount++;
+            
+            // تمييز النتائج المطابقة
+            highlightSearchTerms(item, searchTerms);
+        } else {
+            item.style.display = 'none';
+        }
+    }
+    
+    // إضافة رسالة إذا لم توجد نتائج
+    if (visibleCount === 0) {
+        const noResultsDiv = document.createElement('div');
+        noResultsDiv.className = 'no-results';
+        noResultsDiv.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <i class="fas fa-search" style="font-size: 2em; margin-bottom: 10px; opacity: 0.5;"></i>
+                <p style="margin: 0; font-size: 14px;">لا توجد نتائج مطابقة للبحث "<strong>${filter}</strong>"</p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.7;">جرب استخدام كلمات مختلفة أو تحقق من الإملاء</p>
+            </div>
+        `;
+        employeeList.appendChild(noResultsDiv);
+    }
+}
+
+function highlightSearchTerms(item, searchTerms) {
+    // يمكن إضافة تمييز النص هنا إذا أردت
+    // هذه دالة اختيارية لتحسين تجربة المستخدم
+}
+
+// تحسين تجربة البحث
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة اختصارات لوحة المفاتيح
+    const searchInputs = document.querySelectorAll('.search-input');
+    searchInputs.forEach(input => {
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+                this.dispatchEvent(new Event('input'));
+            }
+        });
+        
+        // تركيز تلقائي عند فتح القائمة
+        input.closest('.dropdown-menu').addEventListener('shown.bs.dropdown', function() {
+            setTimeout(() => input.focus(), 100);
+        });
+    });
+});
+
+// وظائف إدارة الربط
+function changeAssignment() {
+    const form = document.getElementById('changeAssignmentForm');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    
+    if (form.style.display === 'block') {
+        // تنظيف حقل البحث عند فتح النموذج
+        const searchInput = document.getElementById('newEmployeeSearchInput');
+        if (searchInput) {
+            searchInput.value = '';
+            filterNewEmployees(searchInput);
+        }
+    }
+}
+
+function confirmChangeAssignment() {
+    const newEmployeeId = document.getElementById('newEmployeeSelect').value;
+    if (!newEmployeeId) {
+        alert('يرجى اختيار موظف جديد');
+        return;
+    }
+    
+    if (confirm('هل أنت متأكد من تغيير ربط الجهاز للموظف الجديد؟')) {
+        assignDevice({{ device.id }}, newEmployeeId);
+    }
+}
+
+function unassignDevice() {
+    if (confirm('هل أنت متأكد من فك ربط الجهاز؟ سيصبح الجهاز متاحاً للربط بموظف آخر.')) {
+        fetch(`/mobile-devices/{{ device.id }}/unassign`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                showSuccessMessage('تم فك ربط الجهاز بنجاح');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                throw new Error('فشل في فك ربط الجهاز');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showErrorMessage('حدث خطأ أثناء فك ربط الجهاز');
+        });
+    }
+}
+
+function assignToEmployee() {
+    const employeeId = document.getElementById('employeeSelect').value;
+    if (!employeeId) {
+        alert('يرجى اختيار موظف');
+        return;
+    }
+    
+    if (confirm('هل أنت متأكد من ربط الجهاز بالموظف المختار؟')) {
+        assignDevice({{ device.id }}, employeeId);
+    }
+}
+
+function assignDevice(deviceId, employeeId) {
+    // إضافة مؤشر التحميل
+    const loadingSpinner = showLoadingMessage('جاري ربط الجهاز...');
+    
+    fetch(`/mobile-devices/${deviceId}/assign/${employeeId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => {
+        hideLoadingMessage(loadingSpinner);
+        if (response.ok) {
+            showSuccessMessage('تم ربط الجهاز بنجاح');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            throw new Error('فشل في ربط الجهاز');
+        }
+    })
+    .catch(error => {
+        hideLoadingMessage(loadingSpinner);
+        console.error('Error:', error);
+        showErrorMessage('حدث خطأ أثناء ربط الجهاز');
+    });
+}
+
+// دوال مساعدة للرسائل
+function showSuccessMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) alert.parentNode.removeChild(alert);
+    }, 5000);
+}
+
+function showErrorMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) alert.parentNode.removeChild(alert);
+    }, 5000);
+}
+
+function showLoadingMessage(message) {
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-info position-fixed';
+    alert.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            ${message}
+        </div>
+    `;
+    document.body.appendChild(alert);
+    return alert;
+}
+
+function hideLoadingMessage(alert) {
+    if (alert && alert.parentNode) {
+        alert.parentNode.removeChild(alert);
+    }
+}
+</script>
+{% endblock %}

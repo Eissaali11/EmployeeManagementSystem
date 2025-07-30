@@ -1,0 +1,405 @@
+{% extends "layout.html" %}
+
+{% block title %}إدارة ربط الأقسام{% endblock %}
+
+{% block extra_css %}
+<style>
+    .department-card {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    .department-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+    
+    .assignment-form {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .device-list {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        padding: 15px;
+        background: #f8f9fa;
+    }
+    
+    .device-item {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .device-item:hover {
+        background: #e3f2fd;
+        border-color: #2196f3;
+    }
+    
+    .device-item.selected {
+        background: #2196f3;
+        color: white;
+        border-color: #1976d2;
+    }
+    
+    .form-control, .form-select {
+        margin-bottom: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+    
+    .form-control::placeholder {
+        color: rgba(255,255,255,0.7);
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background: rgba(255,255,255,0.2);
+        border-color: rgba(255,255,255,0.5);
+        color: white;
+        box-shadow: 0 0 0 0.2rem rgba(255,255,255,0.25);
+    }
+    
+    .form-select option {
+        background: #333;
+        color: white;
+    }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .department-devices {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .assignment-type-selector {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .type-option {
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border: 2px solid rgba(255,255,255,0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .type-option:hover,
+    .type-option.selected {
+        background: rgba(255,255,255,0.2);
+        border-color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="fas fa-sitemap me-2"></i>
+                    إدارة ربط الأقسام
+                </h2>
+                <a href="{{ url_for('device_assignment.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-right me-2"></i>العودة للربط العادي
+                </a>
+            </div>
+            
+            <!-- الإحصائيات السريعة -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4>{{ available_devices|length }}</h4>
+                        <p class="mb-0">أجهزة متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4>{{ available_sims|length }}</h4>
+                        <p class="mb-0">أرقام متاحة</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4>{{ departments|length }}</h4>
+                        <p class="mb-0">إجمالي الأقسام</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <h4 id="assigned-count">0</h4>
+                        <p class="mb-0">ربطات اليوم</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- نموذج الربط -->
+            <div class="assignment-form">
+                <h4 class="mb-3">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    ربط جديد بالقسم
+                </h4>
+                
+                <form method="POST" action="{{ url_for('device_assignment.assign_to_department') }}" id="assignmentForm">
+                    <!-- اختيار نوع الربط -->
+                    <div class="assignment-type-selector">
+                        <h6>نوع الربط:</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="type-option" data-type="device_only">
+                                    <input type="radio" name="assignment_type" value="device_only" id="device_only" style="display: none;">
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    جهاز فقط
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="type-option" data-type="sim_only">
+                                    <input type="radio" name="assignment_type" value="sim_only" id="sim_only" style="display: none;">
+                                    <i class="fas fa-sim-card me-2"></i>
+                                    رقم فقط
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="type-option" data-type="device_and_sim">
+                                    <input type="radio" name="assignment_type" value="device_and_sim" id="device_and_sim" style="display: none;">
+                                    <i class="fas fa-link me-2"></i>
+                                    جهاز + رقم
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- اختيار القسم -->
+                        <div class="col-md-6">
+                            <label class="form-label">القسم المستهدف</label>
+                            <select name="department_id" class="form-select" required>
+                                <option value="">اختر القسم...</option>
+                                {% for department in departments %}
+                                <option value="{{ department.id }}">{{ department.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- اختيار الجهاز -->
+                        <div class="col-md-6" id="device-selection" style="display: none;">
+                            <label class="form-label">الجهاز</label>
+                            <select name="device_id" class="form-select">
+                                <option value="">اختر الجهاز...</option>
+                                {% for device in available_devices %}
+                                <option value="{{ device.id }}">
+                                    {{ device.phone_number or 'لا يوجد رقم' }} - 
+                                    {{ device.device_brand }} {{ device.device_model }}
+                                    (IMEI: {{ device.imei[:8] }}...)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <!-- اختيار الرقم -->
+                        <div class="col-md-6" id="sim-selection" style="display: none;">
+                            <label class="form-label">الرقم</label>
+                            <select name="sim_id" class="form-select">
+                                <option value="">اختر الرقم...</option>
+                                {% for sim in available_sims %}
+                                <option value="{{ sim.id }}">
+                                    {{ sim.phone_number }} - {{ sim.carrier }}
+                                    {% if sim.plan_type %}({{ sim.plan_type }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- الملاحظات -->
+                        <div class="col-md-6">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="text-end mt-3">
+                        <button type="submit" class="btn btn-light btn-lg">
+                            <i class="fas fa-link me-2"></i>
+                            تأكيد الربط
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- عرض الأقسام والأجهزة المربوطة -->
+            <div class="row">
+                {% for department in departments %}
+                <div class="col-md-6">
+                    <div class="department-card">
+                        <h5>
+                            <i class="fas fa-building me-2"></i>
+                            {{ department.name }}
+                        </h5>
+                        
+                        <div class="department-devices">
+                            <h6 class="text-dark">الأجهزة المربوطة:</h6>
+                            {% set dept_devices = department.mobile_devices %}
+                            {% if dept_devices %}
+                                {% for device in dept_devices %}
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
+                                    <div class="text-dark">
+                                        <strong>{{ device.phone_number or 'لا يوجد رقم' }}</strong><br>
+                                        <small>{{ device.device_brand }} {{ device.device_model }}</small>
+                                    </div>
+                                    <form method="POST" action="{{ url_for('device_assignment.unassign_from_department', device_id=device.id) }}" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                onclick="return confirm('هل تريد فك ربط هذا الجهاز؟')">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">لا توجد أجهزة مربوطة</p>
+                            {% endif %}
+                            
+                            <h6 class="text-dark mt-3">الأرقام المربوطة:</h6>
+                            {% set dept_sims = department.device_assignments|selectattr('is_active', 'equalto', true)|selectattr('sim_card')|list %}
+                            {% if dept_sims %}
+                                {% for assignment in dept_sims %}
+                                <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white rounded">
+                                    <div class="text-dark">
+                                        <strong>{{ assignment.sim_card.phone_number }}</strong><br>
+                                        <small>{{ assignment.sim_card.carrier }}</small>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">لا توجد أرقام مربوطة</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // معالجة اختيار نوع الربط
+    const typeOptions = document.querySelectorAll('.type-option');
+    const deviceSelection = document.getElementById('device-selection');
+    const simSelection = document.getElementById('sim-selection');
+    
+    typeOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // إزالة التحديد من جميع الخيارات
+            typeOptions.forEach(opt => opt.classList.remove('selected'));
+            // تحديد الخيار الحالي
+            this.classList.add('selected');
+            
+            // تحديد الـ radio button المقابل
+            const radioId = this.dataset.type;
+            document.getElementById(radioId).checked = true;
+            
+            // إظهار/إخفاء الحقول المناسبة
+            if (radioId === 'device_only') {
+                deviceSelection.style.display = 'block';
+                simSelection.style.display = 'none';
+                document.querySelector('select[name="device_id"]').required = true;
+                document.querySelector('select[name="sim_id"]').required = false;
+            } else if (radioId === 'sim_only') {
+                deviceSelection.style.display = 'none';
+                simSelection.style.display = 'block';
+                document.querySelector('select[name="device_id"]').required = false;
+                document.querySelector('select[name="sim_id"]').required = true;
+            } else if (radioId === 'device_and_sim') {
+                deviceSelection.style.display = 'block';
+                simSelection.style.display = 'block';
+                document.querySelector('select[name="device_id"]').required = true;
+                document.querySelector('select[name="sim_id"]').required = true;
+            }
+        });
+    });
+    
+    // التحقق من صحة النموذج قبل الإرسال
+    document.getElementById('assignmentForm').addEventListener('submit', function(e) {
+        const assignmentType = document.querySelector('input[name="assignment_type"]:checked');
+        const departmentId = document.querySelector('select[name="department_id"]').value;
+        
+        if (!assignmentType) {
+            e.preventDefault();
+            alert('يرجى اختيار نوع الربط');
+            return;
+        }
+        
+        if (!departmentId) {
+            e.preventDefault();
+            alert('يرجى اختيار القسم');
+            return;
+        }
+        
+        const type = assignmentType.value;
+        const deviceId = document.querySelector('select[name="device_id"]').value;
+        const simId = document.querySelector('select[name="sim_id"]').value;
+        
+        if (type === 'device_only' && !deviceId) {
+            e.preventDefault();
+            alert('يرجى اختيار جهاز للربط');
+            return;
+        }
+        
+        if (type === 'sim_only' && !simId) {
+            e.preventDefault();
+            alert('يرجى اختيار رقم للربط');
+            return;
+        }
+        
+        if (type === 'device_and_sim' && (!deviceId || !simId)) {
+            e.preventDefault();
+            alert('يرجى اختيار جهاز ورقم للربط');
+            return;
+        }
+        
+        // تأكيد الإجراء
+        const confirmation = confirm('هل تريد تأكيد عملية الربط؟');
+        if (!confirmation) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}
