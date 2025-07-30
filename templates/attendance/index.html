@@ -2,11 +2,12 @@
 
 {% block extra_css %}
 <style>
+    /* Modern Attendance Management Styles */
     :root {
-        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        --primary-gradient: linear-gradient(135deg, #4a6fdc 0%, #2b4db7 100%);
         --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -15,7 +16,7 @@
     }
 
     /* Enhanced Page Header */
-    .attendance-header {
+    .page-header-enhanced {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
@@ -28,7 +29,7 @@
         animation: slideDown 0.6s ease-out;
     }
 
-    .attendance-header::before {
+    .page-header-enhanced::before {
         content: '';
         position: absolute;
         top: 0;
@@ -38,7 +39,7 @@
         background: var(--primary-gradient);
     }
 
-    .attendance-header h1 {
+    .page-header-enhanced h1 {
         background: var(--primary-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -48,8 +49,8 @@
         font-size: 2.5rem;
     }
 
-    .attendance-header p {
-        color: #666;
+    .page-header-enhanced .subtitle {
+        color: #6c757d;
         font-size: 1.1rem;
     }
 
@@ -61,10 +62,9 @@
         border-radius: 16px;
         box-shadow: var(--card-shadow);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
         height: 100%;
         position: relative;
-        overflow: hidden;
-        animation: slideUp 0.6s ease-out both;
     }
 
     .action-card::before {
@@ -88,12 +88,7 @@
         box-shadow: var(--card-shadow-hover);
     }
 
-    .action-card .card-body {
-        padding: 2rem;
-        text-align: center;
-    }
-
-    .action-icon {
+    .action-icon-box {
         width: 80px;
         height: 80px;
         display: flex;
@@ -101,220 +96,205 @@
         justify-content: center;
         border-radius: 50%;
         margin: 0 auto 1.5rem;
-        font-size: 2rem;
         transition: all 0.3s ease;
     }
 
-    .action-card:hover .action-icon {
+    .action-card:hover .action-icon-box {
         transform: scale(1.1);
     }
 
-    .action-card.success-card {
-        border-left: 4px solid #38ef7d;
+    /* Enhanced Stats Cards */
+    .stat-card-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
-    .action-card.success-card .action-icon {
-        background: rgba(56, 239, 125, 0.1);
-        color: #38ef7d;
+    .stat-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 5px;
+        height: 100%;
     }
 
-    .action-card.primary-card {
-        border-left: 4px solid #667eea;
+    .stat-card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--card-shadow-hover);
     }
 
-    .action-card.primary-card .action-icon {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
+    .stat-card-enhanced.present::before {
+        background: var(--success-gradient);
     }
 
-    .action-card.warning-card {
-        border-left: 4px solid #f59e0b;
+    .stat-card-enhanced.absent::before {
+        background: var(--danger-gradient);
     }
 
-    .action-card.warning-card .action-icon {
-        background: rgba(245, 158, 11, 0.1);
-        color: #f59e0b;
+    .stat-card-enhanced.leave::before {
+        background: var(--warning-gradient);
+    }
+
+    .stat-card-enhanced.sick::before {
+        background: var(--info-gradient);
+    }
+
+    .stat-value-enhanced {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0.5rem 0;
     }
 
     /* Enhanced Filter Card */
-    .filter-card {
+    .filter-card-enhanced {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         box-shadow: var(--card-shadow);
         margin-bottom: 2rem;
-        animation: slideUp 0.6s ease-out 0.2s both;
-    }
-
-    .filter-card .card-header {
-        background: transparent;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-        padding: 1.5rem;
-    }
-
-    .filter-card .card-header h5 {
-        font-weight: 600;
-        margin: 0;
-    }
-
-    .filter-card .card-body {
-        padding: 1.5rem;
-    }
-
-    /* Enhanced Stats Cards */
-    .stats-card-enhanced {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        height: 100%;
-    }
-
-    .stats-card-enhanced:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--card-shadow-hover);
-    }
-
-    .stats-card-enhanced .stat-icon {
-        font-size: 2rem;
-        margin-bottom: 1rem;
-    }
-
-    .stats-card-enhanced .stat-value {
-        font-size: 2.5rem;
-        font-weight: 700;
-        line-height: 1;
-        margin-bottom: 0.5rem;
-    }
-
-    .stats-card-enhanced .stat-label {
-        font-size: 1rem;
-        color: #666;
-    }
-
-    .stats-card-enhanced.present-card {
-        border-left: 4px solid #38ef7d;
-    }
-
-    .stats-card-enhanced.absent-card {
-        border-left: 4px solid #ef4444;
-    }
-
-    .stats-card-enhanced.leave-card {
-        border-left: 4px solid #f59e0b;
-    }
-
-    .stats-card-enhanced.sick-card {
-        border-left: 4px solid #3b82f6;
-    }
-
-    /* Enhanced Table Card */
-    .table-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
         overflow: hidden;
     }
 
-    .table-card .card-header {
-        background: transparent;
+    .filter-card-header {
+        background: linear-gradient(135deg, rgba(74, 111, 220, 0.1) 0%, rgba(43, 77, 183, 0.1) 100%);
+        padding: 1rem 1.5rem;
         border-bottom: 1px solid rgba(0,0,0,0.05);
-        padding: 1.5rem;
-    }
-
-    .table-card .card-body {
-        padding: 0;
     }
 
     /* Enhanced Table */
     .table-enhanced {
-        width: 100%;
+        --bs-table-bg: transparent;
+        --bs-table-striped-bg: rgba(0, 0, 0, 0.02);
+        --bs-table-hover-bg: rgba(0, 0, 0, 0.04);
         border-collapse: separate;
         border-spacing: 0;
     }
 
     .table-enhanced thead th {
-        background: var(--primary-gradient);
+        background: linear-gradient(135deg, rgba(74, 111, 220, 0.1) 0%, rgba(43, 77, 183, 0.1) 100%);
+        border-bottom: 2px solid rgba(74, 111, 220, 0.2);
+        font-weight: 600;
+        padding: 1rem;
+    }
+
+    .table-enhanced tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table-enhanced tbody tr:hover {
+        transform: translateX(5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Enhanced Status Badges */
+    .badge-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .badge-present {
+        background: var(--success-gradient);
         color: white;
-        padding: 1rem;
-        font-weight: 600;
+    }
+
+    .badge-absent {
+        background: var(--danger-gradient);
+        color: white;
+    }
+
+    .badge-leave {
+        background: var(--warning-gradient);
+        color: white;
+    }
+
+    .badge-sick {
+        background: var(--info-gradient);
+        color: white;
+    }
+
+     .btn-enhanced {
+        position: relative;
+        overflow: hidden;
         border: none;
-    }
-
-    .table-enhanced tbody td {
-        padding: 1rem;
-        vertical-align: middle;
-        border-bottom: 1px solid rgba(0,0,0,0.05);
-    }
-
-    .table-enhanced tbody tr:last-child td {
-        border-bottom: none;
-    }
-
-    .table-enhanced .status-badge {
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
         font-weight: 600;
-        font-size: 0.85rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: var(--card-shadow);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 140px;
+        justify-content: center;
     }
 
-    .table-enhanced .time-badge {
-        padding: 0.5rem 0.75rem;
-        border-radius: 20px;
-        background: rgba(0,0,0,0.05);
-        font-weight: 600;
-        font-size: 0.85rem;
+    .btn-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
     }
 
-    .table-enhanced .avatar {
-        width: 36px;
-        height: 36px;
+    .btn-enhanced:hover::before {
+        left: 100%;
+    }
+
+    .btn-enhanced:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--card-shadow-hover);
+        text-decoration: none;
+    }
+
+    /* Enhanced Avatar */
+    .avatar-enhanced {
+        width: 40px;
+        height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        background: var(--primary-gradient);
+        font-weight: 700;
         color: white;
-        font-weight: 600;
-        margin-right: 0.75rem;
+        background: var(--primary-gradient);
     }
 
     /* Enhanced Empty State */
-    .empty-state {
+    .empty-state-enhanced {
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
         padding: 3rem;
         text-align: center;
+        box-shadow: var(--card-shadow);
     }
 
     .empty-state-icon {
         font-size: 4rem;
-        color: #ccc;
         margin-bottom: 1.5rem;
-    }
-
-    .empty-state-actions {
-        margin-top: 2rem;
-    }
-
-    /* Enhanced Modal */
-    .modal-enhanced .modal-content {
-        border-radius: 16px;
-        border: none;
-        overflow: hidden;
-    }
-
-    .modal-enhanced .modal-header {
-        background: var(--primary-gradient);
-        color: white;
-    }
-
-    .modal-enhanced .modal-footer {
-        background: rgba(0,0,0,0.02);
+        background: linear-gradient(135deg, #4a6fdc 0%, #2b4db7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     /* Animations */
@@ -345,58 +325,43 @@
         to { opacity: 1; }
     }
 
-    /* Staggered Animation for Cards */
-    .action-card:nth-child(1) { animation-delay: 0.1s; }
-    .action-card:nth-child(2) { animation-delay: 0.2s; }
-    .action-card:nth-child(3) { animation-delay: 0.3s; }
+    /* Staggered Animations */
+    .action-card:nth-child(1) { animation: slideUp 0.6s ease-out 0.1s both; }
+    .action-card:nth-child(2) { animation: slideUp 0.6s ease-out 0.2s both; }
+    .action-card:nth-child(3) { animation: slideUp 0.6s ease-out 0.3s both; }
 
-    .stats-card-enhanced:nth-child(1) { animation-delay: 0.1s; }
-    .stats-card-enhanced:nth-child(2) { animation-delay: 0.2s; }
-    .stats-card-enhanced:nth-child(3) { animation-delay: 0.3s; }
-    .stats-card-enhanced:nth-child(4) { animation-delay: 0.4s; }
+    .stat-card-enhanced:nth-child(1) { animation: slideUp 0.6s ease-out 0.1s both; }
+    .stat-card-enhanced:nth-child(2) { animation: slideUp 0.6s ease-out 0.2s both; }
+    .stat-card-enhanced:nth-child(3) { animation: slideUp 0.6s ease-out 0.3s both; }
+    .stat-card-enhanced:nth-child(4) { animation: slideUp 0.6s ease-out 0.4s both; }
 
     /* Responsive Design */
     @media (max-width: 768px) {
-        .attendance-header {
-            padding: 1.5rem;
-        }
-        
-        .attendance-header h1 {
+        .page-header-enhanced h1 {
             font-size: 2rem;
         }
         
-        .action-card .card-body {
-            padding: 1.5rem;
+        .action-card {
+            margin-bottom: 1.5rem;
         }
         
-        .action-icon {
-            width: 60px;
-            height: 60px;
-            font-size: 1.5rem;
-        }
-        
-        .stats-card-enhanced .stat-value {
+        .stat-value-enhanced {
             font-size: 2rem;
-        }
-        
-        .table-enhanced thead th,
-        .table-enhanced tbody td {
-            padding: 0.75rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <!-- Enhanced Header -->
-    <div class="attendance-header">
+    <div class="page-header-enhanced">
         <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h1>سجل الحضور</h1>
-                <p>نظام إدارة سجلات حضور الموظفين</p>
+                <p class="subtitle">نظام إدارة سجلات حضور الموظفين</p>
             </div>
-            <div>
+            <div class="text-end">
                 <i class="fas fa-clipboard-check fa-3x opacity-25"></i>
             </div>
         </div>
@@ -404,43 +369,64 @@
     
     <!-- Enhanced Action Cards -->
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="action-card success-card h-100">
-                <div class="card-body">
-                    <div class="action-icon">
-                        <i class="fas fa-user-check"></i>
+        <!-- Dashboard Buttons -->
+        <div class="col-12 mb-4">
+            <div class="card filter-card-enhanced">
+                <div class="filter-card-header d-flex justify-content-between align-items-center flex-wrap">
+                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i> لوحات المعلومات</h6>
+                    <div>
+                        <a href="{{ url_for('attendance.dashboard') }}" class="btn btn-outline-primary btn-enhanced mx-1 bg-primary text-white">
+                            <i class="fas fa-chart-line me-1"></i> لوحة معلومات الحضور
+                        </a>
+                        <a href="/attendance-dashboard/" class="btn btn-outline-info btn-enhanced mx-1 bg-info text-white">
+                            <i class="fas fa-tachometer-alt me-1"></i> اللوحة المحسنة
+                        </a>
+                        <a href="{{ url_for('attendance.export_page') }}" class="btn btn-outline-success btn-enhanced mx-1 bg-success text-white">
+                            <i class="fas fa-file-excel me-1"></i> تصدير لملف إكسل
+                        </a>
                     </div>
-                    <h5 class="card-title mb-3">تسجيل حضور لموظف</h5>
-                    <a href="{{ url_for('attendance.record') }}" class="btn btn-success px-4 py-2">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Attendance Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="action-card h-100">
+                <div class="card-body text-center p-4 h-100">
+                    <div class="action-icon-box bg-success bg-opacity-10">
+                        <i class="fas fa-user-check text-success fa-3x"></i>
+                    </div>
+                    <h5 class="card-title mb-5">تسجيل حضور لموظف</h5>
+                    <a href="{{ url_for('attendance.record') }}" class="btn btn-success btn-enhanced w-100">
                         <i class="fas fa-arrow-circle-right me-2"></i> فتح
                     </a>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4 mb-3">
-            <div class="action-card primary-card h-100">
-                <div class="card-body">
-                    <div class="action-icon">
-                        <i class="fas fa-users"></i>
+        <div class="col-lg-4 mb-4">
+            <div class="action-card h-100">
+                <div class="card-body text-center p-4 h-100">
+                    <div class="action-icon-box bg-primary bg-opacity-10">
+                        <i class="fas fa-users text-primary fa-3x"></i>
                     </div>
-                    <h5 class="card-title mb-3">تسجيل حضور لقسم</h5>
-                    <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary px-4 py-2">
+                    <h5 class="card-title mb-5">تسجيل حضور لقسم</h5>
+                    <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary btn-enhanced w-100">
                         <i class="fas fa-arrow-circle-right me-2"></i> فتح
                     </a>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-4 mb-3">
-            <div class="action-card warning-card h-100">
-                <div class="card-body">
-                    <div class="action-icon">
-                        <i class="fas fa-calendar-alt"></i>
+        <div class="col-lg-4 mb-4">
+            <div class="action-card h-100">
+                <div class="card-body text-center p-4">
+                    <div class="action-icon-box bg-warning bg-opacity-10">
+                        <i class="fas fa-calendar-alt text-warning fa-3x"></i>
                     </div>
                     <h5 class="card-title mb-3">تسجيل حضور جماعي</h5>
                     <p class="text-muted small mb-3">يومي - أسبوعي - شهري</p>
-                    <a href="{{ url_for('attendance.bulk_record') }}" class="btn btn-warning px-4 py-2">
+                    <a href="{{ url_for('attendance.bulk_record') }}" class="btn btn-warning btn-enhanced w-100">
                         <i class="fas fa-arrow-circle-right me-2"></i> فتح
                     </a>
                 </div>
@@ -448,9 +434,9 @@
         </div>
     </div>
 
-    <!-- Enhanced Filter Card -->
-    <div class="filter-card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <!-- Enhanced Filters -->
+    <div class="card filter-card-enhanced mb-4">
+        <div class="filter-card-header d-flex justify-content-between align-items-center">
             <h5 class="card-title mb-0"><i class="fas fa-filter me-2"></i> خيارات التصفية</h5>
             <a href="#advancedSearch" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse" role="button" aria-expanded="true">
                 <i class="fas fa-chevron-down me-1"></i> توسيع/طي
@@ -464,7 +450,7 @@
                             <input type="date" class="form-control" id="date" name="date" value="{{ date.strftime('%Y-%m-%d') if date else '' }}">
                             <label for="date">التاريخ</label>
                         </div>
-                        <div class="mt-2 text-muted small">
+                        <div class="mt-1 text-muted small">
                             <i class="fas fa-calendar-alt me-1"></i>
                             <span class="gregorian-date">{{ gregorian_date }}</span>
                             <span class="hijri-date" style="display: none;">{{ hijri_date }}</span>
@@ -498,11 +484,11 @@
                         </div>
                     </div>
                     
-                    <div class="col-12 d-flex justify-content-center mt-3">
-                        <button type="submit" class="btn btn-primary px-4 me-2">
+                    <div class="col-12 d-flex justify-content-center mt-4">
+                        <button type="submit" class="btn btn-primary btn-enhanced px-4 me-2">
                             <i class="fas fa-search me-2"></i> تطبيق الفلتر
                         </button>
-                        <a href="{{ url_for('attendance.index') }}" class="btn btn-outline-secondary">
+                        <a href="{{ url_for('attendance.index') }}" class="btn btn-outline-secondary btn-enhanced">
                             <i class="fas fa-undo me-2"></i> إعادة تعيين
                         </a>
                     </div>
@@ -518,51 +504,87 @@
         </div>
         
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="stats-card-enhanced present-card">
-                <div class="stat-icon text-success">
-                    <i class="fas fa-user-check"></i>
+            <div class="stat-card-enhanced present">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-icon text-success">
+                            <i class="fas fa-user-check"></i>
+                        </div>
+                        <div class="stat-value-enhanced text-success">{{ present_count|default('0') }}</div>
+                        <div class="stat-label text-black">حاضر</div>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <div class="icon-box bg-success bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-user-check text-success fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-value text-success">{{ present_count|default('0') }}</div>
-                <div class="stat-label">حاضر</div>
             </div>
         </div>
         
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="stats-card-enhanced absent-card">
-                <div class="stat-icon text-danger">
-                    <i class="fas fa-user-times"></i>
+            <div class="stat-card-enhanced absent">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-icon text-danger">
+                            <i class="fas fa-user-times"></i>
+                        </div>
+                        <div class="stat-value-enhanced text-danger">{{ absent_count|default('0') }}</div>
+                        <div class="stat-label text-black">غائب</div>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <div class="icon-box bg-danger bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-user-times text-danger fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-value text-danger">{{ absent_count|default('0') }}</div>
-                <div class="stat-label">غائب</div>
             </div>
         </div>
         
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="stats-card-enhanced leave-card">
-                <div class="stat-icon text-warning">
-                    <i class="fas fa-calendar-minus"></i>
+            <div class="stat-card-enhanced leave">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-icon text-warning">
+                            <i class="fas fa-calendar-minus"></i>
+                        </div>
+                        <div class="stat-value-enhanced text-warning">{{ leave_count|default('0') }}</div>
+                        <div class="stat-label text-black">إجازة</div>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <div class="icon-box bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-calendar-minus text-warning fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-value text-warning">{{ leave_count|default('0') }}</div>
-                <div class="stat-label">إجازة</div>
             </div>
         </div>
         
         <div class="col-lg-3 col-md-6 mb-3">
-            <div class="stats-card-enhanced sick-card">
-                <div class="stat-icon text-info">
-                    <i class="fas fa-procedures"></i>
+            <div class="stat-card-enhanced sick">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-icon text-info">
+                            <i class="fas fa-procedures"></i>
+                        </div>
+                        <div class="stat-value-enhanced text-info">{{ sick_count|default('0') }}</div>
+                        <div class="stat-label text-black">مرضي</div>
+                    </div>
+                    <div class="d-none d-md-block">
+                        <div class="icon-box bg-info bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-procedures text-info fa-2x"></i>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-value text-info">{{ sick_count|default('0') }}</div>
-                <div class="stat-label">مرضي</div>
             </div>
         </div>
     </div>
 
-    <!-- Enhanced Table Card -->
-    <div class="table-card">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <!-- Enhanced Attendance Table -->
+    <div class="card filter-card-enhanced">
+        <div class="filter-card-header d-flex justify-content-between align-items-center">
             <div>
-                <h5 class="card-title mb-0 text-black" >
+                <h5 class="card-title mb-0">
                     <i class="fas fa-clipboard-list me-2"></i>
                     سجلات الحضور ليوم 
                     <span class="badge bg-primary">
@@ -572,7 +594,7 @@
                 </h5>
             </div>
             <div>
-                <button class="btn btn-sm btn-outline-primary" onclick="window.print()">
+                <button class="btn btn-sm btn-outline-primary btn-enhanced bg-primary text-white" onclick="window.print()">
                     <i class="fas fa-print me-1"></i> طباعة
                 </button>
             </div>
@@ -580,7 +602,7 @@
         <div class="card-body">
             {% if attendances %}
             <div class="table-responsive">
-                <table class="table table-enhanced">
+                <table class="table table-enhanced datatable">
                     <thead>
                         <tr>
                             <th>الموظف</th>
@@ -598,7 +620,7 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <span class="avatar">
+                                    <span class="avatar-enhanced me-2">
                                         {{ attendance.employee.name[0] }}
                                     </span>
                                     <span>{{ attendance.employee.name }}</span>
@@ -614,20 +636,28 @@
                             </td>
                             <td>
                                 {% if attendance.status == 'present' %}
-                                <span class="status-badge bg-success">حاضر</span>
+                                <span class="badge-status badge-present">
+                                    <i class="fas fa-user-check me-1"></i> حاضر
+                                </span>
                                 {% elif attendance.status == 'absent' %}
-                                <span class="status-badge bg-danger">غائب</span>
+                                <span class="badge-status badge-absent">
+                                    <i class="fas fa-user-times me-1"></i> غائب
+                                </span>
                                 {% elif attendance.status == 'leave' %}
-                                <span class="status-badge bg-warning">إجازة</span>
+                                <span class="badge-status badge-leave">
+                                    <i class="fas fa-calendar-minus me-1"></i> إجازة
+                                </span>
                                 {% elif attendance.status == 'sick' %}
-                                <span class="status-badge bg-info">مرضي</span>
+                                <span class="badge-status badge-sick">
+                                    <i class="fas fa-procedures me-1"></i> مرضي
+                                </span>
                                 {% else %}
-                                <span class="status-badge bg-secondary">{{ attendance.status }}</span>
+                                <span class="badge bg-secondary">{{ attendance.status }}</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if attendance.check_in %}
-                                <span class="time-badge">
+                                <span class="badge bg-light text-dark">
                                     <i class="fas fa-clock me-1"></i>
                                     {{ attendance.check_in.strftime('%H:%M') }}
                                 </span>
@@ -637,7 +667,7 @@
                             </td>
                             <td>
                                 {% if attendance.check_out %}
-                                <span class="time-badge">
+                                <span class="badge bg-light text-dark">
                                     <i class="fas fa-clock me-1"></i>
                                     {{ attendance.check_out.strftime('%H:%M') }}
                                 </span>
@@ -650,20 +680,21 @@
                                 <div class="btn-group">
                                     <a href="{{ url_for('attendance.record') }}?employee_id={{ attendance.employee_id }}&date={{ date.strftime('%Y-%m-%d') if date else '' }}" 
                                        class="btn btn-sm btn-outline-primary" 
-                                       title="تعديل">
+                                       title="تعديل"
+                                       data-bs-toggle="tooltip">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <button type="button" 
-                                            class="btn btn-sm btn-outline-danger" 
+                                    <button type="button" class="btn btn-sm btn-outline-danger" 
                                             title="حذف" 
                                             data-bs-toggle="modal" 
-                                            data-bs-target="#deleteModal{{ attendance.id }}">
+                                            data-bs-target="#deleteModal{{ attendance.id }}"
+                                            data-bs-toggle="tooltip">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
                                 
                                 <!-- Delete Modal -->
-                                <div class="modal fade modal-enhanced" id="deleteModal{{ attendance.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal fade" id="deleteModal{{ attendance.id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
@@ -677,7 +708,7 @@
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                                                 <form action="{{ url_for('attendance.delete', id=attendance.id) }}" method="post">
-                                                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+                                                    <button type="submit" class="btn btn-danger delete-confirm">تأكيد الحذف</button>
                                                 </form>
                                             </div>
                                         </div>
@@ -690,18 +721,22 @@
                 </table>
             </div>
             {% else %}
-            <div class="empty-state">
-                <div class="empty-state-icon">
-                    <i class="fas fa-calendar-times"></i>
-                </div>
-                <h5>لا توجد سجلات حضور لهذا اليوم</h5>
-                <p class="text-muted">يمكنك البدء بتسجيل حضور الموظفين باستخدام الأزرار أدناه</p>
-                <div class="empty-state-actions">
-                    <a href="{{ url_for('attendance.record') }}" class="btn btn-success mx-2">
+            <div class="empty-state-enhanced">
+                <i class="fas fa-calendar-times empty-state-icon"></i>
+                <h4 class="mb-3 text-black">لا توجد سجلات حضور لهذا اليوم</h4>
+                <p class="text-muted mb-4">يمكنك البدء بتسجيل حضور للموظفين أو الأقسام</p>
+                <div class="d-flex justify-content-center flex-wrap gap-2">
+                    <a href="{{ url_for('attendance.record') }}" class="btn btn-success btn-enhanced">
                         <i class="fas fa-user-check me-1"></i> تسجيل حضور لموظف
                     </a>
-                    <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary mx-2">
+                    <a href="{{ url_for('attendance.department_attendance') }}" class="btn btn-primary btn-enhanced">
                         <i class="fas fa-users me-1"></i> تسجيل حضور لقسم
+                    </a>
+                    <a href="{{ url_for('attendance.multi_day_department_attendance') }}" class="btn-secondary btn-enhanced">
+                        <i class="fas fa-calendar-week me-1"></i> تسجيل لعدة أيام
+                    </a>
+                     <a href="{{ url_for('mass.departments') }}" class="btn-enhanced btn-danger mx-2 text-white">
+                        <i class="fas fa-bolt me-1"></i> تسجيل جماعي مُحسّن
                     </a>
                 </div>
             </div>
@@ -710,8 +745,8 @@
     </div>
 </div>
 
-<!-- Enhanced Export Modal -->
-<div class="modal fade modal-enhanced" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+<!-- Export Modal -->
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -750,10 +785,17 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // عند تغيير التاريخ، قم بتحديث الصفحة
+    // Initialize tooltips
+    if (typeof bootstrap !== 'undefined') {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    }
+
+    // Date change handler
     const dateInput = document.getElementById('date');
     if (dateInput) {
         dateInput.addEventListener('change', function() {
@@ -764,55 +806,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ملء التاريخ الحالي في نموذج التصدير
+    // Set default export dates
     const currentDate = '{{ date.strftime("%Y-%m-%d") if date else "" }}';
     if (currentDate) {
         document.getElementById('export_start_date').value = currentDate;
     } else {
-        // إذا لم يكن هناك تاريخ محدد، استخدم تاريخ اليوم
         const today = new Date();
         const formattedDate = today.toISOString().split('T')[0];
         document.getElementById('export_start_date').value = formattedDate;
     }
     
-    // نسخ قيمة القسم المحدد في الفلتر إلى نموذج التصدير
+    // Copy selected department to export form
     const selectedDepartment = '{{ selected_department }}';
     if (selectedDepartment) {
         document.getElementById('export_department_id').value = selectedDepartment;
     }
 
-    // Enhanced notification system
-    function showNotification(message, type) {
-        const notification = document.createElement('div');
-        notification.className = `notification-toast position-fixed top-0 end-0 m-3 alert alert-${type}`;
-        notification.style.zIndex = '9999';
-        notification.style.minWidth = '300px';
-        notification.style.borderRadius = '12px';
-        notification.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
-        notification.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        setTimeout(() => {
-            if (notification.parentElement) {
-                notification.remove();
+    // Enhanced delete confirmation
+    document.querySelectorAll('.delete-confirm').forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!confirm('هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                e.preventDefault();
             }
-        }, 3000);
-    }
-
-    // Initialize tooltips
-    if (typeof bootstrap !== 'undefined') {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
-        tooltipTriggerList.map(function(tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
         });
-    }
+    });
+
+    console.log('تم تحميل صفحة سجل الحضور بنجاح');
 });
 </script>
 {% endblock %}
