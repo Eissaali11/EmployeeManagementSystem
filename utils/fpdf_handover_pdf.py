@@ -1,37 +1,31 @@
-# في app/utils/report_generator.py
 import qrcode
 import base64
-
 import io
 import os
+from urllib.request import pathname2url
 from flask import render_template, current_app
 from weasyprint import HTML, CSS
-# ----------------------------------------------------------------
-# لا يوجد import لـ FontConfiguration هنا الآن (تم حذفه)
-# ----------------------------------------------------------------
+from weasyprint.text.fonts import FontConfiguration
 
 def generate_handover_report_pdf_weasyprint(handover):
     """
-    Generates a PDF report using WeasyPrint (Modern API).
+    Generates a PDF report using WeasyPrint with a custom font.
     """
+    # Initialize font configuration
+    font_config = FontConfiguration()
+
     try:
-        # معالجة آمنة للمسارات
-        if handover.damage_diagram_path:
-            handover.damage_diagram_path = handover.damage_diagram_path.replace("\\", "/")
-        if handover.driver_signature_path:
-            handover.driver_signature_path = handover.driver_signature_path.replace("\\", "/")
-        if handover.supervisor_signature_path:
-            handover.supervisor_signature_path = handover.supervisor_signature_path.replace("\\", "/")
-        if handover.custom_logo_path:
-            handover.custom_logo_path = handover.custom_logo_path.replace("\\", "/")
-        if hasattr(handover, 'movement_officer_signature_path') and handover.movement_officer_signature_path:
-            handover.movement_officer_signature_path = handover.movement_officer_signature_path.replace("\\", "/")
+        # Normalize any Windows-style backslashes in file paths
+        for attr in [
+            'damage_diagram_path', 'driver_signature_path',
+            'supervisor_signature_path', 'custom_logo_path',
+            'movement_officer_signature_path'
+        ]:
+            if hasattr(handover, attr) and getattr(handover, attr):
+                setattr(handover, attr, getattr(handover, attr).replace('\\', '/'))
 
-        # print(handover.custom_company_nam)
-        print(f"Error generating PDF: {handover.custom_company_name}")
-
+        # Generate QR code if a form link is provided
         qr_code_url = None
-
         if handover.form_link:
             qr_img = qrcode.make(handover.form_link)
             buffered = io.BytesIO()
@@ -39,78 +33,69 @@ def generate_handover_report_pdf_weasyprint(handover):
             img_str = base64.b64encode(buffered.getvalue()).decode('utf-8')
             qr_code_url = f"data:image/png;base64,{img_str}"
 
-        
-        
+        # Render the HTML template
+        html_string = render_template(
+            'vehicles/handover_report.html',
+            handover=handover,
+            qr_code_url=qr_code_url
+        )
 
-        # movement_officer_signature_path  , supervisor_signature_path
-        # --- 1. Render the HTML template with the handover data ---
-        html_string = render_template('vehicles/handover_report.html', handover=handover,qr_code_url=qr_code_url)
-        
-        # --- 2. Define the CSS stylesheet for fonts ---
-        # المسار إلى مجلد static العام
+        # Locate static folder and pick a font
         static_folder = os.path.join(current_app.root_path, 'static')
-        
-        # تجربة الخطوط المتوفرة بترتيب الأولوية
         font_options = [
-            ('beIN Normal ', 'beIN Normal .ttf'),
             ('beIN-Normal', 'beIN-Normal.ttf'),
-            ('Tajawal', 'Tajawal-Regular.ttf'),
-            ('Cairo', 'Cairo.ttf'),
-            ('Cairo', 'Cairo-Regular.ttf'),
-            ('Amiri', 'Amiri-Regular.ttf')
+            ('Cairo',      'Cairo.ttf'),
+            # add more if needed
         ]
-        
-        selected_font_family = 'Arial'
-        selected_font_path = None
-        
-        for font_family, font_file in font_options:
-            test_path = os.path.join(static_folder, 'fonts', font_file)
-            if os.path.exists(test_path):
-                selected_font_family = font_family
-                selected_font_path = test_path
+        selected_family = 'Arial'
+        selected_path = None
+        for family, filename in font_options:
+            fp = os.path.join(static_folder, 'fonts', filename)
+            if os.path.exists(fp):
+                selected_family = family
+                selected_path = fp
                 break
-        
-        print(f"Selected font: {selected_font_family}")
-        print(f"Font path: {selected_font_path}")
-        print(f"Font exists: {os.path.exists(selected_font_path) if selected_font_path else False}")
 
+        # Build @font-face CSS
+        if selected_path:
+            font_url = f"file://{pathname2url(selected_path)}"
+            font_css = CSS(
+                string=f'''@font-face {{
+    font-family: "{selected_family}";
+    src: url("{font_url}");
+}}
+body {{
+    font-family: "{selected_family}";
+}}''',
+                font_config=font_config
+            )
+        else:
+            font_css = CSS(
+                string="body { font-family: Arial, sans-serif; }",
+                font_config=font_config
+            )
 
-        font_css = CSS(string=f'''
-            @font-face {{
-                font-family: Tajawal;
-                src: url(file://{os.path.join(static_folder, 'fonts', 'Tajawal-Regular.ttf')});
-            }}
-        ''')
-        
-        # إنشاء CSS للخط المختار
-        
-            # Fallback إلى Arial إذا لم نجد أي خط
+        # Create HTML object with base_url for static assets
+        bases_url = static_folder
+        print("================================================")
+        print(bases_url)
+        print("================================================")
+        html = HTML(string=html_string, base_url=bases_url)
 
-        
-        # --- 3. Create an HTML object ---
-        # base_url مهم جدًا لكي تجد WeasyPrint الصور (مثل logo.png)
-        # الموجودة في مجلد static
-        html = HTML(string=html_string, base_url=static_folder)
-
-        # --- 4. Write the PDF to a memory buffer ---
+        # Write PDF
         pdf_buffer = io.BytesIO()
         html.write_pdf(
             pdf_buffer,
-            # نمرر الـ CSS الخاص بالخط هنا
-            stylesheets=[font_css]
+            stylesheets=[font_css],
+            font_config=font_config
         )
-        
         pdf_buffer.seek(0)
-
-        print(f"Error generating PDF: {handover.custom_company_name}")
-        
         return pdf_buffer
 
     except Exception as e:
-        print(f"Error generating PDF: {e}")
-        import traceback
-        traceback.print_exc()
+        current_app.logger.exception("Error generating handover report PDF")
         raise
+
 
 
 

@@ -381,9 +381,11 @@
                                         <div class="col-md-3 mb-3">
                                             <div class="card">
                                                 {% if image.image_path.startswith('static/') %}
-                                                    {% set image_url = url_for('static', filename=image.image_path.replace('static/', '')) %}
-                                                {% else %}
                                                     {% set image_url = '/' + image.image_path %}
+                                                {% elif image.image_path.startswith('uploads/') %}
+                                                    {% set image_url = '/' + image.image_path %}
+                                                {% else %}
+                                                    {% set image_url = '/static/' + image.image_path %}
                                                 {% endif %}
                                                 <img src="{{ image_url }}" 
                                                      class="card-img-top" 
@@ -395,10 +397,10 @@
                                                     <div class="btn-group btn-group-sm w-100 mb-2">
                                                         <button type="button" class="btn btn-primary btn-sm" 
                                                                 onclick="showImageModal('{{ image_url }}', '{{ image.image_description or 'بدون وصف' }}')">
-                                                            <i class="fas fa-search-plus"></i> عرض
+                                                            <i class="fas fa-external-link-alt"></i> عرض في تبويب جديد
                                                         </button>
-                                                        <a href="{{ image_url }}" target="_blank" class="btn btn-secondary btn-sm">
-                                                            <i class="fas fa-external-link-alt"></i> تبويب جديد
+                                                        <a href="{{ image_url }}" target="_blank" class="btn btn-info btn-sm">
+                                                            <i class="fas fa-download"></i> تنزيل
                                                         </a>
                                                     </div>
                                                     <p class="card-text small text-muted">
@@ -496,10 +498,10 @@
                                 </a>
                                 
                                 <!-- زر الحذف -->
-                                <button class="btn btn-danger" 
-                                        onclick="showDeleteModal()">
+                                <a href="{{ url_for('external_safety.delete_external_safety_check', check_id=safety_check.id) }}" 
+                                   class="btn btn-danger">
                                     <i class="fas fa-trash"></i> حذف الفحص
-                                </button>
+                                </a>
                                 
                                 <!-- زر تصدير PDF -->
                                 <a href="{{ url_for('external_safety.export_safety_check_pdf', check_id=safety_check.id) }}" 
@@ -568,39 +570,7 @@
 
 
 
-<!-- نافذة منبثقة لتأكيد الحذف -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">حذف طلب فحص السلامة</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
-            </div>
-            <form method="POST" action="{{ url_for('external_safety.delete_safety_check', check_id=safety_check.id) }}">
-                <div class="modal-body">
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>تحذير:</strong> سيتم حذف طلب فحص السلامة هذا نهائياً مع جميع الصور والملفات المرفقة.
-                    </div>
-                    <p><strong>تفاصيل الطلب:</strong></p>
-                    <ul>
-                        <li>رقم الطلب: #{{ safety_check.id }}</li>
-                        <li>السيارة: {{ safety_check.vehicle_plate_number }}</li>
-                        <li>السائق: {{ safety_check.driver_name }}</li>
-                        <li>تاريخ الفحص: {{ safety_check.inspection_date.strftime('%Y-%m-%d') }}</li>
-                    </ul>
-                    <p class="text-danger"><strong>هذا الإجراء لا يمكن التراجع عنه!</strong></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 <script>
     let currentZoom = 1;
@@ -610,6 +580,18 @@
     function showImageModal(imageSrc, description) {
         console.log('showImageModal called with:', imageSrc, description);
         
+        // التحقق من وجود مسار الصورة
+        if (!imageSrc) {
+            console.error('No image source provided');
+            return;
+        }
+        
+        // فتح الصورة في تبويب جديد مباشرة - حل أكثر استقراراً
+        window.open(imageSrc, '_blank');
+        return;
+        
+        // الكود القديم للنافذة المنبثقة محفوظ للاستخدام لاحقاً
+        /* 
         // تحقق من وجود العناصر المطلوبة
         const modalImageElement = document.getElementById('modalImage');
         const modalDescElement = document.getElementById('modalDescription');
@@ -623,7 +605,6 @@
         
         if (!modalImageElement || !modalDescElement || !modalElement) {
             console.error('Modal elements not found, opening in new tab');
-            // فتح الصورة في تبويب جديد كبديل
             window.open(imageSrc, '_blank');
             return;
         }
@@ -635,7 +616,6 @@
         
         // عرض النافذة المنبثقة
         try {
-            // تحقق من وجود Bootstrap modal
             if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
                 console.log('Using jQuery Bootstrap modal');
                 $('#imageModal').modal('show');
@@ -645,27 +625,24 @@
                 modal.show();
             } else {
                 console.log('Bootstrap not available, using fallback');
-                // عرض النافذة المنبثقة يدوياً
                 modalElement.style.display = 'block';
                 modalElement.classList.add('show');
                 document.body.classList.add('modal-open');
                 
-                // إضافة backdrop
                 const backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
                 backdrop.id = 'imageModalBackdrop';
                 document.body.appendChild(backdrop);
                 
-                // إضافة مستمع لإغلاق النافذة
                 backdrop.addEventListener('click', function() {
                     closeImageModal();
                 });
             }
         } catch (error) {
             console.error('Error showing modal:', error);
-            // فتح الصورة في تبويب جديد كبديل
             window.open(imageSrc, '_blank');
         }
+        */
     }
     
     function closeImageModal() {
@@ -708,21 +685,7 @@
         }
     }
     
-    function showDeleteModal() {
-        const deleteModal = document.getElementById('deleteModal');
-        if (deleteModal) {
-            if (typeof $ !== 'undefined') {
-                $('#deleteModal').modal('show');
-            } else if (typeof bootstrap !== 'undefined') {
-                const modal = new bootstrap.Modal(deleteModal);
-                modal.show();
-            } else {
-                deleteModal.style.display = 'block';
-                deleteModal.classList.add('show');
-                document.body.classList.add('modal-open');
-            }
-        }
-    }
+
     
     // إضافة دعم السحب والإفلات للصور المكبرة
     document.addEventListener('DOMContentLoaded', function() {

@@ -240,12 +240,22 @@ def generate_employee_excel(employees, output=None):
                 'تاريخ انتهاء الإقامة': employee.license_end_date.strftime('%Y-%m-%d') if hasattr(employee, 'license_end_date') and employee.license_end_date else '',  # تاريخ انتهاء الإقامة
                 'حالة العقد': getattr(employee, 'contract_status', '') or '',  # حالة العقد
                 'حالة الرخصة': getattr(employee, 'license_status', '') or '',  # حالة الرخصة
-                'الجنسية': employee.nationality.name if hasattr(employee, 'nationality') and employee.nationality else '',  # الجنسية
+                'الجنسية': employee.nationality_rel.name_ar if hasattr(employee, 'nationality_rel') and employee.nationality_rel else (employee.nationality if hasattr(employee, 'nationality') and employee.nationality else ''),  # الجنسية
                 'تاريخ الإنشاء': employee.created_at.strftime('%Y-%m-%d %H:%M:%S') if hasattr(employee, 'created_at') and employee.created_at else '',  # تاريخ الإنشاء
                 'آخر تحديث': employee.updated_at.strftime('%Y-%m-%d %H:%M:%S') if hasattr(employee, 'updated_at') and employee.updated_at else '',  # آخر تحديث
                 'صورة الملف الشخصي': 'نعم' if hasattr(employee, 'profile_image') and employee.profile_image else 'لا',  # صورة الملف الشخصي
                 'صورة الهوية': 'نعم' if hasattr(employee, 'national_id_image') and employee.national_id_image else 'لا',  # صورة الهوية
                 'صورة الرخصة': 'نعم' if hasattr(employee, 'license_image') and employee.license_image else 'لا',  # صورة الرخصة
+                'رقم الإيبان البنكي': getattr(employee, 'bank_iban', '') or '',  # رقم الإيبان البنكي
+                'صورة الإيبان البنكي': 'نعم' if hasattr(employee, 'bank_iban_image') and employee.bank_iban_image else 'لا',  # صورة الإيبان البنكي
+                'نوع الموظف': getattr(employee, 'employee_type', '') or '',  # نوع الموظف (regular/driver)
+                'نوع العقد': getattr(employee, 'contract_type', '') or '',  # نوع العقد (saudi/foreign)
+                'الراتب الأساسي': getattr(employee, 'basic_salary', '') or '',  # الراتب الأساسي
+                'عهدة جوال': 'نعم' if getattr(employee, 'has_mobile_custody', False) else 'لا',  # عهدة جوال
+                'نوع الجوال': getattr(employee, 'mobile_type', '') or '',  # نوع الجوال
+                'رقم IMEI': getattr(employee, 'mobile_imei', '') or '',  # رقم IMEI
+                'حالة الكفالة': getattr(employee, 'sponsorship_status', '') or '',  # حالة الكفالة
+                'اسم الكفيل الحالي': getattr(employee, 'current_sponsor_name', '') or '',  # اسم الكفيل الحالي
                 'ملاحظات': getattr(employee, 'notes', '') or ''  # ملاحظات
             }
             data.append(row)
@@ -264,10 +274,15 @@ def generate_employee_excel(employees, output=None):
             # Auto-adjust columns' width (openpyxl method)
             worksheet = writer.sheets['Employees']
             for i, col in enumerate(df.columns):
-                column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                # For openpyxl, column dimensions are one-based
-                column_letter = chr(65 + i)  # A, B, C, ...
-                worksheet.column_dimensions[column_letter].width = column_width
+                try:
+                    column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
+                    # For openpyxl, column dimensions are one-based
+                    if i < 26:  # Only handle up to column Z
+                        column_letter = chr(65 + i)  # A, B, C, ...
+                        worksheet.column_dimensions[column_letter].width = min(column_width, 50)  # Max width limit
+                except Exception as col_error:
+                    print(f"Error adjusting column {col}: {str(col_error)}")
+                    continue
         
         output.seek(0)
         return output

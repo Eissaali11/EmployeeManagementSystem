@@ -27,7 +27,7 @@
         </div>
         <div class="card-body">
             <form method="POST" enctype="multipart/form-data">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 
                 <div class="row">
                     <!-- تاريخ الدخول -->
@@ -129,22 +129,65 @@
                         إضافة صور جديدة
                     </h6>
                     
-                    <!-- صور قبل الإصلاح -->
+                    <!-- إيصال تسليم الورشة -->
                     <div class="mb-3">
-                        <label for="before_images" class="form-label">صور قبل الإصلاح</label>
-                        <input type="file" class="form-control" id="before_images" name="before_images" 
-                               multiple accept="image/*" onchange="previewImages(this, 'before-preview')">
-                        <div class="form-text">اختر عدة صور لعرض حالة السيارة قبل الإصلاح</div>
-                        <div id="before-preview" class="image-preview-container mt-2"></div>
+                        <label for="delivery_receipt" class="form-label">إيصال تسليم الورشة</label>
+                        <input type="file" class="form-control" id="delivery_receipt" name="delivery_receipt" 
+                               accept="image/*,.pdf" onchange="previewReceiptFile(this, 'delivery-receipt-preview')">
+                        <div class="form-text">رفع إيصال تسليم السيارة للورشة (صورة أو PDF)</div>
+                        <div id="delivery-receipt-preview" class="receipt-preview-container mt-2"></div>
+                        {% if workshop_record.delivery_receipt %}
+                        <div class="current-file mt-2">
+                            <small class="text-muted">الإيصال الحالي:</small>
+                            <a href="{{ url_for('static', filename=workshop_record.delivery_receipt) }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                <i class="fas fa-eye"></i> عرض الإيصال
+                            </a>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <!-- صور بعد الإصلاح -->
+                    <!-- إيصال استلام من الورشة -->
                     <div class="mb-3">
-                        <label for="after_images" class="form-label">صور بعد الإصلاح</label>
-                        <input type="file" class="form-control" id="after_images" name="after_images" 
-                               multiple accept="image/*" onchange="previewImages(this, 'after-preview')">
-                        <div class="form-text">اختر عدة صور لعرض حالة السيارة بعد الإصلاح</div>
-                        <div id="after-preview" class="image-preview-container mt-2"></div>
+                        <label for="pickup_receipt" class="form-label">إيصال استلام من الورشة</label>
+                        <input type="file" class="form-control" id="pickup_receipt" name="pickup_receipt" 
+                               accept="image/*,.pdf" onchange="previewReceiptFile(this, 'pickup-receipt-preview')">
+                        <div class="form-text">رفع إيصال استلام السيارة من الورشة (صورة أو PDF)</div>
+                        <div id="pickup-receipt-preview" class="receipt-preview-container mt-2"></div>
+                        {% if workshop_record.pickup_receipt %}
+                        <div class="current-file mt-2">
+                            <small class="text-muted">الإيصال الحالي:</small>
+                            <a href="{{ url_for('static', filename=workshop_record.pickup_receipt) }}" target="_blank" class="btn btn-sm btn-outline-success ms-2">
+                                <i class="fas fa-eye"></i> عرض الإيصال
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- صور إيصال التسليم للورشة -->
+                    <div class="mb-3">
+                        <label for="delivery_images" class="form-label">صور إيصال التسليم للورشة</label>
+                        <input type="file" class="form-control" id="delivery_images" name="delivery_images" 
+                               multiple accept="image/*" onchange="previewImages(this, 'delivery-preview')">
+                        <div class="form-text">اختر صور إيصال تسليم السيارة للورشة</div>
+                        <div id="delivery-preview" class="image-preview-container mt-2"></div>
+                    </div>
+
+                    <!-- صور إيصال الاستلام من الورشة -->
+                    <div class="mb-3">
+                        <label for="pickup_images" class="form-label">صور إيصال الاستلام من الورشة</label>
+                        <input type="file" class="form-control" id="pickup_images" name="pickup_images" 
+                               multiple accept="image/*" onchange="previewImages(this, 'pickup-preview')">
+                        <div class="form-text">اختر صور إيصال استلام السيارة من الورشة</div>
+                        <div id="pickup-preview" class="image-preview-container mt-2"></div>
+                    </div>
+
+                    <!-- صور ملاحظات السيارة قبل التسليم للورشة -->
+                    <div class="mb-3">
+                        <label for="notes_images" class="form-label">صور ملاحظات السيارة قبل التسليم للورشة</label>
+                        <input type="file" class="form-control" id="notes_images" name="notes_images" 
+                               multiple accept="image/*" onchange="previewImages(this, 'notes-preview')">
+                        <div class="form-text">اختر صور لتوثيق حالة السيارة وملاحظاتها قبل التسليم للورشة</div>
+                        <div id="notes-preview" class="image-preview-container mt-2"></div>
                     </div>
                 </div>
 
@@ -178,7 +221,21 @@
                     <div class="card">
                         <img src="{{ url_for('static', filename=image.image_path) }}" class="card-img-top" alt="صورة الورشة" style="height: 120px; object-fit: cover;">
                         <div class="card-body p-2">
-                            <small class="text-muted">{{ image.image_type }}</small>
+                            <small class="text-muted">
+                                {% if image.image_type == 'delivery' %}
+                                    <span class="badge bg-primary">إيصال التسليم</span>
+                                {% elif image.image_type == 'pickup' %}
+                                    <span class="badge bg-success">إيصال الاستلام</span>
+                                {% elif image.image_type == 'notes' %}
+                                    <span class="badge bg-warning">ملاحظات السيارة</span>
+                                {% elif image.image_type == 'before' %}
+                                    <span class="badge bg-info">قبل الإصلاح</span>
+                                {% elif image.image_type == 'after' %}
+                                    <span class="badge bg-success">بعد الإصلاح</span>
+                                {% else %}
+                                    {{ image.image_type }}
+                                {% endif %}
+                            </small>
                             <br>
                             <small>{{ image.notes or 'بدون وصف' }}</small>
                         </div>
@@ -278,6 +335,46 @@
     border-color: #007bff !important;
     background-color: rgba(0,123,255,0.1) !important;
 }
+
+.receipt-preview-container {
+    margin-top: 10px;
+}
+
+.receipt-preview {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    background: #f8f9fa;
+}
+
+.pdf-preview {
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #dc3545;
+    color: white;
+    font-size: 24px;
+    border-radius: 8px;
+}
+
+.receipt-preview .remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    cursor: pointer;
+}
 </style>
 
 <script>
@@ -320,12 +417,75 @@ function removeImage(button, inputId, index) {
     input.files = dt.files;
     
     // إعادة عرض المعاينة
-    const containerId = inputId.includes('before') ? 'before-preview' : 'after-preview';
-    previewImages(input, containerId);
+    let containerId;
+    if (inputId.includes('before')) {
+        containerId = 'before-preview';
+    } else if (inputId.includes('after')) {
+        containerId = 'after-preview';
+    } else if (inputId.includes('delivery_images')) {
+        containerId = 'delivery-preview';
+    } else if (inputId.includes('pickup_images')) {
+        containerId = 'pickup-preview';
+    } else if (inputId.includes('notes_images')) {
+        containerId = 'notes-preview';
+    }
+    
+    if (containerId) {
+        previewImages(input, containerId);
+    }
+}
+
+// دالة معاينة الإيصالات (صور وملفات PDF)
+function previewReceiptFile(input, containerId) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'receipt-preview';
+        
+        if (file.type.startsWith('image/')) {
+            // معاينة الصور
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewDiv.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                    <button type="button" class="remove-btn" onclick="removeReceiptFile('${input.id}', '${containerId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div style="font-size: 12px; margin-top: 5px; text-align: center;">${file.name}</div>
+                `;
+                container.appendChild(previewDiv);
+            };
+            reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+            // معاينة ملفات PDF
+            previewDiv.innerHTML = `
+                <div class="pdf-preview">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <button type="button" class="remove-btn" onclick="removeReceiptFile('${input.id}', '${containerId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div style="font-size: 12px; margin-top: 5px; text-align: center;">${file.name}</div>
+            `;
+            container.appendChild(previewDiv);
+        }
+    }
+}
+
+// حذف الإيصال المحدد
+function removeReceiptFile(inputId, containerId) {
+    const input = document.getElementById(inputId);
+    const container = document.getElementById(containerId);
+    input.value = '';
+    container.innerHTML = '';
 }
 
 // تحسين تجربة المستخدم
 document.addEventListener('DOMContentLoaded', function() {
+    
     // إضافة تأثيرات التفاعل
     const fileInputs = document.querySelectorAll('input[type="file"]');
     fileInputs.forEach(input => {
@@ -342,8 +502,32 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('drop', function(e) {
             e.preventDefault();
             this.classList.remove('drag-over');
-            const containerId = this.id.includes('before') ? 'before-preview' : 'after-preview';
-            previewImages(this, containerId);
+            
+            // تحديد containerId بناءً على نوع الحقل
+            let containerId;
+            if (this.id.includes('before')) {
+                containerId = 'before-preview';
+            } else if (this.id.includes('after')) {
+                containerId = 'after-preview';
+            } else if (this.id.includes('delivery_images')) {
+                containerId = 'delivery-preview';
+            } else if (this.id.includes('pickup_images')) {
+                containerId = 'pickup-preview';
+            } else if (this.id.includes('notes_images')) {
+                containerId = 'notes-preview';
+            } else if (this.id.includes('delivery_receipt')) {
+                containerId = 'delivery-receipt-preview';
+            } else if (this.id.includes('pickup_receipt')) {
+                containerId = 'pickup-receipt-preview';
+            }
+            
+            if (containerId) {
+                if (this.id.includes('receipt')) {
+                    previewReceiptFile(this, containerId);
+                } else {
+                    previewImages(this, containerId);
+                }
+            }
         });
     });
 });

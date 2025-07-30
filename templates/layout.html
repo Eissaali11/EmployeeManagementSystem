@@ -209,6 +209,82 @@
                                     <span>الموظفين</span>
                                 </a>
                             </li>
+                            
+                            {# إدارة الأجهزة المحمولة #}
+                            {% if current_user.role == UserRole.ADMIN %}
+                            <li class="nav-item mb-1">
+                                <a
+                                    href="#mobileDevicesSubmenu"
+                                    data-bs-toggle="collapse"
+                                    class="nav-link nav-link-custom {% if '/mobile-devices' in request.path %}active{% endif %}"
+                                    aria-expanded="false"
+                                >
+                                    <i class="fas fa-mobile-alt me-2"></i>
+                                    <span>الأجهزة المحمولة</span>
+                                    <i class="fas fa-chevron-down ms-auto"></i>
+                                </a>
+                                <ul
+                                    class="collapse {% if '/mobile-devices' in request.path %}show{% endif %} list-unstyled ps-4"
+                                    id="mobileDevicesSubmenu"
+                                >
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.dashboard') }}"
+                                            class="nav-link nav-link-custom {% if '/mobile-devices/dashboard' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-chart-bar me-2"></i>
+                                            <span>لوحة المعلومات</span>
+                                        </a>
+                                    </li>
+
+                                    <!-- <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.create') }}"
+                                            class="nav-link nav-link-custom"
+                                        >
+                                            <i class="fas fa-plus me-2"></i>
+                                            <span>إضافة جهاز</span>
+                                        </a>
+                                    </li> -->
+                                    <!-- <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('mobile_devices.import_excel') }}"
+                                            class="nav-link nav-link-custom"
+                                        >
+                                            <i class="fas fa-file-excel me-2"></i>
+                                            <span>استيراد Excel</span>
+                                        </a>
+                                    </li> -->
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('device_management.index') }}"
+                                            class="nav-link nav-link-custom {% if '/device-management' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-tablet me-2"></i>
+                                            <span>إدارة الأجهزة</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('sim_management.index') }}"
+                                            class="nav-link nav-link-custom {% if '/sim-management' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-sim-card me-2"></i>
+                                            <span>إدارة أرقام SIM</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('device_assignment.index') }}"
+                                            class="nav-link nav-link-custom {% if '/device-assignment' in request.path %}active{% endif %}"
+                                        >
+                                            <i class="fas fa-link me-2"></i>
+                                            <span>ربط الأجهزة</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            {% endif %}
                             {% endif %} {# التحقق من صلاحيات الأقسام #} {% if
                             current_user.role == UserRole.ADMIN or
                             current_user|check_module_access(Module.DEPARTMENTS)
@@ -347,6 +423,38 @@
                                             <span>مشاركة روابط الفحص</span>
                                         </a>
                                     </li>
+                                    <li class="nav-item mb-1">
+                                        <a
+                                            href="{{ url_for('vehicle_operations.vehicle_operations_list') }}"
+                                            class="nav-link nav-link-custom {% if '/vehicle-operations' in request.path %}active{% endif %}"
+                                        >
+                                            <i
+                                                class="fas fa-history me-2"
+                                            ></i>
+                                            <span>سجل العمليات الشامل</span>
+                                        </a>
+                                    </li>
+                                        
+                            {% if current_user.role == UserRole.ADMIN %}
+                            <li class="nav-item mb-1">
+
+                                <a
+
+                                    href="{{ url_for('operations.operations_dashboard') }}"
+
+                                    class="nav-link nav-link-custom {% if '/operations' in request.path %}active{% endif %}"
+
+                                >
+
+                                    <i class="fas fa-wrench me-2"></i>
+
+                                    <span>ادارة العمليات</span>
+
+                                </a>
+
+                            </li>
+
+                            {% endif %}
                                 </ul>
                             </li>
                             {% endif %} {# التحقق من صلاحيات التقارير #} {% if
@@ -361,7 +469,10 @@
                                     <span>التقارير</span>
                                 </a>
                             </li>
-                            {% endif %} {# التحقق من صلاحيات المستخدمين #} {% if
+                            {% endif %} {# التحقق من صلاحيات المستخدمين #}
+                            
+                        
+                            {% if
                             current_user.role in [UserRole.ADMIN,
                             UserRole.MANAGER] or
                             current_user|check_module_access(Module.USERS) %}
@@ -386,6 +497,7 @@
                                 </a>
                             </li>
                             {% endif %}
+
                         </ul>
                         <hr />
                         <div class="dropdown">
@@ -480,6 +592,9 @@
                                 request.path %} التقارير والإحصائيات {% elif
                                 '/employee-stats' in request.path %} إحصائيات
                                 الموظفين {% elif '/users' in request.path %}
+                                إدارة المستخدمين {% elif '/operations' in
+
+                                request.path %} 
                                 إدارة المستخدمين {% endif %}
                             </h4>
                         </div>
@@ -571,6 +686,8 @@
         <script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
         <script src="{{ url_for('static', filename='js/table-scroll.js') }}"></script>
 
+        <script src="{{ url_for('static', filename='js/whatsapp.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/whatsapp-direct.js') }}"></script>
         {% block extra_js %}{% endblock %}
 
         <script>

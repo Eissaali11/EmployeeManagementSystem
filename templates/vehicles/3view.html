@@ -96,7 +96,7 @@
                         </div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-sm-4 fw-bold">تاريخ الإضافة:</div>
+                        <div class="col-sm-4 fw-bold">📅 تاريخ الإضافة:</div>
                         <div class="col-sm-8">{{ vehicle.created_at.strftime('%Y-%m-%d') if vehicle.created_at else 'غير محدد' }}</div>
                     </div>
                     <div class="row mb-2">
@@ -117,7 +117,7 @@
                                     مشاهدة سجل التسليم
                                 </a>
                                 {% if current_driver.mobile %}
-                                <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك"
+                                <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0A🚗 بخصوص المركبة رقم: {{ vehicle.plate_number }}%0A📅 تاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0A📋 ملف PDF للتسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0A🙏 شكراً لك والسلامة في الطريق"
                                     class="btn btn-sm btn-success ms-1" target="_blank" title="إرسال رسالة واتساب">
                                     <i class="fab fa-whatsapp ms-1"></i>
                                     واتساب
@@ -253,11 +253,11 @@
                 <div class="card-body">
                     {% if rental %}
                     <div class="row mb-2">
-                        <div class="col-sm-4 fw-bold">تاريخ البداية:</div>
+                        <div class="col-sm-4 fw-bold">📅 تاريخ البداية:</div>
                         <div class="col-sm-8">{{ rental.formatted_start_date }}</div>
                     </div>
                     <div class="row mb-2">
-                        <div class="col-sm-4 fw-bold">تاريخ النهاية:</div>
+                        <div class="col-sm-4 fw-bold">📅 تاريخ النهاية:</div>
                         <div class="col-sm-8">
                             {% if rental.end_date %}
                             {{ rental.formatted_end_date }}
@@ -356,8 +356,8 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>رقم الفحص</th>
-                                    <th>تاريخ الفحص</th>
-                                    <th>تاريخ الانتهاء</th>
+                                    <th>📅 تاريخ الفحص</th>
+                                    <th>📅 تاريخ الانتهاء</th>
                                     <th>النوع</th>
                                     <th>الحالة</th>
                                 </tr>
@@ -585,7 +585,7 @@
                                         تفويض المركبة
                                     </h5>
                                     {% if vehicle.authorization_expiry_date %}
-                                    <p class="mb-1">تاريخ الانتهاء:</p>
+                                    <p class="mb-1">📅 تاريخ الانتهاء:</p>
                                     <h4 class="mb-2">{{ vehicle.authorization_expiry_date.strftime('%Y-%m-%d') }}</h4>
 
                                     {% set days_remaining = (vehicle.authorization_expiry_date - today).days %}
@@ -608,7 +608,7 @@
                             {% else %}
                             <div class="text-muted mb-3">
                                 <i class="fas fa-exclamation-circle fa-2x"></i>
-                                <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                                <p class="mt-2">لم يتم تحديد 📅 تاريخ انتهاء</p>
                             </div>
                             <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}"
                                 class="btn btn-sm btn-primary w-100">
@@ -639,7 +639,7 @@
                                 استمارة السيارة
                             </h5>
                             {% if vehicle.registration_expiry_date %}
-                            <p class="mb-1">تاريخ الانتهاء:</p>
+                            <p class="mb-1">📅 تاريخ الانتهاء:</p>
                             <h4 class="mb-2">{{ vehicle.registration_expiry_date.strftime('%Y-%m-%d') }}</h4>
 
                             {% set days_remaining = (vehicle.registration_expiry_date - today).days %}
@@ -662,7 +662,7 @@
                     {% else %}
                     <div class="text-muted mb-3">
                         <i class="fas fa-exclamation-circle fa-2x"></i>
-                        <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                        <p class="mt-2">لم يتم تحديد 📅 تاريخ انتهاء</p>
                     </div>
                     <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}"
                         class="btn btn-sm btn-primary w-100">
@@ -693,7 +693,7 @@
                         الفحص الدوري
                     </h5>
                     {% if vehicle.inspection_expiry_date %}
-                    <p class="mb-1">تاريخ الانتهاء:</p>
+                    <p class="mb-1">📅 تاريخ الانتهاء:</p>
                     <h4 class="mb-2">{{ vehicle.inspection_expiry_date.strftime('%Y-%m-%d') }}</h4>
 
                     {% set days_remaining = (vehicle.inspection_expiry_date - today).days %}
@@ -716,7 +716,7 @@
             {% else %}
             <div class="text-muted mb-3">
                 <i class="fas fa-exclamation-circle fa-2x"></i>
-                <p class="mt-2">لم يتم تحديد تاريخ انتهاء</p>
+                <p class="mt-2">لم يتم تحديد 📅 تاريخ انتهاء</p>
             </div>
             <a href="{{ url_for('vehicles.edit_documents', id=vehicle.id) }}" class="btn btn-sm btn-primary w-100">
                 <i class="fas fa-plus ms-1"></i>
@@ -942,11 +942,11 @@
                                                         </td>
                                                     </tr>
                                                     <tr>
-                                                        <th scope="row" class="table-light">تاريخ الدخول</th>
+                                                        <th scope="row" class="table-light">📅 تاريخ الدخول</th>
                                                         <td>{{ record.formatted_entry_date }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <th scope="row" class="table-light">تاريخ الخروج</th>
+                                                        <th scope="row" class="table-light">📅 تاريخ الخروج</th>
                                                         <td>
                                                             {% if record.exit_date %}
                                                             {{ record.formatted_exit_date }}
@@ -1191,7 +1191,7 @@
                             <i class="fas fa-file-pdf"></i>
                         </a>
                         {% if current_driver.mobile %}
-                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0Aشكراً لك"
+                        <a href="https://wa.me/{{ current_driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ current_driver.name }}%0A%0A🚗 بخصوص المركبة رقم: {{ vehicle.plate_number }}%0A📅 تاريخ {{ current_driver.handover_type_ar }}: {{ current_driver.formatted_date }}%0A%0A📋 ملف PDF للتسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}%0A%0A🙏 شكراً لك والسلامة في الطريق"
                             class="btn btn-sm btn-success ms-1" target="_blank" title="إرسال رسالة واتساب">
                             <i class="fab fa-whatsapp"></i>
                         </a>
@@ -1242,7 +1242,7 @@
                                 <i class="fas fa-file-pdf"></i>
                             </a>
                             {% if driver.mobile %}
-                            <a href="https://wa.me/{{ driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ driver.name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ driver.handover_type_ar }}: {{ driver.formatted_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=driver.handover_id, _external=True) }}%0A%0Aشكراً لك"
+                            <a href="https://wa.me/{{ driver.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ driver.name }}%0A%0A🚗 بخصوص المركبة رقم: {{ vehicle.plate_number }}%0A📅 تاريخ {{ driver.handover_type_ar }}: {{ driver.formatted_date }}%0A%0A📋 ملف PDF للتسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=driver.handover_id, _external=True) }}%0A%0A🙏 شكراً لك والسلامة في الطريق"
                                 class="btn btn-sm btn-success ms-1" target="_blank" title="إرسال رسالة واتساب">
                                 <i class="fab fa-whatsapp"></i>
                             </a>
@@ -1337,7 +1337,7 @@
                                                 تعديل
                                             </a>
                                             {% if record.mobile %}
-                                            <a href="https://wa.me/{{ record.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ record.person_name }}%0A%0Aبخصوص المركبة رقم: {{ vehicle.plate_number }}%0Aتاريخ {{ record.handover_type_ar }}: {{ record.formatted_handover_date }}%0A%0Aرابط ملف PDF لبيانات التسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=record.id, _external=True) }}%0A%0Aشكراً لك"
+                                            <a href="https://wa.me/{{ record.mobile.replace('+', '').replace(' ', '').replace('-', '') }}?text=مرحباً {{ record.person_name }}%0A%0A🚗 بخصوص المركبة رقم: {{ vehicle.plate_number }}%0A📅 تاريخ {{ record.handover_type_ar }}: {{ record.formatted_handover_date }}%0A%0A📋 ملف PDF للتسليم/الاستلام:%0A{{ url_for('vehicles.handover_pdf_public', id=record.id, _external=True) }}%0A%0A🙏 شكراً لك والسلامة في الطريق"
                                                 class="btn btn-outline-success" target="_blank"
                                                 title="إرسال رسالة واتساب">
                                                 <i class="fab fa-whatsapp"></i>
@@ -1413,7 +1413,7 @@
                                 <th>المشروع</th>
                                 <th>نوع التفويض</th>
                                 <th>الحالة</th>
-                                <th>تاريخ الإنشاء</th>
+                                <th>📅 تاريخ الإنشاء</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
@@ -1509,7 +1509,7 @@
                     <table class="table table-hover">
                         <thead class="table-light">
                             <tr>
-                                <th>تاريخ الحادث</th>
+                                <th>📅 تاريخ الحادث</th>
                                 <th>اسم السائق</th>
                                 <th>حالة الحادث</th>
                                 <th>حالة السيارة</th>

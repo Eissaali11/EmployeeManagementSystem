@@ -3,7 +3,7 @@
 {% block title %}تعديل سجل ورشة للسيارة: {{ vehicle.plate_number }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="mt-4">
     <div class="card shadow-sm">
         <div class="card-header  d-flex justify-content-between align-items-center">
             <h3 class="mb-0">
@@ -22,23 +22,25 @@
             </div>
         </div>
         <div class="card-body">
-            <div class="row mb-4">
-                <div class="col-md-4">
+            <div class="row-cols-1 row-cols-sm-2 row-cols-md-3 mb-4">
+                <div class="col-md-12">
                     <div class="card">
-                        <div class="card-header bg-light">
+                        <div class="card-header bg-blue">
                             <h5 class="mb-0">معلومات السيارة</h5>
                         </div>
                         <div class="card-body">
-                            <div class="mb-2">
+                            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+
+                            <div class="col">
                                 <strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}
                             </div>
-                            <div class="mb-2">
+                            <div class="col">
                                 <strong>النوع:</strong> {{ vehicle.make }} {{ vehicle.model }}
                             </div>
-                            <div class="mb-2">
+                            <div class="col">
                                 <strong>السنة:</strong> {{ vehicle.year }}
                             </div>
-                            <div class="mb-2">
+                            <div class="col">
                                 <strong>اللون:</strong> 
                                 <span class="badge rounded-pill" style="background-color: {{ vehicle.color }}; color: {{ '#000' if vehicle.color in ['white', 'yellow', 'silver'] else '#fff' }};">
                                     {{ vehicle.color }}
@@ -61,16 +63,18 @@
                                 {% endif %}
                             </div>
                         </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-8">
+                </div>
+                <div class="col-md-12">
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle ms-2"></i>
                         <span>إذا حددت تاريخ الخروج من الورشة وكانت حالة الإصلاح "تم الإصلاح"، سيتم تغيير حالة السيارة تلقائيًا من "في الورشة".</span>
                     </div>
                     
-                    <form method="post" enctype="multipart/form-data" id="workshop-edit-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <form method="post" action="{{ url_for('vehicles.edit_workshop', id=workshop.id) }}" enctype="multipart/form-data" id="workshop-edit-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="entry_date" class="form-label required">تاريخ دخول الورشة</label>
@@ -264,11 +268,94 @@
         const form = document.getElementById('workshop-edit-form');
         const saveButton = document.getElementById('save-button');
         
+        console.log('تم تحميل JavaScript للنموذج');
+        console.log('النموذج:', form);
+        console.log('زر الحفظ:', saveButton);
+        
+        if (!form) {
+            console.error('لم يتم العثور على النموذج!');
+            return;
+        }
+        
+        if (!saveButton) {
+            console.error('لم يتم العثور على زر الحفظ!');
+            return;
+        }
+        
         // عند تقديم النموذج
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(event) {
+            console.log('تم إرسال النموذج...');
+            
+            // التحقق من الملفات المرفقة
+            const beforeImages = document.getElementById('before_images').files;
+            const afterImages = document.getElementById('after_images').files;
+            
+            console.log('صور قبل الإصلاح:', beforeImages.length);
+            console.log('صور بعد الإصلاح:', afterImages.length);
+            
+            // التحقق من حجم الملفات
+            const maxFileSize = 5 * 1024 * 1024; // 5MB
+            let hasLargeFile = false;
+            
+            for (let file of beforeImages) {
+                if (file.size > maxFileSize) {
+                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 5MB`);
+                    hasLargeFile = true;
+                    break;
+                }
+            }
+            
+            for (let file of afterImages) {
+                if (file.size > maxFileSize) {
+                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 5MB`);
+                    hasLargeFile = true;
+                    break;
+                }
+            }
+            
+            if (hasLargeFile) {
+                event.preventDefault();
+                return false;
+            }
+            
+            // جمع بيانات النموذج للتصحيح
+            const formData = new FormData(form);
+            console.log('بيانات النموذج:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+            
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
+            
+            console.log('تم قبول النموذج وإرساله...');
+            // لا تمنع السلوك الافتراضي - دع النموذج يرسل
+            return true;
+        });
+        
+        // إضافة مستمع للنقر على زر الحفظ
+        saveButton.addEventListener('click', function(event) {
+            console.log('تم النقر على زر الحفظ');
+            
+            // اختبار بسيط للتأكد من أن النموذج يعمل
+            const formData = new FormData(form);
+            console.log('اختبار النموذج - عدد الحقول:', formData.entries().length);
+            
+            // عرض بعض البيانات للتأكد
+            console.log('تاريخ الدخول:', formData.get('entry_date'));
+            console.log('السبب:', formData.get('reason'));
+            console.log('الوصف:', formData.get('description'));
+            console.log('حالة الإصلاح:', formData.get('repair_status'));
+            
+            // تأكيد إرسال النموذج
+            console.log('سيتم إرسال النموذج الآن...');
+            
+            // اختبار إرسال النموذج يدوياً إذا لم يرسل تلقائياً
+            setTimeout(() => {
+                console.log('إرسال النموذج يدوياً...');
+                form.submit();
+            }, 100);
         });
     });
 </script>

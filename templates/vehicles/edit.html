@@ -251,12 +251,27 @@
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="model" class="form-label-enhanced required">الموديل</label>
                         <input type="text" class="form-control form-control-enhanced" id="model" name="model" value="{{ vehicle.model }}" required>
                         <div class="form-text-enhanced">مثال: كامري، كورولا، إلنترا</div>
                     </div>
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+                        <label for="type_of_car" class="form-label-enhanced required">نوع السيارة</label>
+                        <select class="form-select form-select-enhanced" id="type_of_car" name="type_of_car" required>
+                            <option value="" disabled>اختر نوع السيارة</option>
+                            <option value="سيدان" {% if vehicle.type_of_car == 'سيدان' %}selected{% endif %}>سيدان</option>
+                            <option value="قاطرة" {% if vehicle.type_of_car == 'قاطرة' %}selected{% endif %}>قاطرة</option>
+                            <option value="باص" {% if vehicle.type_of_car == 'باص' %}selected{% endif %}>باص</option>
+                            <option value="مقطورة" {% if vehicle.type_of_car == 'مقطورة' %}selected{% endif %}>مقطورة</option>
+                            <option value="شاحنة" {% if vehicle.type_of_car == 'شاحنة' %}selected{% endif %}>شاحنة</option>
+                            <option value="دباب" {% if vehicle.type_of_car == 'دباب' %}selected{% endif %}>دباب</option>
+                            <option value="كرين" {% if vehicle.type_of_car == 'كرين' %}selected{% endif %}>كرين</option>
+                            <option value="حفار" {% if vehicle.type_of_car == 'حفار' %}selected{% endif %}>حفار</option>
+                        </select>
+                        <div class="form-text-enhanced">نوع المركبة (سيدان، قاطرة، باص، إلخ)</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label for="year" class="form-label-enhanced required">سنة الصنع</label>
                         <input type="number" class="form-control form-control-enhanced" id="year" name="year" min="1990" max="{{ 2030 }}" value="{{ vehicle.year }}" required>
                     </div>
@@ -286,6 +301,7 @@
                                 {% elif status == 'in_project' %}في المشروع
                                 {% elif status == 'in_workshop' %}في الورشة
                                 {% elif status == 'accident' %}حادث
+                                {% elif status == 'out_of_service' %}خارج الخدمة
                                 {% else %}{{ status }}{% endif %}
                             </option>
                             {% endfor %}
@@ -324,11 +340,67 @@
         </div>
     </div>
     
-    <!-- Danger Zone Card -->
-    <div class="card danger-zone-card">
-        <div class="danger-zone-header">
+
+    <!-- قسم إدارة وصول المستخدمين -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white">
             <h4 class="mb-0">
-                <i class="fas fa-exclamation-triangle me-2"></i>
+                <i class="fas fa-users ms-2"></i>
+                إدارة وصول المستخدمين
+            </h4>
+            <small class="text-muted">يمكن للمديرين رؤية جميع المركبات - هذا القسم للمستخدمين العاديين فقط</small>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{{ url_for('vehicles.manage_user_access', id=vehicle.id) }}">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label class="form-label">المستخدمون المخولون للوصول لهذه المركبة:</label>
+                        {% for user in all_users %}
+                            {% if user.role.name != 'ADMIN' %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="authorized_users" value="{{ user.id }}" 
+                                       id="user_{{ user.id }}"
+                                       {% if user in vehicle.authorized_users %}checked{% endif %}>
+                                <label class="form-check-label" for="user_{{ user.id }}">
+                                    {{ user.name or user.username or user.email }}
+                                    <small class="text-muted">({{ user.email }})</small>
+                                    {% if user.employee %}
+                                        <span class="badge bg-info">{{ user.employee.name }}</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> معلومات مهمة:</h6>
+                            <ul class="small mb-0">
+                                <li>المديرون يمكنهم رؤية جميع المركبات دائماً</li>
+                                <li>المستخدمون المحددون هنا فقط يمكنهم رؤية هذه المركبة</li>
+                                <li>إذا لم يتم تحديد أي مستخدم، فلن يتمكن أحد من رؤية المركبة عدا المديرين</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save ms-1"></i>
+                        حفظ إعدادات الوصول
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- قسم خاص بإجراءات الحذف -->
+                <div class="card danger-zone-card">
+                    <div class="danger-zone-header">
+                        <h4 class="mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+
                 منطقة الخطر
             </h4>
         </div>

@@ -4,93 +4,113 @@
 
 {% block extra_css %}
 <style>
-    /* Enhanced Vehicle Form Styles */
     :root {
-        --primary-gradient: linear-gradient(135deg, #3c57d2 0%, #05122D 100%);
-        --secondary-gradient: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
         --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        --glass-bg: rgba(255, 255, 255, 0.95);
-        --glass-border: rgba(255, 255, 255, 0.2);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --dark-gradient: linear-gradient(135deg, #343a40 0%, #212529 100%);
         --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.2);
     }
 
-    .enhanced-form-container {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
-        padding: 2rem;
-    }
-
-    .enhanced-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        overflow: hidden;
-        animation: slideDown 0.6s ease-out;
-    }
-
-    .enhanced-card-header {
-        background: var(--primary-gradient);
+    /* Enhanced Card Header */
+    .card-header-enhanced {
+        background: var(--dark-gradient);
         color: white;
-        padding: 1.5rem;
+        border-bottom: none;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
         position: relative;
+        overflow: hidden;
     }
 
-    .enhanced-card-header::after {
+    .card-header-enhanced::after {
         content: '';
         position: absolute;
         bottom: 0;
         left: 0;
         right: 0;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        height: 3px;
+        background: linear-gradient(90deg, #667eea, #38ef7d, #667eea);
+        background-size: 200% 100%;
+        animation: gradientFlow 3s ease infinite;
     }
 
-    .enhanced-card-header h3 {
-        margin: 0;
+    .card-title-enhanced {
         font-weight: 700;
+        margin-bottom: 0;
         display: flex;
         align-items: center;
     }
 
-    .enhanced-form-label {
+    /* Enhanced Card */
+    .card-enhanced {
+        border: none;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        background: var(--glass-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--glass-border);
+    }
+
+    /* Enhanced Form Elements */
+    .form-control-enhanced {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .form-control-enhanced:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-select-enhanced {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-position: right 1rem center;
+        background-size: 16px 12px;
+    }
+
+    .form-select-enhanced:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+    }
+
+    .form-label-enhanced {
         font-weight: 600;
         margin-bottom: 0.5rem;
         display: flex;
         align-items: center;
     }
 
-    .enhanced-form-label.required::after {
+    .form-label-enhanced.required::after {
         content: '*';
-        color: #ef4444;
-        margin-right: 0.3rem;
+        color: #dc3545;
+        margin-right: 0.5rem;
     }
 
-    .enhanced-form-control {
-        border-radius: 10px;
-        padding: 0.75rem 1rem;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-    }
-
-    .enhanced-form-control:focus {
-        border-color: #3c57d2;
-        box-shadow: 0 0 0 3px rgba(60, 87, 210, 0.2);
-    }
-
-    .enhanced-form-text {
-        font-size: 0.85rem;
-        color: #6b7280;
+    .form-text-enhanced {
+        font-size: 0.8rem;
+        color: #6c757d;
         margin-top: 0.25rem;
     }
 
-    .enhanced-btn {
+    /* Enhanced Buttons */
+    .btn-enhanced {
         position: relative;
         overflow: hidden;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -98,10 +118,10 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 120px;
+        gap: 0.5rem;
     }
 
-    .enhanced-btn::before {
+    .btn-enhanced::before {
         content: '';
         position: absolute;
         top: 0;
@@ -112,11 +132,11 @@
         transition: left 0.5s ease;
     }
 
-    .enhanced-btn:hover::before {
+    .btn-enhanced:hover::before {
         left: 100%;
     }
 
-    .enhanced-btn:hover {
+    .btn-enhanced:hover {
         transform: translateY(-2px);
         box-shadow: var(--card-shadow-hover);
     }
@@ -127,192 +147,167 @@
     }
 
     .btn-secondary-enhanced {
-        background: var(--secondary-gradient);
+        background: var(--dark-gradient);
         color: white;
     }
 
-    .enhanced-select {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        background-position: left 0.75rem center;
-        background-repeat: no-repeat;
-        background-size: 1.5em 1.5em;
-        padding-right: 0.75rem;
+    .btn-outline-primary-enhanced {
+        border: 1px solid #667eea;
+        color: #667eea;
+        background: transparent;
     }
 
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .btn-outline-primary-enhanced:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .btn-success-enhanced {
+        background: var(--success-gradient);
+        color: white;
+    }
+
+    /* Animations */
+    @keyframes gradientFlow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
-        .enhanced-form-container {
+        .card-header-enhanced {
             padding: 1rem;
         }
         
-        .enhanced-card-header {
-            padding: 1rem;
-        }
-        
-        .enhanced-btn {
-            width: 100%;
-            margin-bottom: 0.5rem;
+        .btn-enhanced {
+            padding: 0.5rem 1rem;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="enhanced-form-container">
-    <div class="enhanced-card">
-        <div class="enhanced-card-header d-flex justify-content-between align-items-center">
-            <h3>
-                <i class="fas fa-car ms-2"></i>
+<div class="container mt-4">
+    <div class="card card-enhanced mb-4">
+        <div class="card-header card-header-enhanced d-flex justify-content-between align-items-center">
+            <h3 class="card-title-enhanced mb-0">
+                <i class="fas fa-plus ms-2"></i>
                 إضافة سيارة جديدة
             </h3>
-            <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary-enhanced">
-                <i class="fas fa-arrow-right ms-1"></i>
-                العودة للقائمة
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-enhanced btn-secondary-enhanced">
+                    <i class="fas fa-arrow-right me-1"></i>
+                    العودة للقائمة
+                </a>
+            </div>
         </div>
-        <div class="card-body p-4">
+        <div class="card-body">
             <form method="post" action="{{ url_for('vehicles.create') }}">
                 <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label for="plate_number" class="enhanced-form-label required">
-                            رقم اللوحة
-                        </label>
-                        <input type="text" class="form-control enhanced-form-control" id="plate_number" name="plate_number" required>
-                        <div class="enhanced-form-text">أدخل رقم لوحة السيارة بالكامل</div>
+                    <div class="col-md-6 mb-3">
+                        <label for="plate_number" class="form-label-enhanced required">رقم اللوحة</label>
+                        <input type="text" class="form-control form-control-enhanced" id="plate_number" name="plate_number" required>
+                        <div class="form-text-enhanced">أدخل رقم لوحة السيارة بالكامل</div>
                     </div>
-                    <div class="col-md-6 mb-4">
-                        <label for="make" class="enhanced-form-label required">
-                            الشركة المصنعة
-                        </label>
-                        <input type="text" class="form-control enhanced-form-control" id="make" name="make" required>
-                        <div class="enhanced-form-text">مثال: تويوتا، هيونداي، نيسان</div>
+                    <div class="col-md-6 mb-3">
+                        <label for="make" class="form-label-enhanced required">الشركة المصنعة</label>
+                        <input type="text" class="form-control form-control-enhanced" id="make" name="make" required>
+                        <div class="form-text-enhanced">مثال: تويوتا، هيونداي، نيسان</div>
                     </div>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label for="model" class="enhanced-form-label required">
-                            الموديل
-                        </label>
-                        <input type="text" class="form-control enhanced-form-control" id="model" name="model" required>
-                        <div class="enhanced-form-text">مثال: كامري، كورولا، إلنترا</div>
+                    <div class="col-md-4 mb-3">
+                        <label for="model" class="form-label-enhanced required">الموديل</label>
+                        <input type="text" class="form-control form-control-enhanced" id="model" name="model" required>
+                        <div class="form-text-enhanced">مثال: كامري، كورولا، إلنترا</div>
                     </div>
-                    <div class="col-md-6 mb-4">
-                        <label for="year" class="enhanced-form-label required">
-                            سنة الصنع
-                        </label>
-                        <input type="number" class="form-control enhanced-form-control" id="year" name="year" min="1990" max="{{ 2030 }}" required>
+                    <div class="col-md-4 mb-3">
+                        <label for="type_of_car" class="form-label-enhanced required">نوع السيارة</label>
+                        <select class="form-select form-select-enhanced" id="type_of_car" name="type_of_car" required>
+                            <option value="" disabled selected>اختر نوع السيارة</option>
+                            <option value="سيدان">سيدان</option>
+                            <option value="قاطرة">قاطرة</option>
+                            <option value="باص">باص</option>
+                            <option value="نقل خفيف">نقل خفيف</option>
+                            <option value="نقل ثقيل">نقل ثقيل</option>
+                            <option value="شاحنة صغيرة">شاحنة صغيرة</option>
+                            <option value="شاحنة كبيرة">شاحنة كبيرة</option>
+                            <option value="معدات ثقيلة">معدات ثقيلة</option>
+                            <option value="مقطورة">مقطورة</option>
+                            <option value="دباب">دباب</option>
+                            <option value="كرين">كرين</option>
+                            <option value="حفار">حفار</option>
+                        </select>
+                        <div class="form-text-enhanced">نوع المركبة (سيدان، قاطرة، باص، إلخ)</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="year" class="form-label-enhanced required">سنة الصنع</label>
+                        <input type="number" class="form-control form-control-enhanced" id="year" name="year" min="1990" max="{{ 2030 }}" required>
                     </div>
                 </div>
                 
                 <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label for="color" class="enhanced-form-label required">
-                            اللون
-                        </label>
-                        <input type="text" class="form-control enhanced-form-control" id="color" name="color" required>
-                        <div class="enhanced-form-text">مثال: أبيض، أسود، فضي</div>
+                    <div class="col-md-6 mb-3">
+                        <label for="color" class="form-label-enhanced required">اللون</label>
+                        <input type="text" class="form-control form-control-enhanced" id="color" name="color" required>
+                        <div class="form-text-enhanced">مثال: أبيض، أسود، فضي</div>
                     </div>
-                    <div class="col-md-6 mb-4">
-                        <label for="driver_name" class="enhanced-form-label">
-                            اسم السائق
-                        </label>
-                        <input type="text" class="form-control enhanced-form-control" id="driver_name" name="driver_name">
-                        <div class="enhanced-form-text">اختياري - اسم السائق المعين لهذه السيارة</div>
+                    <div class="col-md-6 mb-3">
+                        <label for="driver_name" class="form-label-enhanced">اسم السائق</label>
+                        <input type="text" class="form-control form-control-enhanced" id="driver_name" name="driver_name">
+                        <div class="form-text-enhanced">اختياري - اسم السائق المعين لهذه السيارة</div>
                     </div>
-                    <div class="col-md-6 mb-4">
-                        <label for="status" class="enhanced-form-label required">
-                            الحالة
-                        </label>
-                        <select class="form-select enhanced-form-control enhanced-select" id="status" name="status" required>
-                            {% for status in statuses %}
-                            <option value="{{ status }}" {% if status == 'available' %}selected{% endif %}>
-                                {% if status == 'available' %}متاحة
-                                {% elif status == 'rented' %}مؤجرة
-                                {% elif status == 'in_project' %}في المشروع
-                                {% elif status == 'in_workshop' %}في الورشة
-                                {% elif status == 'accident' %}حادث
-                                {% else %}{{ status }}{% endif %}
-                            </option>
-                            {% endfor %}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="status" class="form-label-enhanced required">الحالة</label>
+                        <select class="form-select form-select-enhanced" id="status" name="status" required>
+                            <option value="available">متاحة</option>
+                            <option value="rented">مؤجرة</option>
+                            <option value="in_project">في المشروع</option>
+                            <option value="in_workshop">في الورشة</option>
+                            <option value="accident">حادث</option>
+                            <option value="out_of_service">خارج الخدمة</option>
                         </select>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="project" class="form-label-enhanced">المشروع</label>
+                        <select class="form-select form-select-enhanced" id="project" name="project">
+                            <option value="">اختر المشروع</option>
+                            {% for department in departments %}
+                            <option value="{{ department.name }}">{{ department.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text-enhanced">اختياري - المشروع المرتبط بهذه السيارة</div>
+                    </div>
                 </div>
                 
-                <div class="mb-4">
-                    <label for="notes" class="enhanced-form-label">
-                        ملاحظات
-                    </label>
-                    <textarea class="form-control enhanced-form-control" id="notes" name="notes" rows="3"></textarea>
+                <div class="mb-3">
+                    <label for="notes" class="form-label-enhanced">ملاحظات</label>
+                    <textarea class="form-control form-control-enhanced" id="notes" name="notes" rows="3" placeholder="أدخل أي ملاحظات إضافية عن السيارة"></textarea>
+                    <div class="form-text-enhanced">اختياري - أي ملاحظات أو تفاصيل إضافية</div>
                 </div>
                 
-                <div class="text-center mt-5">
-                    <button type="submit" class="btn btn-primary-enhanced me-3">
-                        <i class="fas fa-save ms-1"></i>
-                        حفظ السيارة
-                    </button>
-                    <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary-enhanced">
-                        <i class="fas fa-times ms-1"></i>
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{{ url_for('vehicles.index') }}" class="btn btn-enhanced btn-outline-primary-enhanced">
+                        <i class="fas fa-times me-1"></i>
                         إلغاء
                     </a>
+                    <button type="submit" class="btn btn-enhanced btn-success-enhanced">
+                        <i class="fas fa-save me-1"></i>
+                        حفظ السيارة
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set default year to current year
-        const currentYear = new Date().getFullYear();
-        document.getElementById('year').value = currentYear;
-        
-        // Enhanced input interactions
-        const inputs = document.querySelectorAll('.enhanced-form-control');
-        inputs.forEach(input => {
-            // Add focus/blur effects
-            input.addEventListener('focus', function() {
-                this.parentElement.querySelector('.enhanced-form-label').style.color = '#3c57d2';
-            });
-            
-            input.addEventListener('blur', function() {
-                this.parentElement.querySelector('.enhanced-form-label').style.color = '';
-            });
-            
-            // Add character counter for text inputs
-            if (input.type === 'text' || input.tagName === 'TEXTAREA') {
-                const counter = document.createElement('div');
-                counter.className = 'text-end small text-muted mt-1';
-                counter.style.fontSize = '0.75rem';
-                input.parentElement.appendChild(counter);
-                
-                input.addEventListener('input', function() {
-                    counter.textContent = `${this.value.length} حرف`;
-                });
-            }
-        });
-        
-        // Form submission enhancement
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> جاري الحفظ...';
-            submitBtn.disabled = true;
-        });
-    });
-</script>
 {% endblock %}

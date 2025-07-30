@@ -4,7 +4,11 @@
 
 {% block extra_css %}
 <style>
-    /* Modern Share Links Styles */
+    /*
+     * =========================================
+     * Variables and Root Styles
+     * =========================================
+     */
     :root {
         --primary-gradient: linear-gradient(135deg, #667eea 0%, #05122D 100%);
         --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
@@ -17,15 +21,24 @@
         --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     }
 
-    /* Enhanced Header */
-    .share-header {
+    /*
+     * =========================================
+     * General Page Components (Your original styles)
+     * =========================================
+     */
+    .share-header,
+    .info-alert,
+    .filter-card {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         box-shadow: var(--card-shadow);
-        padding: 2rem;
         margin-bottom: 2rem;
+    }
+
+    .share-header {
+        padding: 2rem;
         position: relative;
         overflow: hidden;
         animation: slideDown 0.6s ease-out;
@@ -54,27 +67,6 @@
         gap: 10px;
     }
 
-    /* Enhanced Alert */
-    .info-alert {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        margin-bottom: 2rem;
-    }
-
-    /* Enhanced Filter Card */
-    .filter-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        box-shadow: var(--card-shadow);
-        margin-bottom: 2rem;
-        overflow: hidden;
-    }
-
     .filter-card .card-header {
         background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
         color: white;
@@ -90,7 +82,12 @@
         gap: 10px;
     }
 
-    /* Enhanced Table */
+
+    /*
+     * =========================================
+     * Vehicles Table Styles (Simplified and Corrected)
+     * =========================================
+     */
     .vehicles-table-container {
         background: var(--glass-bg);
         backdrop-filter: blur(10px);
@@ -104,7 +101,6 @@
         background: linear-gradient(135deg, #3c57d2ff 0%, #05122D 100%);
         color: white;
         padding: 1rem 1.5rem;
-        border-bottom: none;
     }
 
     .vehicles-table-container .card-header h5 {
@@ -115,21 +111,31 @@
         gap: 10px;
     }
 
-    .table-responsive {
-        border-radius: 0 0 12px 12px;
-        overflow: hidden;
+    .vehicles-table-container .card-body {
+        padding: 0;
     }
+
+    /* === هذا هو كل الكود المطلوب للجدول === */
+
+    /* 1. الكود لتفعيل التمرير العمودي */
+    .table-wrapper-scroll-y {
+        display: block;
+        max-height: 65vh; /* يمكنك تعديل هذا الارتفاع. مثلا 500px أو 65vh (65% من ارتفاع الشاشة) */
+        overflow-y: auto;
+    }
+
+    /* 2. الكود لتثبيت رأس الجدول أثناء التمرير */
+    .table-wrapper-scroll-y thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2; /* للتأكد من أن الرأس يظهر فوق المحتوى عند التمرير */
+    }
+
+    /* 3. استرجاع الأنماط الأصلية الخاصة بك للجدول */
+    /* .table-responsive هو كلاس Bootstrap للتمرير الأفقي فقط وسيعمل بشكل طبيعي */
 
     .table {
         margin-bottom: 0;
-    }
-
-    .table thead th {
-        background: rgba(102, 126, 234, 0.1);
-        border-bottom: 2px solid rgba(102, 126, 234, 0.2);
-        padding: 1rem;
-        font-weight: 600;
-        text-align: right;
     }
 
     .table tbody td {
@@ -142,48 +148,21 @@
         background-color: rgba(102, 126, 234, 0.05);
     }
 
-    /* Enhanced Action Buttons */
+    /* سيتم تطبيق تصميم thead من خلال كلاس table-dark من Bootstrap مباشرة */
+    /* === نهاية كود الجدول === */
+
+
+    /*
+     * =========================================
+     * Other UI Elements (Buttons, Badges, etc.)
+     * =========================================
+     */
     .action-btn-group {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
     }
 
-    .action-btn {
-        border-radius: 8px;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .action-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--card-shadow-hover);
-    }
-
-    .btn-primary-enhanced {
-        background: var(--primary-gradient);
-        color: white;
-        border: none;
-    }
-
-    .btn-success-enhanced {
-        background: var(--success-gradient);
-        color: white;
-        border: none;
-    }
-
-    .btn-secondary-enhanced {
-        background: var(--glass-bg);
-        border: 1px solid #6c757d;
-        color: #6c757d;
-    }
-
-    /* Enhanced Copy Button */
     .copy-btn {
         display: inline-flex;
         align-items: center;
@@ -214,13 +193,11 @@
     .copy-btn .icon-success { display: none; }
     .copy-btn .text-success { display: none; }
     .copy-btn .text-original { display: inline-block; }
-
     .copy-btn.copied .icon-copy { display: none; }
     .copy-btn.copied .icon-success { display: inline-block; }
     .copy-btn.copied .text-success { display: inline-block; }
     .copy-btn.copied .text-original { display: none; }
 
-    /* Enhanced Status Badges */
     .status-badge {
         padding: 0.5rem 0.75rem;
         border-radius: 20px;
@@ -230,7 +207,6 @@
         text-align: center;
     }
 
-    /* Color Badges */
     .color-badge {
         width: 24px;
         height: 24px;
@@ -242,7 +218,11 @@
         border: 1px solid rgba(0, 0, 0, 0.1);
     }
 
-    /* Animations */
+    /*
+     * =========================================
+     * Animations, Responsive & Scrollbar
+     * =========================================
+     */
     @keyframes slideDown {
         from {
             opacity: 0;
@@ -254,35 +234,35 @@
         }
     }
 
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Responsive Design */
     @media (max-width: 768px) {
         .share-header {
             padding: 1.5rem;
         }
-        
         .share-header h2 {
             font-size: 1.8rem;
         }
-        
         .action-btn-group {
             flex-direction: column;
             align-items: flex-start;
         }
-        
         .action-btn {
             width: 100%;
         }
+    }
+
+    /* لتخصيص شكل شريط التمرير (اختياري) */
+    .table-wrapper-scroll-y::-webkit-scrollbar {
+        width: 8px;
+    }
+    .table-wrapper-scroll-y::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-wrapper-scroll-y::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+    .table-wrapper-scroll-y::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
 </style>
 {% endblock %}
@@ -388,6 +368,11 @@
                             <i class="fas fa-undo"></i>
                             إعادة تعيين
                         </a>
+    <button class="btn btn-sm" style="background-color: #25D366; color: white;"
+            title="إرسال طلب الفحص عبر واتساب"
+            onclick="">
+        <i class="fab fa-whatsapp ms-1"></i> إرسال واتساب للجميع
+    </button>
                     </div>
                     <div class="col-md-6 text-end">
                         <span class="text-muted">
@@ -453,47 +438,46 @@
                                 {% endif %}
                             </td>
                             <td>
+
                                 <div class="action-btn-group">
-                                    <!-- Copy Button -->
-                                    <button type="button" class="copy-btn" 
-                                            title="نسخ رابط النموذج"
-                                            onclick="copyToClipboard('{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}', this)">
-                                        <span class="icon-copy">
-                                            <i class="fas fa-copy"></i>
-                                        </span>
-                                        <span class="icon-success">
-                                            <i class="fas fa-check"></i>
-                                        </span>
-                                        <span class="text-original d-none d-md-inline">
-                                            نسخ
-                                        </span>
-                                        <span class="text-success">
-                                            تم النسخ
-                                        </span>
-                                    </button>
+    <!-- زر النسخ (واحد فقط) -->
+    <button type="button" class="copy-btn" 
+            title="نسخ رابط النموذج"
+            onclick="copyToClipboard('{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id, _external=True) }}', this)">
+        <span class="icon-copy"><i class="fas fa-copy"></i></span>
+        <span class="icon-success"><i class="fas fa-check"></i></span>
+        <span class="text-original d-none d-md-inline">نسخ</span>
+        <span class="text-success">تم النسخ</span>
+    </button>
 
-                                    <!-- Share Button -->
-                                    <button class="btn btn-primary-enhanced btn-sm" 
-                                           onclick="shareSafetyCheckForm('{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
-                                        <i class="fas fa-share-alt"></i>
-                                        <span class="d-none d-md-inline">مشاركة</span>
-                                    </button>
+    <!-- زر المشاركة -->
+    <button class="btn btn-primary btn-sm" 
+            onclick="shareSafetyCheckForm('{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+        <i class="fas fa-share-alt ms-1"></i> مشاركة
+    </button>
 
-                                    <!-- Email Button -->
-                                    <button class="btn btn-success-enhanced btn-sm"
-                                            title="إرسال طلب الفحص عبر البريد"
-                                            onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
-                                        <i class="fas fa-envelope"></i>
-                                        <span class="d-none d-md-inline">إرسال</span>
-                                    </button>
+    <!-- زر إرسال البريد -->
+    <button class="btn btn-outline-secondary btn-sm"
+            title="إرسال طلب الفحص عبر البريد"
+            onclick="sendSafetyCheckEmail(this, '{{ vehicle.id }}' , '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+        <i class="fas fa-envelope ms-1"></i> إرسال بالبريد
+    </button>
 
-                                    <!-- Open Form Button -->
-                                    <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
-                                       class="btn btn-info btn-sm" target="_blank">
-                                        <i class="fas fa-external-link-alt"></i>
-                                        <span class="d-none d-md-inline">فتح</span>
-                                    </a>
-                                </div>
+    <!-- زر إرسال واتساب -->
+    <button class="btn btn-sm" style="background-color: #25D366; color: white;"
+            title="إرسال طلب الفحص عبر واتساب"
+            onclick="sendSafetyCheckWhatsApp(this, '{{ vehicle.id }}', '{{ vehicle.plate_number }}', '{{ vehicle.make }} {{ vehicle.model }}')">
+        <i class="fab fa-whatsapp ms-1"></i> إرسال واتساب
+    </button>
+
+    <!-- رابط فتح النموذج -->
+    <a href="{{ url_for('external_safety.external_safety_check_form', vehicle_id=vehicle.id) }}" 
+        class="btn btn-success btn-sm ms-1" target="_blank">
+        <i class="fas fa-external-link-alt ms-1"></i> فتح النموذج
+    </a>
+</div>
+
+
                             </td>
                         </tr>
                         {% endfor %}
@@ -521,48 +505,34 @@
 <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 
 <script>
+    // تمرير البيانات من Flask إلى JavaScript
     const allDriversData = {{ all_current_drivers | tojson | safe }};
     const allDriversDataWithEmil = {{ all_current_drivers_with_emil | tojson | safe }};
 
-    // دالة نسخ الرابط
-    function copyToClipboard(textToCopy, buttonElement) {
-        if (!buttonElement) {
-            console.error("لم يتم تمرير عنصر الزر إلى الدالة.");
-            return;
-        }
-
-        navigator.clipboard.writeText(textToCopy)
-            .then(() => {
-                buttonElement.classList.add('copied');
-                showToast('تم نسخ الرابط بنجاح!', 'success');
-                
-                setTimeout(() => {
-                    buttonElement.classList.remove('copied');
-                }, 2000); 
-            })
-            .catch(err => {
-                console.error('فشل في نسخ الرابط: ', err);
-                showToast('حدث خطأ أثناء محاولة نسخ الرابط.', 'danger');
-            });
-    }
-
-    // دالة عرض رسائل Toast
+    /**
+     * دالة عامة لعرض إشعارات (Toast).
+     * @param {string} message - الرسالة المراد عرضها.
+     * @param {string} type - نوع الإشعار ('success' أو 'danger').
+     */
     function showToast(message, type = 'info') {
         const toastContainer = document.getElementById('toast-container');
         if (!toastContainer) {
-            alert(message);
+            alert(message); // بديل بسيط في حال عدم وجود الحاوية
             return;
         }
 
         const toastId = 'toast-' + Math.random().toString(36).substr(2, 9);
+        const bgColor = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-info');
+
         const toastHTML = `
-            <div id="${toastId}" class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div id="${toastId}" class="toast show align-items-center text-white ${bgColor} border-0" role="alert" aria-live="assertive" aria-atomic="true">
                 <div class="d-flex">
                     <div class="toast-body">${message}</div>
                     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
             </div>
         `;
+
         toastContainer.insertAdjacentHTML('beforeend', toastHTML);
 
         const toastElement = document.getElementById(toastId);
@@ -573,18 +543,51 @@
         });
     }
 
-    // دالة إرسال البريد الإلكتروني
+    /**
+     * [جديد] دالة نسخ النص إلى الحافظة.
+     * @param {string} textToCopy - النص الذي سيتم نسخه.
+     * @param {HTMLElement} buttonElement - عنصر الزر الذي تم النقر عليه.
+     */
+    function copyToClipboard(textToCopy, buttonElement) {
+        if (!navigator.clipboard) {
+            showToast('متصفحك لا يدعم النسخ التلقائي.', 'danger');
+            return;
+        }
+
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+                buttonElement.classList.add('copied');
+                showToast('تم نسخ الرابط بنجاح!', 'success');
+
+                setTimeout(() => {
+                    buttonElement.classList.remove('copied');
+                }, 2500); // إعادة الزر لحالته الطبيعية بعد 2.5 ثانية
+            })
+            .catch(err => {
+                console.error('فشل في نسخ الرابط: ', err);
+                showToast('حدث خطأ أثناء محاولة نسخ الرابط.', 'danger');
+            });
+    }
+
+    /**
+     * إرسال طلب فحص السلامة عبر البريد الإلكتروني.
+     */
+    /**
+     * إرسال طلب فحص السلامة عبر البريد الإلكتروني.
+     * (نسخة معدلة لتشخيص الأخطاء بشكل أفضل)
+     */
     async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
+        // جلب بيانات السائق
         const driver = allDriversDataWithEmil[vehicleId];
-        
         if (!driver || !driver.email) {
             showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
             return;
         }
 
+        // تعطيل الزر وإظهار مؤشر التحميل
         buttonElement.disabled = true;
         buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
-        
+
         try {
             const response = await fetch('/api/send-email', {
                 method: 'POST',
@@ -594,12 +597,118 @@
                     driver_name: driver.name,
                     plate_number: plateNumber,
                     vehicle_model: vehicleModel,
+                    // هام جداً: تأكد من أن هذا الرابط صحيح ويطابق المسار في Flask
                     form_url: `${window.location.origin}/external-safety-check/${vehicleId}`
                 })
             });
-            
+
+            // ======================= الجزء الجديد للتشخيص =======================
+            const contentType = response.headers.get("content-type");
+
+            // التحقق مما إذا كان الرد هو JSON كما هو متوقع
+            if (response.ok && contentType && contentType.indexOf("application/json") !== -1) {
+                // الحالة الناجحة: الرد هو JSON
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message, 'success');
+                } else {
+                    // إذا كان JSON ولكنه يحمل رسالة خطأ من طرفنا
+                    showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف.'}`, 'danger');
+                }
+            } else {
+                // الحالة غير الطبيعية: الرد ليس JSON (غالباً صفحة خطأ HTML من Flask)
+                // سنقرأ الرد كنص عادي ونطبعه في الـ console
+                const errorText = await response.text();
+                console.error("الخادم أعاد رداً غير متوقع (ليس JSON). محتوى الرد:", errorText);
+
+                // عرض رسالة خطأ واضحة للمستخدم
+                showToast('حدث خطأ فادح في الخادم! يرجى مراجعة Console لمعرفة التفاصيل.', 'danger');
+            }
+            // ===================== نهاية الجزء الجديد للتشخيص =====================
+
+        } catch (error) {
+            // هذا الخطأ يحدث فقط إذا فشل الاتصال بالشبكة تماماً
+            console.error('فشل الاتصال بالخادم:', error);
+            showToast('فشل الاتصال بالخادم. تحقق من الشبكة.', 'danger');
+        } finally {
+            // إعادة الزر إلى حالته الطبيعية في كل الأحوال
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال بالبريد';
+        }
+    }
+
+    
+    // async function sendSafetyCheckEmail(buttonElement, vehicleId, plateNumber, vehicleModel) {
+    //     const driver = allDriversDataWithEmil[vehicleId];
+
+    //     if (!driver || !driver.email) {
+    //         showToast("خطأ: لا يوجد سائق أو بريد إلكتروني مسجل لهذه المركبة.", 'danger');
+    //         return;
+    //     }
+
+    //     buttonElement.disabled = true;
+    //     buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+
+    //     try {
+    //         const response = await fetch('/api/send-email', {
+    //             method: 'POST',
+    //             headers: {'Content-Type': 'application/json'},
+    //             body: JSON.stringify({
+    //                 driver_email: driver.email,
+    //                 driver_name: driver.name,
+    //                 plate_number: plateNumber,
+    //                 vehicle_model: vehicleModel,
+    //                 form_url: `${window.location.origin}/external-safety/external-safety-check/${vehicleId}`
+    //             })
+    //         });
+
+    //         const result = await response.json();
+
+    //         if (response.ok && result.success) {
+    //             showToast(result.message, 'success');
+    //         } else {
+    //             showToast(`فشل الإرسال: ${result.error || 'خطأ غير معروف في الخادم.'}`, 'danger');
+    //         }
+
+    //     } catch (error) {
+    //         console.error('فشل الاتصال بالخادم:', error);
+    //         showToast(`فشل الإرسال: ${error}`, 'danger');
+    //     } finally {
+    //         buttonElement.disabled = false;
+    //         buttonElement.innerHTML = '<i class="fas fa-envelope ms-1"></i> إرسال بالبريد';
+    //     }
+    // }
+
+    //
+    /**
+     * إرسال طلب فحص السلامة عبر واتساب.
+     */
+    async function sendSafetyCheckWhatsApp(buttonElement, vehicleId, plateNumber, vehicleModel) {
+        const driver = allDriversDataWithEmil[vehicleId];
+
+        if (!driver || !driver.phone) {
+            showToast("خطأ: لا يوجد سائق أو رقم هاتف واتساب مسجل لهذه المركبة.", 'danger');
+            return;
+        }
+
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإرسال...';
+
+        try {
+            const response = await fetch('/api/send-whatsapp', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    driver_phone: driver.phone,
+                    driver_name: driver.name,
+                    plate_number: plateNumber,
+                    vehicle_model: vehicleModel,
+                    form_url: `${window.location.origin}/external-safety/external-safety-check/${vehicleId}`
+                })
+            });
+
             const result = await response.json();
-            
+
             if (response.ok && result.success) {
                 showToast(result.message, 'success');
             } else {
@@ -608,16 +717,19 @@
 
         } catch (error) {
             console.error('فشل الاتصال بالخادم:', error);
-            showToast('فشل الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.', 'danger');
+            showToast('فشل الاتصال بالخادم.', 'danger');
         } finally {
             buttonElement.disabled = false;
-            buttonElement.innerHTML = '<i class="fas fa-envelope"></i> <span class="d-none d-md-inline">إرسال</span>';
+            buttonElement.innerHTML = '<i class="fab fa-whatsapp ms-1"></i> إرسال واتساب';
         }
     }
 
-    // دالة مشاركة رابط نموذج فحص السلامة الخارجي
+    /**
+     * دالة لمشاركة رابط نموذج فحص السلامة باستخدام Web Share API.
+     */
     function shareSafetyCheckForm(vehicleId, plateNumber, vehicleModel) {
-        const formUrl = window.location.origin + '/external-safety-check/' + vehicleId;
+        // إنشاء رابط باستخدام النطاق الحالي
+        const formUrl = window.location.origin + '/external-safety/external-safety-check/' + vehicleId;
         const driver_name = allDriversData[vehicleId] || 'زميلنا العزيز';
 
         const fullMessageText = `مرحباً ${driver_name} 👋
@@ -667,59 +779,13 @@ ${formUrl}
 
         if (navigator.share) {
             navigator.share(shareData)
-                .then(() => showToast('تم مشاركة الرابط بنجاح!', 'success'))
-                .catch((error) => fallbackShare(shareData));
+                .then(() => showToast('تمت مشاركة الرابط بنجاح!', 'success'))
+                .catch((error) => console.log('خطأ في المشاركة:', error));
         } else {
-            fallbackShare(shareData);
+            // كبديل للمتصفحات التي لا تدعم المشاركة، يمكن نسخ النص
+            copyToClipboard(shareData.text, document.createElement('button')); // نمرر زرًا وهميًا
+            showToast('تم نسخ نص المشاركة إلى الحافظة!', 'success');
         }
-    }
-
-    // دالة بديلة للمشاركة
-    function fallbackShare(shareData) {
-        const textToCopy = shareData.text;
-        
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(textToCopy)
-                .then(() => showToast('تم نسخ رسالة المشاركة للحافظة!', 'success'))
-                .catch(() => showShareModal(shareData));
-        } else {
-            showShareModal(shareData);
-        }
-    }
-
-    // عرض نافذة منبثقة للمشاركة
-    function showShareModal(shareData) {
-        const modal = document.createElement('div');
-        modal.className = 'modal fade';
-        modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">مشاركة رابط فحص السلامة</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p class="mb-3">انسخ الرابط والرسالة التالية لمشاركتها:</p>
-                        <textarea class="form-control" rows="12" readonly>${shareData.text}</textarea>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="copyToClipboard(this, '${shareData.text.replace(/'/g, "\\'")}')">
-                            <i class="fas fa-copy"></i>
-                            نسخ النص
-                        </button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        const bootstrapModal = new bootstrap.Modal(modal);
-        bootstrapModal.show();
-        
-        modal.addEventListener('hidden.bs.modal', () => {
-            document.body.removeChild(modal);
-        });
     }
 </script>
 {% endblock %}

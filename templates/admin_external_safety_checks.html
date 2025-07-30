@@ -153,7 +153,7 @@
         border: 1px solid var(--glass-border);
         border-radius: 16px;
         box-shadow: var(--card-shadow);
-        overflow: hidden;
+        /* overflow: hidden; */
         animation: slideUp 0.6s ease-out 0.4s both;
     }
 
@@ -402,7 +402,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>قيد المراجعة</h5>
-                        <h2>{{ safety_checks | selectattr('is_pending') | list | length }}</h2>
+                        <h2>{{ pending_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-clock"></i>
@@ -416,7 +416,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>معتمدة</h5>
-                        <h2>{{ safety_checks | selectattr('is_approved') | list | length }}</h2>
+                        <h2>{{ approved_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-check-circle"></i>
@@ -430,7 +430,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>مرفوضة</h5>
-                        <h2>{{ safety_checks | selectattr('is_rejected') | list | length }}</h2>
+                        <h2>{{ rejected_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-times-circle"></i>
@@ -444,7 +444,7 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h5>الإجمالي</h5>
-                        <h2>{{ safety_checks | length }}</h2>
+                        <h2>{{ total_checks }}</h2>
                     </div>
                     <div class="stat-icon">
                         <i class="fas fa-list"></i>
@@ -456,23 +456,57 @@
     
     <!-- Enhanced Filter Section -->
     <div class="filter-card-enhanced">
+        <form method="GET" id="filterForm">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label class="form-label text-light mb-1">الحالة:</label>
+                    <select class="form-control filter-input-enhanced" name="status_filter">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>قيد المراجعة</option>
+                        <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>معتمدة</option>
+                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>مرفوضة</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label text-light mb-1">السيارة:</label>
+                    <select class="form-control filter-input-enhanced" name="vehicle_filter">
+                        <option value="">جميع السيارات</option>
+                        {% for vehicle in vehicles_list %}
+                        <option value="{{ vehicle }}" {% if vehicle_filter == vehicle %}selected{% endif %}>{{ vehicle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label class="form-label text-light mb-1">القسم:</label>
+                    <select class="form-control filter-input-enhanced" name="department_filter">
+                        <option value="">جميع الأقسام</option>
+                        {% for department in departments_list %}
+                        <option value="{{ department }}" {% if department_filter == department %}selected{% endif %}>{{ department }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-action-enhanced" style="background: var(--info-gradient);">
+                            <i class="fas fa-search"></i> تطبيق الفلاتر
+                        </button>
+                        <button type="button" class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
+                                onclick="clearFilters()">
+                            <i class="fas fa-times"></i> مسح
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- Bulk Actions -->
         <div class="row">
-            <div class="col-md-4 mb-3">
-                <select class="form-control filter-input-enhanced" id="statusFilter">
-                    <option value="">جميع الحالات</option>
-                    <option value="pending">قيد المراجعة</option>
-                    <option value="approved">معتمدة</option>
-                    <option value="rejected">مرفوضة</option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3">
-                <input type="text" class="form-control filter-input-enhanced" id="searchFilter" 
-                       placeholder="البحث برقم اللوحة أو اسم السائق...">
-            </div>
-            <div class="col-md-4 mb-3">
-                <button class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
-                        onclick="clearFilters()">
-                    <i class="fas fa-times"></i> مسح الفلاتر
+            <div class="col-md-12">
+                <button class="btn btn-action-enhanced btn-reject" 
+                        id="bulkDeleteBtn" 
+                        onclick="bulkDelete()" 
+                        style="display: none;">
+                    <i class="fas fa-trash-alt"></i> حذف المحدد (<span id="selectedCount">0</span>)
                 </button>
             </div>
         </div>
@@ -480,7 +514,13 @@
         <!-- Enhanced Info Alert -->
         <div class="alert alert-info" style="background: rgba(52, 152, 219, 0.2); border: 1px solid rgba(52, 152, 219, 0.3); border-radius: 12px;">
             <i class="fas fa-info-circle"></i>
-            <strong>تلميح:</strong> يمكنك التمرير داخل الجدول لعرض جميع البيانات والأعمدة
+            <strong>عدد النتائج:</strong> {{ safety_checks|length }} من أصل {{ total_checks }} طلب
+            {% if status_filter or vehicle_filter or department_filter %}
+            | <strong>مطبق فلاتر:</strong>
+            {% if status_filter %}<span class="badge badge-secondary ms-1">الحالة: {{ status_filter }}</span>{% endif %}
+            {% if vehicle_filter %}<span class="badge badge-secondary ms-1">السيارة: {{ vehicle_filter }}</span>{% endif %}
+            {% if department_filter %}<span class="badge badge-secondary ms-1">القسم: {{ department_filter }}</span>{% endif %}
+            {% endif %}
         </div>
     </div>
     
@@ -490,6 +530,9 @@
             <table class="table table-enhanced table-hover" id="safetyChecksTable">
                 <thead>
                     <tr>
+                        <th>
+                            <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="form-check-input">
+                        </th>
                         <th>#</th>
                         <th>رقم اللوحة</th>
                         <th>نوع السيارة</th>
@@ -505,6 +548,11 @@
                 <tbody>
                     {% for safety_check in safety_checks %}
                     <tr data-status="{{ safety_check.approval_status }}">
+                        <td>
+                            <input type="checkbox" class="row-checkbox form-check-input" 
+                                   value="{{ safety_check.id }}" 
+                                   onchange="updateBulkDeleteButton()">
+                        </td>
                         <td>{{ safety_check.id }}</td>
                         <td>{{ safety_check.vehicle_plate_number }}</td>
                         <td>{{ safety_check.vehicle_make_model }}</td>
@@ -548,6 +596,14 @@
                                     <i class="fas fa-times"></i>
                                 </a>
                                 {% endif %}
+                                
+                                <!-- زر الحذف الفردي -->
+                                <a href="{{ url_for('external_safety.delete_safety_check', check_id=safety_check.id) }}" 
+                                   class="btn btn-action-enhanced" 
+                                   style="background: var(--rejected-gradient); color: white;" 
+                                   title="حذف الطلب">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -644,7 +700,7 @@
                 
                 // Show notification if filtered
                 if (statusFilter || searchFilter) {
-                    showNotification(تم العثور على ${visibleCount} طلب, 'info');
+                    showNotification('تم العثور على ' + visibleCount + ' طلب', 'info');
                 }
             }, 300);
         }
@@ -653,13 +709,44 @@
         document.getElementById('statusFilter').addEventListener('change', filterTable);
         document.getElementById('searchFilter').addEventListener('input', filterTable);
         
-        // Clear filters
-        function clearFilters() {
-            document.getElementById('statusFilter').value = '';
-            document.getElementById('searchFilter').value = '';
-            filterTable();
-            showNotification('تم مسح جميع الفلاتر', 'info');
-        }
+        // تحديث عدد العناصر المحددة لحذف مجمع
+        window.updateBulkDeleteButton = function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-check-id]');
+            const checked = document.querySelectorAll('input[type="checkbox"][data-check-id]:checked');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (checked.length > 0) {
+                bulkDeleteBtn.style.display = 'inline-block';
+                selectedCount.textContent = checked.length;
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+                selectedCount.textContent = '0';
+            }
+        };
+        
+        // Submit filter form - دالة إرسال الفلاتر
+        window.submitFilterForm = function() {
+            const form = document.getElementById('filterForm');
+            if (form) {
+                form.submit();
+            }
+        };
+        
+        // Clear filters function - دالة مسح الفلاتر
+        window.clearFilters = function() {
+            // إعادة تعيين جميع الفلاتر
+            const statusFilter = document.querySelector('select[name="status_filter"]');
+            const vehicleFilter = document.querySelector('select[name="vehicle_filter"]');
+            const departmentFilter = document.querySelector('select[name="department_filter"]');
+            
+            if (statusFilter) statusFilter.value = '';
+            if (vehicleFilter) vehicleFilter.value = '';
+            if (departmentFilter) departmentFilter.value = '';
+            
+            // إرسال النموذج فوراً
+            document.getElementById('filterForm').submit();
+        };
         
         // Enhanced notification system
         function showNotification(message, type) {
@@ -700,5 +787,108 @@
         form.action = `/admin/external-safety-check/${checkId}/reject`;
         $('#rejectModal').modal('show');
     }
+
+    // دوال التحديد الجماعي
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll');
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        const visibleCheckboxes = Array.from(checkboxes).filter(cb => cb.closest('tr').style.display !== 'none');
+        
+        visibleCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+        
+        updateBulkDeleteButton();
+    }
+
+    function updateBulkDeleteButton() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const selectedCount = document.getElementById('selectedCount');
+        
+        console.log('تحديث زر الحذف الجماعي:', checkboxes.length, 'عنصر محدد');
+        
+        if (checkboxes.length > 0) {
+            bulkDeleteBtn.style.display = 'inline-block';
+            selectedCount.textContent = checkboxes.length;
+            console.log('إظهار زر الحذف الجماعي');
+        } else {
+            bulkDeleteBtn.style.display = 'none';
+            console.log('إخفاء زر الحذف الجماعي');
+        }
+        
+        // تحديث حالة "تحديد الكل"
+        const allCheckboxes = document.querySelectorAll('.row-checkbox');
+        const visibleCheckboxes = Array.from(allCheckboxes).filter(cb => cb.closest('tr').style.display !== 'none');
+        const checkedVisibleBoxes = visibleCheckboxes.filter(cb => cb.checked);
+        
+        const selectAll = document.getElementById('selectAll');
+        if (visibleCheckboxes.length === 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        } else if (checkedVisibleBoxes.length === visibleCheckboxes.length) {
+            selectAll.checked = true;
+            selectAll.indeterminate = false;
+        } else if (checkedVisibleBoxes.length > 0) {
+            selectAll.checked = false;
+            selectAll.indeterminate = true;
+        } else {
+            selectAll.checked = false;
+            selectAll.indeterminate = false;
+        }
+    }
+
+    function bulkDelete() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+        const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+        
+        if (selectedIds.length === 0) {
+            showNotification('لم يتم تحديد أي عناصر للحذف', 'warning');
+            return;
+        }
+        
+        const confirmMessage = `هل أنت متأكد من حذف ${selectedIds.length} طلب فحص سلامة؟\n\nهذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع الصور المرفقة أيضاً.`;
+        
+        if (confirm(confirmMessage)) {
+            // إنشاء نموذج مخفي لإرسال البيانات
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ url_for("external_safety.bulk_delete_safety_checks") }}';
+            
+            // إضافة CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrf_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            // إضافة المعرفات المحددة
+            selectedIds.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'check_ids';
+                input.value = id;
+                form.appendChild(input);
+            });
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+
+    // إضافة مستمع الأحداث لتحديث أزرار التحديد عند تطبيق الفلاتر
+    document.addEventListener('DOMContentLoaded', function() {
+        // إعادة تعريف clearFilters في النطاق العام
+        window.clearFilters = function() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            filterTable();
+            showNotification('تم مسح جميع الفلاتر', 'info');
+            updateBulkDeleteButton(); // تحديث أزرار التحديد بعد مسح الفلاتر
+        };
+        
+        // تحديث أزرار التحديد عند تحميل الصفحة
+        updateBulkDeleteButton();
+    });
 </script>
 {% endblock %}

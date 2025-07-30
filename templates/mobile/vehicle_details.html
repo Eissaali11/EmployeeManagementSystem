@@ -105,6 +105,28 @@ body {
             </div>
         </div>
         
+        <!-- معلومات السائق الحالي -->
+        <div class="info-row">
+            <div class="info-label">السائق الحالي:</div>
+            <div class="info-value">
+                {% if vehicle.driver_name %}
+                    <span class="text-success fw-bold">{{ vehicle.driver_name }}</span>
+                    {% if current_driver and current_driver.mobile %}
+                    <div class="mt-2">
+                        <button onclick="redirectToWhatsApp('{{ current_driver.mobile }}', '{{ vehicle.driver_name }}', '{{ vehicle.plate_number }}', '{{ current_driver.handover_type_ar }}', '{{ current_driver.formatted_date }}', '{{ url_for('vehicles.handover_pdf_public', id=current_driver.handover_id, _external=True) }}', '{% if vehicle.registration_form_image %}{{ request.url_root }}static/{{ vehicle.registration_form_image }}{% endif %}')"
+                                class="btn btn-sm btn-success w-100 mt-1"
+                                title="إرسال رسالة واتساب محسنة">
+                            <i class="fab fa-whatsapp ms-1"></i>
+                            واتساب محسن مع رسائل السلامة
+                        </button>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <span class="text-muted">غير محدد</span>
+                {% endif %}
+            </div>
+        </div>
+        
         {% if vehicle.notes %}
         <div class="mt-3">
             <div class="info-section-title">ملاحظات:</div>
@@ -661,7 +683,7 @@ body {
                                            class="btn btn-sm btn-outline-primary" title="عرض">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ url_for('mobile.edit_handover_mobile', handover_id=record.id) }}" 
+                                        <a href="{{ url_for('mobile.create_handover_mobile', handover_id=record.id) }}" 
                                            class="btn btn-sm btn-outline-warning" title="تعديل">
                                             <i class="fas fa-edit"></i>
                                         </a>

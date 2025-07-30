@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.lsof
     pkgs.zip
     pkgs.libffi
     pkgs.gdk-pixbuf

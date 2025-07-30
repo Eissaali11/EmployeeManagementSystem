@@ -14,7 +14,7 @@
             <h5 class="card-title mb-0">تعديل بيانات: {{ employee.name }}</h5>
         </div>
         <div class="card-body">
-            <form action="{{ url_for('employees.edit', id=employee.id) }}" method="post">
+            <form action="{{ url_for('employees.edit', id=employee.id) }}" method="post" enctype="multipart/form-data">
                 <!-- إضافة حقل مخفي لتتبع الصفحة المرجعية -->
                 <input type="hidden" name="return_url" value="{{ request.referrer or url_for('employees.index') }}">
                 <div class="row">
@@ -40,7 +40,32 @@
                     <div class="col-md-3">
                         <div class="form-group mb-3">
                             <label for="mobile" class="form-label required-field">جوال العمل</label>
-                            <input type="text" class="form-control" id="mobile" name="mobile" value="{{ employee.mobile }}" required>
+                            <div class="mobile-dropdown-container" style="position: relative;">
+                                <!-- حقل البحث -->
+                                <input type="text" class="form-control" id="mobile_search" 
+                                       placeholder="ابحث عن رقم الجوال أو اكتب رقم جديد..." 
+                                       value="{{ employee.mobile or '' }}"
+                                       autocomplete="off">
+                                
+                                <!-- القائمة المخفية للأرقام المتاحة -->
+                                <div class="mobile-dropdown-list" id="mobile_dropdown_list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                    {% for phone in available_phone_numbers %}
+                                    <div class="mobile-dropdown-item" data-value="{{ phone.phone_number }}" 
+                                         style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ phone.phone_number }}</div>
+                                        {% if phone.carrier or phone.plan_type %}
+                                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                            {% if phone.carrier %}{{ phone.carrier }}{% endif %}
+                                            {% if phone.plan_type %} - {{ phone.plan_type }}{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <!-- الحقل المخفي لحفظ القيمة -->
+                                <input type="hidden" id="mobile" name="mobile" value="{{ employee.mobile or '' }}" required>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -158,7 +183,32 @@
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="mobile_imei" class="form-label">رقم IMEI</label>
-                                            <input type="text" class="form-control" id="mobile_imei" name="mobile_imei" value="{{ employee.mobile_imei or '' }}" placeholder="15 رقم" maxlength="15">
+                                            <div class="imei-dropdown-container" style="position: relative;">
+                                                <!-- حقل البحث -->
+                                                <input type="text" class="form-control" id="imei_search" 
+                                                       placeholder="ابحث عن رقم IMEI أو اكتب رقم جديد..." 
+                                                       value="{{ employee.mobile_imei or '' }}"
+                                                       autocomplete="off" maxlength="15">
+                                                
+                                                <!-- القائمة المخفية للأرقام المتاحة -->
+                                                <div class="imei-dropdown-list" id="imei_dropdown_list" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 1000; max-height: 200px; overflow-y: auto; border: 1px solid #ccc; background: #ffffff; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">
+                                                    {% for device in available_imei_numbers %}
+                                                    <div class="imei-dropdown-item" data-value="{{ device.imei }}" 
+                                                         style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f0f0f0; color: #333; background: #fff;">
+                                                        <div style="font-weight: bold; color: #2c3e50; font-size: 14px;">{{ device.imei }}</div>
+                                                        {% if device.brand or device.model %}
+                                                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 2px;">
+                                                            {% if device.brand %}{{ device.brand }}{% endif %}
+                                                            {% if device.model %} {{ device.model }}{% endif %}
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                
+                                                <!-- الحقل المخفي لحفظ القيمة -->
+                                                <input type="hidden" id="mobile_imei" name="mobile_imei" value="{{ employee.mobile_imei or '' }}">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -197,6 +247,56 @@
                                                 <i class="fas fa-info-circle"></i>
                                                 يمكن تركه فارغاً إذا كان غير معروف أو غير محدد
                                             </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قسم المعلومات البنكية -->
+                    <div class="col-12">
+                        <div class="card border-success">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-university me-2"></i>المعلومات البنكية</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="bank_iban" class="form-label">رقم الإيبان البنكي (IBAN)</label>
+                                            <input type="text" class="form-control" id="bank_iban" name="bank_iban" 
+                                                   value="{{ employee.bank_iban or '' }}" 
+                                                   placeholder="SA0000000000000000000000"
+                                                   maxlength="34"
+                                                   title="أدخل رقم الإيبان البنكي (اختياري)"
+                                                   style="text-transform: uppercase;">
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                أدخل رقم الإيبان الصحيح للموظف (اختياري) - مثال: SA6710000111000467250
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="bank_iban_image" class="form-label">صورة شهادة الإيبان</label>
+                                            <input type="file" class="form-control" id="bank_iban_image" name="bank_iban_image" 
+                                                   accept="image/*,.pdf">
+                                            <div class="form-text text-muted">
+                                                <i class="fas fa-upload"></i>
+                                                يمكنك رفع صورة أو ملف PDF لشهادة الإيبان (اختياري)
+                                            </div>
+                                            {% if employee.bank_iban_image %}
+                                            <div class="mt-2">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-file-image text-success me-2"></i>
+                                                    <span class="text-success">تم رفع صورة شهادة الإيبان</span>
+                                                    <a href="{{ url_for('static', filename=employee.bank_iban_image) }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                                        <i class="fas fa-eye"></i> عرض
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
@@ -268,6 +368,17 @@
                             <div class="form-text text-muted">
                                 <i class="fas fa-info-circle"></i>
                                 يمكنك استخدام التاريخ الميلادي أو الهجري عن طريق زر التبديل أعلى الصفحة
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="birth_date" class="form-label">تاريخ الميلاد</label>
+                            <input type="date" class="form-control date-picker" id="birth_date" name="birth_date" 
+                                  value="{{ employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '' }}">
+                            <div class="form-text text-muted">
+                                <i class="fas fa-birthday-cake"></i>
+                                تاريخ ميلاد الموظف
                             </div>
                         </div>
                     </div>
@@ -391,7 +502,229 @@ document.addEventListener('DOMContentLoaded', function() {
     // إعداد الحالة الافتراضية للحقول الشرطية عند تحميل الصفحة
     toggleCustodyFields();
     toggleSponsorNameField();
+    
+    // إعداد searchable dropdown للجوال العمل
+    initializeMobileDropdown();
+    
+    // إعداد searchable dropdown لرقم IMEI
+    initializeImeiDropdown();
 });
+
+// دالة إعداد القائمة المنسدلة القابلة للبحث لجوال العمل
+function initializeMobileDropdown() {
+    const searchInput = document.getElementById('mobile_search');
+    const dropdownList = document.getElementById('mobile_dropdown_list');
+    const hiddenInput = document.getElementById('mobile');
+    const dropdownItems = document.querySelectorAll('.mobile-dropdown-item');
+    
+    if (!searchInput || !dropdownList || !hiddenInput) {
+        console.error('Mobile dropdown elements not found');
+        return;
+    }
+    
+    console.log('Initializing mobile dropdown with current value:', hiddenInput.value);
+    
+    // إظهار القائمة عند التركيز على حقل البحث
+    searchInput.addEventListener('focus', function() {
+        dropdownList.style.display = 'block';
+        filterDropdownItems('');
+    });
+    
+    // البحث في الأرقام أثناء الكتابة
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        filterDropdownItems(searchTerm);
+        dropdownList.style.display = 'block';
+        
+        // تحديث القيمة المخفية
+        hiddenInput.value = searchTerm;
+        console.log('Updated hidden input value to:', searchTerm);
+    });
+    
+    // إخفاء القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdownList.contains(e.target)) {
+            dropdownList.style.display = 'none';
+        }
+    });
+    
+    // التعامل مع اختيار عنصر من القائمة
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            searchInput.value = value;
+            hiddenInput.value = value;
+            dropdownList.style.display = 'none';
+            console.log('Selected mobile number:', value);
+        });
+        
+        // تأثيرات التمرير
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e3f2fd';
+            this.style.color = '#1976d2';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#ffffff';
+            this.style.color = '#333';
+        });
+    });
+    
+    // إضافة معالج إرسال النموذج للتأكد من حفظ القيمة
+    const form = searchInput.closest('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // التأكد من أن القيمة المخفية تحتوي على القيمة الصحيحة
+            const finalValue = searchInput.value.trim();
+            hiddenInput.value = finalValue;
+            console.log('Form submitting with mobile value:', finalValue);
+        });
+    }
+    
+    // دالة فلترة العناصر
+    function filterDropdownItems(searchTerm) {
+        dropdownItems.forEach(item => {
+            const phoneNumber = item.dataset.value;
+            const text = item.textContent.toLowerCase();
+            
+            if (phoneNumber.includes(searchTerm) || text.includes(searchTerm.toLowerCase())) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+}
+
+// إضافة CSS محسن للقائمة المنسدلة
+const mobileDropdownCSS = document.createElement('style');
+mobileDropdownCSS.textContent = `
+    .mobile-dropdown-list {
+        border: 1px solid #bdc3c7 !important;
+        background: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    
+    .mobile-dropdown-item {
+        color: #2c3e50 !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease;
+    }
+    
+    .mobile-dropdown-item:hover {
+        background: #e3f2fd !important;
+        color: #1976d2 !important;
+    }
+    
+    .mobile-dropdown-item div {
+        color: inherit !important;
+    }
+    
+    .mobile-dropdown-item:last-child {
+        border-bottom: none !important;
+    }
+`;
+document.head.appendChild(mobileDropdownCSS);
+
+// دالة إعداد القائمة المنسدلة القابلة للبحث لرقم IMEI
+function initializeImeiDropdown() {
+    const searchInput = document.getElementById('imei_search');
+    const dropdownList = document.getElementById('imei_dropdown_list');
+    const hiddenInput = document.getElementById('mobile_imei');
+    const dropdownItems = document.querySelectorAll('.imei-dropdown-item');
+    
+    if (!searchInput || !dropdownList || !hiddenInput) return;
+    
+    // إظهار القائمة عند التركيز على حقل البحث
+    searchInput.addEventListener('focus', function() {
+        dropdownList.style.display = 'block';
+        filterImeiDropdownItems('');
+    });
+    
+    // البحث في الأرقام أثناء الكتابة
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        filterImeiDropdownItems(searchTerm);
+        dropdownList.style.display = 'block';
+        
+        // تحديث القيمة المخفية
+        hiddenInput.value = searchTerm;
+    });
+    
+    // إخفاء القائمة عند النقر خارجها
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdownList.contains(e.target)) {
+            dropdownList.style.display = 'none';
+        }
+    });
+    
+    // التعامل مع اختيار عنصر من القائمة
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const value = this.dataset.value;
+            searchInput.value = value;
+            hiddenInput.value = value;
+            dropdownList.style.display = 'none';
+        });
+        
+        // تأثيرات التمرير
+        item.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#e3f2fd';
+            this.style.color = '#1976d2';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#ffffff';
+            this.style.color = '#333';
+        });
+    });
+    
+    // دالة فلترة العناصر
+    function filterImeiDropdownItems(searchTerm) {
+        dropdownItems.forEach(item => {
+            const imeiNumber = item.dataset.value;
+            const text = item.textContent.toLowerCase();
+            
+            if (imeiNumber.includes(searchTerm) || text.includes(searchTerm.toLowerCase())) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+}
+
+// إضافة CSS محسن للقائمة المنسدلة لـ IMEI
+const imeiDropdownCSS = document.createElement('style');
+imeiDropdownCSS.textContent = `
+    .imei-dropdown-list {
+        border: 1px solid #bdc3c7 !important;
+        background: #ffffff !important;
+        color: #2c3e50 !important;
+    }
+    
+    .imei-dropdown-item {
+        color: #2c3e50 !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease;
+    }
+    
+    .imei-dropdown-item:hover {
+        background: #e3f2fd !important;
+        color: #1976d2 !important;
+    }
+    
+    .imei-dropdown-item div {
+        color: inherit !important;
+    }
+    
+    .imei-dropdown-item:last-child {
+        border-bottom: none !important;
+    }
+`;
+document.head.appendChild(imeiDropdownCSS);
+
+
 </script>
 
 {% endblock %}

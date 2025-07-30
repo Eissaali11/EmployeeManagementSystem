@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments, MobileDevice
 from sqlalchemy import func, or_
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
@@ -20,7 +20,7 @@ employees_bp = Blueprint('employees', __name__)
 
 # المجلد المخصص لحفظ صور الموظفين
 UPLOAD_FOLDER = 'static/uploads/employees'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
 
 def allowed_file(filename):
     """التحقق من أن الملف من الأنواع المسموحة"""
@@ -170,6 +170,7 @@ def create():
             email = request.form.get('email', '')
             department_id = request.form.get('department_id', None)
             join_date = parse_date(request.form.get('join_date', ''))
+            birth_date = parse_date(request.form.get('birth_date', ''))
             mobilePersonal = request.form.get('mobilePersonal')
             nationality_id = request.form.get('nationality_id')
             contract_status = request.form.get('contract_status')
@@ -180,6 +181,10 @@ def create():
             has_mobile_custody = 'has_mobile_custody' in request.form
             mobile_type = request.form.get('mobile_type', '') if has_mobile_custody else None
             mobile_imei = request.form.get('mobile_imei', '') if has_mobile_custody else None
+            
+            # حقول الكفالة الجديدة
+            sponsorship_status = request.form.get('sponsorship_status', 'inside')
+            current_sponsor_name = request.form.get('current_sponsor_name', '')
             
             selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             
@@ -200,6 +205,7 @@ def create():
                 email=email,
                 department_id=department_id,
                 join_date=join_date,
+                birth_date=birth_date,
                 mobilePersonal=mobilePersonal,
                 nationality_id=int(nationality_id) if nationality_id else None,
                 contract_status=contract_status,
@@ -207,7 +213,9 @@ def create():
                 employee_type=employee_type,
                 has_mobile_custody=has_mobile_custody,
                 mobile_type=mobile_type,
-                mobile_imei=mobile_imei
+                mobile_imei=mobile_imei,
+                sponsorship_status=sponsorship_status,
+                current_sponsor_name=current_sponsor_name
             )
             if selected_dept_ids:
                 departments_to_assign = Department.query.filter(Department.id.in_(selected_dept_ids)).all()
@@ -237,8 +245,26 @@ def create():
     
     # Get all departments for the dropdown
     departments = Department.query.all()
-    nationalities = Nationality.query.order_by(Nationality.name_ar).all() 
-    return render_template('employees/create.html', departments=departments,nationalities=nationalities)
+    nationalities = Nationality.query.order_by(Nationality.name_ar).all()
+    
+    # جلب الأرقام المتاحة فقط (غير المربوطة بأي موظف)
+    from models import ImportedPhoneNumber
+    available_phone_numbers = ImportedPhoneNumber.query.filter(
+        ImportedPhoneNumber.employee_id.is_(None)  # الأرقام المتاحة فقط
+    ).order_by(ImportedPhoneNumber.phone_number).all()
+    
+    # جلب أرقام IMEI المتاحة من إدارة الأجهزة
+    from models import MobileDevice
+    available_imei_numbers = MobileDevice.query.filter(
+        MobileDevice.status == 'متاح',  # الأجهزة المتاحة فقط
+        MobileDevice.employee_id.is_(None)  # غير مربوطة بموظف
+    ).order_by(MobileDevice.imei).all()
+    
+    return render_template('employees/create.html', 
+                         departments=departments,
+                         nationalities=nationalities,
+                         available_phone_numbers=available_phone_numbers,
+                         available_imei_numbers=available_imei_numbers)
 
 
 
@@ -276,7 +302,14 @@ def edit(id):
             employee.name = new_name
             employee.employee_id = new_employee_id
             employee.national_id = new_national_id
-            employee.mobile = request.form.get('mobile', '')
+            # معالجة رقم الجوال مع دعم الإدخال المخصص
+            mobile_value = request.form.get('mobile', '')
+            print(f"DEBUG: Received mobile value from form: '{mobile_value}'")
+            if mobile_value == 'custom':
+                mobile_value = request.form.get('mobile_custom', '')
+                print(f"DEBUG: Using custom mobile value: '{mobile_value}'")
+            employee.mobile = mobile_value
+            print(f"DEBUG: Final mobile value set to employee: '{employee.mobile}'")
             employee.status = request.form.get('status', 'active')
             employee.job_title = request.form.get('job_title', '')
             employee.location = request.form.get('location', '')
@@ -298,8 +331,27 @@ def edit(id):
             employee.sponsorship_status = request.form.get('sponsorship_status', 'inside')
             employee.current_sponsor_name = request.form.get('current_sponsor_name', '') if employee.sponsorship_status == 'inside' else None
             
+            # تحديث حقول المعلومات البنكية
+            employee.bank_iban = request.form.get('bank_iban', '').strip() or None
+            
+            # معالجة رفع صورة شهادة الإيبان
+            bank_iban_image_file = request.files.get('bank_iban_image')
+            if bank_iban_image_file and bank_iban_image_file.filename:
+                # حذف الصورة القديمة إذا كانت موجودة
+                if employee.bank_iban_image:
+                    old_image_path = os.path.join('static', employee.bank_iban_image)
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                
+                # حفظ الصورة الجديدة
+                employee.bank_iban_image = save_employee_image(bank_iban_image_file, id, 'iban')
+            
             join_date_str = request.form.get('join_date')
             employee.join_date = parse_date(join_date_str) if join_date_str else None
+            
+            # إضافة معالجة تاريخ الميلاد
+            birth_date_str = request.form.get('birth_date')
+            employee.birth_date = parse_date(birth_date_str) if birth_date_str else None
 
             selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             current_dept_ids = {dept.id for dept in employee.departments}
@@ -359,8 +411,27 @@ def edit(id):
     # في حالة GET request (عند فتح الصفحة لأول مرة)
     all_departments = Department.query.order_by(Department.name).all()
     all_nationalities = Nationality.query.order_by(Nationality.name_ar).all() # جلب كل الجنسيات
+    
+    # جلب الأرقام المتاحة فقط (غير المربوطة بأي موظف)
+    from models import ImportedPhoneNumber
+    available_phone_numbers = ImportedPhoneNumber.query.filter(
+        ImportedPhoneNumber.employee_id.is_(None)  # الأرقام المتاحة فقط
+    ).order_by(ImportedPhoneNumber.phone_number).all()
+    
+    # جلب أرقام IMEI المتاحة من إدارة الأجهزة
+    from models import MobileDevice
+    available_imei_numbers = MobileDevice.query.filter(
+        MobileDevice.status == 'متاح',  # الأجهزة المتاحة فقط
+        MobileDevice.employee_id.is_(None)  # غير مربوطة بموظف
+    ).order_by(MobileDevice.imei).all()
+    
     print(f"Passing {len(all_nationalities)} nationalities to the template.")
-    return render_template('employees/edit.html', employee=employee, nationalities=all_nationalities, departments=all_departments)
+    return render_template('employees/edit.html', 
+                         employee=employee, 
+                         nationalities=all_nationalities, 
+                         departments=all_departments,
+                         available_phone_numbers=available_phone_numbers,
+                         available_imei_numbers=available_imei_numbers)
 
 
 
@@ -443,7 +514,10 @@ def edit(id):
 @require_module_access(Module.EMPLOYEES, Permission.VIEW)
 def view(id):
     """View detailed employee information"""
-    employee = Employee.query.get_or_404(id)
+    employee = Employee.query.options(
+        db.joinedload(Employee.departments),
+        db.joinedload(Employee.nationality_rel)
+    ).get_or_404(id)
     
     # Get employee documents
     documents = Document.query.filter_by(employee_id=id).all()
@@ -491,6 +565,20 @@ def view(id):
     
     # Get vehicle handover records
     vehicle_handovers = VehicleHandover.query.filter_by(employee_id=id).order_by(VehicleHandover.handover_date.desc()).all()
+    
+    # Get mobile devices assigned to this employee
+    mobile_devices = MobileDevice.query.filter_by(employee_id=id).order_by(MobileDevice.assigned_date.desc()).all()
+    
+    # Get device assignments for this employee
+    from models import DeviceAssignment
+    device_assignments = DeviceAssignment.query.filter_by(
+        employee_id=id, 
+        is_active=True
+    ).options(
+        db.joinedload(DeviceAssignment.device),
+        db.joinedload(DeviceAssignment.sim_card)
+    ).all()
+    
     all_departments = Department.query.order_by(Department.name).all()
     return render_template('employees/view.html', 
                           employee=employee, 
@@ -500,8 +588,83 @@ def view(id):
                           attendances=attendances,
                           salaries=salaries,
                           vehicle_handovers=vehicle_handovers,
+                          mobile_devices=mobile_devices,
+                          device_assignments=device_assignments,
                           departments=all_departments
                           )
+
+@employees_bp.route('/<int:id>/upload_iban', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
+def upload_iban(id):
+    """رفع صورة الإيبان البنكي للموظف"""
+    employee = Employee.query.get_or_404(id)
+    
+    try:
+        # الحصول على بيانات الإيبان والملف
+        bank_iban = request.form.get('bank_iban', '').strip()
+        iban_file = request.files.get('iban_image')
+        
+        # تحديث رقم الإيبان
+        if bank_iban:
+            employee.bank_iban = bank_iban
+        
+        # رفع صورة الإيبان إذا تم اختيارها
+        if iban_file and iban_file.filename:
+            # حذف الصورة القديمة إذا كانت موجودة
+            if employee.bank_iban_image:
+                old_image_path = os.path.join('static', employee.bank_iban_image)
+                if os.path.exists(old_image_path):
+                    os.remove(old_image_path)
+            
+            # حفظ الصورة الجديدة
+            image_path = save_employee_image(iban_file, employee.id, 'iban')
+            if image_path:
+                employee.bank_iban_image = image_path
+        
+        db.session.commit()
+        
+        # تسجيل العملية
+        log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الإيبان البنكي للموظف: {employee.name}')
+        
+        flash('تم حفظ بيانات الإيبان البنكي بنجاح', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حفظ بيانات الإيبان: {str(e)}', 'danger')
+    
+    return redirect(url_for('employees.view', id=id))
+
+@employees_bp.route('/<int:id>/delete_iban_image', methods=['POST'])
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.EDIT)
+def delete_iban_image(id):
+    """حذف صورة الإيبان البنكي للموظف"""
+    employee = Employee.query.get_or_404(id)
+    
+    try:
+        if employee.bank_iban_image:
+            # حذف الملف من الخادم
+            image_path = os.path.join('static', employee.bank_iban_image)
+            if os.path.exists(image_path):
+                os.remove(image_path)
+            
+            # حذف المسار من قاعدة البيانات
+            employee.bank_iban_image = None
+            db.session.commit()
+            
+            # تسجيل العملية
+            log_activity('delete', 'Employee', employee.id, f'تم حذف صورة الإيبان البنكي للموظف: {employee.name}')
+            
+            flash('تم حذف صورة الإيبان البنكي بنجاح', 'success')
+        else:
+            flash('لا توجد صورة إيبان لحذفها', 'warning')
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء حذف صورة الإيبان: {str(e)}', 'danger')
+    
+    return redirect(url_for('employees.view', id=id))
 
 @employees_bp.route('/<int:id>/confirm_delete')
 @login_required
@@ -874,6 +1037,51 @@ def update_status(id):
             
             note = request.form.get('note', '')
             
+            # إذا تم تغيير الحالة إلى غير نشط، فك ربط جميع أرقام SIM
+            if new_status == 'inactive' and old_status != 'inactive':
+                try:
+                    # استيراد SimCard model
+                    from models import SimCard
+                    from flask import current_app
+                    
+                    current_app.logger.info(f"Checking SIM cards for employee {employee.id} ({employee.name}) who became inactive")
+                    
+                    # البحث عن جميع أرقام SIM المرتبطة بهذا الموظف
+                    sim_cards = SimCard.query.filter_by(employee_id=employee.id).all()
+                    
+                    current_app.logger.info(f"Found {len(sim_cards)} SIM cards linked to employee {employee.id}")
+                    
+                    if sim_cards:
+                        for sim_card in sim_cards:
+                            current_app.logger.info(f"Unlinking SIM card {sim_card.phone_number} (ID: {sim_card.id}) from employee {employee.id}")
+                            
+                            # فك الربط
+                            sim_card.employee_id = None
+                            sim_card.assigned_date = None
+                            
+                            # تسجيل عملية فك الربط
+                            try:
+                                from utils.audit_logger import log_activity
+                                log_activity(
+                                    action="unassign_auto",
+                                    entity_type="SIM",
+                                    entity_id=sim_card.id,
+                                    details=f"فك ربط رقم SIM {sim_card.phone_number} تلقائياً بسبب تغيير حالة الموظف {employee.name} إلى غير نشط"
+                                )
+                            except Exception as audit_e:
+                                current_app.logger.error(f"Failed to log audit: {str(audit_e)}")
+                        
+                        # حفظ التغييرات في قاعدة البيانات
+                        db.session.commit()
+                        flash(f'تم فك ربط {len(sim_cards)} رقم SIM مرتبط بالموظف تلقائياً', 'info')
+                        current_app.logger.info(f"Successfully unlinked {len(sim_cards)} SIM cards from employee {employee.id}")
+                
+                except Exception as e:
+                    current_app.logger.error(f"Error unassigning SIM cards for inactive employee: {str(e)}")
+                    db.session.rollback()
+                    flash('تحذير: حدث خطأ في فك ربط أرقام SIM. يرجى فحص الأرقام يدوياً', 'warning')
+                    # لا نتوقف عن تحديث حالة الموظف حتى لو فشل فك ربط الأرقام
+            
             # توثيق التغيير في السجل
             status_names = {
                 'active': 'نشط',
@@ -916,7 +1124,10 @@ def update_status(id):
 def export_excel():
     """Export employees to Excel file"""
     try:
-        employees = Employee.query.all()
+        employees = Employee.query.options(
+            db.joinedload(Employee.departments),
+            db.joinedload(Employee.nationality_rel)
+        ).all()
         output = generate_employee_excel(employees)
         
         # Log the export
@@ -937,6 +1148,52 @@ def export_excel():
         )
     except Exception as e:
         flash(f'حدث خطأ أثناء تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('employees.index'))
+
+@employees_bp.route('/export_comprehensive')
+@login_required
+@require_module_access(Module.EMPLOYEES, Permission.VIEW)
+def export_comprehensive():
+    """تصدير شامل لبيانات الموظفين مع جميع التفاصيل والعُهد والمعلومات البنكية"""
+    try:
+        from utils.basic_comprehensive_export import generate_comprehensive_employee_excel
+        
+        employees = Employee.query.options(
+            db.joinedload(Employee.departments),
+            db.joinedload(Employee.nationality_rel),
+            db.joinedload(Employee.salaries),
+            db.joinedload(Employee.attendances),
+            db.joinedload(Employee.documents)
+        ).all()
+        
+        output = generate_comprehensive_employee_excel(employees)
+        
+        # تسجيل العملية
+        audit = SystemAudit(
+            action='export_comprehensive',
+            entity_type='employee',
+            entity_id=0,
+            details=f'تم التصدير الشامل لبيانات {len(employees)} موظف مع جميع التفاصيل'
+        )
+        db.session.add(audit)
+        db.session.commit()
+        
+        # إنشاء اسم الملف مع التاريخ
+        current_date = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'تصدير_شامل_الموظفين_{current_date}.xlsx'
+        
+        return send_file(
+            output,
+            download_name=filename,
+            as_attachment=True,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        import traceback
+        print(f"Error in comprehensive export: {str(e)}")
+        print(traceback.format_exc())
+        flash(f'حدث خطأ أثناء التصدير الشامل: {str(e)}', 'danger')
         return redirect(url_for('employees.index'))
         
 @employees_bp.route('/<int:id>/export_attendance_excel')
@@ -1227,3 +1484,5 @@ def comprehensive_report_excel(id):
         
         flash(f'حدث خطأ أثناء إنشاء التقرير الشامل (إكسل): {str(e)}', 'danger')
         return redirect(url_for('employees.view', id=id))
+
+

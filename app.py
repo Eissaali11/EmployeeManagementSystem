@@ -14,8 +14,20 @@ from flask_migrate import Migrate  # أضف هذا الاستيراد في ال�
 from dotenv import load_dotenv
 load_dotenv()  # تحميل المتغيرات البيئية من ملف .env
 
+
+# app.py
+from whatsapp_client import WhatsAppWrapper
+# ... استيراد مكتبات أخرى ...
+
+# إنشاء كائن واتساب واحد عند بدء تشغيل التطبيق
+# سيقوم الكلاس تلقائياً بقراءة المتغيرات من ملف .env
+whatsapp_service = WhatsAppWrapper()
+
+# ... بقية كود التطبيق الخاص بك ...
+
+
 # في ملف manage.py أو app.py
-  
+
 
 # إعدادات اللغة العربية
 ARABIC_CONFIG = {
@@ -181,7 +193,7 @@ def nl2br_filter(s):
 def format_date_filter(date, format='%Y-%m-%d'):
     """
     فلتر آمن لتنسيق التواريخ مع التعامل مع القيم الفارغة
-    
+
     :param date: كائن التاريخ (يمكن أن يكون None)
     :param format: صيغة التنسيق (افتراضياً YYYY-MM-DD)
     :return: التاريخ المنسق أو نص بديل
@@ -195,7 +207,7 @@ def format_date_filter(date, format='%Y-%m-%d'):
 def display_date_filter(date, format='%Y-%m-%d', default="غير محدد"):
     """
     عرض التاريخ بشكل منسق أو نص بديل إذا كان التاريخ فارغاً
-    
+
     :param date: كائن التاريخ (يمكن أن يكون None)
     :param format: صيغة التنسيق (افتراضياً YYYY-MM-DD)
     :param default: النص البديل للعرض
@@ -210,22 +222,22 @@ def display_date_filter(date, format='%Y-%m-%d', default="غير محدد"):
 def days_remaining_filter(date, from_date=None):
     """
     حساب عدد الأيام المتبقية من التاريخ المحدد حتى اليوم
-    
+
     :param date: تاريخ الانتهاء (يمكن أن يكون None)
     :param from_date: تاريخ البداية (افتراضياً اليوم)
     :return: عدد الأيام المتبقية أو None إذا كان التاريخ غير محدد
     """
     if not date:
         return None
-        
+
     if not from_date:
         from_date = datetime.now().date()
     elif hasattr(from_date, 'date'):
         from_date = from_date.date()
-        
+
     if hasattr(date, 'date'):
         date = date.date()
-        
+
     return (date - from_date).days
 
 # Context processor to add variables to all templates
@@ -244,7 +256,7 @@ def inject_csrf_token():
     """إضافة csrf_token إلى جميع القوالب"""
     def get_csrf_token():
         return csrf._get_csrf_token()
-    
+
     return {'csrf_token': get_csrf_token}
 
 # مسار الجذر الرئيسي للتطبيق مع توجيه تلقائي حسب نوع الجهاز
@@ -252,26 +264,26 @@ def inject_csrf_token():
 def root():
     from flask import request
     from models import Module, UserRole 
-    
+
     user_agent = request.headers.get('User-Agent', '').lower()
     mobile_devices = ['android', 'iphone', 'ipad', 'mobile']
-    
+
     # التحقق مما إذا كان الطلب يتضمن معلمة m=1 للوصول المباشر إلى نسخة الجوال
     mobile_param = request.args.get('m', '0')
-    
+
     # إذا كان المستخدم يستخدم جهازاً محمولاً أو طلب نسخة الجوال صراحةً
     if any(device in user_agent for device in mobile_devices) or mobile_param == '1':
         if current_user.is_authenticated:
             return redirect(url_for('mobile.index'))
         else:
-            return redirect(url_for('mobile.login'))
-    
+            return redirect(url_for('mobil e.login'))
+
     # إذا كان المستخدم يستخدم جهاز كمبيوتر
     if current_user.is_authenticated:
         # التحقق من صلاحيات المستخدم للوصول إلى لوحة التحكم
         if current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.DASHBOARD):
             return redirect(url_for('dashboard.index'))
-        
+
         # توجيه المستخدم إلى أول وحدة مصرح له بالوصول إليها
         if current_user.has_module_access(Module.EMPLOYEES):
             return redirect(url_for('employees.index'))
@@ -319,7 +331,7 @@ WEASYPRINT_ENABLED = False
 with app.app_context():
     # Import models before creating tables
     import models  # noqa: F401
-    
+
     # Import and register route blueprints
     from routes.dashboard import dashboard_bp
     from routes.employees import employees_bp
@@ -341,14 +353,20 @@ with app.app_context():
 
     # تعطيل تقارير الورشة مؤقتاً حتى يتم حل مشكلة WeasyPrint
     # from routes.workshop_reports import workshop_reports_bp
-    
+
     from routes.employee_portal import employee_portal_bp
     from routes.insights import insights_bp
     from routes.external_safety import external_safety_bp
-    
+    from routes.mobile_devices import mobile_devices_bp
+    from routes.operations import operations_bp
+    from routes.sim_management import sim_management_bp
+    from routes.device_management import device_management_bp
+    from routes.device_assignment import device_assignment_bp
+    from routes.vehicle_operations import vehicle_operations_bp
+
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
-    
+
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(employees_bp, url_prefix='/employees')
     app.register_blueprint(departments_bp, url_prefix='/departments')
@@ -368,29 +386,35 @@ with app.app_context():
     # app.register_blueprint(workshop_reports_bp, url_prefix='/workshop-reports')
     app.register_blueprint(employee_portal_bp, url_prefix='/employee-portal')
     app.register_blueprint(insights_bp, url_prefix='/insights')
-    app.register_blueprint(external_safety_bp)
+    app.register_blueprint(external_safety_bp, url_prefix='/external-safety')
+    app.register_blueprint(mobile_devices_bp, url_prefix='/mobile-devices')
+    app.register_blueprint(operations_bp, url_prefix='/operations')
+    app.register_blueprint(sim_management_bp, url_prefix='/sim-management')
+    app.register_blueprint(device_management_bp, url_prefix='/device-management')
+    app.register_blueprint(device_assignment_bp, url_prefix='/device-assignment')
+    app.register_blueprint(vehicle_operations_bp, url_prefix='/vehicle-operations')
 
     # إضافة route لخدمة الصور من مجلد uploads
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
         from flask import send_from_directory
         return send_from_directory('uploads', filename)
-    
+
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access
-    
+
     # إضافة مرشح bitwise_and لاستخدامه في قوالب Jinja2
     @app.template_filter('bitwise_and')
     def bitwise_and_filter(value1, value2):
         """تنفيذ عملية bitwise AND بين قيمتين"""
         return value1 & value2
-    
+
     # إضافة مرشح للتحقق من صلاحيات المستخدم
     @app.template_filter('check_module_access')
     def check_module_access_filter(user, module, permission=None):
         """
         مرشح للتحقق من صلاحيات المستخدم للوصول إلى وحدة معينة
-        
+
         :param user: كائن المستخدم
         :param module: الوحدة المطلوب التحقق منها
         :param permission: الصلاحية المطلوبة (اختياري)
@@ -398,7 +422,7 @@ with app.app_context():
         """
         from models import Permission
         return check_module_access(user, module, permission or Permission.VIEW)
-        
+
     @app.context_processor
     def inject_global_template_vars():
         from models import Module, UserRole, Permission
@@ -410,9 +434,9 @@ with app.app_context():
             'UserRole': UserRole,
             'Permission': Permission
         }
-    
+
     # ملاحظة: تم دمج هذا الكود مع مسار الجذر الرئيسي
-    
+
     # Create database tables if they don't exist
     logger.info("Creating database tables...")
     db.create_all()
@@ -445,24 +469,24 @@ def make_all_users_admins_command():
     try:
         # 1. جلب كل المستخدمين من قاعدة البيانات
         users_to_update = User.query.all()
-        
+
         if not users_to_update:
             print("لا يوجد مستخدمين في قاعدة البيانات لتحديثهم.")
             return
-            
+
         count = 0
         # 2. المرور على كل مستخدم وتغيير دوره
         for user in users_to_update:
             if user.role != UserRole.ADMIN:
                 user.role = UserRole.ADMIN
                 count += 1
-        
+
         # 3. حفظ كل التغييرات في قاعدة البيانات دفعة واحدة
         db.session.commit()
-        
+
         print(f"نجاح! تم تحديث دور {count} مستخدم إلى 'admin'.")
         print(f"إجمالي عدد المستخدمين الآن: {len(users_to_update)}.")
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"حدث خطأ أثناء تحديث الأدوار: {e}")
@@ -473,25 +497,26 @@ def make_all_users_admins_command():
     try:
         # 1. جلب كل المستخدمين من قاعدة البيانات
         users_to_update = User.query.all()
-        
+
         if not users_to_update:
             print("لا يوجد مستخدمين في قاعدة البيانات لتحديثهم.")
             return
-            
+
         count = 0
         # 2. المرور على كل مستخدم وتغيير دوره
         for user in users_to_update:
             if user.role != UserRole.ADMIN:
                 user.role = UserRole.ADMIN
                 count += 1
-        
+
         # 3. حفظ كل التغييرات في قاعدة البيانات دفعة واحدة
         db.session.commit()
-        
+
         print(f"نجاح! تم تحديث دور {count} مستخدم إلى 'admin'.")
         print(f"إجمالي عدد المستخدمين الآن: {len(users_to_update)}.")
-        
+
     except Exception as e:
         db.session.rollback()
         print(f"حدث خطأ أثناء تحديث الأدوار: {e}")
         print("تم التراجع عن كل التغييرات.")
+

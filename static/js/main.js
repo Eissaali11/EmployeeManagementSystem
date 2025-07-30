@@ -374,9 +374,9 @@ function setupCalendarToggle() {
     
     if (calendarToggle) {
         calendarToggle.addEventListener('change', function() {
-            // استثناء العناصر داخل جدول الحضور لمنع اختفاء التواريخ فيه
-            const hijriElements = document.querySelectorAll('.hijri-date:not(.attendance-table .hijri-date)');
-            const gregorianElements = document.querySelectorAll('.gregorian-date:not(.attendance-table .gregorian-date)');
+            // استثناء العناصر داخل جدول الحضور وصفحة عرض الموظفين لمنع اختفاء التواريخ فيها
+            const hijriElements = document.querySelectorAll('.hijri-date:not(.attendance-table .hijri-date):not(.employee-view .hijri-date)');
+            const gregorianElements = document.querySelectorAll('.gregorian-date:not(.attendance-table .gregorian-date):not(.employee-view .gregorian-date)');
             
             if (this.checked) {
                 // Show Hijri dates
