@@ -59,6 +59,7 @@ from datetime import date
 operations_bp = Blueprint('operations', __name__, url_prefix='/operations')
 
 
+
 def update_vehicle_state(vehicle_id):
     """
     الدالة المركزية الذكية لتحديد وتحديث الحالة النهائية للمركبة وسائقها.
@@ -156,6 +157,89 @@ def update_vehicle_state(vehicle_id):
         current_app.logger.error(f"خطأ في دالة update_vehicle_state لـ vehicle_id {vehicle_id}: {str(e)}")
 
 
+
+# def update_vehicle_state(vehicle_id):
+#     """
+#     الدالة المركزية الذكية لتحديد وتحديث الحالة النهائية للمركبة وسائقها
+#     بناءً على هرم أولويات الحالات (ورشة > إيجار > تسليم > متاحة).
+#     """
+#     try:
+#         vehicle = Vehicle.query.get(vehicle_id)
+#         if not vehicle:
+#             return
+
+#         # -- هرم أولوية الحالات (من الأعلى إلى الأدنى) --
+
+#         # 1. حالة "خارج الخدمة": لها أعلى أولوية ولا تتغير تلقائياً
+#         if vehicle.status == 'out_of_service':
+#             # لا تفعل شيئاً، هذه الحالة لا تتغير إلا يدوياً
+#             return
+
+#         # 2. حالة "الحادث"
+#         # يجب تعديل منطق الحادث بحيث تبقى الحالة accident حتى يتم إغلاق السجل
+#         active_accident = VehicleAccident.query.filter(
+#             VehicleAccident.vehicle_id == vehicle_id,
+#             VehicleAccident.accident_status != 'مغلق' # نفترض أن 'مغلق' هي الحالة النهائية
+#         ).first()
+#         if active_accident:
+#             vehicle.status = 'accident'
+#             # (منطق السائق يبقى كما هو أدناه لأنه قد يكون هناك سائق وقت الحادث)
+
+#         # 3. حالة "الورشة"
+#         in_workshop = VehicleWorkshop.query.filter(
+#             VehicleWorkshop.vehicle_id == vehicle_id,
+#             VehicleWorkshop.exit_date.is_(None) # لا يزال في الورشة
+#         ).first()
+#         if in_workshop:
+#             vehicle.status = 'in_workshop'
+#             db.session.commit() # نحفظ الحالة وننهي لأنها ذات أولوية
+#             return # إنهاء الدالة، لأن الورشة لها الأسبقية على الإيجار والتسليم
+
+#         # --- إذا لم تكن السيارة في ورشة، ننتقل للحالات التشغيلية ---
+
+#         # 4. حالة "مؤجرة"
+#         active_rental = VehicleRental.query.filter(
+#             VehicleRental.vehicle_id == vehicle_id,
+#             VehicleRental.is_active == True
+#         ).first()
+#         if active_rental:
+#             vehicle.status = 'rented'
+#             # لا ننهي هنا، سنكمل لتحديد السائق
+
+#         # 5. حالة "التسليم" و "متاحة" (نفس منطق الدالة السابقة)
+#         latest_delivery = VehicleHandover.query.filter(
+#             VehicleHandover.vehicle_id == vehicle_id,
+#             VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+#         ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+#         latest_return = VehicleHandover.query.filter(
+#             VehicleHandover.vehicle_id == vehicle_id,
+#             VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+#         ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+#         is_currently_handed_out = False
+#         if latest_delivery:
+#             if not latest_return or latest_delivery.created_at > latest_return.created_at:
+#                  is_currently_handed_out = True
+
+#         if is_currently_handed_out:
+#             # مسلمة لسائق
+#             vehicle.driver_name = latest_delivery.person_name
+#             # إذا لم تكن مؤجرة، فستكون في مشروع
+#             if not active_rental: 
+#                 vehicle.status = 'in_project'
+#         else:
+#             # تم استلامها أو لم تسلم أبداً
+#             vehicle.driver_name = None
+#             # إذا لم تكن مؤجرة، فستكون متاحة
+#             if not active_rental:
+#                 vehicle.status = 'available'
+
+#         db.session.commit()
+
+#     except Exception as e:
+#         db.session.rollback()
+#         current_app.logger.error(f"خطأ في تحديث حالة المركبة {vehicle_id}: {e}")
 
 
 
@@ -475,28 +559,91 @@ def approve_operation(operation_id):
 #         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
 
 
+# @operations_bp.route('/<int:operation_id>/reject', methods=['POST'])
+# @login_required
+# def reject_operation(operation_id):
+#     """رفض العملية مع حذف السجل المؤقت المرتبط بها."""
+
+#     if current_user.role != UserRole.ADMIN:
+#         return jsonify({'success': False, 'message': 'غير مسموح لك بالقيام بهذا الإجراء'})
+
+#     operation = OperationRequest.query.get_or_404(operation_id)
+#     review_notes = request.form.get('review_notes', '').strip()
+
+#     if not review_notes:
+#         return jsonify({'success': False, 'message': 'يجب إدخال سبب الرفض'})
+
+#     try:
+#         # 1. تحديث حالة الطلب
+#         operation.status = 'rejected'
+#         operation.reviewed_by = current_user.id
+#         operation.reviewed_at = datetime.utcnow()
+#         operation.review_notes = review_notes
+
+#         # 2. البحث عن السجل المرتبط وحذفه (إذا كان handover)
+#         record_to_delete = None
+#         if operation.operation_type == 'handover':
+#             record_to_delete = VehicleHandover.query.get(operation.related_record_id)
+
+#         if record_to_delete:
+#             db.session.delete(record_to_delete)
+#             log_audit(
+#                 'delete_on_rejection', 'VehicleHandover', record_to_delete.id,
+#                 f"تم حذف سجل Handover رقم {record_to_delete.id} تلقائياً بسبب رفض الطلب #{operation.id}"
+#             )
+#         else:
+#             current_app.logger.warning(f"لم يتم العثور على سجل Handover رقم {operation.related_record_id} لحذفه بعد الرفض.")
+
+#         # 3. إنشاء إشعار
+#         create_notification(
+#             operation_id=operation.id, user_id=operation.requested_by, notification_type='status_change',
+#             title=f'❌ تم رفض طلبك: {operation.title}',
+#             message=f'تم رفض طلبك من قبل {current_user.username}. السبب: {review_notes}'
+#         )
+
+#         db.session.commit()
+
+#         log_audit('reject', 'operation_request', operation.id, f'تم رفض العملية: {operation.title}')
+#         flash('تم رفض العملية وحذف السجل المؤقت.', 'warning')
+#         return jsonify({'success': True, 'message': 'تم رفض العملية'})
+
+#     except Exception as e:
+#         db.session.rollback()
+#         current_app.logger.error(f"خطأ في رفض العملية #{operation_id}: {str(e)}")
+#         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
+
 @operations_bp.route('/<int:operation_id>/reject', methods=['POST'])
 @login_required
 def reject_operation(operation_id):
-    """رفض العملية مع حذف السجل المؤقت المرتبط بها."""
-
+    """رفض العملية"""
+    
     if current_user.role != UserRole.ADMIN:
-        return jsonify({'success': False, 'message': 'غير مسموح لك بالقيام بهذا الإجراء'})
-
+        return jsonify({'success': False, 'message': 'غير مسموح'})
+    
     operation = OperationRequest.query.get_or_404(operation_id)
     review_notes = request.form.get('review_notes', '').strip()
-
+    
     if not review_notes:
         return jsonify({'success': False, 'message': 'يجب إدخال سبب الرفض'})
-
+    
     try:
-        # 1. تحديث حالة الطلب
+        # تحديث حالة العملية
         operation.status = 'rejected'
         operation.reviewed_by = current_user.id
         operation.reviewed_at = datetime.utcnow()
         operation.review_notes = review_notes
+        
+        # إنشاء إشعار للطالب
+        create_notification(
+            operation_id=operation.id,
+            user_id=operation.requested_by,
+            notification_type='status_change',
+            title=f'تم رفض العملية: {operation.title}',
+            message=f'تم رفض العملية من قبل {current_user.username}.\nالسبب: {review_notes}'
+        )
 
-        # 2. البحث عن السجل المرتبط وحذفه (إذا كان handover)
+
         record_to_delete = None
         if operation.operation_type == 'handover':
             record_to_delete = VehicleHandover.query.get(operation.related_record_id)
@@ -510,67 +657,19 @@ def reject_operation(operation_id):
         else:
             current_app.logger.warning(f"لم يتم العثور على سجل Handover رقم {operation.related_record_id} لحذفه بعد الرفض.")
 
-        # 3. إنشاء إشعار
-        create_notification(
-            operation_id=operation.id, user_id=operation.requested_by, notification_type='status_change',
-            title=f'❌ تم رفض طلبك: {operation.title}',
-            message=f'تم رفض طلبك من قبل {current_user.username}. السبب: {review_notes}'
-        )
-
+        
         db.session.commit()
-
-        log_audit('reject', 'operation_request', operation.id, f'تم رفض العملية: {operation.title}')
-        flash('تم رفض العملية وحذف السجل المؤقت.', 'warning')
+        
+        # تسجيل العملية
+        log_audit(current_user.id, 'reject', 'operation_request', operation.id, 
+                 f'تم رفض العملية: {operation.title} - السبب: {review_notes}')
+        
+        flash('تم رفض العملية', 'warning')
         return jsonify({'success': True, 'message': 'تم رفض العملية'})
-
+        
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"خطأ في رفض العملية #{operation_id}: {str(e)}")
         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
-
-
-# @operations_bp.route('/<int:operation_id>/reject', methods=['POST'])
-# @login_required
-# def reject_operation(operation_id):
-#     """رفض العملية"""
-    
-#     if current_user.role != UserRole.ADMIN:
-#         return jsonify({'success': False, 'message': 'غير مسموح'})
-    
-#     operation = OperationRequest.query.get_or_404(operation_id)
-#     review_notes = request.form.get('review_notes', '').strip()
-    
-#     if not review_notes:
-#         return jsonify({'success': False, 'message': 'يجب إدخال سبب الرفض'})
-    
-#     try:
-#         # تحديث حالة العملية
-#         operation.status = 'rejected'
-#         operation.reviewed_by = current_user.id
-#         operation.reviewed_at = datetime.utcnow()
-#         operation.review_notes = review_notes
-        
-#         # إنشاء إشعار للطالب
-#         create_notification(
-#             operation_id=operation.id,
-#             user_id=operation.requested_by,
-#             notification_type='status_change',
-#             title=f'تم رفض العملية: {operation.title}',
-#             message=f'تم رفض العملية من قبل {current_user.username}.\nالسبب: {review_notes}'
-#         )
-        
-#         db.session.commit()
-        
-#         # تسجيل العملية
-#         log_audit(current_user.id, 'reject', 'operation_request', operation.id, 
-#                  f'تم رفض العملية: {operation.title} - السبب: {review_notes}')
-        
-#         flash('تم رفض العملية', 'warning')
-#         return jsonify({'success': True, 'message': 'تم رفض العملية'})
-        
-#     except Exception as e:
-#         db.session.rollback()
-#         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
 
 
 

@@ -684,7 +684,6 @@ class VehicleHandover(db.Model):
     city = db.Column(db.String(100), nullable=True) # **جديد**: اسم المدينة وقت العملية
 
     # هذا الحقل سيفرق بين السجلات المعلّقة التي تنتظر الموافقة والسجلات الرسمية
-    is_approved = db.Column(db.Boolean, nullable=False, default=False, index=True)
     
     # --- 2. معلومات السيارة المنسوخة (Snapshot) ---
     # يبقى الربط فقط لسهولة الوصول للسيارة الحالية، ولكن بيانات التقرير تأتي من الحقول أدناه    

@@ -20,7 +20,7 @@ from models import (
         VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
         VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
         Department, ExternalAuthorization, Module, Permission, UserRole,
-        VehicleExternalSafetyCheck ,OperationRequest
+        VehicleExternalSafetyCheck,OperationRequest
 )
 from utils.audit_logger import log_activity
 from utils.audit_logger import log_audit
@@ -48,6 +48,47 @@ from datetime import date
 
 
 vehicles_bp = Blueprint('vehicles', __name__)
+
+def update_vehicle_driver(vehicle_id):
+        """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
+        try:
+                # الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
+                delivery_records = VehicleHandover.query.filter_by(
+                        vehicle_id=vehicle_id, 
+                        handover_type='delivery'
+                ).order_by(VehicleHandover.handover_date.desc()).all()
+
+                if delivery_records:
+                        # أخذ أحدث سجل تسليم (delivery)
+                        latest_delivery = delivery_records[0]
+
+                        # تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
+                        driver_name = None
+                        if latest_delivery.employee_id:
+                                employee = Employee.query.get(latest_delivery.employee_id)
+                                if employee:
+                                        driver_name = employee.name
+
+                        # إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
+                        if not driver_name and latest_delivery.person_name:
+                                driver_name = latest_delivery.person_name
+
+                        # تحديث اسم السائق في جدول السيارات
+                        vehicle = Vehicle.query.get(vehicle_id)
+                        if vehicle:
+                                vehicle.driver_name = driver_name
+                                db.session.commit()
+                else:
+                        # إذا لم يكن هناك سجلات تسليم، امسح اسم السائق
+                        vehicle = Vehicle.query.get(vehicle_id)
+                        if vehicle:
+                                vehicle.driver_name = None
+                                db.session.commit()
+
+        except Exception as e:
+                print(f"خطأ في تحديث اسم السائق: {e}")
+                # لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
+                pass
 
 
 
@@ -148,46 +189,89 @@ def update_vehicle_state(vehicle_id):
         current_app.logger.error(f"خطأ في دالة update_vehicle_state لـ vehicle_id {vehicle_id}: {str(e)}")
 
 
-def update_vehicle_driver(vehicle_id):
-        """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
-        try:
-                # الحصول على جميع سجلات التسليم (delivery) للسيارة مرتبة حسب التاريخ
-                delivery_records = VehicleHandover.query.filter_by(
-                        vehicle_id=vehicle_id, 
-                        handover_type='delivery'
-                ).order_by(VehicleHandover.handover_date.desc()).all()
+# def update_vehicle_state(vehicle_id):
+#     """
+#     الدالة المركزية الذكية لتحديد وتحديث الحالة النهائية للمركبة وسائقها
+#     بناءً على هرم أولويات الحالات (ورشة > إيجار > تسليم > متاحة).
+#     """
+#     try:
+#         vehicle = Vehicle.query.get(vehicle_id)
+#         if not vehicle:
+#             return
 
-                if delivery_records:
-                        # أخذ أحدث سجل تسليم (delivery)
-                        latest_delivery = delivery_records[0]
+#         # -- هرم أولوية الحالات (من الأعلى إلى الأدنى) --
 
-                        # تحديد اسم السائق (إما من جدول الموظفين أو من اسم الشخص المدخل يدوياً)
-                        driver_name = None
-                        if latest_delivery.employee_id:
-                                employee = Employee.query.get(latest_delivery.employee_id)
-                                if employee:
-                                        driver_name = employee.name
+#         # 1. حالة "خارج الخدمة": لها أعلى أولوية ولا تتغير تلقائياً
+#         if vehicle.status == 'out_of_service':
+#             # لا تفعل شيئاً، هذه الحالة لا تتغير إلا يدوياً
+#             return
 
-                        # إذا لم يكن هناك موظف معين، استخدم اسم الشخص المدخل يدوياً
-                        if not driver_name and latest_delivery.person_name:
-                                driver_name = latest_delivery.person_name
+#         # 2. حالة "الحادث"
+#         # يجب تعديل منطق الحادث بحيث تبقى الحالة accident حتى يتم إغلاق السجل
+#         active_accident = VehicleAccident.query.filter(
+#             VehicleAccident.vehicle_id == vehicle_id,
+#             VehicleAccident.accident_status != 'مغلق' # نفترض أن 'مغلق' هي الحالة النهائية
+#         ).first()
+#         if active_accident:
+#             vehicle.status = 'accident'
+#             # (منطق السائق يبقى كما هو أدناه لأنه قد يكون هناك سائق وقت الحادث)
 
-                        # تحديث اسم السائق في جدول السيارات
-                        vehicle = Vehicle.query.get(vehicle_id)
-                        if vehicle:
-                                vehicle.driver_name = driver_name
-                                db.session.commit()
-                else:
-                        # إذا لم يكن هناك سجلات تسليم، امسح اسم السائق
-                        vehicle = Vehicle.query.get(vehicle_id)
-                        if vehicle:
-                                vehicle.driver_name = None
-                                db.session.commit()
+#         # 3. حالة "الورشة"
+#         in_workshop = VehicleWorkshop.query.filter(
+#             VehicleWorkshop.vehicle_id == vehicle_id,
+#             VehicleWorkshop.exit_date.is_(None) # لا يزال في الورشة
+#         ).first()
+#         if in_workshop:
+#             vehicle.status = 'in_workshop'
+#             db.session.commit() # نحفظ الحالة وننهي لأنها ذات أولوية
+#             return # إنهاء الدالة، لأن الورشة لها الأسبقية على الإيجار والتسليم
 
-        except Exception as e:
-                print(f"خطأ في تحديث اسم السائق: {e}")
-                # لا نريد أن يؤثر هذا الخطأ على العملية الأساسية
-                pass
+#         # --- إذا لم تكن السيارة في ورشة، ننتقل للحالات التشغيلية ---
+
+#         # 4. حالة "مؤجرة"
+#         active_rental = VehicleRental.query.filter(
+#             VehicleRental.vehicle_id == vehicle_id,
+#             VehicleRental.is_active == True
+#         ).first()
+#         if active_rental:
+#             vehicle.status = 'rented'
+#             # لا ننهي هنا، سنكمل لتحديد السائق
+
+#         # 5. حالة "التسليم" و "متاحة" (نفس منطق الدالة السابقة)
+#         latest_delivery = VehicleHandover.query.filter(
+#             VehicleHandover.vehicle_id == vehicle_id,
+#             VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+#         ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+#         latest_return = VehicleHandover.query.filter(
+#             VehicleHandover.vehicle_id == vehicle_id,
+#             VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+#         ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+#         is_currently_handed_out = False
+#         if latest_delivery:
+#             if not latest_return or latest_delivery.created_at > latest_return.created_at:
+#                  is_currently_handed_out = True
+
+#         if is_currently_handed_out:
+#             # مسلمة لسائق
+#             vehicle.driver_name = latest_delivery.person_name
+#             # إذا لم تكن مؤجرة، فستكون في مشروع
+#             if not active_rental: 
+#                 vehicle.status = 'in_project'
+#         else:
+#             # تم استلامها أو لم تسلم أبداً
+#             vehicle.driver_name = None
+#             # إذا لم تكن مؤجرة، فستكون متاحة
+#             if not active_rental:
+#                 vehicle.status = 'available'
+
+#         db.session.commit()
+
+#     except Exception as e:
+#         db.session.rollback()
+#         current_app.logger.error(f"خطأ في تحديث حالة المركبة {vehicle_id}: {e}")
+            
 
 
 def update_all_vehicle_drivers():
@@ -902,7 +986,7 @@ def view(id):
     """عرض تفاصيل سيارة معينة (نسخة مُصحَّحة بواجهة عرض آمنة تعتمد على الموافقات)."""
 
     # 1. تحديث حالة السيارة لضمان أن البيانات المعروضة هي الأحدث
-    update_vehicle_state(id)
+    # update_vehicle_state(id)
 
     # 2. جلب السيارة وكل سجلاتها المرتبطة بها بعد التحديث
     vehicle = Vehicle.query.get_or_404(id)
@@ -1021,7 +1105,6 @@ def view(id):
         attachments=VehicleWorkshopImage.query.join(VehicleWorkshop).filter(VehicleWorkshop.vehicle_id == id).all(),
         inspection_warnings=[] # يمكنك إعادة تفعيل هذا المنطق إذا أردت
     )
-
 
 
 # @vehicles_bp.route('/<int:id>')
@@ -2372,56 +2455,122 @@ def create_handover(id):
         status_info = unsuitable_statuses[vehicle.status]
         flash(status_info['message'], 'danger')
         return redirect(status_info['redirect_to'])
-    # ===================== نهاية طبقة التحقق الأولى =====================
 
-
-    # --- إذا تجاوز الفحص أعلاه، نكمل المنطق العادي ---
 
     if request.method == 'GET':
-        # (منطق GET الذي يحدد ما إذا كان يجب عرض نموذج تسليم أم استلام)
+        approved_handover_ids_subquery = db.session.query(OperationRequest.related_record_id).filter_by(
+                operation_type='handover', status='approved', vehicle_id=id
+                    ).subquery()
 
-        latest_delivery = VehicleHandover.query.filter(
-            VehicleHandover.vehicle_id == id,
-            VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
-        ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+        all_handover_request_ids_subquery = db.session.query(OperationRequest.related_record_id).filter_by(
+                        operation_type='handover', vehicle_id=id
+                    ).subquery()
 
-        latest_return = VehicleHandover.query.filter(
-            VehicleHandover.vehicle_id == id,
-            VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
-        ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+                    # 2. بناء الاستعلام الأساسي الذي يختار السجلات الرسمية فقط
+        base_official_query = VehicleHandover.query.filter(
+                        VehicleHandover.vehicle_id == id
+                    ).filter(
+                        or_(
+                            VehicleHandover.id.in_(approved_handover_ids_subquery),
+                            ~VehicleHandover.id.in_(all_handover_request_ids_subquery)
+                        )
+                    )
 
+                    # 3. الآن نبحث عن آخر عملية تسليم واستلام في السجلات الرسمية فقط
+        latest_delivery = base_official_query.filter(
+                        VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+                    ).order_by(VehicleHandover.created_at.desc()).first()
+
+        latest_return = base_official_query.filter(
+                        VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+                    ).order_by(VehicleHandover.created_at.desc()).first()
+
+                    # 4. تطبيق نفس منطق القرار لتحديد حالة التسليم الحالية
         force_mode = None
         info_message = None
         current_driver_info = None
 
         is_currently_handed_out = False
         if latest_delivery:
-            if not latest_return or latest_delivery.created_at > latest_return.created_at:
-                is_currently_handed_out = True
+                if not latest_return or latest_delivery.created_at > latest_return.created_at:
+                        is_currently_handed_out = True
 
         if is_currently_handed_out:
-            force_mode = 'return'
-            current_driver_info = latest_delivery
-            info_message = f"تنبيه: المركبة مسلمة حالياً لـِ '{latest_delivery.person_name}'. النموذج معد لعملية الاستلام فقط."
-            flash(info_message, 'info')
+                force_mode = 'return'
+                current_driver_info = latest_delivery
+                info_message = f"تنبيه: المركبة مسلمة حالياً لـِ '{latest_delivery.person_name}'. النموذج معد لعملية الاستلام فقط."
+                flash(info_message, 'info')
         else:
-            force_mode = 'delivery'
-            info_message = "المركبة متاحة حالياً. النموذج معد لعملية التسليم لسائق جديد."
+                force_mode = 'delivery'
+                info_message = "المركبة متاحة حالياً. النموذج معد لعملية التسليم لسائق جديد."
 
+                    # 5. جلب البيانات المطلوبة وعرض القالب (لا تغيير هنا)
         employees = Employee.query.options(db.joinedload(Employee.departments)).order_by(Employee.name).all()
         departments = Department.query.order_by(Department.name).all()
 
         return render_template(
-            'vehicles/handover_create.html', 
-            vehicle=vehicle,
-            handover_types=['delivery', 'return'],
-            employees=employees,
-            departments=departments,
-            force_mode=force_mode,
-            info_message=info_message,
-            current_driver_info=current_driver_info
-        )
+                'vehicles/handover_create.html', 
+                vehicle=vehicle,
+                handover_types=['delivery', 'return'],
+                employees=employees,
+                departments=departments,
+                force_mode=force_mode,
+                info_message=info_message,
+                current_driver_info=current_driver_info
+                )
 
+                
+
+    
+    # if request.method == 'GET':
+    #     # (منطق GET الذي يحدد ما إذا كان يجب عرض نموذج تسليم أم استلام)
+
+
+
+    #     latest_delivery = VehicleHandover.query.filter(
+    #         VehicleHandover.vehicle_id == id,
+    #         VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+    #     ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+    #     latest_return = VehicleHandover.query.filter(
+    #         VehicleHandover.vehicle_id == id,
+    #         VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+    #     ).order_by(VehicleHandover.handover_date.desc(), VehicleHandover.id.desc()).first()
+
+    #     force_mode = None
+    #     info_message = None
+    #     current_driver_info = None
+
+    #     is_currently_handed_out = False
+    #     if latest_delivery:
+    #         if not latest_return or latest_delivery.created_at > latest_return.created_at:
+    #             is_currently_handed_out = True
+
+    #     if is_currently_handed_out:
+    #         force_mode = 'return'
+    #         current_driver_info = latest_delivery
+    #         info_message = f"تنبيه: المركبة مسلمة حالياً لـِ '{latest_delivery.person_name}'. النموذج معد لعملية الاستلام فقط."
+    #         flash(info_message, 'info')
+    #     else:
+    #         force_mode = 'delivery'
+    #         info_message = "المركبة متاحة حالياً. النموذج معد لعملية التسليم لسائق جديد."
+
+    #     employees = Employee.query.options(db.joinedload(Employee.departments)).order_by(Employee.name).all()
+    #     departments = Department.query.order_by(Department.name).all()
+
+    #     return render_template(
+    #         'vehicles/handover_create.html', 
+    #         vehicle=vehicle,
+    #         handover_types=['delivery', 'return'],
+    #         employees=employees,
+    #         departments=departments,
+    #         force_mode=force_mode,
+    #         info_message=info_message,
+    #         current_driver_info=current_driver_info
+    #     )
+
+
+    
     if request.method == 'POST':
         try:
             # 1. استخراج كل البيانات من النموذج (Forms)
@@ -2515,36 +2664,58 @@ def create_handover(id):
             )
 
 
-
-
-            action_type_ar = 'تسليم' if handover_type == 'delivery' else 'استلام'
-            operation_title = f"طلب موافقة على {action_type_ar} للمركبة {vehicle.plate_number}"
-            operation_description = ( f"تم إنشاء طلب {action_type_ar} للمركبة {vehicle.plate_number} " f"للسائق '{handover.person_name}' من قبل المستخدم '{current_user.username}'. "     f"الطلب في انتظار المراجعة.")
+            db.session.add(handover)
+            db.session.commit()
 
 
 
 
 
+            action_type = 'تسليم' if handover_type == 'delivery' else 'استلام'
+          
 
+        
 
+            try:
+                operation_title = f"طلب موافقة على {action_type} مركبة {vehicle.plate_number}"
+                operation_description = f"تم إنشاء {action_type} للمركبة {vehicle.plate_number} من قبل {current_user.username} ويحتاج للموافقة الإدارية"
 
-
-            create_operation_request(
+                operation = create_operation_request(
                     operation_type="handover",
                     related_record_id=handover.id,
                     vehicle_id=vehicle.id,
                     title=operation_title,
                     description=operation_description,
-                    requested_by=current_user.id
+                    requested_by=current_user.id,
+                    priority="normal"
                 )
 
+                # حفظ طلب العملية والإشعارات
+                db.session.commit()
 
+                print(f"تم تسجيل عملية {action_type} بنجاح: {operation.id}")
+                current_app.logger.debug(f"تم إنشاء طلب عملية للتسليم والاستلام: {handover.id} برقم عملية: {operation.id}")
+
+                # التحقق من وجود العملية في قاعدة البيانات
+                saved_operation = OperationRequest.query.get(operation.id)
+                if saved_operation:
+                    print(f"تأكيد: عملية {action_type} {operation.id} محفوظة في قاعدة البيانات")
+                else:
+                    print(f"تحذير: عملية {action_type} {operation.id} غير موجودة في قاعدة البيانات!")
+
+            except Exception as e:
+                print(f"خطأ في إنشاء طلب العملية للتسليم والاستلام: {str(e)}")
+                current_app.logger.error(f"خطأ في إنشاء طلب العملية للتسليم والاستلام: {str(e)}")
+                import traceback
+                current_app.logger.error(f"تفاصيل الخطأ: {traceback.format_exc()}")
+                        
+
+                    
                 
-                    # --- 3.4. التزام نهائي بالبيانات (الطلب والإشعارات) ---
+        # --- 3.4. التزام نهائي بالبيانات (الطلب والإشعارات) ---
             db.session.commit()
 
-            db.session.add(handover)
-            db.session.commit()
+
 
             # 3. تحديث حالة السيارة والسائق وحفظ الملفات
             
@@ -2558,23 +2729,18 @@ def create_handover(id):
                         
                         file_path, file_type = save_file(file, 'handover')
                         if file_path:
-                                
-                            
                                 file_description = request.form.get(f'description_{file.filename}', '')
                                 file_record = VehicleHandoverImage( handover_record_id=handover.id, file_path=file_path, file_type=file_type, file_description=file_description, image_path=file_path,mage_description=file_description)
-            
-            db.session.add(file_record)
-            db.session.commit()
+                                db.session.add(file_record)
+                                db.session.commit()
 
 
 
+        
 
-            log_audit('submit_for_approval', 'vehicle_handover', handover.id, f'تم تقديم طلب {action_type_ar} للموافقة: {vehicle.plate_number}')
-            flash(f'✅ تم إرسال طلب الـ"{action_type_ar}" بنجاح وفي انتظار موافقة الإدارة.', 'success')
 
                     # إعادة التوجيه إلى صفحة عرض السيارة ليرى المستخدم أن الحالة لم تتغير بعد
             return redirect(url_for('vehicles.view', id=id))
-
 
         except Exception as e:
             db.session.rollback()
@@ -2977,6 +3143,19 @@ def view_handover(id, vehicle_id=None):
                 images=images,
                 handover_type_name=handover_type_name
         )
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

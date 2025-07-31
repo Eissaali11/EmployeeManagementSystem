@@ -2011,33 +2011,7 @@ def create_handover_mobile(handover_id=None):
     عرض ومعالجة نموذج تسليم/استلام السيارة (نسخة الهواتف المحمولة).
     هذه النسخة مطابقة للمنطق الشامل الموجود في نسخة الويب.
     """
-    
 
-    vehicle = Vehicle.query.get_or_404(handover_id)
-
-    # ==================== طبقة التحقق الأولى: فحص الحالات الحرجة ====================
-    # هذا الفحص يعمل قبل كل شيء، لكل من طلبات GET و POST.
-
-    unsuitable_statuses = {
-        'in_workshop': {
-            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنها حالياً في الورشة. يجب إخراجها أولاً.',
-            'redirect_to': url_for('mobile.vehicle_details', vehicle_id=id, _anchor='workshop-records-section') # يوجه إلى قسم الورشة
-        },
-        'accident': {
-            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنه مسجل عليها حادث نشط. يجب إغلاق ملف الحادث أولاً.',
-            'redirect_to': url_for('mobile.vehicle_details', vehicle_id=id, _anchor='accidents-section')
-        },
-        'out_of_service': {
-            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنها "خارج الخدمة". يرجى تعديل حالة المركبة أولاً.',
-            'redirect_to': url_for('mobile.vehicle_details', vehicle_id=id) # يوجه لصفحة تعديل السيارة
-        }
-    }
-
-    if vehicle.status in unsuitable_statuses:
-        status_info = unsuitable_statuses[vehicle.status]
-        flash(status_info['message'], 'danger')
-        return redirect(status_info['redirect_to'])
-    # ===================== نهاية طبقة التحقق الأولى =====================
 
     
     # === معالجة طلب POST (عند إرسال النموذج) ===
@@ -2056,6 +2030,25 @@ def create_handover_mobile(handover_id=None):
             return redirect(url_for('mobile.create_handover_mobile')) # أعد توجيه المستخدم لنفس الصفحة
 
         vehicle = Vehicle.query.get_or_404(int(vehicle_id_str))
+
+        unsuitable_statuses = {
+            'in_workshop': 'لا يمكن تسليم أو استلام المركبة لأنها حالياً في الورشة.',
+            'accident': 'لا يمكن تسليم أو استلام المركبة لأنه مسجل عليها حادث نشط.',
+            'out_of_service': 'لا يمكن تسليم أو استلام المركبة لأنها "خارج الخدمة".'
+        }
+
+        if vehicle.status in unsuitable_statuses:
+            flash(f'❌ عملية مرفوضة: {unsuitable_statuses[vehicle.status]}', 'danger')
+            # أعد توجيهه إلى صفحة تفاصيل السيارة حيث يمكنه رؤية المشكلة
+            return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+
+        # 3. التحقق من منطق تسليم/استلام (نفس منطقك الحالي ولكن بشكل أنظف)
+        handover_type = request.form.get('handover_type')
+        if vehicle.status != 'available' and handover_type == 'delivery':
+            flash('⚠️ تنبيه: هذه المركبة غير متاحة للتسليم. النموذج تم تعديله لعملية "استلام" تلقائياً.', 'warning')
+            # يمكن أن يقوم Javasript في الواجهة بتغيير نوع العملية تلقائياً
+            # حالياً سنخبره أن يصحح ويعيد الإرسال
+            return redirect(url_for('mobile.create_handover_mobile', handover_id=handover_id))
         
         print(vehicle)
         if vehicle.status != 'available':
