@@ -7,7 +7,157 @@ from models import (OperationRequest, OperationNotification, VehicleHandover,
 from datetime import datetime
 from utils.audit_logger import log_audit
 
+
+
+from datetime import datetime, timedelta
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
+from flask_login import login_required, current_user
+from flask_wtf import FlaskForm
+from werkzeug.utils import secure_filename
+from sqlalchemy import extract, func, or_
+from forms.vehicle_forms import VehicleAccidentForm, VehicleDocumentsForm
+import os
+import uuid
+import io
+import urllib.parse
+import pandas as pd
+from fpdf import FPDF
+import base64
+import uuid
+
+from app import db
+from models import (
+        Vehicle, VehicleRental, VehicleWorkshop, VehicleWorkshopImage, 
+        VehicleProject, VehicleHandover, VehicleHandoverImage, SystemAudit,
+        VehiclePeriodicInspection, VehicleSafetyCheck, VehicleAccident, Employee,
+        Department, ExternalAuthorization, Module, Permission, UserRole,
+        VehicleExternalSafetyCheck, OperationRequest
+)
+from utils.audit_logger import log_activity
+from utils.audit_logger import log_audit
+from utils.whatsapp_message_generator import generate_whatsapp_url
+from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
+from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
+from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+# from utils.workshop_report import generate_workshop_report_pdf
+# from utils.html_to_pdf import generate_pdf_from_template
+# from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+import arabic_reshaper
+from bidi.algorithm import get_display
+# from utils.fpdf_handover_pdf import generate_handover_report_pdf
+# ============ تأكد من وجود هذه الاستيرادات في أعلى الملف ============
+from datetime import date
+# =================================================================
+
+
 operations_bp = Blueprint('operations', __name__, url_prefix='/operations')
+
+
+def update_vehicle_state(vehicle_id):
+    """
+    الدالة المركزية الذكية لتحديد وتحديث الحالة النهائية للمركبة وسائقها.
+    (نسخة معدلة لا تعتمد على حقل is_approved).
+    تعتمد على حالة OperationRequest المرتبط لتحديد السجلات الرسمية.
+    """
+    try:
+        vehicle = Vehicle.query.get(vehicle_id)
+        if not vehicle:
+            current_app.logger.warning(f"محاولة تحديث حالة لمركبة غير موجودة: ID={vehicle_id}")
+            return
+
+        # 1. فحص الحالات ذات الأولوية القصوى (تبقى كما هي)
+        if vehicle.status == 'out_of_service':
+            return
+
+        active_accident = VehicleAccident.query.filter(VehicleAccident.vehicle_id == vehicle_id, VehicleAccident.accident_status != 'مغلق').first()
+        in_workshop = VehicleWorkshop.query.filter(VehicleWorkshop.vehicle_id == vehicle_id, VehicleWorkshop.exit_date.is_(None)).first()
+
+        # نحدد ما إذا كانت السيارة في حالة حرجة
+        is_critical_state = bool(active_accident or in_workshop)
+
+        if active_accident:
+            vehicle.status = 'accident'
+        elif in_workshop:
+            vehicle.status = 'in_workshop'
+
+        # 2. التحقق من الإيجار النشط
+        active_rental = VehicleRental.query.filter_by(vehicle_id=vehicle_id, is_active=True).first()
+
+        # ================== بداية المنطق الجديد لتحديد السجلات الرسمية ==================
+
+        # 3. إنشاء استعلام فرعي لجلب ID لكل سجل handover له طلب موافقة.
+        approved_handover_ids_subquery = db.session.query(
+            OperationRequest.related_record_id
+        ).filter(
+            OperationRequest.operation_type == 'handover',
+            OperationRequest.status == 'approved',
+            OperationRequest.vehicle_id == vehicle_id
+        ).subquery()
+
+        # 4. إنشاء استعلام فرعي لجلب ID لكل سجل handover له طلب (بغض النظر عن حالته).
+        all_handover_request_ids_subquery = db.session.query(
+            OperationRequest.related_record_id
+        ).filter(
+            OperationRequest.operation_type == 'handover',
+            OperationRequest.vehicle_id == vehicle_id
+        ).subquery()
+
+        # 5. بناء الاستعلام الأساسي الذي يختار السجلات "الرسمية" فقط.
+        # السجل يعتبر رسمياً إذا تمت الموافقة عليه، أو إذا كان قديماً (ليس له طلب موافقة أصلاً).
+        base_official_query = VehicleHandover.query.filter(
+            VehicleHandover.vehicle_id == vehicle_id
+        ).filter(
+            or_(
+                VehicleHandover.id.in_(approved_handover_ids_subquery),
+                ~VehicleHandover.id.in_(all_handover_request_ids_subquery)
+            )
+        )
+
+        # 6. الآن نستخدم هذا الاستعلام الرسمي للحصول على آخر عملية تسليم واستلام
+        latest_delivery = base_official_query.filter(
+            VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+        ).order_by(VehicleHandover.created_at.desc()).first()
+
+        latest_return = base_official_query.filter(
+            VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+        ).order_by(VehicleHandover.created_at.desc()).first()
+
+        # =================== نهاية المنطق الجديد لتحديد السجلات الرسمية ===================
+
+        # 7. تطبيق التحديثات على السائق والحالة بناءً على السجلات الرسمية فقط
+        is_currently_handed_out = False
+        if latest_delivery:
+            if not latest_return or latest_delivery.created_at > latest_return.created_at:
+                is_currently_handed_out = True
+
+        if is_currently_handed_out:
+            # السيناريو (أ): السيارة مسلّمة حالياً (بناءً على سجل معتمد)
+            vehicle.driver_name = latest_delivery.person_name
+            # تحديث الحالة فقط إذا لم تكن السيارة في حالة حرجة (ورشة/حادث)
+            if not is_critical_state:
+                vehicle.status = 'rented' if active_rental else 'in_project'
+        else:
+            # السيناريو (ب): السيارة متاحة (بناءً على سجل معتمد)
+            vehicle.driver_name = None
+            # تحديث الحالة فقط إذا لم تكن السيارة في حالة حرجة
+            if not is_critical_state:
+                vehicle.status = 'rented' if active_rental else 'available'
+
+        db.session.commit()
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"خطأ في دالة update_vehicle_state لـ vehicle_id {vehicle_id}: {str(e)}")
+
+
+
+
 
 @operations_bp.route('/')
 @login_required
@@ -185,125 +335,248 @@ def view_operation(operation_id):
                          related_record=related_record,
                          employee=employee)
 
+
+
 @operations_bp.route('/<int:operation_id>/approve', methods=['POST'])
 @login_required
 def approve_operation(operation_id):
-    """الموافقة على العملية"""
-    
+    """الموافقة على العملية مع تفعيل السجل المرتبط وتحديث حالة السيارة."""
+
     if current_user.role != UserRole.ADMIN:
-        return jsonify({'success': False, 'message': 'غير مسموح'})
-    
+        return jsonify({'success': False, 'message': 'غير مسموح لك بالقيام بهذا الإجراء'})
+
     operation = OperationRequest.query.get_or_404(operation_id)
     review_notes = request.form.get('review_notes', '').strip()
-    
+
     try:
-        # تحديث حالة العملية
+        # 1. تحديث حالة الطلب نفسه
         operation.status = 'approved'
         operation.reviewed_by = current_user.id
         operation.reviewed_at = datetime.utcnow()
         operation.review_notes = review_notes
-        
-        # إنشاء إشعار للطالب
+
+        # 2. البحث عن السجل المرتبط وتفعيله إذا كان من نوع handover
+        if operation.operation_type == 'handover':
+            handover_record = VehicleHandover.query.get(operation.related_record_id)
+            if handover_record:
+                # === الخطوة الأهم: تحويل المسودة إلى سجل رسمي ===
+                # handover_record.is_approved = True
+                db.session.commit() # نحفظ التفعيل أولاً
+
+                # === بعد التفعيل، نقوم بتحديث حالة السيارة الآن ===
+                if operation.vehicle_id:
+                    update_vehicle_state(operation.vehicle_id)
+                    log_audit(
+                        'update', 'vehicle_state', operation.vehicle_id,
+                        f'تم تحديث حالة السيارة والسائق بعد الموافقة على الطلب #{operation.id}'
+                    )
+            else:
+                current_app.logger.warning(f"لم يتم العثور على سجل Handover رقم {operation.related_record_id} للموافقة عليه.")
+
+        # (يمكن إضافة منطق لأنواع أخرى من العمليات هنا مستقبلاً)
+
+        # 3. إنشاء إشعار للطالب
         create_notification(
             operation_id=operation.id,
             user_id=operation.requested_by,
             notification_type='status_change',
-            title=f'تمت الموافقة على العملية: {operation.title}',
-            message=f'تمت الموافقة على العملية من قبل {current_user.username}.\n{review_notes if review_notes else ""}'
+            title=f'✅ تمت الموافقة على طلبك: {operation.title}',
+            message=f'تمت الموافقة على طلبك من قبل {current_user.username}.'
         )
-        
+
         db.session.commit()
-        
-        # تحديث السائق الحالي وحالة السيارة إذا كانت العملية من نوع handover
-        if operation.operation_type == 'handover' and operation.vehicle_id:
-            try:
-                from utils.vehicle_driver_utils import update_vehicle_driver_approved
-                update_vehicle_driver_approved(operation.vehicle_id)
-                
-                # تحديث حالة السيارة بناءً على نوع التسليم/الاستلام
-                handover_record = VehicleHandover.query.get(operation.related_record_id)
-                if handover_record:
-                    vehicle = Vehicle.query.get(operation.vehicle_id)
-                    if vehicle and handover_record.handover_type:
-                        old_status = vehicle.status
-                        
-                        # تحديد الحالة الجديدة بناءً على نوع العملية
-                        if handover_record.handover_type == 'return':  # استلام السيارة
-                            new_status = 'متاحة'
-                        elif handover_record.handover_type == 'delivery':  # تسليم السيارة
-                            new_status = 'في المشروع'
-                        else:
-                            new_status = None
-                        
-                        if new_status and old_status != new_status:
-                            vehicle.status = new_status
-                            db.session.add(vehicle)
-                            
-                            # تسجيل تغيير الحالة
-                            action_type = 'الاستلام' if handover_record.handover_type == 'return' else 'التسليم'
-                            log_audit(current_user.id, 'update', 'vehicle_status', vehicle.id,
-                                     f'تم تحديث حالة السيارة {vehicle.plate_number} إلى "{new_status}" بعد الموافقة على عملية {action_type}')
-                            
-                            print(f"تم تحديث حالة السيارة {vehicle.plate_number} من '{old_status}' إلى '{new_status}' بعد الموافقة على عملية {action_type}")
-                        
-            except Exception as e:
-                print(f"خطأ في تحديث السائق وحالة السيارة بعد الموافقة: {e}")
-                import traceback
-                traceback.print_exc()
-        
-        # تسجيل العملية
-        log_audit(current_user.id, 'approve', 'operation_request', operation.id, 
-                 f'تمت الموافقة على العملية: {operation.title}')
-        
-        flash('تمت الموافقة على العملية بنجاح', 'success')
+
+        log_audit('approve', 'operation_request', operation.id, f'تمت الموافقة على العملية: {operation.title}')
+        flash('تمت الموافقة على العملية وتحديث حالة المركبة بنجاح', 'success')
         return jsonify({'success': True, 'message': 'تمت الموافقة بنجاح'})
-        
+
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"خطأ في الموافقة على العملية #{operation_id}: {str(e)}")
         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
+
+
+# @operations_bp.route('/<int:operation_id>/approve', methods=['POST'])
+# @login_required
+# def approve_operation(operation_id):
+#     """الموافقة على العملية"""
+    
+#     if current_user.role != UserRole.ADMIN:
+#         return jsonify({'success': False, 'message': 'غير مسموح'})
+    
+#     operation = OperationRequest.query.get_or_404(operation_id)
+#     review_notes = request.form.get('review_notes', '').strip()
+    
+#     try:
+#         # تحديث حالة العملية
+#         operation.status = 'approved'
+#         operation.reviewed_by = current_user.id
+#         operation.reviewed_at = datetime.utcnow()
+#         operation.review_notes = review_notes
+        
+#         # إنشاء إشعار للطالب
+#         create_notification(
+#             operation_id=operation.id,
+#             user_id=operation.requested_by,
+#             notification_type='status_change',
+#             title=f'تمت الموافقة على العملية: {operation.title}',
+#             message=f'تمت الموافقة على العملية من قبل {current_user.username}.\n{review_notes if review_notes else ""}'
+#         )
+        
+#         db.session.commit()
+        
+#         # تحديث السائق الحالي وحالة السيارة إذا كانت العملية من نوع handover
+#         if operation.operation_type == 'handover' and operation.vehicle_id:
+#             try:
+#                 from utils.vehicle_driver_utils import update_vehicle_driver_approved
+#                 update_vehicle_driver_approved(operation.vehicle_id)
+                
+#                 # تحديث حالة السيارة بناءً على نوع التسليم/الاستلام
+#                 handover_record = VehicleHandover.query.get(operation.related_record_id)
+#                 if handover_record:
+#                     vehicle = Vehicle.query.get(operation.vehicle_id)
+#                     if vehicle and handover_record.handover_type:
+#                         old_status = vehicle.status
+                        
+#                         # تحديد الحالة الجديدة بناءً على نوع العملية
+#                         if handover_record.handover_type == 'return':  # استلام السيارة
+#                             new_status = 'متاحة'
+#                         elif handover_record.handover_type == 'delivery':  # تسليم السيارة
+#                             new_status = 'في المشروع'
+#                         else:
+#                             new_status = None
+                        
+#                         if new_status and old_status != new_status:
+#                             vehicle.status = new_status
+#                             db.session.add(vehicle)
+                            
+#                             # تسجيل تغيير الحالة
+#                             action_type = 'الاستلام' if handover_record.handover_type == 'return' else 'التسليم'
+#                             log_audit(current_user.id, 'update', 'vehicle_status', vehicle.id,
+#                                      f'تم تحديث حالة السيارة {vehicle.plate_number} إلى "{new_status}" بعد الموافقة على عملية {action_type}')
+                            
+#                             print(f"تم تحديث حالة السيارة {vehicle.plate_number} من '{old_status}' إلى '{new_status}' بعد الموافقة على عملية {action_type}")
+                        
+#             except Exception as e:
+#                 print(f"خطأ في تحديث السائق وحالة السيارة بعد الموافقة: {e}")
+#                 import traceback
+#                 traceback.print_exc()
+        
+#         # تسجيل العملية
+#         log_audit(current_user.id, 'approve', 'operation_request', operation.id, 
+#                  f'تمت الموافقة على العملية: {operation.title}')
+        
+#         flash('تمت الموافقة على العملية بنجاح', 'success')
+#         return jsonify({'success': True, 'message': 'تمت الموافقة بنجاح'})
+        
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
 
 @operations_bp.route('/<int:operation_id>/reject', methods=['POST'])
 @login_required
 def reject_operation(operation_id):
-    """رفض العملية"""
-    
+    """رفض العملية مع حذف السجل المؤقت المرتبط بها."""
+
     if current_user.role != UserRole.ADMIN:
-        return jsonify({'success': False, 'message': 'غير مسموح'})
-    
+        return jsonify({'success': False, 'message': 'غير مسموح لك بالقيام بهذا الإجراء'})
+
     operation = OperationRequest.query.get_or_404(operation_id)
     review_notes = request.form.get('review_notes', '').strip()
-    
+
     if not review_notes:
         return jsonify({'success': False, 'message': 'يجب إدخال سبب الرفض'})
-    
+
     try:
-        # تحديث حالة العملية
+        # 1. تحديث حالة الطلب
         operation.status = 'rejected'
         operation.reviewed_by = current_user.id
         operation.reviewed_at = datetime.utcnow()
         operation.review_notes = review_notes
-        
-        # إنشاء إشعار للطالب
+
+        # 2. البحث عن السجل المرتبط وحذفه (إذا كان handover)
+        record_to_delete = None
+        if operation.operation_type == 'handover':
+            record_to_delete = VehicleHandover.query.get(operation.related_record_id)
+
+        if record_to_delete:
+            db.session.delete(record_to_delete)
+            log_audit(
+                'delete_on_rejection', 'VehicleHandover', record_to_delete.id,
+                f"تم حذف سجل Handover رقم {record_to_delete.id} تلقائياً بسبب رفض الطلب #{operation.id}"
+            )
+        else:
+            current_app.logger.warning(f"لم يتم العثور على سجل Handover رقم {operation.related_record_id} لحذفه بعد الرفض.")
+
+        # 3. إنشاء إشعار
         create_notification(
-            operation_id=operation.id,
-            user_id=operation.requested_by,
-            notification_type='status_change',
-            title=f'تم رفض العملية: {operation.title}',
-            message=f'تم رفض العملية من قبل {current_user.username}.\nالسبب: {review_notes}'
+            operation_id=operation.id, user_id=operation.requested_by, notification_type='status_change',
+            title=f'❌ تم رفض طلبك: {operation.title}',
+            message=f'تم رفض طلبك من قبل {current_user.username}. السبب: {review_notes}'
         )
-        
+
         db.session.commit()
-        
-        # تسجيل العملية
-        log_audit(current_user.id, 'reject', 'operation_request', operation.id, 
-                 f'تم رفض العملية: {operation.title} - السبب: {review_notes}')
-        
-        flash('تم رفض العملية', 'warning')
+
+        log_audit('reject', 'operation_request', operation.id, f'تم رفض العملية: {operation.title}')
+        flash('تم رفض العملية وحذف السجل المؤقت.', 'warning')
         return jsonify({'success': True, 'message': 'تم رفض العملية'})
-        
+
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"خطأ في رفض العملية #{operation_id}: {str(e)}")
         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
+
+# @operations_bp.route('/<int:operation_id>/reject', methods=['POST'])
+# @login_required
+# def reject_operation(operation_id):
+#     """رفض العملية"""
+    
+#     if current_user.role != UserRole.ADMIN:
+#         return jsonify({'success': False, 'message': 'غير مسموح'})
+    
+#     operation = OperationRequest.query.get_or_404(operation_id)
+#     review_notes = request.form.get('review_notes', '').strip()
+    
+#     if not review_notes:
+#         return jsonify({'success': False, 'message': 'يجب إدخال سبب الرفض'})
+    
+#     try:
+#         # تحديث حالة العملية
+#         operation.status = 'rejected'
+#         operation.reviewed_by = current_user.id
+#         operation.reviewed_at = datetime.utcnow()
+#         operation.review_notes = review_notes
+        
+#         # إنشاء إشعار للطالب
+#         create_notification(
+#             operation_id=operation.id,
+#             user_id=operation.requested_by,
+#             notification_type='status_change',
+#             title=f'تم رفض العملية: {operation.title}',
+#             message=f'تم رفض العملية من قبل {current_user.username}.\nالسبب: {review_notes}'
+#         )
+        
+#         db.session.commit()
+        
+#         # تسجيل العملية
+#         log_audit(current_user.id, 'reject', 'operation_request', operation.id, 
+#                  f'تم رفض العملية: {operation.title} - السبب: {review_notes}')
+        
+#         flash('تم رفض العملية', 'warning')
+#         return jsonify({'success': True, 'message': 'تم رفض العملية'})
+        
+#     except Exception as e:
+#         db.session.rollback()
+#         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
+
+
+
+
+
 
 @operations_bp.route('/<int:operation_id>/under-review', methods=['POST'])
 @login_required  
@@ -339,6 +612,8 @@ def set_under_review(operation_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
+
 
 @operations_bp.route('/<int:operation_id>/delete', methods=['POST'])
 @login_required

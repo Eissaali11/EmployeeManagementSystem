@@ -682,6 +682,9 @@ class VehicleHandover(db.Model):
     handover_time = db.Column(db.Time, nullable=True) # **جديد**: وقت العملية
     project_name = db.Column(db.String(100), nullable=True) # **جديد**: اسم المشروع وقت العملية
     city = db.Column(db.String(100), nullable=True) # **جديد**: اسم المدينة وقت العملية
+
+    # هذا الحقل سيفرق بين السجلات المعلّقة التي تنتظر الموافقة والسجلات الرسمية
+    is_approved = db.Column(db.Boolean, nullable=False, default=False, index=True)
     
     # --- 2. معلومات السيارة المنسوخة (Snapshot) ---
     # يبقى الربط فقط لسهولة الوصول للسيارة الحالية، ولكن بيانات التقرير تأتي من الحقول أدناه    

@@ -2011,6 +2011,35 @@ def create_handover_mobile(handover_id=None):
     عرض ومعالجة نموذج تسليم/استلام السيارة (نسخة الهواتف المحمولة).
     هذه النسخة مطابقة للمنطق الشامل الموجود في نسخة الويب.
     """
+    
+
+    vehicle = Vehicle.query.get_or_404(handover_id)
+
+    # ==================== طبقة التحقق الأولى: فحص الحالات الحرجة ====================
+    # هذا الفحص يعمل قبل كل شيء، لكل من طلبات GET و POST.
+
+    unsuitable_statuses = {
+        'in_workshop': {
+            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنها حالياً في الورشة. يجب إخراجها أولاً.',
+            'redirect_to': url_for('mobile.vehicle_details', vehicle_id=id, _anchor='workshop-records-section') # يوجه إلى قسم الورشة
+        },
+        'accident': {
+            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنه مسجل عليها حادث نشط. يجب إغلاق ملف الحادث أولاً.',
+            'redirect_to': url_for('mobile.vehicle_details', vehicle_id=id, _anchor='accidents-section')
+        },
+        'out_of_service': {
+            'message': '❌ لا يمكن تسليم أو استلام المركبة لأنها "خارج الخدمة". يرجى تعديل حالة المركبة أولاً.',
+            'redirect_to': url_for('mobile.vehicle_details', vehicle_id=id) # يوجه لصفحة تعديل السيارة
+        }
+    }
+
+    if vehicle.status in unsuitable_statuses:
+        status_info = unsuitable_statuses[vehicle.status]
+        flash(status_info['message'], 'danger')
+        return redirect(status_info['redirect_to'])
+    # ===================== نهاية طبقة التحقق الأولى =====================
+
+    
     # === معالجة طلب POST (عند إرسال النموذج) ===
     if request.method == 'POST':
         # فحص حجم البيانات المرسلة
