@@ -20,9 +20,10 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import DataRequired, Email, Length, ValidationError, Optional
 from markupsafe import Markup
 import base64
-from models import VehicleProject, VehicleWorkshop, VehicleWorkshopImage, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker, ExternalAuthorization, Project, OperationRequest, OperationNotification
+from models import VehicleProject, VehicleWorkshop, VehicleWorkshopImage, db, User, Employee, Department, Document, Vehicle, Attendance, Salary, FeesCost as Fee, VehicleChecklist, VehicleChecklistItem, VehicleMaintenance, VehicleMaintenanceImage, VehicleFuelConsumption, UserPermission, Module, Permission, SystemAudit, UserRole, VehiclePeriodicInspection, VehicleSafetyCheck, VehicleHandover, VehicleHandoverImage, VehicleChecklistImage, VehicleDamageMarker, ExternalAuthorization, Project, OperationRequest, OperationNotification,VehicleAccident,VehicleRental
 # from app import app
 from flask import current_app
+from routes.vehicles import update_vehicle_state, update_vehicle_driver
 
 from utils.hijri_converter import convert_gregorian_to_hijri, format_hijri_date
 from utils.decorators import module_access_required, permission_required
@@ -45,6 +46,103 @@ class LoginForm(FlaskForm):
     password = PasswordField('كلمة المرور', validators=[DataRequired('كلمة المرور مطلوبة')])
     remember = BooleanField('تذكرني')
     submit = SubmitField('تسجيل الدخول')
+
+
+# def update_vehicle_state(vehicle_id):
+#     """
+#     الدالة المركزية الذكية لتحديد وتحديث الحالة النهائية للمركبة وسائقها.
+#     (نسخة معدلة لا تعتمد على حقل is_approved).
+#     تعتمد على حالة OperationRequest المرتبط لتحديد السجلات الرسمية.
+#     """
+#     try:
+#         vehicle = Vehicle.query.get(vehicle_id)
+#         if not vehicle:
+#             current_app.logger.warning(f"محاولة تحديث حالة لمركبة غير موجودة: ID={vehicle_id}")
+#             return
+
+#         # 1. فحص الحالات ذات الأولوية القصوى (تبقى كما هي)
+#         if vehicle.status == 'out_of_service':
+#             return
+
+#         active_accident = VehicleAccident.query.filter(VehicleAccident.vehicle_id == vehicle_id, VehicleAccident.accident_status != 'مغلق').first()
+#         in_workshop = VehicleWorkshop.query.filter(VehicleWorkshop.vehicle_id == vehicle_id, VehicleWorkshop.exit_date.is_(None)).first()
+
+#         # نحدد ما إذا كانت السيارة في حالة حرجة
+#         is_critical_state = bool(active_accident or in_workshop)
+
+#         if active_accident:
+#             vehicle.status = 'accident'
+#         elif in_workshop:
+#             vehicle.status = 'in_workshop'
+
+#         # 2. التحقق من الإيجار النشط
+#         active_rental = VehicleRental.query.filter_by(vehicle_id=vehicle_id, is_active=True).first()
+
+#         # ================== بداية المنطق الجديد لتحديد السجلات الرسمية ==================
+
+#         # 3. إنشاء استعلام فرعي لجلب ID لكل سجل handover له طلب موافقة.
+#         approved_handover_ids_subquery = db.session.query(
+#             OperationRequest.related_record_id
+#         ).filter(
+#             OperationRequest.operation_type == 'handover',
+#             OperationRequest.status == 'approved',
+#             OperationRequest.vehicle_id == vehicle_id
+#         ).subquery()
+
+#         # 4. إنشاء استعلام فرعي لجلب ID لكل سجل handover له طلب (بغض النظر عن حالته).
+#         all_handover_request_ids_subquery = db.session.query(
+#             OperationRequest.related_record_id
+#         ).filter(
+#             OperationRequest.operation_type == 'handover',
+#             OperationRequest.vehicle_id == vehicle_id
+#         ).subquery()
+
+#         # 5. بناء الاستعلام الأساسي الذي يختار السجلات "الرسمية" فقط.
+#         # السجل يعتبر رسمياً إذا تمت الموافقة عليه، أو إذا كان قديماً (ليس له طلب موافقة أصلاً).
+#         base_official_query = VehicleHandover.query.filter(
+#             VehicleHandover.vehicle_id == vehicle_id
+#         ).filter(
+#             or_(
+#                 VehicleHandover.id.in_(approved_handover_ids_subquery),
+#                 ~VehicleHandover.id.in_(all_handover_request_ids_subquery)
+#             )
+#         )
+
+#         # 6. الآن نستخدم هذا الاستعلام الرسمي للحصول على آخر عملية تسليم واستلام
+#         latest_delivery = base_official_query.filter(
+#             VehicleHandover.handover_type.in_(['delivery', 'تسليم'])
+#         ).order_by(VehicleHandover.created_at.desc()).first()
+
+#         latest_return = base_official_query.filter(
+#             VehicleHandover.handover_type.in_(['return', 'استلام', 'receive'])
+#         ).order_by(VehicleHandover.created_at.desc()).first()
+
+#         # =================== نهاية المنطق الجديد لتحديد السجلات الرسمية ===================
+
+#         # 7. تطبيق التحديثات على السائق والحالة بناءً على السجلات الرسمية فقط
+#         is_currently_handed_out = False
+#         if latest_delivery:
+#             if not latest_return or latest_delivery.created_at > latest_return.created_at:
+#                 is_currently_handed_out = True
+
+#         if is_currently_handed_out:
+#             # السيناريو (أ): السيارة مسلّمة حالياً (بناءً على سجل معتمد)
+#             vehicle.driver_name = latest_delivery.person_name
+#             # تحديث الحالة فقط إذا لم تكن السيارة في حالة حرجة (ورشة/حادث)
+#             if not is_critical_state:
+#                 vehicle.status = 'rented' if active_rental else 'in_project'
+#         else:
+#             # السيناريو (ب): السيارة متاحة (بناءً على سجل معتمد)
+#             vehicle.driver_name = None
+#             # تحديث الحالة فقط إذا لم تكن السيارة في حالة حرجة
+#             if not is_critical_state:
+#                 vehicle.status = 'rented' if active_rental else 'available'
+
+#         db.session.commit()
+
+#     except Exception as e:
+#         db.session.rollback()
+#         current_app.logger.error(f"خطأ في دالة update_vehicle_state لـ vehicle_id {vehicle_id}: {str(e)}")
 
 
 
@@ -2286,6 +2384,7 @@ def create_handover_mobile(handover_id=None):
             # === 4. حفظ المرفقات الإضافية وتحديث حالة السائق ===
             # (استخدام نفس منطق الويب المنظم)
             update_vehicle_driver(vehicle.id) # دالة مساعدة لتحديث السائق المرتبط بالمركبة
+            update_vehicle_state(vehicle.id)
 
             files = request.files.getlist('files')
             for file in files:
@@ -4302,6 +4401,9 @@ def edit_workshop_record(workshop_id):
                 
                 # حفظ طلب العملية والإشعارات
                 db.session.commit()
+
+                # update_vehicle_driver(vehicle.id)
+                update_vehicle_state(vehicle.id)
                 
                 print(f"تم تسجيل عملية التحديث بنجاح: {operation.id}")
                 current_app.logger.debug(f"تم إنشاء طلب عملية لتحديث الورشة: {workshop_record.id} برقم عملية: {operation.id}")
@@ -4354,6 +4456,17 @@ def edit_workshop_record(workshop_id):
             current_app.logger.error(f"خطأ في تعديل سجل الورشة {workshop_id}: {str(e)}")
             flash(f'حدث خطأ أثناء تحديث سجل الورشة: {str(e)}', 'danger')
 
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     # خيارات النموذج
     workshop_reasons = [
         ('maintenance', 'صيانة دورية'),
