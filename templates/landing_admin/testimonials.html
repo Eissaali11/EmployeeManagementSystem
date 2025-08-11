@@ -1,0 +1,264 @@
+{% extends "landing_admin/layout.html" %}
+
+{% block title %}إدارة آراء العملاء - إدارة صفحة الهبوط{% endblock %}
+{% block page_title %}إدارة آراء العملاء{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0">
+                    <i class="fas fa-comments me-2"></i>
+                    آراء العملاء
+                </h5>
+                <button class="btn btn-primary" onclick="addTestimonial()">
+                    <i class="fas fa-plus me-2"></i>إضافة رأي جديد
+                </button>
+            </div>
+            
+            <div class="row" id="testimonials-container">
+                {% for testimonial in settings.testimonials %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="testimonial-card">
+                        <div class="testimonial-content">
+                            <div class="quote-icon">
+                                <i class="fas fa-quote-right"></i>
+                            </div>
+                            <p class="testimonial-text">"{{ testimonial.text }}"</p>
+                        </div>
+                        
+                        <div class="testimonial-author">
+                            <div class="author-info">
+                                <strong class="author-name">{{ testimonial.name }}</strong>
+                                <small class="author-position text-muted d-block">{{ testimonial.position }}</small>
+                                <small class="author-company text-muted">{{ testimonial.company }}</small>
+                            </div>
+                        </div>
+                        
+                        <div class="testimonial-rating">
+                            {% for i in range(testimonial.rating or 5) %}
+                            <i class="fas fa-star text-warning"></i>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="testimonial-actions">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editTestimonial({{ loop.index0 }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteTestimonial({{ loop.index0 }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة/تعديل رأي -->
+<div class="modal fade" id="testimonialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testimonialModalTitle">إضافة رأي جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="testimonialForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testimonialName" class="form-label">اسم العميل</label>
+                                <input type="text" class="form-control" id="testimonialName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="testimonialPosition" class="form-label">المنصب</label>
+                                <input type="text" class="form-control" id="testimonialPosition" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="testimonialCompany" class="form-label">الشركة</label>
+                                <input type="text" class="form-control" id="testimonialCompany" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="testimonialRating" class="form-label">التقييم</label>
+                                <select class="form-control" id="testimonialRating" required>
+                                    <option value="5">5 نجوم</option>
+                                    <option value="4">4 نجوم</option>
+                                    <option value="3">3 نجوم</option>
+                                    <option value="2">2 نجوم</option>
+                                    <option value="1">1 نجمة</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="testimonialText" class="form-label">نص الرأي</label>
+                                <textarea class="form-control" id="testimonialText" rows="8" required placeholder="أدخل رأي العميل هنا..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveTestimonial()">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.testimonial-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid #667eea;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.testimonial-content {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.quote-icon {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    color: #667eea;
+    font-size: 24px;
+    opacity: 0.3;
+}
+
+.testimonial-text {
+    font-style: italic;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.author-info {
+    flex: 1;
+}
+
+.author-name {
+    color: #333;
+    font-size: 1.1rem;
+}
+
+.author-position, .author-company {
+    font-size: 0.9rem;
+}
+
+.testimonial-rating {
+    margin-bottom: 10px;
+}
+
+.testimonial-actions {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.testimonial-card:hover .testimonial-actions {
+    opacity: 1;
+}
+
+.quote-icon i {
+    transform: rotate(180deg);
+}
+</style>
+
+<script>
+let editingTestimonialIndex = -1;
+
+function addTestimonial() {
+    editingTestimonialIndex = -1;
+    document.getElementById('testimonialModalTitle').textContent = 'إضافة رأي جديد';
+    document.getElementById('testimonialForm').reset();
+    document.getElementById('testimonialRating').value = '5';
+    new bootstrap.Modal(document.getElementById('testimonialModal')).show();
+}
+
+function editTestimonial(index) {
+    editingTestimonialIndex = index;
+    document.getElementById('testimonialModalTitle').textContent = 'تعديل الرأي';
+    
+    fetch(`/landing-admin/api/testimonials/${index}`)
+        .then(response => response.json())
+        .then(testimonial => {
+            document.getElementById('testimonialText').value = testimonial.text;
+            document.getElementById('testimonialName').value = testimonial.name;
+            document.getElementById('testimonialPosition').value = testimonial.position;
+            document.getElementById('testimonialCompany').value = testimonial.company;
+            document.getElementById('testimonialRating').value = testimonial.rating || 5;
+            new bootstrap.Modal(document.getElementById('testimonialModal')).show();
+        });
+}
+
+function deleteTestimonial(index) {
+    if (confirm('هل أنت متأكد من حذف هذا الرأي؟')) {
+        fetch(`/landing-admin/api/testimonials/${index}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        });
+    }
+}
+
+function saveTestimonial() {
+    const formData = {
+        text: document.getElementById('testimonialText').value,
+        name: document.getElementById('testimonialName').value,
+        position: document.getElementById('testimonialPosition').value,
+        company: document.getElementById('testimonialCompany').value,
+        rating: parseInt(document.getElementById('testimonialRating').value)
+    };
+    
+    const url = editingTestimonialIndex >= 0 ? 
+        `/landing-admin/api/testimonials/${editingTestimonialIndex}` : 
+        '/landing-admin/api/testimonials';
+    
+    const method = editingTestimonialIndex >= 0 ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('testimonialModal')).hide();
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    });
+}
+</script>
+{% endblock %}

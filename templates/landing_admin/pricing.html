@@ -1,0 +1,324 @@
+{% extends "landing_admin/layout.html" %}
+
+{% block title %}إدارة الأسعار - إدارة صفحة الهبوط{% endblock %}
+{% block page_title %}إدارة خطط الأسعار{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0">
+                    <i class="fas fa-dollar-sign me-2"></i>
+                    خطط الأسعار
+                </h5>
+                <button class="btn btn-primary" onclick="addPlan()">
+                    <i class="fas fa-plus me-2"></i>إضافة خطة جديدة
+                </button>
+            </div>
+            
+            <div class="row" id="plans-container">
+                {% for plan in settings.pricing_plans %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="pricing-card {% if plan.featured %}featured{% endif %}">
+                        {% if plan.featured %}
+                        <div class="featured-badge">الأكثر شعبية</div>
+                        {% endif %}
+                        
+                        <div class="plan-header">
+                            <h6 class="plan-name">{{ plan.name }}</h6>
+                            <div class="plan-price">
+                                <span class="currency">ريال</span>
+                                <span class="amount">{{ plan.price }}</span>
+                                <span class="period">/{{ plan.period }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="plan-features">
+                            {% for feature in plan.features %}
+                            <div class="feature-item">
+                                <i class="fas fa-check text-success me-2"></i>
+                                {{ feature }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="plan-actions">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editPlan({{ loop.index0 }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deletePlan({{ loop.index0 }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة/تعديل خطة -->
+<div class="modal fade" id="planModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="planModalTitle">إضافة خطة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="planForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="planName" class="form-label">اسم الخطة</label>
+                                <input type="text" class="form-control" id="planName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="planPrice" class="form-label">السعر</label>
+                                <input type="number" class="form-control" id="planPrice" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="planPeriod" class="form-label">الفترة</label>
+                                <select class="form-control" id="planPeriod" required>
+                                    <option value="شهر">شهر</option>
+                                    <option value="سنة">سنة</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="planFeatured">
+                                    <label class="form-check-label" for="planFeatured">
+                                        خطة مميزة (الأكثر شعبية)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">الميزات</label>
+                            <div id="features-list">
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control feature-input" placeholder="أدخل ميزة">
+                                    <button type="button" class="btn btn-outline-danger" onclick="removeFeature(this)">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addFeatureInput()">
+                                <i class="fas fa-plus me-2"></i>إضافة ميزة
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="savePlan()">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.pricing-card {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.pricing-card.featured {
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+.featured-badge {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.plan-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.plan-name {
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.plan-price {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 5px;
+}
+
+.amount {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.currency, .period {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.plan-features {
+    margin-bottom: 20px;
+}
+
+.feature-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.feature-item:last-child {
+    border-bottom: none;
+}
+
+.plan-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pricing-card:hover .plan-actions {
+    opacity: 1;
+}
+</style>
+
+<script>
+let editingPlanIndex = -1;
+
+function addPlan() {
+    editingPlanIndex = -1;
+    document.getElementById('planModalTitle').textContent = 'إضافة خطة جديدة';
+    document.getElementById('planForm').reset();
+    resetFeaturesList();
+    new bootstrap.Modal(document.getElementById('planModal')).show();
+}
+
+function editPlan(index) {
+    editingPlanIndex = index;
+    document.getElementById('planModalTitle').textContent = 'تعديل الخطة';
+    
+    fetch(`/landing-admin/api/pricing/${index}`)
+        .then(response => response.json())
+        .then(plan => {
+            document.getElementById('planName').value = plan.name;
+            document.getElementById('planPrice').value = plan.price;
+            document.getElementById('planPeriod').value = plan.period;
+            document.getElementById('planFeatured').checked = plan.featured;
+            
+            // إعداد قائمة الميزات
+            resetFeaturesList();
+            plan.features.forEach(feature => {
+                addFeatureInput(feature);
+            });
+            
+            new bootstrap.Modal(document.getElementById('planModal')).show();
+        });
+}
+
+function deletePlan(index) {
+    if (confirm('هل أنت متأكد من حذف هذه الخطة؟')) {
+        fetch(`/landing-admin/api/pricing/${index}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        });
+    }
+}
+
+function addFeatureInput(value = '') {
+    const featuresList = document.getElementById('features-list');
+    const div = document.createElement('div');
+    div.className = 'input-group mb-2';
+    div.innerHTML = `
+        <input type="text" class="form-control feature-input" placeholder="أدخل ميزة" value="${value}">
+        <button type="button" class="btn btn-outline-danger" onclick="removeFeature(this)">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    featuresList.appendChild(div);
+}
+
+function removeFeature(button) {
+    button.parentElement.remove();
+}
+
+function resetFeaturesList() {
+    document.getElementById('features-list').innerHTML = `
+        <div class="input-group mb-2">
+            <input type="text" class="form-control feature-input" placeholder="أدخل ميزة">
+            <button type="button" class="btn btn-outline-danger" onclick="removeFeature(this)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+}
+
+function savePlan() {
+    const features = Array.from(document.querySelectorAll('.feature-input'))
+        .map(input => input.value.trim())
+        .filter(value => value !== '');
+    
+    const formData = {
+        name: document.getElementById('planName').value,
+        price: parseFloat(document.getElementById('planPrice').value),
+        period: document.getElementById('planPeriod').value,
+        featured: document.getElementById('planFeatured').checked,
+        features: features
+    };
+    
+    const url = editingPlanIndex >= 0 ? 
+        `/landing-admin/api/pricing/${editingPlanIndex}` : 
+        '/landing-admin/api/pricing';
+    
+    const method = editingPlanIndex >= 0 ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    });
+}
+</script>
+{% endblock %}

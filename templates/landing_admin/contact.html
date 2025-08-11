@@ -1,0 +1,343 @@
+{% extends "landing_admin/layout.html" %}
+
+{% block title %}إدارة معلومات التواصل - إدارة صفحة الهبوط{% endblock %}
+{% block page_title %}إدارة معلومات التواصل{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- معلومات الاتصال الأساسية -->
+    <div class="col-lg-6 mb-4">
+        <div class="content-card">
+            <h5 class="text-primary mb-4">
+                <i class="fas fa-address-book me-2"></i>
+                معلومات الاتصال الأساسية
+            </h5>
+            
+            <form id="contactForm">
+                <div class="mb-3">
+                    <label for="companyPhone" class="form-label">رقم الهاتف</label>
+                    <input type="tel" class="form-control" id="companyPhone" value="{{ settings.contact_info.phone if settings.contact_info else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="companyEmail" class="form-label">البريد الإلكتروني</label>
+                    <input type="email" class="form-control" id="companyEmail" value="{{ settings.contact_info.email if settings.contact_info else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="companyAddress" class="form-label">العنوان</label>
+                    <textarea class="form-control" id="companyAddress" rows="3">{{ settings.contact_info.address if settings.contact_info else '' }}</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="workingHours" class="form-label">ساعات العمل</label>
+                    <input type="text" class="form-control" id="workingHours" value="{{ settings.contact_info.working_hours if settings.contact_info else '' }}" placeholder="الأحد - الخميس: 8:00 ص - 5:00 م">
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="saveContactInfo()">
+                    <i class="fas fa-save me-2"></i>حفظ التغييرات
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- وسائل التواصل الاجتماعي -->
+    <div class="col-lg-6 mb-4">
+        <div class="content-card">
+            <h5 class="text-primary mb-4">
+                <i class="fas fa-share-alt me-2"></i>
+                وسائل التواصل الاجتماعي
+            </h5>
+            
+            <form id="socialForm">
+                <div class="mb-3">
+                    <label for="whatsappNumber" class="form-label">رقم الواتساب</label>
+                    <input type="tel" class="form-control" id="whatsappNumber" value="{{ settings.social_media.whatsapp if settings.social_media else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="twitterUrl" class="form-label">رابط تويتر</label>
+                    <input type="url" class="form-control" id="twitterUrl" value="{{ settings.social_media.twitter if settings.social_media else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="linkedinUrl" class="form-label">رابط لينكد إن</label>
+                    <input type="url" class="form-control" id="linkedinUrl" value="{{ settings.social_media.linkedin if settings.social_media else '' }}">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="instagramUrl" class="form-label">رابط إنستجرام</label>
+                    <input type="url" class="form-control" id="instagramUrl" value="{{ settings.social_media.instagram if settings.social_media else '' }}">
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="saveSocialMedia()">
+                    <i class="fas fa-save me-2"></i>حفظ التغييرات
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- نموذج الاتصال -->
+    <div class="col-12 mb-4">
+        <div class="content-card">
+            <h5 class="text-primary mb-4">
+                <i class="fas fa-envelope me-2"></i>
+                إعدادات نموذج الاتصال
+            </h5>
+            
+            <form id="contactFormSettings">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="formTitle" class="form-label">عنوان النموذج</label>
+                            <input type="text" class="form-control" id="formTitle" value="{{ settings.contact_form.title if settings.contact_form else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="formSubtitle" class="form-label">النص التوضيحي</label>
+                            <textarea class="form-control" id="formSubtitle" rows="3">{{ settings.contact_form.subtitle if settings.contact_form else '' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="recipientEmail" class="form-label">البريد المستقبل للرسائل</label>
+                            <input type="email" class="form-control" id="recipientEmail" value="{{ settings.contact_form.recipient_email if settings.contact_form else '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="autoReplyMessage" class="form-label">رسالة الرد التلقائي</label>
+                            <textarea class="form-control" id="autoReplyMessage" rows="3">{{ settings.contact_form.auto_reply if settings.contact_form else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="saveContactFormSettings()">
+                    <i class="fas fa-save me-2"></i>حفظ التغييرات
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- الرسائل الواردة -->
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0">
+                    <i class="fas fa-inbox me-2"></i>
+                    الرسائل الواردة
+                </h5>
+                <button class="btn btn-outline-primary" onclick="refreshMessages()">
+                    <i class="fas fa-sync me-2"></i>تحديث
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الموضوع</th>
+                            <th>التاريخ</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messagesTable">
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <br>لا توجد رسائل
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal عرض الرسالة -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل الرسالة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>الاسم:</strong> <span id="messageName"></span></p>
+                        <p><strong>البريد الإلكتروني:</strong> <span id="messageEmail"></span></p>
+                        <p><strong>رقم الهاتف:</strong> <span id="messagePhone"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>الموضوع:</strong> <span id="messageSubject"></span></p>
+                        <p><strong>التاريخ:</strong> <span id="messageDate"></span></p>
+                        <p><strong>الحالة:</strong> <span id="messageStatus"></span></p>
+                    </div>
+                </div>
+                <hr>
+                <div>
+                    <strong>محتوى الرسالة:</strong>
+                    <div id="messageContent" class="mt-2 p-3 bg-light rounded"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="markAsRead()">
+                    <i class="fas fa-check me-2"></i>تم القراءة
+                </button>
+                <button type="button" class="btn btn-primary" onclick="replyToMessage()">
+                    <i class="fas fa-reply me-2"></i>الرد
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function saveContactInfo() {
+    const data = {
+        phone: document.getElementById('companyPhone').value,
+        email: document.getElementById('companyEmail').value,
+        address: document.getElementById('companyAddress').value,
+        working_hours: document.getElementById('workingHours').value
+    };
+    
+    fetch('/landing-admin/api/contact/info', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('تم حفظ معلومات الاتصال بنجاح');
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    });
+}
+
+function saveSocialMedia() {
+    const data = {
+        whatsapp: document.getElementById('whatsappNumber').value,
+        twitter: document.getElementById('twitterUrl').value,
+        linkedin: document.getElementById('linkedinUrl').value,
+        instagram: document.getElementById('instagramUrl').value
+    };
+    
+    fetch('/landing-admin/api/contact/social', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('تم حفظ وسائل التواصل الاجتماعي بنجاح');
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    });
+}
+
+function saveContactFormSettings() {
+    const data = {
+        title: document.getElementById('formTitle').value,
+        subtitle: document.getElementById('formSubtitle').value,
+        recipient_email: document.getElementById('recipientEmail').value,
+        auto_reply: document.getElementById('autoReplyMessage').value
+    };
+    
+    fetch('/landing-admin/api/contact/form-settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            alert('تم حفظ إعدادات النموذج بنجاح');
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    });
+}
+
+function refreshMessages() {
+    fetch('/landing-admin/api/contact/messages')
+        .then(response => response.json())
+        .then(messages => {
+            const tbody = document.getElementById('messagesTable');
+            tbody.innerHTML = '';
+            
+            if (messages.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="fas fa-inbox fa-2x mb-2"></i>
+                            <br>لا توجد رسائل
+                        </td>
+                    </tr>
+                `;
+            } else {
+                messages.forEach((message, index) => {
+                    const statusBadge = message.status === 'read' ? 
+                        '<span class="badge bg-success">تم القراءة</span>' : 
+                        '<span class="badge bg-warning">جديد</span>';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${message.name}</td>
+                            <td>${message.email}</td>
+                            <td>${message.subject}</td>
+                            <td>${message.date}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary" onclick="viewMessage(${index})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+}
+
+function viewMessage(index) {
+    // جلب تفاصيل الرسالة وعرضها في modal
+    fetch(`/landing-admin/api/contact/messages/${index}`)
+        .then(response => response.json())
+        .then(message => {
+            document.getElementById('messageName').textContent = message.name;
+            document.getElementById('messageEmail').textContent = message.email;
+            document.getElementById('messagePhone').textContent = message.phone || 'غير محدد';
+            document.getElementById('messageSubject').textContent = message.subject;
+            document.getElementById('messageDate').textContent = message.date;
+            document.getElementById('messageStatus').textContent = message.status === 'read' ? 'تم القراءة' : 'جديد';
+            document.getElementById('messageContent').textContent = message.content;
+            
+            new bootstrap.Modal(document.getElementById('messageModal')).show();
+        });
+}
+
+function markAsRead() {
+    // تمييز الرسالة كمقروءة
+    alert('تم تمييز الرسالة كمقروءة');
+    bootstrap.Modal.getInstance(document.getElementById('messageModal')).hide();
+    refreshMessages();
+}
+
+function replyToMessage() {
+    // فتح نموذج الرد
+    alert('سيتم إضافة نموذج الرد قريباً');
+}
+
+// تحديث الرسائل عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    refreshMessages();
+});
+</script>
+{% endblock %}

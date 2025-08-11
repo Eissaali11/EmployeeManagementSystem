@@ -216,7 +216,7 @@ def pricing_management():
 def contact_management():
     """إدارة معلومات التواصل"""
     settings = load_landing_settings()
-    return render_template('landing_admin/contact_info.html', settings=settings)
+    return render_template('landing_admin/contact.html', settings=settings)
 
 # API Endpoints
 
