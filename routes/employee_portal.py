@@ -192,7 +192,7 @@ def my_vehicles():
     employee = Employee.query.get_or_404(employee_id)
     
     # استيراد النماذج المطلوبة
-    from models import OperationRequest, VehicleVehicleSafetyCheck, VehiclePeriodicInspection, VehicleWorkshop
+    from models import OperationRequest, VehicleSafetyCheck, VehiclePeriodicInspection, VehicleWorkshop
     
     # السيارات المخصصة للموظف من خلال سجلات التسليم الأخيرة
     latest_handovers = db.session.query(
