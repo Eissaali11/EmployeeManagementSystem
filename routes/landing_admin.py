@@ -1,21 +1,56 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, session
+from flask_login import login_required, current_user, login_user, logout_user
+from werkzeug.security import check_password_hash
 from datetime import datetime
-from models import db
+from models import db, User
 import json
 import os
 
-landing_admin_bp = Blueprint('landing_admin', __name__)
+landing_admin_bp = Blueprint('landing_admin', __name__, url_prefix='/landing-admin')
 
 def admin_required(f):
     """ديكوريتر للتحقق من صلاحيات المدير"""
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or current_user.role != 'admin':
-            flash('غير مسموح لك بالوصول لهذه الصفحة', 'error')
-            return redirect(url_for('auth.login'))
+        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False):
+            flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'error')
+            return redirect(url_for('landing_admin.admin_login'))
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
     return decorated_function
+
+@landing_admin_bp.route('/login', methods=['GET', 'POST'])
+def admin_login():
+    """صفحة تسجيل دخول المدير لإعدادات صفحة الهبوط"""
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if not username or not password:
+            flash('يرجى إدخال اسم المستخدم وكلمة المرور', 'error')
+            return render_template('landing_admin/login.html')
+        
+        # البحث عن المستخدم المدير
+        user = User.query.filter_by(username=username).first()
+        
+        if user and getattr(user, 'is_admin', False) and check_password_hash(user.password_hash, password):
+            login_user(user)
+            
+            # التوجه إلى الصفحة المطلوبة أو لوحة التحكم
+            next_page = request.args.get('next')
+            if next_page:
+                return redirect(next_page)
+            return redirect(url_for('landing_admin.dashboard'))
+        else:
+            flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'error')
+    
+    return render_template('landing_admin/login.html')
+
+@landing_admin_bp.route('/logout')
+def admin_logout():
+    """تسجيل خروج المدير"""
+    logout_user()
+    flash('تم تسجيل الخروج بنجاح', 'success')
+    return redirect(url_for('landing_admin.admin_login'))
 
 @landing_admin_bp.route('/dashboard')
 @login_required
