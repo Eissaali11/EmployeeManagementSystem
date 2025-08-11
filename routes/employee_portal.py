@@ -187,9 +187,12 @@ def dashboard():
 @employee_portal_bp.route('/vehicles')
 @employee_login_required
 def my_vehicles():
-    """السيارات المخصصة للموظف"""
+    """عرض السيارات المخصصة للموظف مع العمليات والفحوصات"""
     employee_id = session.get('employee_id')
     employee = Employee.query.get_or_404(employee_id)
+    
+    # استيراد النماذج المطلوبة
+    from models import OperationRequest, VehicleVehicleSafetyCheck, VehiclePeriodicInspection, VehicleWorkshop
     
     # السيارات المخصصة للموظف من خلال سجلات التسليم الأخيرة
     latest_handovers = db.session.query(
@@ -213,16 +216,39 @@ def my_vehicles():
         VehicleHandover.handover_type == 'delivery'
     ).all()
     
-    # إضافة معلومات النماذج لكل سيارة
+    # إضافة معلومات شاملة لكل سيارة
     current_driver_vehicles = []
     for vehicle in current_driver_vehicles_base:
-        # البحث عن جميع نماذج التسليم والاستلام لهذه السيارة والموظف
+        # جميع نماذج التسليم والاستلام لهذه السيارة والموظف
         vehicle_handovers = VehicleHandover.query.filter_by(
             vehicle_id=vehicle.id,
             employee_id=employee_id
         ).order_by(VehicleHandover.handover_date.desc()).all()
         
+        # العمليات المرتبطة بالموظف (لا يوجد حقل employee_id في OperationRequest)
+        # سيتم عرض العمليات العامة المرتبطة بالسيارة
+        employee_operations = []
+        
+        # فحوصات السلامة للسيارة
+        safety_checks = VehicleVehicleSafetyCheck.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleVehicleSafetyCheck.check_date.desc()).limit(3).all()
+        
+        # فحوصات السيارة الدورية
+        inspections = VehiclePeriodicInspection.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehiclePeriodicInspection.inspection_date.desc()).limit(3).all()
+        
+        # سجلات الورشة للسيارة
+        workshop_records = VehicleWorkshop.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleWorkshop.entry_date.desc()).limit(3).all()
+        
         vehicle.handovers = vehicle_handovers
+        vehicle.employee_operations = employee_operations
+        vehicle.safety_checks = safety_checks
+        vehicle.inspections = inspections
+        vehicle.workshop_records = workshop_records
         current_driver_vehicles.append(vehicle)
     
     # السيارات المؤجرة النشطة (عرض عام)
@@ -238,9 +264,15 @@ def my_vehicles():
         # البحث عن نماذج التسليم والاستلام لهذه السيارة
         vehicle_handovers = VehicleHandover.query.filter_by(
             vehicle_id=vehicle.id
-        ).order_by(VehicleHandover.handover_date.desc()).all()
+        ).order_by(VehicleHandover.handover_date.desc()).limit(5).all()
+        
+        # فحوصات السلامة للسيارة
+        safety_checks = VehicleSafetyCheck.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleSafetyCheck.check_date.desc()).limit(3).all()
         
         vehicle.handovers = vehicle_handovers
+        vehicle.safety_checks = safety_checks
         rented_vehicles.append((vehicle, rental))
     
     # السيارات في مشاريع نشطة (عرض عام)
@@ -256,16 +288,36 @@ def my_vehicles():
         # البحث عن نماذج التسليم والاستلام لهذه السيارة
         vehicle_handovers = VehicleHandover.query.filter_by(
             vehicle_id=vehicle.id
-        ).order_by(VehicleHandover.handover_date.desc()).all()
+        ).order_by(VehicleHandover.handover_date.desc()).limit(5).all()
+        
+        # فحوصات السلامة للسيارة
+        safety_checks = VehicleSafetyCheck.query.filter_by(
+            vehicle_id=vehicle.id
+        ).order_by(VehicleSafetyCheck.check_date.desc()).limit(3).all()
         
         vehicle.handovers = vehicle_handovers
+        vehicle.safety_checks = safety_checks
         project_vehicles.append((vehicle, project))
+    
+    # إحصائيات شاملة للموظف
+    total_operations = VehicleHandover.query.filter_by(employee_id=employee_id).count()
+    total_safety_checks = VehicleVehicleSafetyCheck.query.filter_by(vehicle_id__in=[v.id for v in current_driver_vehicles]).count() if current_driver_vehicles else 0
+    pending_operations = OperationRequest.query.filter_by(status='pending').count()
+    approved_operations = OperationRequest.query.filter_by(status='approved').count()
+    
+    stats = {
+        'total_operations': total_operations,
+        'total_safety_checks': total_safety_checks,
+        'pending_operations': pending_operations,
+        'approved_operations': approved_operations
+    }
     
     return render_template('employee_portal/vehicles_enhanced.html',
                          employee=employee,
                          current_driver_vehicles=current_driver_vehicles,
                          rented_vehicles=rented_vehicles,
-                         project_vehicles=project_vehicles)
+                         project_vehicles=project_vehicles,
+                         stats=stats)
 
 @employee_portal_bp.route('/salaries')
 @employee_login_required

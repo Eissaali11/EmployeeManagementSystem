@@ -3,384 +3,573 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سياراتي - بوابة الموظف</title>
+    <title>السيارات والعمليات - {{ employee.name }} - نُظم</title>
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
-        
         body {
-            font-family: 'Cairo', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 20px 0;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
         }
         
         .vehicle-card {
             background: white;
             border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid #e8ecef;
         }
         
         .vehicle-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
         }
         
-        .vehicle-type-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 12px;
+        .vehicle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f8f9fa;
+        }
+        
+        .vehicle-title {
+            color: #2c3e50;
             font-weight: bold;
+            font-size: 1.4rem;
+        }
+        
+        .vehicle-status {
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
             color: white;
         }
         
-        .current-driver-badge {
-            background: linear-gradient(135deg, #28a745, #20c997);
+        .status-maintenance {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
         }
         
-        .rental-badge {
-            background: linear-gradient(135deg, #ffc107, #fd7e14);
-        }
-        
-        .project-badge {
-            background: linear-gradient(135deg, #6f42c1, #e83e8c);
-        }
-        
-        .vehicle-info p {
-            margin-bottom: 8px;
-            color: #555;
-        }
-        
-        .handover-forms {
-            margin-top: 20px;
-            padding: 15px;
+        .operations-section, .checks-section {
             background: #f8f9fa;
             border-radius: 10px;
-            border-left: 4px solid #007bff;
+            padding: 1.5rem;
+            margin: 1rem 0;
         }
         
-        .handover-forms h6 {
-            color: #007bff;
-            margin-bottom: 15px;
-            font-weight: bold;
+        .operations-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .operation-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #3498db;
+            transition: all 0.3s ease;
+        }
+        
+        .operation-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transform: translateX(-5px);
+        }
+        
+        .safety-check-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #27ae60;
+            transition: all 0.3s ease;
+        }
+        
+        .safety-check-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transform: translateX(-5px);
         }
         
         .handover-item {
-            display: inline-block;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .handover-btn {
-            border-radius: 20px !important;
-            padding: 8px 15px !important;
-            font-weight: bold !important;
-            transition: all 0.3s ease !important;
-            text-decoration: none !important;
-        }
-        
-        .delivery-btn {
-            background: linear-gradient(135deg, #28a745, #20c997) !important;
-            border: none !important;
-            color: white !important;
-        }
-        
-        .delivery-btn:hover {
-            background: linear-gradient(135deg, #218838, #1fa886) !important;
-            transform: translateY(-2px) !important;
-            color: white !important;
-        }
-        
-        .return-btn {
-            background: linear-gradient(135deg, #17a2b8, #6610f2) !important;
-            border: none !important;
-            color: white !important;
-        }
-        
-        .return-btn:hover {
-            background: linear-gradient(135deg, #138496, #520dc2) !important;
-            transform: translateY(-2px) !important;
-            color: white !important;
-        }
-        
-        .external-form-btn {
-            background: linear-gradient(135deg, #28a745, #20c997) !important;
-            border: none !important;
-            color: white !important;
-            border-radius: 15px !important;
-            font-weight: bold !important;
-            font-size: 10px !important;
-            padding: 4px 8px !important;
-            margin-top: 5px !important;
-            display: block !important;
-            text-decoration: none !important;
-            transition: all 0.3s ease !important;
-        }
-        
-        .external-form-btn:hover {
-            background: linear-gradient(135deg, #218838, #1fa886) !important;
-            transform: translateY(-2px) !important;
-            color: white !important;
-        }
-        
-        .no-handovers {
-            color: #6c757d;
-            font-style: italic;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        .page-title {
             background: white;
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border-left: 4px solid #9b59b6;
+            transition: all 0.3s ease;
         }
         
-        .page-title h1 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .page-title p {
-            color: #666;
-            margin-bottom: 0;
+        .handover-item:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transform: translateX(-5px);
         }
         
         .section-title {
-            color: #333;
-            margin-bottom: 25px;
+            color: #34495e;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-left: 0.5rem;
+            color: #3498db;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 2rem;
+            font-style: italic;
+        }
+        
+        .btn-action {
+            margin: 0.2rem;
+            border-radius: 20px;
+            padding: 0.4rem 1rem;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn {
+            margin-bottom: 2rem;
+            border-radius: 25px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+        }
+        
+        .nav-tabs {
+            border: none;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-tabs .nav-link {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            margin: 0 0.5rem;
+            padding: 0.8rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: white;
+            color: #2c3e50;
             font-weight: bold;
         }
         
-        .container {
-            max-width: 1200px;
+        .tab-content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background: #ffeaa7;
+            color: #2d3436;
+        }
+        
+        .status-approved {
+            background: #55a3ff;
+            color: white;
+        }
+        
+        .status-rejected {
+            background: #fd79a8;
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- عنوان الصفحة -->
-        <div class="page-title">
-            <h1><i class="fas fa-car ms-3"></i>السيارات المخصصة لي</h1>
-            <p>عرض جميع السيارات المخصصة لك والنماذج الإلكترونية المتاحة</p>
-        </div>
-
-        <!-- السيارات الحالية للسائق -->
-        {% if current_driver_vehicles %}
-        <div class="row">
-            <div class="col-12">
-                <h3 class="section-title">
-                    <i class="fas fa-user-tie ms-2"></i>السيارات كسائق حالي
-                </h3>
-            </div>
-            {% for vehicle in current_driver_vehicles %}
-            <div class="col-lg-6 mb-4">
-                <div class="vehicle-card">
-                    <div class="vehicle-type-badge current-driver-badge">سائق حالي</div>
-                    <h4 class="text-dark">{{ vehicle.make }} {{ vehicle.model }}</h4>
-                    <div class="row mt-3 vehicle-info">
-                        <div class="col-6">
-                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
-                            <p><strong>سنة الصنع:</strong> {{ vehicle.year or 'غير محدد' }}</p>
-                        </div>
-                        <div class="col-6">
-                            <p><strong>اللون:</strong> {{ vehicle.color or 'غير محدد' }}</p>
-                            <p><strong>الحالة:</strong> {{ vehicle.status or 'غير محدد' }}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- النماذج الإلكترونية -->
-                    {% if vehicle.handovers %}
-                    <div class="handover-forms">
-                        <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
-                        <div class="d-flex flex-wrap">
-                            {% for handover in vehicle.handovers %}
-                            <div class="handover-item">
-                                <a href="{{ url_for('employee_portal.view_handover', handover_id=handover.id) }}" 
-                                   class="handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
-                                   title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
-                                    <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
-                                    {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
-                                    <small class="d-block">{{ handover.handover_date.strftime('%Y-%m-%d') }}</small>
-                                </a>
-                                {% if handover.form_link %}
-                                <a href="{{ handover.form_link }}" 
-                                   target="_blank" 
-                                   class="external-form-btn"
-                                   title="فتح النموذج الخارجي">
-                                    <i class="fas fa-external-link-alt me-1"></i>
-                                    نموذج
-                                </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="handover-forms">
-                        <p class="no-handovers mb-0">لا توجد نماذج إلكترونية متاحة</p>
-                    </div>
-                    {% endif %}
+    <!-- الرأس -->
+    <div class="page-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1><i class="fas fa-car-side ms-2"></i>السيارات والعمليات</h1>
+                    <p class="mb-0">عرض شامل للسيارات المخصصة وجميع العمليات والفحوصات - {{ employee.name }}</p>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- السيارات المؤجرة -->
-        {% if rented_vehicles %}
-        <div class="row">
-            <div class="col-12">
-                <h3 class="section-title">
-                    <i class="fas fa-file-contract ms-2"></i>السيارات المؤجرة
-                </h3>
-            </div>
-            {% for vehicle, rental in rented_vehicles %}
-            <div class="col-lg-6 mb-4">
-                <div class="vehicle-card">
-                    <div class="vehicle-type-badge rental-badge">إيجار</div>
-                    <h4 class="text-dark">{{ vehicle.make }} {{ vehicle.model }}</h4>
-                    <div class="row mt-3 vehicle-info">
-                        <div class="col-6">
-                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
-                            <p><strong>الشركة المؤجرة:</strong> {{ rental.rental_company or 'غير محدد' }}</p>
-                        </div>
-                        <div class="col-6">
-                            <p><strong>تاريخ البداية:</strong> {{ rental.start_date.strftime('%Y-%m-%d') if rental.start_date else 'غير محدد' }}</p>
-                            <p><strong>تاريخ الانتهاء:</strong> {{ rental.end_date.strftime('%Y-%m-%d') if rental.end_date else 'غير محدد' }}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- النماذج الإلكترونية -->
-                    {% if vehicle.handovers %}
-                    <div class="handover-forms">
-                        <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
-                        <div class="d-flex flex-wrap">
-                            {% for handover in vehicle.handovers %}
-                            <div class="handover-item">
-                                <a href="{{ url_for('employee_portal.view_handover', handover_id=handover.id) }}" 
-                                   class="handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
-                                   title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
-                                    <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
-                                    {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
-                                    <small class="d-block">{{ handover.handover_date.strftime('%Y-%m-%d') }}</small>
-                                </a>
-                                {% if handover.form_link %}
-                                <a href="{{ handover.form_link }}" 
-                                   target="_blank" 
-                                   class="external-form-btn"
-                                   title="فتح النموذج الخارجي">
-                                    <i class="fas fa-external-link-alt me-1"></i>
-                                    نموذج
-                                </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="handover-forms">
-                        <p class="no-handovers mb-0">لا توجد نماذج إلكترونية متاحة</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- السيارات في المشاريع -->
-        {% if project_vehicles %}
-        <div class="row">
-            <div class="col-12">
-                <h3 class="section-title">
-                    <i class="fas fa-project-diagram ms-2"></i>السيارات في المشاريع
-                </h3>
-            </div>
-            {% for vehicle, project in project_vehicles %}
-            <div class="col-lg-6 mb-4">
-                <div class="vehicle-card">
-                    <div class="vehicle-type-badge project-badge">مشروع</div>
-                    <h4 class="text-dark">{{ vehicle.make }} {{ vehicle.model }}</h4>
-                    <div class="row mt-3 vehicle-info">
-                        <div class="col-6">
-                            <p><strong>رقم اللوحة:</strong> {{ vehicle.plate_number }}</p>
-                            <p><strong>اسم المشروع:</strong> {{ project.project_name or 'غير محدد' }}</p>
-                        </div>
-                        <div class="col-6">
-                            <p><strong>تاريخ البداية:</strong> {{ project.start_date.strftime('%Y-%m-%d') if project.start_date else 'غير محدد' }}</p>
-                            <p><strong>تاريخ الانتهاء:</strong> {{ project.end_date.strftime('%Y-%m-%d') if project.end_date else 'غير محدد' }}</p>
-                        </div>
-                    </div>
-                    {% if project.description %}
-                    <div class="mt-3 vehicle-info">
-                        <p><strong>وصف المشروع:</strong> {{ project.description }}</p>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- النماذج الإلكترونية -->
-                    {% if vehicle.handovers %}
-                    <div class="handover-forms">
-                        <h6><i class="fas fa-file-alt me-2"></i>النماذج الإلكترونية</h6>
-                        <div class="d-flex flex-wrap">
-                            {% for handover in vehicle.handovers %}
-                            <div class="handover-item">
-                                <a href="{{ url_for('employee_portal.view_handover', handover_id=handover.id) }}" 
-                                   class="handover-btn {% if handover.handover_type == 'delivery' %}delivery-btn{% else %}return-btn{% endif %}" 
-                                   title="عرض نموذج {{ 'التسليم' if handover.handover_type == 'delivery' else 'الاستلام' }} - {{ handover.handover_date.strftime('%Y-%m-%d') }}">
-                                    <i class="fas fa-{% if handover.handover_type == 'delivery' %}file-upload{% else %}file-download{% endif %} me-1"></i>
-                                    {{ 'تسليم' if handover.handover_type == 'delivery' else 'استلام' }}
-                                    <small class="d-block">{{ handover.handover_date.strftime('%Y-%m-%d') }}</small>
-                                </a>
-                                {% if handover.form_link %}
-                                <a href="{{ handover.form_link }}" 
-                                   target="_blank" 
-                                   class="external-form-btn"
-                                   title="فتح النموذج الخارجي">
-                                    <i class="fas fa-external-link-alt me-1"></i>
-                                    نموذج
-                                </a>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% else %}
-                    <div class="handover-forms">
-                        <p class="no-handovers mb-0">لا توجد نماذج إلكترونية متاحة</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- رسالة في حالة عدم وجود سيارات -->
-        {% if not current_driver_vehicles and not rented_vehicles and not project_vehicles %}
-        <div class="row">
-            <div class="col-12">
-                <div class="vehicle-card text-center">
-                    <i class="fas fa-car fa-4x text-muted mb-3"></i>
-                    <h4 class="text-muted">لا توجد سيارات مخصصة</h4>
-                    <p class="text-muted">لم يتم تخصيص أي سيارات لك حالياً</p>
+                <div class="col-md-4 text-end">
+                    <a href="{{ url_for('employee_portal.dashboard') }}" class="btn btn-light back-btn">
+                        <i class="fas fa-arrow-right ms-2"></i>العودة للوحة المعلومات
+                    </a>
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- الإحصائيات -->
+    <div class="container mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <i class="fas fa-clipboard-list fa-2x mb-2"></i>
+                    <h3>{{ stats.total_operations or 0 }}</h3>
+                    <p class="mb-0">إجمالي العمليات</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <i class="fas fa-shield-alt fa-2x mb-2"></i>
+                    <h3>{{ stats.total_safety_checks or 0 }}</h3>
+                    <p class="mb-0">فحوصات السلامة</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <i class="fas fa-clock fa-2x mb-2"></i>
+                    <h3>{{ stats.pending_operations or 0 }}</h3>
+                    <p class="mb-0">العمليات المعلقة</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3>{{ stats.approved_operations or 0 }}</h3>
+                    <p class="mb-0">العمليات المعتمدة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- تبويبات السيارات -->
+        <ul class="nav nav-tabs" id="vehiclesTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="my-vehicles-tab" data-bs-toggle="tab" href="#my-vehicles">
+                    <i class="fas fa-car ms-2"></i>سياراتي ({{ current_driver_vehicles|length }})
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="rental-vehicles-tab" data-bs-toggle="tab" href="#rental-vehicles">
+                    <i class="fas fa-handshake ms-2"></i>السيارات المؤجرة ({{ rented_vehicles|length }})
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="project-vehicles-tab" data-bs-toggle="tab" href="#project-vehicles">
+                    <i class="fas fa-project-diagram ms-2"></i>سيارات المشاريع ({{ project_vehicles|length }})
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="vehiclesTabContent">
+            <!-- سياراتي المخصصة -->
+            <div class="tab-pane fade show active" id="my-vehicles">
+                {% if current_driver_vehicles %}
+                    {% for vehicle in current_driver_vehicles %}
+                    <div class="vehicle-card">
+                        <div class="vehicle-header">
+                            <div>
+                                <h4 class="vehicle-title">
+                                    <i class="fas fa-car ms-2"></i>{{ vehicle.plate_number }}
+                                </h4>
+                                <p class="text-muted mb-0">{{ vehicle.make }} {{ vehicle.model }} - {{ vehicle.year }}</p>
+                            </div>
+                            <div>
+                                <span class="vehicle-status status-active">
+                                    <i class="fas fa-circle ms-1"></i>نشط
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- نماذج التسليم والاستلام -->
+                            <div class="col-md-4">
+                                <div class="operations-section">
+                                    <h5 class="section-title">
+                                        <i class="fas fa-exchange-alt"></i>نماذج التسليم والاستلام
+                                    </h5>
+                                    <div class="operations-list">
+                                        {% if vehicle.handovers %}
+                                            {% for handover in vehicle.handovers[:5] %}
+                                            <div class="handover-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <strong>
+                                                            {% if handover.handover_type == 'delivery' %}
+                                                                <i class="fas fa-arrow-down text-success"></i> تسليم
+                                                            {% else %}
+                                                                <i class="fas fa-arrow-up text-info"></i> استلام
+                                                            {% endif %}
+                                                        </strong>
+                                                        <div class="small text-muted">{{ handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date }}</div>
+                                                    </div>
+                                                    <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" 
+                                                       class="btn btn-sm btn-outline-primary btn-action" target="_blank">
+                                                        <i class="fas fa-file-pdf"></i> عرض
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="empty-state">
+                                                <i class="fas fa-inbox"></i>
+                                                <p>لا توجد نماذج تسليم مسجلة</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- العمليات المرتبطة -->
+                            <div class="col-md-4">
+                                <div class="operations-section">
+                                    <h5 class="section-title">
+                                        <i class="fas fa-cogs"></i>العمليات المرتبطة
+                                    </h5>
+                                    <div class="operations-list">
+                                        {% if vehicle.employee_operations %}
+                                            {% for operation in vehicle.employee_operations %}
+                                            <div class="operation-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <strong>{{ operation.operation_type }}</strong>
+                                                        <span class="status-badge status-{{ operation.status }}">{{ operation.status }}</span>
+                                                        <div class="small text-muted">{{ operation.created_at.strftime('%Y-%m-%d') if operation.created_at }}</div>
+                                                    </div>
+                                                    <a href="{{ url_for('operations.view_operation', operation_id=operation.id) }}" 
+                                                       class="btn btn-sm btn-outline-info btn-action">
+                                                        <i class="fas fa-eye"></i> عرض
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="empty-state">
+                                                <i class="fas fa-tasks"></i>
+                                                <p>لا توجد عمليات مسجلة</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- فحوصات السلامة -->
+                            <div class="col-md-4">
+                                <div class="checks-section">
+                                    <h5 class="section-title">
+                                        <i class="fas fa-shield-alt"></i>فحوصات السلامة
+                                    </h5>
+                                    <div class="operations-list">
+                                        {% if vehicle.safety_checks %}
+                                            {% for check in vehicle.safety_checks %}
+                                            <div class="safety-check-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <strong>فحص السلامة</strong>
+                                                        <span class="status-badge status-{{ check.status }}">{{ check.status }}</span>
+                                                        <div class="small text-muted">{{ check.check_date.strftime('%Y-%m-%d') if check.check_date }}</div>
+                                                    </div>
+                                                    <div>
+                                                        <a href="{{ url_for('vehicles.safety_check_edit', id=check.id) }}" 
+                                                           class="btn btn-sm btn-outline-success btn-action">
+                                                            <i class="fas fa-eye"></i> عرض
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="empty-state">
+                                                <i class="fas fa-shield-alt"></i>
+                                                <p>لا توجد فحوصات سلامة مسجلة</p>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- معلومات إضافية -->
+                        {% if vehicle.inspections %}
+                        <div class="mt-3">
+                            <h6 class="section-title">
+                                <i class="fas fa-clipboard-check"></i>الفحوصات الدورية
+                            </h6>
+                            <div class="row">
+                                {% for inspection in vehicle.inspections[:3] %}
+                                <div class="col-md-4">
+                                    <div class="card card-sm">
+                                        <div class="card-body">
+                                            <strong>{{ inspection.inspection_type }}</strong>
+                                            <div class="small text-muted">{{ inspection.inspection_date.strftime('%Y-%m-%d') if inspection.inspection_date }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if vehicle.workshop_records %}
+                        <div class="mt-3">
+                            <h6 class="section-title">
+                                <i class="fas fa-wrench"></i>سجلات الورشة
+                            </h6>
+                            <div class="row">
+                                {% for record in vehicle.workshop_records[:3] %}
+                                <div class="col-md-4">
+                                    <div class="card card-sm">
+                                        <div class="card-body">
+                                            <strong>{{ record.reason }}</strong>
+                                            <div class="small text-muted">{{ record.entry_date.strftime('%Y-%m-%d') if record.entry_date }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-car fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا توجد سيارات مخصصة حالياً</h4>
+                        <p class="text-muted">لم يتم تخصيص أي سيارة لك حتى الآن</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- السيارات المؤجرة -->
+            <div class="tab-pane fade" id="rental-vehicles">
+                {% if rented_vehicles %}
+                    {% for vehicle, rental in rented_vehicles %}
+                    <div class="vehicle-card">
+                        <div class="vehicle-header">
+                            <div>
+                                <h4 class="vehicle-title">
+                                    <i class="fas fa-handshake ms-2"></i>{{ vehicle.plate_number }}
+                                </h4>
+                                <p class="text-muted mb-0">{{ vehicle.make }} {{ vehicle.model }} - مؤجرة</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% if vehicle.handovers %}
+                                    <h6>نماذج التسليم الأخيرة:</h6>
+                                    {% for handover in vehicle.handovers[:3] %}
+                                        <div class="handover-item">
+                                            {{ handover.handover_type }} - {{ handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date }}
+                                            <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" target="_blank">عرض PDF</a>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {% if vehicle.safety_checks %}
+                                    <h6>فحوصات السلامة:</h6>
+                                    {% for check in vehicle.safety_checks[:3] %}
+                                        <div class="safety-check-item">
+                                            فحص بتاريخ {{ check.check_date.strftime('%Y-%m-%d') if check.check_date }} - {{ check.status }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-handshake fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا توجد سيارات مؤجرة</h4>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- سيارات المشاريع -->
+            <div class="tab-pane fade" id="project-vehicles">
+                {% if project_vehicles %}
+                    {% for vehicle, project in project_vehicles %}
+                    <div class="vehicle-card">
+                        <div class="vehicle-header">
+                            <div>
+                                <h4 class="vehicle-title">
+                                    <i class="fas fa-project-diagram ms-2"></i>{{ vehicle.plate_number }}
+                                </h4>
+                                <p class="text-muted mb-0">{{ vehicle.make }} {{ vehicle.model }} - مشروع: {{ project.project_name }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% if vehicle.handovers %}
+                                    <h6>نماذج التسليم:</h6>
+                                    {% for handover in vehicle.handovers[:3] %}
+                                        <div class="handover-item">
+                                            {{ handover.handover_type }} - {{ handover.handover_date.strftime('%Y-%m-%d') if handover.handover_date }}
+                                            <a href="{{ url_for('vehicles.handover_pdf', id=handover.id) }}" 
+                                               class="btn btn-sm btn-outline-primary" target="_blank">عرض PDF</a>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {% if vehicle.safety_checks %}
+                                    <h6>فحوصات السلامة:</h6>
+                                    {% for check in vehicle.safety_checks[:3] %}
+                                        <div class="safety-check-item">
+                                            فحص بتاريخ {{ check.check_date.strftime('%Y-%m-%d') if check.check_date }} - {{ check.status }}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا توجد سيارات مشاريع</h4>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.replit.com/agent/bootstrap-agent.min.js"></script>
 </body>
 </html>
