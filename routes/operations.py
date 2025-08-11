@@ -743,7 +743,7 @@ def delete_operation(id):
         db.session.commit()
         
         # تسجيل عملية الحذف
-        log_audit('delete', 'operation_request', id, f'تم حذف العملية: {operation_title} من النوع {operation_type}')
+        log_audit(current_user.id, 'delete', 'operation_request', id, f'تم حذف العملية: {operation_title} من النوع {operation_type}')
         
         flash('تم حذف العملية بنجاح', 'success')
         return redirect(url_for('operations.operations_list'))
