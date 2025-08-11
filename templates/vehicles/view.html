@@ -2157,7 +2157,14 @@
                                     <tbody>
                                         {% for auth in external_authorizations %}
                                         <tr>
-                                            <td>{{ auth.employee.name }}</td>
+                                            <td>
+                                                {% if auth.employee %}
+                                                    {{ auth.employee.name }}
+                                                {% else %}
+                                                    {{ auth.manual_driver_name }}
+                                                    <small class="text-muted d-block">(إدخال يدوي)</small>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ auth.project_name or 'غير محدد' }}</td>
                                             <td>
                                                 <span class="badge-enhanced bg-info">{{ auth.authorization_type }}</span>
