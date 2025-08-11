@@ -3346,7 +3346,7 @@ def handover_pdf(id):
         import os
         from datetime import datetime
         # استخدام مولد PDF المحسن مع WeasyPrint
-        from utils.weasyprint_handover_pdf import generate_handover_report_pdf
+        from utils.enhanced_arabic_handover_pdf import create_vehicle_handover_pdf
 
         try:
                 # التأكد من تحويل المعرف إلى عدد صحيح
@@ -3385,7 +3385,7 @@ def handover_pdf(id):
                         handover_data['supervisor_name'] = str(handover.supervisor_name)
 
                 # إنشاء ملف PDF باستخدام المولد المحسن
-                pdf_buffer = generate_handover_report_pdf(vehicle, handover)
+                pdf_buffer = create_vehicle_handover_pdf(handover)
 
                 # تحديد اسم الملف
                 filename = f"handover_form_{vehicle.plate_number}.pdf"
