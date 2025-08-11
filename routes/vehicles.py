@@ -5702,3 +5702,14 @@ def create_external_authorization(vehicle_id):
                          vehicle=vehicle,
                          departments=departments,
                          employees=employees)
+
+@vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/view')
+@login_required
+def view_external_authorization(vehicle_id, auth_id):
+    """عرض تفاصيل التفويض الخارجي"""
+    vehicle = Vehicle.query.get_or_404(vehicle_id)
+    auth = ExternalAuthorization.query.get_or_404(auth_id)
+
+    return render_template('vehicles/view_external_authorization.html',
+                         vehicle=vehicle,
+                         authorization=auth)
