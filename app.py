@@ -309,6 +309,12 @@ def root():
     else:
         return redirect(url_for('auth.login'))
 
+# إضافة route مختصر للتوافق مع الروابط القديمة
+@app.route('/login')
+def login_redirect():
+    """إعادة توجيه من /login إلى /auth/login للتوافق"""
+    return redirect(url_for('auth.login'))
+
 # معالج أخطاء الطلبات الكبيرة
 @app.errorhandler(413)
 def request_entity_too_large(error):
