@@ -595,12 +595,15 @@ body {
                                     <i class="fas fa-phone me-2 text-light"></i>
                                     <strong>رقم الجوال:</strong>
                                     <div class="mt-1 text-success">
-                                        {% if operation.requester.phone %}
+                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
+                                        {% if mobile_device and mobile_device.phone_number %}
+                                            {{ mobile_device.phone_number }}
+                                        {% elif operation.requester.phone %}
                                             {{ operation.requester.phone }}
                                         {% elif employee and employee.mobile %}
                                             {{ employee.mobile }}
                                         {% else %}
-                                            966501234567
+                                            غير متوفر
                                         {% endif %}
                                     </div>
                                 </div>
@@ -610,12 +613,13 @@ body {
                                     <i class="fas fa-barcode me-2 text-light"></i>
                                     <strong>رقم IMEI:</strong>
                                     <div class="mt-1 text-warning">
-                                        {% if employee and employee.mobile_imei %}
+                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
+                                        {% if mobile_device and mobile_device.imei %}
+                                            {{ mobile_device.imei }}
+                                        {% elif employee and employee.mobile_imei %}
                                             {{ employee.mobile_imei }}
-                                        {% elif operation.requester.mobile_imei %}
-                                            {{ operation.requester.mobile_imei }}
                                         {% else %}
-                                            123456789012345
+                                            غير متوفر
                                         {% endif %}
                                     </div>
                                 </div>
@@ -628,10 +632,13 @@ body {
                                     <i class="fas fa-calendar-check me-2 text-light"></i>
                                     <strong>تاريخ الاستلام:</strong>
                                     <div class="mt-1 text-info">
-                                        {% if employee and employee.join_date %}
+                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
+                                        {% if mobile_device and mobile_device.assignment_date %}
+                                            {{ mobile_device.assignment_date.strftime('%Y-%m-%d') }}
+                                        {% elif employee and employee.join_date %}
                                             {{ employee.join_date.strftime('%Y-%m-%d') }}
                                         {% else %}
-                                            2025-01-01
+                                            غير محدد
                                         {% endif %}
                                     </div>
                                 </div>
@@ -641,7 +648,20 @@ body {
                                     <i class="fas fa-check-circle me-2 text-light"></i>
                                     <strong>حالة الجهاز:</strong>
                                     <div class="mt-1">
-                                        <span class="badge bg-success">مُستلم</span>
+                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
+                                        {% if mobile_device %}
+                                            {% if mobile_device.status == 'active' %}
+                                                <span class="badge bg-success">نشط</span>
+                                            {% elif mobile_device.status == 'inactive' %}
+                                                <span class="badge bg-danger">غير نشط</span>
+                                            {% elif mobile_device.status == 'maintenance' %}
+                                                <span class="badge bg-warning">صيانة</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">{{ mobile_device.status }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">غير محدد</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                             </div>

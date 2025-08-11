@@ -1119,12 +1119,16 @@ def export_operation_excel(operation_id):
                 cell.border = border
                 ws3.column_dimensions[cell.column_letter].width = 20
             
-            # بيانات تفاصيل الجوال المُستلم
+            # الحصول على بيانات الجوال الحقيقية من قاعدة البيانات
+            from models import MobileDevice
+            mobile_device = MobileDevice.query.filter_by(assigned_to_id=operation.requester.id).first()
+            
+            # بيانات تفاصيل الجوال المُستلم من البيانات الحقيقية
             mobile_details = [
-                ['رقم الجوال', operation.requester.phone or '966501234567'],
-                ['رقم IMEI', '123456789012345'],
-                ['تاريخ الاستلام', '2025-01-01'],
-                ['حالة الجهاز', 'مُستلم']
+                ['رقم الجوال', mobile_device.phone_number if mobile_device else (operation.requester.phone or 'غير متوفر')],
+                ['رقم IMEI', mobile_device.imei if mobile_device else 'غير متوفر'],
+                ['تاريخ الاستلام', mobile_device.assignment_date.strftime('%Y-%m-%d') if mobile_device and mobile_device.assignment_date else 'غير محدد'],
+                ['حالة الجهاز', mobile_device.status if mobile_device else 'غير محدد']
             ]
             
             for row_num, (label, value) in enumerate(mobile_details, 6):
