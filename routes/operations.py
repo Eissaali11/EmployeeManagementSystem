@@ -424,10 +424,15 @@ def view_operation(operation_id):
         except Exception as e:
             print(f"خطأ في تحميل بيانات الموظف الطالب: {e}")
     
+    # البحث عن جهاز الجوال المخصص للمستخدم
+    from models import MobileDevice
+    mobile_device = MobileDevice.query.filter_by(employee_id=operation.requester.id).first()
+    
     return render_template('operations/view.html', 
                          operation=operation,
                          related_record=related_record,
-                         employee=employee)
+                         employee=employee,
+                         mobile_device=mobile_device)
 
 
 
@@ -1121,13 +1126,13 @@ def export_operation_excel(operation_id):
             
             # الحصول على بيانات الجوال الحقيقية من قاعدة البيانات
             from models import MobileDevice
-            mobile_device = MobileDevice.query.filter_by(assigned_to_id=operation.requester.id).first()
+            mobile_device = MobileDevice.query.filter_by(employee_id=operation.requester.id).first()
             
             # بيانات تفاصيل الجوال المُستلم من البيانات الحقيقية
             mobile_details = [
                 ['رقم الجوال', mobile_device.phone_number if mobile_device else (operation.requester.phone or 'غير متوفر')],
                 ['رقم IMEI', mobile_device.imei if mobile_device else 'غير متوفر'],
-                ['تاريخ الاستلام', mobile_device.assignment_date.strftime('%Y-%m-%d') if mobile_device and mobile_device.assignment_date else 'غير محدد'],
+                ['تاريخ الاستلام', mobile_device.assigned_date.strftime('%Y-%m-%d') if mobile_device and mobile_device.assigned_date else 'غير محدد'],
                 ['حالة الجهاز', mobile_device.status if mobile_device else 'غير محدد']
             ]
             

@@ -595,7 +595,6 @@ body {
                                     <i class="fas fa-phone me-2 text-light"></i>
                                     <strong>رقم الجوال:</strong>
                                     <div class="mt-1 text-success">
-                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
                                         {% if mobile_device and mobile_device.phone_number %}
                                             {{ mobile_device.phone_number }}
                                         {% elif operation.requester.phone %}
@@ -613,7 +612,6 @@ body {
                                     <i class="fas fa-barcode me-2 text-light"></i>
                                     <strong>رقم IMEI:</strong>
                                     <div class="mt-1 text-warning">
-                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
                                         {% if mobile_device and mobile_device.imei %}
                                             {{ mobile_device.imei }}
                                         {% elif employee and employee.mobile_imei %}
@@ -632,9 +630,8 @@ body {
                                     <i class="fas fa-calendar-check me-2 text-light"></i>
                                     <strong>تاريخ الاستلام:</strong>
                                     <div class="mt-1 text-info">
-                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
-                                        {% if mobile_device and mobile_device.assignment_date %}
-                                            {{ mobile_device.assignment_date.strftime('%Y-%m-%d') }}
+                                        {% if mobile_device and mobile_device.assigned_date %}
+                                            {{ mobile_device.assigned_date.strftime('%Y-%m-%d') }}
                                         {% elif employee and employee.join_date %}
                                             {{ employee.join_date.strftime('%Y-%m-%d') }}
                                         {% else %}
@@ -648,7 +645,6 @@ body {
                                     <i class="fas fa-check-circle me-2 text-light"></i>
                                     <strong>حالة الجهاز:</strong>
                                     <div class="mt-1">
-                                        {% set mobile_device = operation.requester.mobile_devices.first() %}
                                         {% if mobile_device %}
                                             {% if mobile_device.status == 'active' %}
                                                 <span class="badge bg-success">نشط</span>
