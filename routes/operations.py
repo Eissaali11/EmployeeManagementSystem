@@ -983,17 +983,17 @@ def export_operation_excel(operation_id):
             
             if employee:
                 driver_values = [
-                    employee.name or '',
-                    employee.national_id or '',
-                    employee.phone or '',
-                    employee.department.name if employee.department else '',
-                    employee.position or '',
-                    employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else '',
-                    employee.status or '',
-                    employee.email or '',
-                    employee.address or '',
-                    employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '',
-                    employee.nationality or ''
+                    getattr(employee, 'name', '') or '',
+                    getattr(employee, 'national_id', '') or '',
+                    getattr(employee, 'mobile', '') or '',
+                    employee.department.name if hasattr(employee, 'department') and employee.department else '',
+                    getattr(employee, 'position', '') or getattr(employee, 'job_title', '') or '',
+                    employee.join_date.strftime('%Y-%m-%d') if hasattr(employee, 'join_date') and employee.join_date else '',
+                    getattr(employee, 'status', '') or '',
+                    getattr(employee, 'email', '') or '',
+                    getattr(employee, 'address', '') or '',
+                    employee.birth_date.strftime('%Y-%m-%d') if hasattr(employee, 'birth_date') and employee.birth_date else '',
+                    getattr(employee, 'nationality', '') or ''
                 ]
             else:
                 driver_values = [
