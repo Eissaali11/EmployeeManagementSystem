@@ -4689,12 +4689,19 @@ def edit_external_authorization(vehicle_id, auth_id):
     if request.method == 'POST':
         try:
             # تحديث البيانات
-            auth.employee_id = request.form.get('employee_id')
+            employee_id = request.form.get('employee_id')
+            auth.employee_id = int(employee_id) if employee_id and employee_id != 'None' else None
             auth.project_name = request.form.get('project_name')
             auth.authorization_type = request.form.get('authorization_type')
             auth.city = request.form.get('city')
             auth.external_link = request.form.get('form_link')
             auth.notes = request.form.get('notes')
+            
+            # معالجة بيانات السائق اليدوية
+            auth.manual_driver_name = request.form.get('manual_driver_name')
+            auth.manual_driver_phone = request.form.get('manual_driver_phone')
+            auth.manual_driver_position = request.form.get('manual_driver_position')
+            auth.manual_driver_department = request.form.get('manual_driver_department')
 
             # معالجة رفع الملف الجديد
             if 'file' in request.files and request.files['file'].filename:
