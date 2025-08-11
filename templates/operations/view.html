@@ -839,6 +839,24 @@ body {
                 </div>
                 {% endif %}
                 
+                {% if operation.requester.location %}
+                <div class="info-item">
+                    <strong>الموقع:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-map-marker-alt me-1"></i>{{ operation.requester.location }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if operation.requester.job_title %}
+                <div class="info-item">
+                    <strong>المسمى الوظيفي:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-briefcase me-1"></i>{{ operation.requester.job_title }}
+                    </div>
+                </div>
+                {% endif %}
+                
                 {% if operation.requester.phone %}
                 <div class="info-item">
                     <strong>رقم الهاتف:</strong> 
