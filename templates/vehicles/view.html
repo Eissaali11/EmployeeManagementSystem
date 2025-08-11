@@ -439,6 +439,10 @@
                     <i class="fas fa-share-alt"></i>
                     مشاركة رابط الفحص
                 </button>
+                <a href="{{ url_for('vehicles.confirm_delete', id=vehicle.id) }}" class="btn-vehicle-action btn-danger-enhanced">
+                    <i class="fas fa-trash-alt"></i>
+                    حذف السيارة
+                </a>
                 <a href="{{ url_for('vehicles.index') }}" class="btn-vehicle-action btn-outline-secondary">
                     <i class="fas fa-arrow-right"></i>
                     العودة للقائمة
