@@ -1,0 +1,254 @@
+{% extends "landing_admin/layout.html" %}
+
+{% block title %}إدارة المحتوى - صفحة الهبوط{% endblock %}
+{% block page_title %}إدارة محتوى صفحة الهبوط{% endblock %}
+
+{% block content %}
+<!-- تحرير العنوان الرئيسي -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="content-card">
+            <h5 class="text-primary mb-4">
+                <i class="fas fa-heading me-2"></i>
+                العنوان الرئيسي والوصف
+            </h5>
+            
+            <form id="heroForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">عنوان الموقع</label>
+                        <input type="text" class="form-control" id="siteTitle" value="{{ settings.site_title }}" placeholder="عنوان الموقع">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">العنوان الرئيسي</label>
+                        <input type="text" class="form-control" id="heroTitle" value="{{ settings.hero_title }}" placeholder="العنوان الرئيسي">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">النص الفرعي</label>
+                    <textarea class="form-control" id="heroSubtitle" rows="3" placeholder="النص الفرعي الوصفي">{{ settings.hero_subtitle }}</textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>حفظ التغييرات
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات الشركة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="content-card">
+            <h5 class="text-success mb-4">
+                <i class="fas fa-building me-2"></i>
+                معلومات الشركة
+            </h5>
+            
+            <form id="companyForm">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">اسم الشركة</label>
+                        <input type="text" class="form-control" id="companyName" value="{{ settings.company_info.name }}" placeholder="اسم الشركة">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">سنة التأسيس</label>
+                        <input type="text" class="form-control" id="companyFounded" value="{{ settings.company_info.founded }}" placeholder="سنة التأسيس">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">وصف الشركة</label>
+                    <textarea class="form-control" id="companyDescription" rows="3" placeholder="وصف مختصر للشركة">{{ settings.company_info.description }}</textarea>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">عدد العملاء</label>
+                    <input type="text" class="form-control" id="companyEmployees" value="{{ settings.company_info.employees }}" placeholder="عدد العملاء">
+                </div>
+                
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>حفظ معلومات الشركة
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- إعداد الإحصائيات -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="content-card">
+            <h5 class="text-info mb-4">
+                <i class="fas fa-chart-bar me-2"></i>
+                إحصائيات الموقع
+            </h5>
+            
+            <form id="statsForm">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">عدد الشركات</label>
+                        <input type="number" class="form-control" id="statsCompanies" value="{{ settings.stats.companies }}" placeholder="500">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">عدد الموظفين</label>
+                        <input type="number" class="form-control" id="statsEmployees" value="{{ settings.stats.employees }}" placeholder="50000">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">عدد المركبات</label>
+                        <input type="number" class="form-control" id="statsVehicles" value="{{ settings.stats.vehicles }}" placeholder="10000">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">معدل الرضا (%)</label>
+                        <input type="number" class="form-control" id="statsSatisfaction" value="{{ settings.stats.satisfaction }}" placeholder="99" min="0" max="100">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-save me-2"></i>حفظ الإحصائيات
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- معاينة التغييرات -->
+<div class="row">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-warning mb-0">
+                    <i class="fas fa-eye me-2"></i>
+                    معاينة الموقع
+                </h5>
+                <a href="/nuzum" target="_blank" class="btn btn-outline-warning">
+                    <i class="fas fa-external-link-alt me-2"></i>
+                    فتح في نافذة جديدة
+                </a>
+            </div>
+            
+            <div class="bg-light p-4 rounded">
+                <div class="text-center">
+                    <h2 class="text-primary mb-3" id="previewTitle">{{ settings.hero_title }}</h2>
+                    <p class="lead text-muted mb-4" id="previewSubtitle">{{ settings.hero_subtitle }}</p>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <div class="bg-white p-3 rounded shadow-sm">
+                                <h4 class="text-primary mb-1" id="previewCompanies">{{ settings.stats.companies }}</h4>
+                                <small class="text-muted">شركة</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="bg-white p-3 rounded shadow-sm">
+                                <h4 class="text-success mb-1" id="previewEmployees">{{ settings.stats.employees }}</h4>
+                                <small class="text-muted">موظف</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="bg-white p-3 rounded shadow-sm">
+                                <h4 class="text-warning mb-1" id="previewVehicles">{{ settings.stats.vehicles }}</h4>
+                                <small class="text-muted">مركبة</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <div class="bg-white p-3 rounded shadow-sm">
+                                <h4 class="text-info mb-1"><span id="previewSatisfaction">{{ settings.stats.satisfaction }}</span>%</h4>
+                                <small class="text-muted">رضا العملاء</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديث المعاينة المباشرة
+function updatePreview() {
+    document.getElementById('previewTitle').textContent = document.getElementById('heroTitle').value;
+    document.getElementById('previewSubtitle').textContent = document.getElementById('heroSubtitle').value;
+    document.getElementById('previewCompanies').textContent = document.getElementById('statsCompanies').value;
+    document.getElementById('previewEmployees').textContent = document.getElementById('statsEmployees').value;
+    document.getElementById('previewVehicles').textContent = document.getElementById('statsVehicles').value;
+    document.getElementById('previewSatisfaction').textContent = document.getElementById('statsSatisfaction').value;
+}
+
+// ربط الأحداث بالحقول
+['heroTitle', 'heroSubtitle', 'statsCompanies', 'statsEmployees', 'statsVehicles', 'statsSatisfaction'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updatePreview);
+});
+
+// حفظ العنوان الرئيسي
+document.getElementById('heroForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        site_title: document.getElementById('siteTitle').value,
+        hero_title: document.getElementById('heroTitle').value,
+        hero_subtitle: document.getElementById('heroSubtitle').value
+    };
+    
+    saveSettings(data, 'تم حفظ العنوان الرئيسي بنجاح');
+});
+
+// حفظ معلومات الشركة
+document.getElementById('companyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        company_info: {
+            name: document.getElementById('companyName').value,
+            description: document.getElementById('companyDescription').value,
+            founded: document.getElementById('companyFounded').value,
+            employees: document.getElementById('companyEmployees').value
+        }
+    };
+    
+    saveSettings(data, 'تم حفظ معلومات الشركة بنجاح');
+});
+
+// حفظ الإحصائيات
+document.getElementById('statsForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const data = {
+        stats: {
+            companies: parseInt(document.getElementById('statsCompanies').value) || 0,
+            employees: parseInt(document.getElementById('statsEmployees').value) || 0,
+            vehicles: parseInt(document.getElementById('statsVehicles').value) || 0,
+            satisfaction: parseInt(document.getElementById('statsSatisfaction').value) || 0
+        }
+    };
+    
+    saveSettings(data, 'تم حفظ الإحصائيات بنجاح');
+});
+
+// دالة حفظ الإعدادات
+function saveSettings(data, message) {
+    fetch('{{ url_for("landing_admin.api_settings") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showMessage(message, 'success');
+        } else {
+            showMessage(result.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في الحفظ', 'error');
+    });
+}
+</script>
+{% endblock %}

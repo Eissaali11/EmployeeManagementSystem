@@ -401,6 +401,10 @@ with app.app_context():
     # استيراد وتسجيل لوحة التحكم الإدارية
     from routes.admin_dashboard import admin_dashboard_bp
     app.register_blueprint(admin_dashboard_bp, url_prefix='/admin')
+    
+    # استيراد وتسجيل إدارة صفحة الهبوط
+    from routes.landing_admin import landing_admin_bp
+    app.register_blueprint(landing_admin_bp, url_prefix='/landing-admin')
 
     # إضافة route لخدمة الصور من مجلد uploads
     @app.route('/uploads/<path:filename>')

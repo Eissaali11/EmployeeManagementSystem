@@ -1,0 +1,254 @@
+{% extends "landing_admin/layout.html" %}
+
+{% block title %}لوحة المعلومات - إدارة صفحة الهبوط{% endblock %}
+{% block page_title %}لوحة معلومات صفحة الهبوط{% endblock %}
+
+{% block content %}
+<!-- الإحصائيات الرئيسية -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #667eea; --card-color-rgb: 102,126,234;">
+            <div class="stats-icon">
+                <i class="fas fa-th-large"></i>
+            </div>
+            <h3 class="text-white mb-1">{{ stats.total_sections }}</h3>
+            <p class="text-white-50 mb-0">أقسام الموقع</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #11998e; --card-color-rgb: 17,153,142;">
+            <div class="stats-icon">
+                <i class="fas fa-star"></i>
+            </div>
+            <h3 class="text-white mb-1">{{ stats.active_features }}</h3>
+            <p class="text-white-50 mb-0">الميزات النشطة</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #f093fb; --card-color-rgb: 240,147,251;">
+            <div class="stats-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <h3 class="text-white mb-1">{{ stats.testimonials_count }}</h3>
+            <p class="text-white-50 mb-0">آراء العملاء</p>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #fc466b; --card-color-rgb: 252,70,107;">
+            <div class="stats-icon">
+                <i class="fas fa-address-book"></i>
+            </div>
+            <h3 class="text-white mb-1">{{ stats.contact_methods }}</h3>
+            <p class="text-white-50 mb-0">طرق التواصل</p>
+        </div>
+    </div>
+</div>
+
+<!-- معلومات الموقع الأساسية -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات الموقع الأساسية
+                </h5>
+                <button class="btn btn-outline-primary" onclick="editBasicInfo()">
+                    <i class="fas fa-edit me-2"></i>تعديل
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <strong>عنوان الموقع:</strong>
+                        <div class="text-muted">{{ settings.site_title }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>العنوان الرئيسي:</strong>
+                        <div class="text-muted">{{ settings.hero_title }}</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <strong>اسم الشركة:</strong>
+                        <div class="text-muted">{{ settings.company_info.name }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <strong>وصف الشركة:</strong>
+                        <div class="text-muted">{{ settings.company_info.description }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- العمليات السريعة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="content-card">
+            <h5 class="text-primary mb-4">
+                <i class="fas fa-bolt me-2"></i>
+                العمليات السريعة
+            </h5>
+            
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ url_for('landing_admin.content_management') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-edit me-2"></i>
+                        تحرير المحتوى
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ url_for('landing_admin.features_management') }}" class="btn btn-success w-100">
+                        <i class="fas fa-star me-2"></i>
+                        إدارة الميزات
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ url_for('landing_admin.testimonials_management') }}" class="btn btn-warning w-100">
+                        <i class="fas fa-comments me-2"></i>
+                        آراء العملاء
+                    </a>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-3">
+                    <a href="{{ url_for('landing_admin.pricing_management') }}" class="btn btn-danger w-100">
+                        <i class="fas fa-dollar-sign me-2"></i>
+                        خطط الأسعار
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- معاينة الميزات -->
+    <div class="col-lg-6 mb-4">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-success mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    الميزات الحالية
+                </h5>
+                <a href="{{ url_for('landing_admin.features_management') }}" class="btn btn-outline-success btn-sm">
+                    إدارة الميزات
+                </a>
+            </div>
+            
+            <div class="row">
+                {% for feature in settings.features[:4] %}
+                <div class="col-md-6 mb-3">
+                    <div class="p-3 bg-light rounded">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="{{ feature.icon }} text-{{ feature.color }} me-2"></i>
+                            <strong class="small">{{ feature.title }}</strong>
+                        </div>
+                        <p class="small text-muted mb-0">{{ feature.description[:50] }}...</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- معاينة آراء العملاء -->
+    <div class="col-lg-6 mb-4">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-warning mb-0">
+                    <i class="fas fa-comments me-2"></i>
+                    آراء العملاء الأخيرة
+                </h5>
+                <a href="{{ url_for('landing_admin.testimonials_management') }}" class="btn btn-outline-warning btn-sm">
+                    إدارة الآراء
+                </a>
+            </div>
+            
+            {% for testimonial in settings.testimonials[:3] %}
+            <div class="mb-3 p-3 bg-light rounded">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="bg-warning text-white rounded-circle me-2" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                        {{ testimonial.name[:2] }}
+                    </div>
+                    <div>
+                        <div class="fw-bold small">{{ testimonial.name }}</div>
+                        <small class="text-muted">{{ testimonial.position }}</small>
+                    </div>
+                </div>
+                <p class="small text-muted mb-0">{{ testimonial.content[:80] }}...</p>
+                <div class="text-warning">
+                    {% for i in range(testimonial.rating) %}
+                    <i class="fas fa-star"></i>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات الموقع -->
+<div class="row">
+    <div class="col-12">
+        <div class="content-card">
+            <h5 class="text-info mb-4">
+                <i class="fas fa-chart-bar me-2"></i>
+                إحصائيات الموقع المعروضة
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h3 class="text-primary mb-1">{{ settings.stats.companies }}</h3>
+                        <p class="text-muted mb-0 small">شركة تثق بنا</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h3 class="text-success mb-1">{{ settings.stats.employees }}</h3>
+                        <p class="text-muted mb-0 small">موظف يستخدم النظام</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h3 class="text-warning mb-1">{{ settings.stats.vehicles }}</h3>
+                        <p class="text-muted mb-0 small">مركبة مُدارة</p>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <div class="text-center p-3 bg-light rounded">
+                        <h3 class="text-info mb-1">{{ settings.stats.satisfaction }}%</h3>
+                        <p class="text-muted mb-0 small">معدل رضا العملاء</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editBasicInfo() {
+    // في التطبيق الحقيقي، يمكن فتح نافذة تعديل
+    alert('سيتم إضافة نافذة تعديل المعلومات الأساسية');
+}
+
+// تحديث الإحصائيات كل دقيقة
+setInterval(function() {
+    fetch('{{ url_for("landing_admin.api_settings") }}')
+        .then(response => response.json())
+        .then(data => {
+            console.log('تم تحديث البيانات');
+        })
+        .catch(error => {
+            console.error('خطأ في تحديث البيانات:', error);
+        });
+}, 60000);
+</script>
+{% endblock %}
