@@ -5574,3 +5574,49 @@ def import_vehicles():
         flash(f'خطأ في قراءة الملف: {str(e)}', 'error')
         return redirect(url_for('vehicles.import_vehicles'))
 
+
+
+@vehicles_bp.route("/handover/<int:handover_id>/confirm-delete")
+@login_required
+def confirm_delete_single_handover(handover_id):
+    """صفحة تأكيد حذف سجل تسليم/استلام واحد"""
+    handover = VehicleHandover.query.get_or_404(handover_id)
+    vehicle = handover.vehicle
+    
+    # تنسيق التاريخ للعرض
+    handover.formatted_handover_date = format_date_arabic(handover.handover_date)
+    
+    return render_template(
+        "vehicles/confirm_delete_single_handover.html",
+        handover=handover,
+        vehicle=vehicle
+    )
+
+@vehicles_bp.route("/handover/<int:handover_id>/delete", methods=["POST"])
+@login_required  
+def delete_single_handover(handover_id):
+    """حذف سجل تسليم/استلام واحد"""
+    handover = VehicleHandover.query.get_or_404(handover_id)
+    vehicle_id = handover.vehicle_id
+    vehicle = handover.vehicle
+    
+    # التحقق من إدخال تأكيد الحذف
+    confirmation = request.form.get("confirmation")
+    if confirmation != "تأكيد":
+        flash("يجب كتابة كلمة \"تأكيد\" للمتابعة مع عملية الحذف!", "danger")
+        return redirect(url_for("vehicles.confirm_delete_single_handover", handover_id=handover_id))
+    
+    # تسجيل الإجراء قبل الحذف
+    handover_type_name = "تسليم" if handover.handover_type == "delivery" else "استلام"
+    log_audit("delete", "vehicle_handover", handover.id, 
+             f"تم حذف سجل {handover_type_name} للسيارة {vehicle.plate_number}")
+    
+    # حذف السجل
+    db.session.delete(handover)
+    db.session.commit()
+    
+    # تحديث حالة السيارة
+    update_vehicle_state(vehicle_id)
+    
+    flash(f"تم حذف سجل {handover_type_name} بنجاح!", "success")
+    return redirect(url_for("vehicles.view", id=vehicle_id))
