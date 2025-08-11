@@ -314,8 +314,8 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="employee-photo-section">
-                        {% if employee.photo %}
-                            <img src="{{ url_for('static', filename='uploads/employees/' + employee.photo) }}" 
+                        {% if employee.profile_image %}
+                            <img src="{{ url_for('static', filename='uploads/employees/' + employee.profile_image) }}" 
                                  alt="{{ employee.name }}" class="employee-photo">
                         {% else %}
                             <div class="default-photo">
@@ -324,8 +324,8 @@
                         {% endif %}
                         <h2 class="employee-name">{{ employee.name }}</h2>
                         <p class="employee-title">
-                            {% if employee.position %}
-                                {{ employee.position }}
+                            {% if employee.job_title %}
+                                {{ employee.job_title }}
                             {% else %}
                                 موظف
                             {% endif %}
@@ -364,7 +364,7 @@
                     </div>
                     <div class="info-row">
                         <div class="info-label"><i class="fas fa-phone ms-2"></i>رقم الجوال:</div>
-                        <div class="info-value">{{ employee.phone or 'غير محدد' }}</div>
+                        <div class="info-value">{{ employee.mobile or 'غير محدد' }}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label"><i class="fas fa-envelope ms-2"></i>البريد الإلكتروني:</div>
@@ -395,8 +395,8 @@
                     <div class="info-value">{{ employee.nationality or 'غير محدد' }}</div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">الحالة الاجتماعية:</div>
-                    <div class="info-value">{{ employee.marital_status or 'غير محدد' }}</div>
+                    <div class="info-label">نوع الموظف:</div>
+                    <div class="info-value">{{ employee.employee_type or 'عادي' }}</div>
                 </div>
                 <div class="info-row">
                     <div class="info-label">العنوان:</div>
@@ -557,16 +557,16 @@
                     <h3 class="card-title">معلومات الطوارئ</h3>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">اسم جهة الاتصال:</div>
-                    <div class="info-value">{{ employee.emergency_contact_name or 'غير محدد' }}</div>
+                    <div class="info-label">الجوال الشخصي:</div>
+                    <div class="info-value">{{ employee.mobilePersonal or 'غير محدد' }}</div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">رقم الطوارئ:</div>
-                    <div class="info-value">{{ employee.emergency_contact_phone or 'غير محدد' }}</div>
+                    <div class="info-label">الموقع:</div>
+                    <div class="info-value">{{ employee.location or 'غير محدد' }}</div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">العلاقة:</div>
-                    <div class="info-value">{{ employee.emergency_contact_relation or 'غير محدد' }}</div>
+                    <div class="info-label">المشروع:</div>
+                    <div class="info-value">{{ employee.project or 'غير محدد' }}</div>
                 </div>
             </div>
         </div>

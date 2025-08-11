@@ -529,19 +529,20 @@ def my_profile():
     today = datetime.now().date()
     warning_date = today + timedelta(days=warning_days)
     
-    if employee.id_expiry_date:
+    # فحص الحقول المتوفرة فقط
+    if hasattr(employee, 'id_expiry_date') and employee.id_expiry_date:
         if employee.id_expiry_date < today:
             documents_status['id_expired'] = True
         elif employee.id_expiry_date < warning_date:
             documents_status['id_expiry_warning'] = True
             
-    if employee.license_expiry_date:
+    if hasattr(employee, 'license_expiry_date') and employee.license_expiry_date:
         if employee.license_expiry_date < today:
             documents_status['license_expired'] = True
         elif employee.license_expiry_date < warning_date:
             documents_status['license_expiry_warning'] = True
             
-    if employee.passport_expiry_date:
+    if hasattr(employee, 'passport_expiry_date') and employee.passport_expiry_date:
         if employee.passport_expiry_date < today:
             documents_status['passport_expired'] = True
         elif employee.passport_expiry_date < warning_date:
@@ -558,10 +559,7 @@ def my_profile():
     }
     
     # حساب سنوات الخدمة
-    if employee.hire_date:
-        years_of_service = (datetime.now().date() - employee.hire_date).days / 365.25
-        stats['years_of_service'] = round(years_of_service, 1)
-    elif employee.join_date:
+    if employee.join_date:
         years_of_service = (datetime.now().date() - employee.join_date).days / 365.25
         stats['years_of_service'] = round(years_of_service, 1)
     
@@ -572,11 +570,11 @@ def my_profile():
     
     # تنسيق التواريخ
     formatted_dates = {
-        'hire_date': employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else (employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد'),
+        'hire_date': employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد',
         'birth_date': employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد',
-        'id_expiry': employee.id_expiry_date.strftime('%Y-%m-%d') if employee.id_expiry_date else 'غير محدد',
-        'license_expiry': employee.license_expiry_date.strftime('%Y-%m-%d') if employee.license_expiry_date else 'غير محدد',
-        'passport_expiry': employee.passport_expiry_date.strftime('%Y-%m-%d') if employee.passport_expiry_date else 'غير محدد'
+        'id_expiry': getattr(employee, 'id_expiry_date', None).strftime('%Y-%m-%d') if getattr(employee, 'id_expiry_date', None) else 'غير محدد',
+        'license_expiry': getattr(employee, 'license_expiry_date', None).strftime('%Y-%m-%d') if getattr(employee, 'license_expiry_date', None) else 'غير محدد',
+        'passport_expiry': getattr(employee, 'passport_expiry_date', None).strftime('%Y-%m-%d') if getattr(employee, 'passport_expiry_date', None) else 'غير محدد'
     }
     
     return render_template('employee_portal/profile_enhanced.html',
