@@ -5541,8 +5541,8 @@ def import_vehicles():
                 
                 # تسجيل العملية في سجل النشاطات
                 log_activity(
-                    user_id=current_user.id,
                     action=f'استيراد السيارات من ملف Excel',
+                    entity_type='Vehicle',
                     details=f'تم استيراد {success_count} سيارة بنجاح، {error_count} خطأ'
                 )
                 
