@@ -20,10 +20,20 @@
             <div class="row" id="features-container">
                 {% for feature in settings.features %}
                 <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="feature-card">
+                    <div class="feature-card {% if not feature.active %}inactive{% endif %}"
                         <div class="feature-icon">
+                            {% if feature.image %}
+                            <img src="{{ feature.image }}" alt="{{ feature.title }}" class="feature-image">
+                            {% else %}
                             <i class="{{ feature.icon }}"></i>
+                            {% endif %}
                         </div>
+                        {% if feature.category %}
+                        <span class="badge bg-secondary">{{ feature.category }}</span>
+                        {% endif %}
+                        {% if not feature.active %}
+                        <span class="badge bg-warning">غير نشط</span>
+                        {% endif %}
                         <h6 class="feature-title">{{ feature.title }}</h6>
                         <p class="feature-description">{{ feature.description }}</p>
                         <div class="feature-actions">
@@ -51,18 +61,69 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="featureForm">
-                    <div class="mb-3">
-                        <label for="featureTitle" class="form-label">عنوان الميزة</label>
-                        <input type="text" class="form-control" id="featureTitle" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="featureIcon" class="form-label">أيقونة الميزة (Font Awesome)</label>
-                        <input type="text" class="form-control" id="featureIcon" placeholder="fas fa-cog" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="featureDescription" class="form-label">وصف الميزة</label>
-                        <textarea class="form-control" id="featureDescription" rows="3" required></textarea>
+                <form id="featureForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="featureTitle" class="form-label">عنوان الميزة</label>
+                                <input type="text" class="form-control" id="featureTitle" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="featureDescription" class="form-label">وصف الميزة</label>
+                                <textarea class="form-control" id="featureDescription" rows="4" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="featureCategory" class="form-label">التصنيف</label>
+                                <select class="form-control" id="featureCategory">
+                                    <option value="إدارة">إدارة</option>
+                                    <option value="المركبات">المركبات</option>
+                                    <option value="الموظفين">الموظفين</option>
+                                    <option value="التقارير">التقارير</option>
+                                    <option value="الأمان">الأمان</option>
+                                    <option value="تقني">تقني</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">نوع الأيقونة</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="iconType" id="iconTypeIcon" value="icon" checked>
+                                    <label class="form-check-label" for="iconTypeIcon">أيقونة Font Awesome</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="iconType" id="iconTypeImage" value="image">
+                                    <label class="form-check-label" for="iconTypeImage">صورة مخصصة</label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3" id="iconInput">
+                                <label for="featureIcon" class="form-label">أيقونة الميزة (Font Awesome)</label>
+                                <input type="text" class="form-control" id="featureIcon" placeholder="fas fa-cog">
+                                <small class="form-text text-muted">مثال: fas fa-users, fas fa-car, fas fa-chart-bar</small>
+                            </div>
+                            
+                            <div class="mb-3" id="imageInput" style="display: none;">
+                                <label for="featureImage" class="form-label">صورة الميزة</label>
+                                <input type="file" class="form-control" id="featureImage" accept="image/*">
+                                <small class="form-text text-muted">PNG, JPG, SVG (الحد الأقصى: 2MB)</small>
+                                <div id="imagePreview" class="mt-2"></div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="featureOrder" class="form-label">ترتيب العرض</label>
+                                <input type="number" class="form-control" id="featureOrder" min="1" value="1">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="featureActive" checked>
+                                    <label class="form-check-label" for="featureActive">
+                                        ميزة نشطة (تظهر في الصفحة الرئيسية)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -100,6 +161,52 @@
     margin: 0 auto 15px;
     color: white;
     font-size: 24px;
+    overflow: hidden;
+}
+
+.feature-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+#imagePreview img {
+    max-width: 100px;
+    max-height: 100px;
+    border-radius: 8px;
+    border: 2px solid #ddd;
+}
+
+.feature-card .badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 10px;
+}
+
+.feature-card.inactive {
+    opacity: 0.6;
+    border: 2px dashed #ccc;
+}
+
+.drag-drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.drag-drop-area:hover {
+    border-color: #667eea;
+    background-color: #f8f9ff;
+}
+
+.drag-drop-area.dragover {
+    border-color: #667eea;
+    background-color: #f0f4ff;
 }
 
 .feature-title {
@@ -130,11 +237,60 @@
 <script>
 let editingIndex = -1;
 
+// Toggle between icon and image input
+document.addEventListener('DOMContentLoaded', function() {
+    const iconTypeRadios = document.querySelectorAll('input[name="iconType"]');
+    const iconInput = document.getElementById('iconInput');
+    const imageInput = document.getElementById('imageInput');
+    
+    iconTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'icon') {
+                iconInput.style.display = 'block';
+                imageInput.style.display = 'none';
+                document.getElementById('featureIcon').required = true;
+                document.getElementById('featureImage').required = false;
+            } else {
+                iconInput.style.display = 'none';
+                imageInput.style.display = 'block';
+                document.getElementById('featureIcon').required = false;
+                document.getElementById('featureImage').required = false;
+            }
+        });
+    });
+    
+    // Image preview
+    document.getElementById('featureImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="معاينة">`;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.innerHTML = '';
+        }
+    });
+});
+
 function addFeature() {
     editingIndex = -1;
     document.getElementById('featureModalTitle').textContent = 'إضافة ميزة جديدة';
-    document.getElementById('featureForm').reset();
+    resetForm();
     new bootstrap.Modal(document.getElementById('featureModal')).show();
+}
+
+function resetForm() {
+    document.getElementById('featureForm').reset();
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('iconTypeIcon').checked = true;
+    document.getElementById('iconInput').style.display = 'block';
+    document.getElementById('imageInput').style.display = 'none';
+    document.getElementById('featureActive').checked = true;
+    document.getElementById('featureOrder').value = 1;
 }
 
 function editFeature(index) {
@@ -145,10 +301,29 @@ function editFeature(index) {
     fetch(`/landing-admin/api/features/${index}`)
         .then(response => response.json())
         .then(feature => {
-            document.getElementById('featureTitle').value = feature.title;
-            document.getElementById('featureIcon').value = feature.icon;
-            document.getElementById('featureDescription').value = feature.description;
+            document.getElementById('featureTitle').value = feature.title || '';
+            document.getElementById('featureDescription').value = feature.description || '';
+            document.getElementById('featureCategory').value = feature.category || 'إدارة';
+            document.getElementById('featureOrder').value = feature.order || 1;
+            document.getElementById('featureActive').checked = feature.active !== false;
+            
+            if (feature.image) {
+                document.getElementById('iconTypeImage').checked = true;
+                document.getElementById('iconInput').style.display = 'none';
+                document.getElementById('imageInput').style.display = 'block';
+                document.getElementById('imagePreview').innerHTML = `<img src="${feature.image}" alt="معاينة">`;
+            } else {
+                document.getElementById('iconTypeIcon').checked = true;
+                document.getElementById('iconInput').style.display = 'block';
+                document.getElementById('imageInput').style.display = 'none';
+                document.getElementById('featureIcon').value = feature.icon || '';
+            }
+            
             new bootstrap.Modal(document.getElementById('featureModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('حدث خطأ في جلب بيانات الميزة');
         });
 }
 
@@ -169,11 +344,24 @@ function deleteFeature(index) {
 }
 
 function saveFeature() {
-    const formData = {
-        title: document.getElementById('featureTitle').value,
-        icon: document.getElementById('featureIcon').value,
-        description: document.getElementById('featureDescription').value
-    };
+    const formData = new FormData();
+    const iconType = document.querySelector('input[name="iconType"]:checked').value;
+    
+    formData.append('title', document.getElementById('featureTitle').value);
+    formData.append('description', document.getElementById('featureDescription').value);
+    formData.append('category', document.getElementById('featureCategory').value);
+    formData.append('order', document.getElementById('featureOrder').value);
+    formData.append('active', document.getElementById('featureActive').checked);
+    formData.append('icon_type', iconType);
+    
+    if (iconType === 'icon') {
+        formData.append('icon', document.getElementById('featureIcon').value);
+    } else {
+        const imageFile = document.getElementById('featureImage').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+    }
     
     const url = editingIndex >= 0 ? 
         `/landing-admin/api/features/${editingIndex}` : 
@@ -183,10 +371,7 @@ function saveFeature() {
     
     fetch(url, {
         method: method,
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
@@ -194,8 +379,12 @@ function saveFeature() {
             bootstrap.Modal.getInstance(document.getElementById('featureModal')).hide();
             location.reload();
         } else {
-            alert('حدث خطأ أثناء الحفظ');
+            alert('حدث خطأ أثناء الحفظ: ' + (data.message || 'خطأ غير معروف'));
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في الاتصال');
     });
 }
 </script>

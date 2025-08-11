@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, session
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash, session, current_app as app
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import check_password_hash
 from datetime import datetime
 from models import db, User, UserRole
 import json
 import os
+import time
 
 landing_admin_bp = Blueprint('landing_admin', __name__, url_prefix='/landing-admin')
 
@@ -129,22 +130,56 @@ def features_management():
 @admin_required
 def add_feature():
     """إضافة ميزة جديدة"""
-    data = request.get_json()
-    settings = load_landing_settings()
-    
-    new_feature = {
-        'title': data.get('title'),
-        'icon': data.get('icon'),
-        'description': data.get('description')
-    }
-    
-    if 'features' not in settings:
-        settings['features'] = []
-    
-    settings['features'].append(new_feature)
-    save_landing_settings(settings)
-    
-    return jsonify({'success': True})
+    try:
+        settings = load_landing_settings()
+        
+        new_feature = {
+            'title': request.form.get('title'),
+            'description': request.form.get('description'),
+            'category': request.form.get('category', 'إدارة'),
+            'order': int(request.form.get('order', 1)),
+            'active': request.form.get('active') == 'true',
+            'icon_type': request.form.get('icon_type', 'icon')
+        }
+        
+        if new_feature['icon_type'] == 'icon':
+            new_feature['icon'] = request.form.get('icon')
+        else:
+            # رفع الصورة
+            if 'image' in request.files:
+                image_file = request.files['image']
+                if image_file.filename != '':
+                    # حفظ الصورة في مجلد uploads
+                    import os
+                    from werkzeug.utils import secure_filename
+                    
+                    filename = secure_filename(image_file.filename)
+                    timestamp = str(int(time.time()))
+                    filename = f"feature_{timestamp}_{filename}"
+                    
+                    upload_path = os.path.join('static', 'uploads', 'features')
+                    os.makedirs(upload_path, exist_ok=True)
+                    
+                    file_path = os.path.join(upload_path, filename)
+                    image_file.save(file_path)
+                    
+                    new_feature['image'] = f"/static/uploads/features/{filename}"
+        
+        if 'features' not in settings:
+            settings['features'] = []
+        
+        settings['features'].append(new_feature)
+        
+        # ترتيب الميزات حسب order
+        settings['features'].sort(key=lambda x: x.get('order', 1))
+        
+        save_landing_settings(settings)
+        
+        return jsonify({'success': True})
+        
+    except Exception as e:
+        app.logger.error(f"Error adding feature: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @landing_admin_bp.route('/api/features/<int:index>', methods=['GET'])
 @login_required
@@ -164,20 +199,69 @@ def get_feature(index):
 @admin_required
 def update_feature(index):
     """تحديث ميزة"""
-    data = request.get_json()
-    settings = load_landing_settings()
-    features = settings.get('features', [])
-    
-    if 0 <= index < len(features):
-        features[index] = {
-            'title': data.get('title'),
-            'icon': data.get('icon'),
-            'description': data.get('description')
-        }
-        save_landing_settings(settings)
-        return jsonify({'success': True})
-    
-    return jsonify({'error': 'Feature not found'}), 404
+    try:
+        settings = load_landing_settings()
+        features = settings.get('features', [])
+        
+        if 0 <= index < len(features):
+            existing_feature = features[index].copy()
+            
+            # تحديث البيانات الأساسية
+            features[index].update({
+                'title': request.form.get('title'),
+                'description': request.form.get('description'),
+                'category': request.form.get('category', 'إدارة'),
+                'order': int(request.form.get('order', 1)),
+                'active': request.form.get('active') == 'true',
+                'icon_type': request.form.get('icon_type', 'icon')
+            })
+            
+            if features[index]['icon_type'] == 'icon':
+                features[index]['icon'] = request.form.get('icon')
+                # إزالة الصورة إذا كانت موجودة
+                if 'image' in features[index]:
+                    del features[index]['image']
+            else:
+                # رفع صورة جديدة إذا تم اختيارها
+                if 'image' in request.files and request.files['image'].filename != '':
+                    image_file = request.files['image']
+                    
+                    import os
+                    from werkzeug.utils import secure_filename
+                    
+                    filename = secure_filename(image_file.filename)
+                    timestamp = str(int(time.time()))
+                    filename = f"feature_{timestamp}_{filename}"
+                    
+                    upload_path = os.path.join('static', 'uploads', 'features')
+                    os.makedirs(upload_path, exist_ok=True)
+                    
+                    file_path = os.path.join(upload_path, filename)
+                    image_file.save(file_path)
+                    
+                    # حذف الصورة القديمة إذا كانت موجودة
+                    if 'image' in existing_feature and existing_feature['image']:
+                        old_image_path = existing_feature['image'].replace('/static/', 'static/')
+                        if os.path.exists(old_image_path):
+                            os.remove(old_image_path)
+                    
+                    features[index]['image'] = f"/static/uploads/features/{filename}"
+                
+                # إزالة الأيقونة إذا كانت موجودة
+                if 'icon' in features[index]:
+                    del features[index]['icon']
+            
+            # ترتيب الميزات حسب order
+            settings['features'].sort(key=lambda x: x.get('order', 1))
+            
+            save_landing_settings(settings)
+            return jsonify({'success': True})
+        
+        return jsonify({'error': 'Feature not found'}), 404
+        
+    except Exception as e:
+        app.logger.error(f"Error updating feature: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @landing_admin_bp.route('/api/features/<int:index>', methods=['DELETE'])
 @login_required
