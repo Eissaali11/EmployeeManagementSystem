@@ -186,3 +186,50 @@ def contact():
 def demo():
     """صفحة عرض توضيحي"""
     return render_template('landing/demo.html')
+
+@landing_bp.route('/nuzum/login', methods=['GET', 'POST'])
+def login():
+    """صفحة تسجيل دخول خاصة بالتسويق"""
+    from flask_login import login_user, current_user
+    from werkzeug.security import check_password_hash
+    from models import User
+    from datetime import datetime
+    from flask import flash, redirect, url_for, request, render_template
+    
+    # إذا كان المستخدم مسجل دخوله بالفعل، وجهه لصفحة العرض التوضيحي
+    if current_user.is_authenticated:
+        return redirect(url_for('landing_admin.demo_dashboard'))
+    
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        remember = bool(request.form.get('remember'))
+        
+        if not email or not password:
+            flash('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'error')
+            return render_template('landing/login.html')
+        
+        # البحث عن المستخدم
+        user = User.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password, password):
+            # تسجيل الدخول بنجاح
+            login_user(user, remember=remember)
+            user.last_login = datetime.utcnow()
+            
+            from core.database import db
+            db.session.commit()
+            
+            flash('مرحباً بك! تم تسجيل الدخول بنجاح', 'success')
+            
+            # التوجيه للعرض التوضيحي أو النظام حسب الطلب
+            next_page = request.args.get('next')
+            if next_page and 'landing-admin' in next_page:
+                return redirect(next_page)
+            
+            # التوجيه الافتراضي للعرض التوضيحي للتسويق
+            return redirect(url_for('landing_admin.demo_dashboard'))
+        else:
+            flash('بيانات الدخول غير صحيحة. جرب بيانات التجربة المعروضة', 'error')
+    
+    return render_template('landing/login.html')
