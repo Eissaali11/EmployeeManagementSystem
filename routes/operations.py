@@ -923,22 +923,19 @@ def export_operation_excel(operation_id):
             ws2 = wb.create_sheet('بيانات المركبة')
             
             vehicle_headers = ['رقم اللوحة', 'نوع المركبة', 'الماركة', 'الموديل', 'السنة', 
-                              'اللون', 'رقم الشاصي', 'رقم المحرك', 'الحالة', 'القسم', 'ملاحظات']
+                              'اللون', 'الحالة', 'ملاحظات']
             
             for col_num, header in enumerate(vehicle_headers, 1):
                 ws2.cell(row=1, column=col_num, value=header)
             
             vehicle_values = [
                 vehicle.plate_number or '',
-                vehicle.vehicle_type or '',
-                vehicle.brand or '',
+                getattr(vehicle, 'type_of_car', '') or '',
+                getattr(vehicle, 'make', '') or '',
                 vehicle.model or '',
                 str(vehicle.year) if vehicle.year else '',
                 vehicle.color or '',
-                vehicle.chassis_number or '',
-                vehicle.engine_number or '',
                 vehicle.status or '',
-                vehicle.department.name if vehicle.department else '',
                 vehicle.notes or ''
             ]
             
