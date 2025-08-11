@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>تحميل نموذج استيراد الوثائق</h1>
+        <a href="{{ url_for('documents.import_page') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-right me-1"></i> العودة لصفحة الاستيراد
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">تحميل نموذج Excel للوثائق</h5>
+        </div>
+        <div class="card-body">
+            <p>يمكنك تحميل نموذج Excel فارغ يحتوي على التنسيق الصحيح لاستيراد الوثائق:</p>
+            
+            <a href="{{ url_for('documents.download_template') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-download me-2"></i>
+                تحميل نموذج الوثائق
+            </a>
+            
+            <div class="mt-4">
+                <h6>النموذج يحتوي على الأعمدة التالية:</h6>
+                <ul class="list-group">
+                    <li class="list-group-item">رقم الموظف - <small class="text-muted">معرف الموظف في النظام</small></li>
+                    <li class="list-group-item">نوع الوثيقة - <small class="text-muted">نوع الوثيقة (national_id, passport, إلخ)</small></li>
+                    <li class="list-group-item">رقم الوثيقة - <small class="text-muted">رقم الوثيقة الفعلي</small></li>
+                    <li class="list-group-item">تاريخ الإصدار - <small class="text-muted">تاريخ إصدار الوثيقة</small></li>
+                    <li class="list-group-item">تاريخ الانتهاء - <small class="text-muted">تاريخ انتهاء صلاحية الوثيقة</small></li>
+                    <li class="list-group-item">ملاحظات - <small class="text-muted">ملاحظات إضافية (اختياري)</small></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1663,15 +1663,41 @@ def parse_document_excel(file):
         file.seek(0)
         
         # Read the Excel file explicitly using openpyxl engine
-        df = pd.read_excel(file, engine='openpyxl')
+        # Try to detect if this is a report-style export with header rows
+        try:
+            df = pd.read_excel(file, engine='openpyxl')
+            
+            # Check if first row looks like a report title
+            if len(df.columns) > 0 and str(df.columns[0]).startswith('تقرير'):
+                # This is a report-style export, try reading from row 2 or find actual header
+                df_test = pd.read_excel(file, engine='openpyxl', header=None)
+                
+                # Look for a row that contains document field names
+                header_row = None
+                for i in range(min(10, len(df_test))):  # Check first 10 rows
+                    row_values = [str(val).lower() for val in df_test.iloc[i].values if pd.notna(val)]
+                    if any('موظف' in val or 'employee' in val for val in row_values):
+                        header_row = i
+                        break
+                
+                if header_row is not None:
+                    df = pd.read_excel(file, engine='openpyxl', header=header_row)
+                else:
+                    # Try standard document import format
+                    df = pd.read_excel(file, engine='openpyxl', header=0)
+            
+        except Exception as e:
+            print(f"Error reading Excel file: {e}")
+            # Fallback to standard reading
+            df = pd.read_excel(file, engine='openpyxl')
         
         # Print column names for debugging
         print(f"Document Excel columns: {df.columns.tolist()}")
         
-        # Create a mapping for column detection
+        # Create a mapping for column detection - include export format columns
         column_mappings = {
-            'employee_id': ['employee_id', 'employee id', 'emp id', 'employee number', 'emp no', 'emp.id', 'emp.no', 'رقم الموظف', 'معرف الموظف', 'الرقم الوظيفي'],
-            'document_type': ['document_type', 'document type', 'type', 'doc type', 'نوع الوثيقة', 'نوع المستند', 'النوع'],
+            'employee_id': ['employee_id', 'employee id', 'emp id', 'employee number', 'emp no', 'emp.id', 'emp.no', 'رقم الموظف', 'معرف الموظف', 'الرقم الوظيفي', 'موظف', 'اسم الموظف'],
+            'document_type': ['document_type', 'document type', 'type', 'doc type', 'نوع الوثيقة', 'نوع المستند', 'النوع', 'نوع الوثيقة'],
             'document_number': ['document_number', 'document no', 'doc number', 'doc no', 'رقم الوثيقة', 'رقم المستند'],
             'issue_date': ['issue_date', 'issue date', 'start date', 'تاريخ الإصدار', 'تاريخ البدء'],
             'expiry_date': ['expiry_date', 'expiry date', 'end date', 'valid until', 'تاريخ الانتهاء', 'صالح حتى'],
