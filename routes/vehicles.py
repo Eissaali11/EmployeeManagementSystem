@@ -4680,27 +4680,6 @@ def delete_safety_check(id):
 
 # إنشاء تقرير Excel شامل للسيارة
 @vehicles_bp.route('/<int:vehicle_id>/external-authorization/create', methods=['GET', 'POST'])
-@login_required
-def create_external_authorization(vehicle_id):
-    """إنشاء تفويض خارجي جديد"""
-    vehicle = Vehicle.query.get_or_404(vehicle_id)
-
-    # فحص قيود العمليات للسيارات خارج الخدمة
-    restrictions = check_vehicle_operation_restrictions(vehicle)
-    if restrictions['blocked']:
-        flash(restrictions['message'], 'error')
-        return redirect(url_for('vehicles.view', id=vehicle_id))
-
-
-    # الحصول على البيانات للنموذج
-    departments = Department.query.all()
-    employees = Employee.query.all()
-
-    return render_template('vehicles/create_external_authorization.html',
-                         vehicle=vehicle,
-                         departments=departments,
-                         employees=employees)
-
 @vehicles_bp.route('/<int:vehicle_id>/external-authorization/<int:auth_id>/view')
 @login_required
 def view_external_authorization(vehicle_id, auth_id):
