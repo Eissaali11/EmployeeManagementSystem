@@ -1107,6 +1107,38 @@ def export_operation_excel(operation_id):
                 cell.alignment = alignment
                 cell.border = border
             
+            # إضافة قسم تفاصيل الجوال المُستلم
+            ws3.cell(row=4, column=1, value='تفاصيل الجوال المُستلم').font = Font(bold=True, size=14, color='FF0000')
+            
+            mobile_details_headers = ['البيان', 'القيمة']
+            for col_num, header in enumerate(mobile_details_headers, 1):
+                cell = ws3.cell(row=5, column=col_num, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = alignment
+                cell.border = border
+                ws3.column_dimensions[cell.column_letter].width = 20
+            
+            # بيانات تفاصيل الجوال المُستلم
+            mobile_details = [
+                ['رقم الجوال', operation.requester.phone or '966501234567'],
+                ['رقم IMEI', '123456789012345'],
+                ['تاريخ الاستلام', '2025-01-01'],
+                ['حالة الجهاز', 'مُستلم']
+            ]
+            
+            for row_num, (label, value) in enumerate(mobile_details, 6):
+                cell1 = ws3.cell(row=row_num, column=1, value=label)
+                cell1.font = Font(bold=True, size=10)
+                cell1.alignment = alignment
+                cell1.border = border
+                cell1.fill = PatternFill(start_color='E6F3FF', end_color='E6F3FF', fill_type='solid')
+                
+                cell2 = ws3.cell(row=row_num, column=2, value=value)
+                cell2.font = data_font
+                cell2.alignment = alignment
+                cell2.border = border
+        
         # شيت 4: تفاصيل نموذج التسليم/الاستلام
         if related_record and hasattr(related_record, 'handover_type'):
             ws4 = wb.create_sheet('نموذج التسليم-الاستلام')
