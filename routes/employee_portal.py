@@ -301,7 +301,16 @@ def my_vehicles():
     
     # إحصائيات شاملة للموظف
     total_operations = VehicleHandover.query.filter_by(employee_id=employee_id).count()
-    total_safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id__in=[v.id for v in current_driver_vehicles]).count() if current_driver_vehicles else 0
+    
+    # عدد فحوصات السلامة للسيارات المخصصة للموظف
+    if current_driver_vehicles:
+        vehicle_ids = [v.id for v in current_driver_vehicles]
+        total_safety_checks = VehicleSafetyCheck.query.filter(
+            VehicleSafetyCheck.vehicle_id.in_(vehicle_ids)
+        ).count()
+    else:
+        total_safety_checks = 0
+        
     pending_operations = OperationRequest.query.filter_by(status='pending').count()
     approved_operations = OperationRequest.query.filter_by(status='approved').count()
     
