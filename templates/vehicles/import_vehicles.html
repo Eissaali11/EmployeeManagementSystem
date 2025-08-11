@@ -1,0 +1,285 @@
+{% extends 'layout.html' %}
+
+{% block title %}استيراد السيارات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .import-container {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 2rem;
+        margin: 2rem auto;
+        max-width: 800px;
+    }
+
+    .import-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #667eea;
+    }
+
+    .import-header h2 {
+        background: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-area {
+        border: 2px dashed #667eea;
+        border-radius: 12px;
+        padding: 3rem 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(5, 18, 45, 0.05) 100%);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .file-upload-area:hover {
+        border-color: #05122D;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(5, 18, 45, 0.1) 100%);
+    }
+
+    .file-upload-area.dragover {
+        border-color: #05122D;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(5, 18, 45, 0.15) 100%);
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: #667eea;
+        margin-bottom: 1rem;
+    }
+
+    .upload-text {
+        font-size: 1.2rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-subtext {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .btn-import {
+        background: linear-gradient(135deg, #667eea 0%, #05122D 100%);
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        color: white;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-import:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        color: white;
+    }
+
+    .requirements-card {
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(25, 135, 84, 0.1) 100%);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .requirements-title {
+        color: #198754;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .requirements-list li {
+        padding: 0.25rem 0;
+        color: #333;
+    }
+
+    .requirements-list li:before {
+        content: "✓";
+        color: #198754;
+        font-weight: bold;
+        margin-left: 0.5rem;
+    }
+
+    .file-input {
+        display: none;
+    }
+
+    .selected-file {
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .selected-file.show {
+        display: block;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #198754;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="import-container">
+        <div class="import-header">
+            <h2><i class="fas fa-file-import ms-2"></i>استيراد السيارات من Excel</h2>
+            <p class="text-muted">قم برفع ملف Excel يحتوي على بيانات السيارات لاستيرادها إلى النظام</p>
+        </div>
+
+        <!-- متطلبات الملف -->
+        <div class="requirements-card">
+            <div class="requirements-title">
+                <i class="fas fa-info-circle"></i>
+                متطلبات ملف Excel:
+            </div>
+            <ul class="requirements-list">
+                <li>يجب أن يحتوي الملف على الأعمدة التالية: <strong>رقم اللوحة، الشركة المصنعة، الموديل، السنة، اللون</strong></li>
+                <li>الأعمدة الاختيارية: <strong>الحالة، ملاحظات</strong></li>
+                <li>يجب أن يكون الملف بصيغة .xlsx أو .xls</li>
+                <li>رقم اللوحة مطلوب ولا يمكن أن يكون فارغاً</li>
+                <li>لا يمكن استيراد سيارات بأرقام لوحات موجودة مسبقاً</li>
+            </ul>
+        </div>
+
+        <!-- نموذج الاستيراد -->
+        <form method="POST" enctype="multipart/form-data" id="importForm">
+            <div class="file-upload-area" id="uploadArea">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">اسحب وأفلت ملف Excel هنا</div>
+                <div class="upload-subtext">أو انقر لاختيار الملف</div>
+                <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls" required>
+            </div>
+
+            <div class="selected-file" id="selectedFile">
+                <div class="file-info">
+                    <i class="fas fa-file-excel"></i>
+                    <span id="fileName"></span>
+                    <span class="badge bg-success">تم اختيار الملف</span>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-import">
+                    <i class="fas fa-upload ms-2"></i>
+                    بدء الاستيراد
+                </button>
+                <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary ms-2">
+                    <i class="fas fa-arrow-right ms-2"></i>
+                    العودة إلى قائمة السيارات
+                </a>
+            </div>
+        </form>
+
+        <!-- نموذج لتحميل ملف Excel مثال -->
+        <div class="mt-4 text-center">
+            <p class="text-muted">تحتاج إلى نموذج؟</p>
+            <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-outline-primary">
+                <i class="fas fa-download ms-2"></i>
+                تحميل نموذج Excel
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFile = document.getElementById('selectedFile');
+    const fileName = document.getElementById('fileName');
+
+    // النقر على منطقة الرفع
+    uploadArea.addEventListener('click', function() {
+        fileInput.click();
+    });
+
+    // تغيير الملف
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            selectedFile.classList.add('show');
+        }
+    });
+
+    // منع السلوك الافتراضي للسحب والإفلات
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // تسليط الضوء على منطقة الرفع عند السحب
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        uploadArea.classList.add('dragover');
+    }
+
+    function unhighlight(e) {
+        uploadArea.classList.remove('dragover');
+    }
+
+    // التعامل مع إسقاط الملف
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                fileInput.files = files;
+                fileName.textContent = file.name;
+                selectedFile.classList.add('show');
+            } else {
+                alert('يرجى اختيار ملف Excel (.xlsx أو .xls)');
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

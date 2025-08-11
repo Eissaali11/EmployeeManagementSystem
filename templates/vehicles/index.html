@@ -464,6 +464,10 @@
                     <i class="fas fa-file-excel"></i>
                     تصدير Excel
                 </a>
+                <a href="{{ url_for('vehicles.import_vehicles') }}" class="action-btn btn-info-enhanced">
+                    <i class="fas fa-file-import"></i>
+                    استيراد Excel
+                </a>
                 <a href="{{ url_for('vehicles.expired_documents') }}" class="action-btn btn-danger-enhanced">
                     <i class="fas fa-exclamation-triangle"></i>
                     الوثائق المنتهية
@@ -595,6 +599,10 @@
                         <a href="{{ url_for('vehicles.export_vehicles_excel') }}" class="btn btn-success-enhanced action-btn ms-2">
                             <i class="fas fa-file-excel"></i>
                             تصدير Excel
+                        </a>
+                        <a href="{{ url_for('vehicles.import_vehicles') }}" class="btn btn-info-enhanced action-btn ms-2">
+                            <i class="fas fa-file-import"></i>
+                            استيراد Excel
                         </a>
                     </div>
                 </div>

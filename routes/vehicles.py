@@ -5428,3 +5428,144 @@ def check_vehicle_operation_restrictions(vehicle):
     return {'blocked': False}
 
 
+
+
+@vehicles_bp.route('/import', methods=['GET', 'POST'])
+@login_required  
+def import_vehicles():
+    """استيراد السيارات من ملف Excel"""
+    if request.method == 'GET':
+        return render_template('vehicles/import_vehicles.html')
+    
+    if 'file' not in request.files:
+        flash('لم يتم اختيار ملف للاستيراد', 'error')
+        return redirect(url_for('vehicles.import_vehicles'))
+    
+    file = request.files['file']
+    if file.filename == '':
+        flash('لم يتم اختيار ملف للاستيراد', 'error')
+        return redirect(url_for('vehicles.import_vehicles'))
+    
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        flash('يجب أن يكون الملف من نوع Excel (.xlsx أو .xls)', 'error')
+        return redirect(url_for('vehicles.import_vehicles'))
+    
+    try:
+        # قراءة ملف Excel
+        df = pd.read_excel(file)
+        
+        # التحقق من وجود الأعمدة المطلوبة
+        required_columns = ['رقم اللوحة', 'الشركة المصنعة', 'الموديل', 'السنة', 'اللون']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        
+        if missing_columns:
+            flash(f'الأعمدة التالية مفقودة في الملف: {", ".join(missing_columns)}', 'error')
+            return redirect(url_for('vehicles.import_vehicles'))
+        
+        # إنشاء خريطة حالات السيارة
+        status_reverse_map = {
+            'متاحة': 'available',
+            'مؤجرة': 'rented',
+            'في المشروع': 'in_project',
+            'في الورشة': 'in_workshop',
+            'حادث': 'accident'
+        }
+        
+        success_count = 0
+        error_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                # التحقق من وجود رقم اللوحة
+                if pd.isna(row['رقم اللوحة']) or str(row['رقم اللوحة']).strip() == '':
+                    error_count += 1
+                    errors.append(f'الصف {index + 2}: رقم اللوحة مطلوب')
+                    continue
+                
+                plate_number = str(row['رقم اللوحة']).strip()
+                
+                # التحقق من عدم وجود السيارة مسبقاً
+                existing_vehicle = Vehicle.query.filter_by(plate_number=plate_number).first()
+                if existing_vehicle:
+                    error_count += 1
+                    errors.append(f'الصف {index + 2}: السيارة برقم اللوحة {plate_number} موجودة مسبقاً')
+                    continue
+                
+                # إنشاء سيارة جديدة
+                vehicle = Vehicle()
+                vehicle.plate_number = plate_number
+                vehicle.make = str(row['الشركة المصنعة']).strip() if not pd.isna(row['الشركة المصنعة']) else ''
+                vehicle.model = str(row['الموديل']).strip() if not pd.isna(row['الموديل']) else ''
+                vehicle.color = str(row['اللون']).strip() if not pd.isna(row['اللون']) else ''
+                
+                # معالجة السنة
+                if not pd.isna(row['السنة']):
+                    try:
+                        vehicle.year = int(float(row['السنة']))
+                    except (ValueError, TypeError):
+                        vehicle.year = None
+                else:
+                    vehicle.year = None
+                
+                # معالجة الحالة
+                if 'الحالة' in df.columns and not pd.isna(row['الحالة']):
+                    status_arabic = str(row['الحالة']).strip()
+                    vehicle.status = status_reverse_map.get(status_arabic, 'available')
+                else:
+                    vehicle.status = 'available'
+                
+                # معالجة الملاحظات إذا كانت موجودة
+                if 'ملاحظات' in df.columns and not pd.isna(row['ملاحظات']):
+                    vehicle.notes = str(row['ملاحظات']).strip()
+                
+                # إضافة تواريخ الإنشاء والتحديث
+                vehicle.created_at = datetime.now()
+                vehicle.updated_at = datetime.now()
+                
+                # إضافة السيارة إلى قاعدة البيانات
+                db.session.add(vehicle)
+                success_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                errors.append(f'الصف {index + 2}: خطأ في معالجة البيانات - {str(e)}')
+                continue
+        
+        # حفظ التغييرات
+        if success_count > 0:
+            try:
+                db.session.commit()
+                
+                # تسجيل العملية في سجل النشاطات
+                log_activity(
+                    user_id=current_user.id,
+                    action=f'استيراد السيارات من ملف Excel',
+                    details=f'تم استيراد {success_count} سيارة بنجاح، {error_count} خطأ'
+                )
+                
+                flash(f'تم استيراد {success_count} سيارة بنجاح!', 'success')
+                
+                if error_count > 0:
+                    flash(f'حدثت {error_count} أخطاء أثناء الاستيراد', 'warning')
+                    
+            except Exception as e:
+                db.session.rollback()
+                flash(f'خطأ في حفظ البيانات: {str(e)}', 'error')
+                return redirect(url_for('vehicles.import_vehicles'))
+        else:
+            flash('لم يتم استيراد أي سيارة', 'warning')
+        
+        # إظهار الأخطاء إذا كانت موجودة
+        if errors:
+            for error in errors[:10]:  # إظهار أول 10 أخطاء فقط
+                flash(error, 'error')
+            if len(errors) > 10:
+                flash(f'وهناك {len(errors) - 10} أخطاء أخرى...', 'info')
+        
+        return redirect(url_for('vehicles.index'))
+        
+    except Exception as e:
+        flash(f'خطأ في قراءة الملف: {str(e)}', 'error')
+        return redirect(url_for('vehicles.import_vehicles'))
+
