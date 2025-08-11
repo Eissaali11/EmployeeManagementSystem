@@ -211,15 +211,118 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+/* تخصيص Select2 للثيم المظلم */
+.select2-container--default .select2-selection--single {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    height: 48px !important;
+    color: white !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: white !important;
+    line-height: 46px !important;
+    padding-left: 12px !important;
+    padding-right: 20px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 12px !important;
+    right: 12px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: white transparent transparent transparent !important;
+}
+
+.select2-dropdown {
+    background-color: rgba(30, 58, 92, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px);
+}
+
+.select2-container--default .select2-results__option {
+    background-color: transparent !important;
+    color: white !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    margin: 4px 8px !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: rgba(52, 152, 219, 0.7) !important;
+    color: white !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected=true] {
+    background-color: rgba(52, 152, 219, 0.5) !important;
+    color: white !important;
+}
+
+.select2-search--dropdown .select2-search__field {
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 8px !important;
+    color: white !important;
+    padding: 8px 12px !important;
+}
+
+.select2-search--dropdown .select2-search__field::placeholder {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.select2-container {
+    width: 100% !important;
+}
+</style>
+
 <script>
+$(document).ready(function() {
+    // تطبيق Select2 على فلتر السيارات
+    $('select[name="vehicle_filter"]').select2({
+        placeholder: 'ابحث عن السيارة...',
+        allowClear: true,
+        language: {
+            noResults: function () {
+                return "لا توجد نتائج";
+            },
+            searching: function () {
+                return "جاري البحث...";
+            }
+        }
+    });
+    
+    // تطبيق Select2 على فلتر القسم أيضاً
+    $('select[name="department_filter"]').select2({
+        placeholder: 'اختر القسم...',
+        allowClear: true,
+        language: {
+            noResults: function () {
+                return "لا توجد نتائج";
+            },
+            searching: function () {
+                return "جاري البحث...";
+            }
+        }
+    });
+});
+
 function exportOperations() {
     // جلب القيم من الفلاتر الحالية
-    const vehicleFilter = document.getElementById('vehicle_filter')?.value || '';
+    const vehicleFilter = $('select[name="vehicle_filter"]').val() || '';
     const operationType = document.getElementById('operation_type')?.value || '';
     const dateFrom = document.getElementById('date_from')?.value || '';
     const dateTo = document.getElementById('date_to')?.value || '';
     const employeeFilter = document.getElementById('employee_filter')?.value || '';
-    const departmentFilter = document.getElementById('department_filter')?.value || '';
+    const departmentFilter = $('select[name="department_filter"]').val() || '';
     
     // إنشاء URL مع المعاملات
     const params = new URLSearchParams({
@@ -233,6 +336,19 @@ function exportOperations() {
     
     // فتح التصدير في نافذة جديدة
     window.open(`{{ url_for('vehicle_operations.export_simple') }}?${params.toString()}`, '_blank');
+}
+
+function clearFilters() {
+    // مسح جميع الفلاتر
+    $('select[name="vehicle_filter"]').val('').trigger('change');
+    $('select[name="department_filter"]').val('').trigger('change');
+    document.getElementById('operation_type').value = '';
+    document.getElementById('date_from').value = '';
+    document.getElementById('date_to').value = '';
+    document.getElementById('employee_filter').value = '';
+    
+    // إرسال النموذج
+    document.getElementById('filterForm').submit();
 }
 </script>
 {% endblock %}
@@ -324,7 +440,7 @@ function exportOperations() {
             <div class="row">
                 <div class="col-md-2 mb-3">
                     <label class="form-label text-light mb-1">رقم السيارة:</label>
-                    <select class="form-control filter-input-enhanced bg-black" name="vehicle_filter">
+                    <select class="form-control filter-input-enhanced bg-black" name="vehicle_filter" id="vehicle_filter">
                         <option value="">جميع السيارات</option>
                         {% for vehicle in vehicles %}
                         <option value="{{ vehicle.plate_number }}" {% if vehicle_filter == vehicle.plate_number %}selected{% endif %}>
@@ -336,7 +452,7 @@ function exportOperations() {
                 
                 <div class="col-md-2 mb-3">
                     <label class="form-label text-light mb-1 ">نوع العملية:</label>
-                    <select class="form-control filter-input-enhanced bg-black" name="operation_type">
+                    <select class="form-control filter-input-enhanced bg-black" name="operation_type" id="operation_type">
                         <option value="">جميع العمليات</option>
                         <option value="handover" {% if operation_type == 'handover' %}selected{% endif %}>تسليم واستلام</option>
                         <option value="workshop" {% if operation_type == 'workshop' %}selected{% endif %}>ورشة</option>
@@ -350,6 +466,7 @@ function exportOperations() {
                     <input type="date" 
                            class="form-control filter-input-enhanced bg-black" 
                            name="date_from" 
+                           id="date_from"
                            value="{{ date_from }}">
                 </div>
                 
@@ -358,6 +475,7 @@ function exportOperations() {
                     <input type="date" 
                            class="form-control filter-input-enhanced bg-black" 
                            name="date_to" 
+                           id="date_to"
                            value="{{ date_to }}">
                 </div>
                 
@@ -366,13 +484,14 @@ function exportOperations() {
                     <input type="text" 
                            class="form-control filter-input-enhanced bg-black" 
                            name="employee_filter" 
+                           id="employee_filter"
                            value="{{ employee_filter }}"
                            placeholder="ابحث بالاسم">
                 </div>
                 
                 <div class="col-md-2 mb-3">
                     <label class="form-label text-light mb-1 ">القسم:</label>
-                    <select class="form-control filter-input-enhanced bg-black" name="department_filter">
+                    <select class="form-control filter-input-enhanced bg-black" name="department_filter" id="department_filter">
                         <option value="">جميع الأقسام</option>
                         {% for department in departments %}
                         <option value="{{ department.name }}" {% if department_filter == department.name %}selected{% endif %}>{{ department.name }}</option>
