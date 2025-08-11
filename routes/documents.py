@@ -20,6 +20,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import cm
 import arabic_reshaper
 from bidi.algorithm import get_display
+from reportlab.platypus import PageBreak
 from app import db
 from models import Document, Employee, Department, SystemAudit
 from utils.excel import parse_document_excel
@@ -74,6 +75,183 @@ def update_expiry_date(document_id):
         db.session.rollback()
         flash(f'حدث خطأ أثناء تحديث تاريخ الانتهاء: {str(e)}', 'error')
         return redirect(request.referrer or url_for('documents.expiring'))
+
+@documents_bp.route('/template/pdf')
+@login_required
+def document_template_pdf():
+    """إنشاء نموذج PDF فارغ للوثائق"""
+    try:
+        # إنشاء ملف PDF في الذاكرة
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm
+        )
+        
+        # تسجيل الخط العربي
+        try:
+            pdfmetrics.registerFont(TTFont('Cairo', 'Cairo.ttf'))
+            arabic_font = 'Cairo'
+        except:
+            arabic_font = 'Helvetica'
+        
+        # إنشاء الأنماط
+        styles = getSampleStyleSheet()
+        
+        # نمط العنوان الرئيسي
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Title'],
+            fontName=arabic_font,
+            fontSize=20,
+            spaceAfter=30,
+            alignment=1,  # وسط
+            textColor=colors.darkblue
+        )
+        
+        # نمط العنوان الفرعي
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontName=arabic_font,
+            fontSize=16,
+            spaceAfter=20,
+            alignment=1,
+            textColor=colors.blue
+        )
+        
+        # نمط النص العادي
+        normal_style = ParagraphStyle(
+            'CustomNormal',
+            parent=styles['Normal'],
+            fontName=arabic_font,
+            fontSize=12,
+            spaceAfter=12,
+            alignment=2,  # يمين
+            leading=18
+        )
+        
+        # نمط الجدول
+        table_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), arabic_font),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('FONTNAME', (0, 1), (-1, -1), arabic_font),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ])
+        
+        # محتوى الوثيقة
+        story = []
+        
+        # العنوان الرئيسي
+        title_text = arabic_reshaper.reshape("نموذج إدارة الوثائق")
+        title_text = get_display(title_text)
+        story.append(Paragraph(title_text, title_style))
+        
+        # معلومات الشركة
+        company_text = arabic_reshaper.reshape("شركة نُظم لإدارة الموارد البشرية")
+        company_text = get_display(company_text)
+        story.append(Paragraph(company_text, subtitle_style))
+        
+        story.append(Spacer(1, 20))
+        
+        # جدول معلومات الموظف
+        employee_title = arabic_reshaper.reshape("معلومات الموظف")
+        employee_title = get_display(employee_title)
+        story.append(Paragraph(employee_title, subtitle_style))
+        
+        employee_data = [
+            [get_display(arabic_reshaper.reshape("البيان")), get_display(arabic_reshaper.reshape("القيمة"))],
+            [get_display(arabic_reshaper.reshape("اسم الموظف")), "________________________"],
+            [get_display(arabic_reshaper.reshape("رقم الموظف")), "________________________"],
+            [get_display(arabic_reshaper.reshape("رقم الهوية الوطنية")), "________________________"],
+            [get_display(arabic_reshaper.reshape("القسم")), "________________________"],
+            [get_display(arabic_reshaper.reshape("المنصب")), "________________________"]
+        ]
+        
+        employee_table = Table(employee_data, colWidths=[8*cm, 8*cm])
+        employee_table.setStyle(table_style)
+        story.append(employee_table)
+        
+        story.append(Spacer(1, 30))
+        
+        # جدول معلومات الوثيقة
+        document_title = arabic_reshaper.reshape("معلومات الوثيقة")
+        document_title = get_display(document_title)
+        story.append(Paragraph(document_title, subtitle_style))
+        
+        document_data = [
+            [get_display(arabic_reshaper.reshape("البيان")), get_display(arabic_reshaper.reshape("القيمة"))],
+            [get_display(arabic_reshaper.reshape("نوع الوثيقة")), "________________________"],
+            [get_display(arabic_reshaper.reshape("رقم الوثيقة")), "________________________"],
+            [get_display(arabic_reshaper.reshape("تاريخ الإصدار")), "________________________"],
+            [get_display(arabic_reshaper.reshape("تاريخ الانتهاء")), "________________________"],
+            [get_display(arabic_reshaper.reshape("الجهة المصدرة")), "________________________"]
+        ]
+        
+        document_table = Table(document_data, colWidths=[8*cm, 8*cm])
+        document_table.setStyle(table_style)
+        story.append(document_table)
+        
+        story.append(Spacer(1, 30))
+        
+        # حقل الملاحظات
+        notes_title = arabic_reshaper.reshape("الملاحظات")
+        notes_title = get_display(notes_title)
+        story.append(Paragraph(notes_title, subtitle_style))
+        
+        # مساحة فارغة للملاحظات
+        notes_lines = []
+        for i in range(5):
+            notes_lines.append("_________________________________________________")
+        
+        for line in notes_lines:
+            story.append(Paragraph(line, normal_style))
+        
+        story.append(Spacer(1, 40))
+        
+        # التوقيعات
+        signature_data = [
+            [get_display(arabic_reshaper.reshape("توقيع الموظف")), get_display(arabic_reshaper.reshape("توقيع المسؤول"))],
+            ["", ""],
+            ["", ""],
+            [get_display(arabic_reshaper.reshape("التاريخ: ___________")), get_display(arabic_reshaper.reshape("التاريخ: ___________"))]
+        ]
+        
+        signature_table = Table(signature_data, colWidths=[8*cm, 8*cm], rowHeights=[None, 2*cm, None, None])
+        signature_table.setStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, -1), arabic_font),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('GRID', (0, 0), (-1, 2), 1, colors.black)
+        ])
+        
+        story.append(signature_table)
+        
+        # بناء الوثيقة
+        doc.build(story)
+        
+        # إرجاع PDF
+        buffer.seek(0)
+        response = make_response(buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = 'inline; filename=document_template.pdf'
+        
+        return response
+        
+    except Exception as e:
+        flash(f'حدث خطأ في إنشاء نموذج PDF: {str(e)}', 'error')
+        return redirect(url_for('documents.expiring'))
 
 @documents_bp.route('/delete/<int:document_id>', methods=['GET', 'POST'])
 @login_required

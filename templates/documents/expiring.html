@@ -187,13 +187,20 @@
                 {% endif %}
             </h5>
             
-            <!-- زر تصدير إلى إكسل -->
-            {% if documents %}
-            <a href="{{ url_for('documents.export_excel', expiring=request.args.get('status', 'expiring'), document_type=selected_type, employee_id=selected_employee, department_id=selected_department, sponsorship_status=selected_sponsorship) }}" 
-               class="btn btn-success btn-sm" title="تصدير إلى إكسل">
-                <i class="fas fa-file-excel"></i> تصدير إلى إكسل
-            </a>
-            {% endif %}
+            <!-- أزرار الإجراءات -->
+            <div class="btn-group">
+                {% if documents %}
+                <a href="{{ url_for('documents.export_excel', expiring=request.args.get('status', 'expiring'), document_type=selected_type, employee_id=selected_employee, department_id=selected_department, sponsorship_status=selected_sponsorship) }}" 
+                   class="btn btn-success btn-sm" title="تصدير إلى إكسل">
+                    <i class="fas fa-file-excel"></i> تصدير إلى إكسل
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('documents.document_template_pdf') }}" 
+                   class="btn btn-primary btn-sm" title="عرض نموذج الوثائق" target="_blank">
+                    <i class="fas fa-file-pdf"></i> عرض النموذج
+                </a>
+            </div>
         </div>
         <div class="card-body">
             {% if documents %}
