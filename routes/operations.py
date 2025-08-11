@@ -736,7 +736,7 @@ def delete_operation(id):
         operation_type = operation.operation_type
         
         # حذف الإشعارات المرتبطة بالعملية أولاً
-        OperationNotification.query.filter_by(operation_id=id).delete()
+        OperationNotification.query.filter_by(operation_request_id=id).delete()
         
         # حذف العملية
         db.session.delete(operation)
