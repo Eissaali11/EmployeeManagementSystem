@@ -587,6 +587,51 @@ def my_profile():
                          stats=stats,
                          formatted_dates=formatted_dates)
 
+@employee_portal_bp.route('/safety-check/<int:safety_check_id>')
+@employee_login_required
+def view_safety_check(safety_check_id):
+    """عرض فحص السلامة للموظف بتصميم الموبايل"""
+    employee_id = session.get('employee_id')
+    employee = Employee.query.get_or_404(employee_id)
+    
+    # جلب فحص السلامة
+    safety_check = VehicleSafetyCheck.query.get_or_404(safety_check_id)
+    
+    # التحقق من أن الموظف مخول لعرض هذا الفحص
+    # يمكن للموظف عرض فحوصات السيارات المخصصة له
+    latest_handovers = db.session.query(
+        VehicleHandover.vehicle_id,
+        func.max(VehicleHandover.handover_date).label('latest_date')
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).group_by(VehicleHandover.vehicle_id).subquery()
+    
+    assigned_vehicle_ids = db.session.query(VehicleHandover.vehicle_id).join(
+        latest_handovers, 
+        and_(
+            VehicleHandover.vehicle_id == latest_handovers.c.vehicle_id,
+            VehicleHandover.handover_date == latest_handovers.c.latest_date
+        )
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).all()
+    
+    assigned_vehicle_ids = [v[0] for v in assigned_vehicle_ids]
+    
+    if safety_check.vehicle_id not in assigned_vehicle_ids:
+        flash('غير مصرح لك بعرض هذا الفحص', 'error')
+        return redirect(url_for('employee_portal.my_vehicles'))
+    
+    # جلب معلومات السيارة
+    vehicle = Vehicle.query.get_or_404(safety_check.vehicle_id)
+    
+    return render_template('employee_portal/safety_check_view.html',
+                         employee=employee,
+                         safety_check=safety_check,
+                         vehicle=vehicle)
+
 @employee_portal_bp.route('/api/attendance_chart/<int:year>')
 @employee_login_required
 def attendance_chart_data(year):
