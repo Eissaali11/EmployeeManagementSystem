@@ -6,6 +6,12 @@
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+- **Landing Page Enhancement (Jan 2025)**: Created comprehensive independent landing page at `/nuzum` route completely separate from main system
+- **Demo Page Development**: Enhanced demo page with interactive features, customer testimonials, step-by-step guidance, and trial account access
+- **Marketing Features**: Added animated statistics, feature showcases, video placeholders, and professional CTA sections
+- **Landing Page Routes**: All landing pages now use `/nuzum/` prefix (features, pricing, contact, demo) with separate layout and navigation
+
 ## System Architecture
 ### Frontend Architecture
 - **Framework**: Flask with Jinja2 templates.
