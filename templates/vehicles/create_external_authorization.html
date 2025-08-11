@@ -69,8 +69,32 @@
                             </div>
                         </div>
 
-                        <!-- اختيار السائق/الموظف مع البحث -->
+                        <!-- اختيار نوع السائق -->
                         <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">
+                                    <i class="fas fa-user ms-1"></i>
+                                    طريقة إدخال بيانات السائق <span class="text-danger">*</span>
+                                </label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="driver_input_type" id="driver_from_list" value="from_list" checked onchange="toggleDriverInput()">
+                                    <label class="form-check-label" for="driver_from_list">
+                                        <i class="fas fa-list ms-1"></i>
+                                        من قائمة الموظفين
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="driver_input_type" id="driver_manual" value="manual" onchange="toggleDriverInput()">
+                                    <label class="form-check-label" for="driver_manual">
+                                        <i class="fas fa-keyboard ms-1"></i>
+                                        إدخال يدوي
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- اختيار السائق/الموظف من القائمة -->
+                        <div class="row mb-3" id="employee_from_list_section">
                             <div class="col-md-12">
                                 <label for="employee_search" class="form-label">
                                     <i class="fas fa-user ms-1"></i>
@@ -134,6 +158,46 @@
                                     <i class="fas fa-info-circle ms-1"></i>
                                     <span id="employee_details"></span>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- قسم الإدخال اليدوي للسائق -->
+                        <div class="row mb-3" id="manual_driver_section" style="display: none;">
+                            <div class="col-md-6">
+                                <label for="manual_driver_name" class="form-label">
+                                    <i class="fas fa-user ms-1"></i>
+                                    اسم السائق <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="manual_driver_name" name="manual_driver_name" 
+                                       placeholder="أدخل اسم السائق">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="manual_driver_phone" class="form-label">
+                                    <i class="fas fa-phone ms-1"></i>
+                                    رقم الهاتف
+                                </label>
+                                <input type="tel" class="form-control" id="manual_driver_phone" name="manual_driver_phone" 
+                                       placeholder="رقم الهاتف (اختياري)" dir="ltr">
+                                <small class="text-muted">مثال: +966501234567</small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3" id="manual_driver_details_section" style="display: none;">
+                            <div class="col-md-6">
+                                <label for="manual_driver_position" class="form-label">
+                                    <i class="fas fa-briefcase ms-1"></i>
+                                    المنصب/الوظيفة
+                                </label>
+                                <input type="text" class="form-control" id="manual_driver_position" name="manual_driver_position" 
+                                       placeholder="المنصب أو الوظيفة (اختياري)">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="manual_driver_department" class="form-label">
+                                    <i class="fas fa-building ms-1"></i>
+                                    القسم
+                                </label>
+                                <input type="text" class="form-control" id="manual_driver_department" name="manual_driver_department" 
+                                       placeholder="القسم أو الإدارة (اختياري)">
                             </div>
                         </div>
 
@@ -415,6 +479,49 @@ document.getElementById('project_name').addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
     console.log('المشروع المختار:', selectedOption.value);
 });
+
+// دالة التحكم في عرض قسم السائق
+function toggleDriverInput() {
+    const fromListSection = document.getElementById('employee_from_list_section');
+    const manualSection = document.getElementById('manual_driver_section');
+    const manualDetailsSection = document.getElementById('manual_driver_details_section');
+    const driverFromListRadio = document.getElementById('driver_from_list');
+    const driverManualRadio = document.getElementById('driver_manual');
+    
+    // الحقول المطلوبة
+    const employeeIdField = document.getElementById('employee_id');
+    const manualDriverNameField = document.getElementById('manual_driver_name');
+    
+    if (driverFromListRadio.checked) {
+        // إظهار قسم الاختيار من القائمة وإخفاء الإدخال اليدوي
+        fromListSection.style.display = 'block';
+        manualSection.style.display = 'none';
+        manualDetailsSection.style.display = 'none';
+        
+        // تعيين الحقول المطلوبة
+        employeeIdField.required = true;
+        manualDriverNameField.required = false;
+        
+        // مسح القيم اليدوية
+        document.getElementById('manual_driver_name').value = '';
+        document.getElementById('manual_driver_phone').value = '';
+        document.getElementById('manual_driver_position').value = '';
+        document.getElementById('manual_driver_department').value = '';
+        
+    } else if (driverManualRadio.checked) {
+        // إظهار الإدخال اليدوي وإخفاء قسم الاختيار من القائمة
+        fromListSection.style.display = 'none';
+        manualSection.style.display = 'block';
+        manualDetailsSection.style.display = 'block';
+        
+        // تعيين الحقول المطلوبة
+        employeeIdField.required = false;
+        manualDriverNameField.required = true;
+        
+        // مسح البيانات المختارة من القائمة
+        clearSelectedEmployee();
+    }
+}
 </script>
 
 {% endblock %}
