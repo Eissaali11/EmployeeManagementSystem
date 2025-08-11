@@ -200,7 +200,9 @@ def activity_logs():
 @login_required
 @admin_required
 def activity_log(id):
-    """عرض سجل النشاط الكامل للمستخدم"""
+    """عرض سجل النشاط الكامل للمستخدم من جميع مصادر السجلات"""
+    from models import SystemAudit
+    from sqlalchemy import union_all, text
     user = User.query.get_or_404(id)
     
     # معاملات التصفية
@@ -211,54 +213,145 @@ def activity_log(id):
     page = request.args.get('page', 1, type=int)
     per_page = 50
     
-    # بناء الاستعلام
-    query = AuditLog.query.filter_by(user_id=id)
+    # جلب النشاط من AuditLog
+    audit_query = db.session.query(
+        AuditLog.id,
+        AuditLog.action,
+        AuditLog.entity_type,
+        AuditLog.entity_id,
+        AuditLog.details,
+        AuditLog.timestamp,
+        text("'AuditLog' as source")
+    ).filter(AuditLog.user_id == id)
     
-    # تشخيص: طباعة عدد السجلات للمستخدم
-    total_logs = query.count()
-    print(f"إجمالي سجلات النشاط للمستخدم {id}: {total_logs}")
+    # جلب النشاط من SystemAudit
+    system_audit_query = db.session.query(
+        SystemAudit.id,
+        SystemAudit.action,
+        SystemAudit.entity_type,
+        SystemAudit.entity_id,
+        SystemAudit.details,
+        SystemAudit.timestamp,
+        text("'SystemAudit' as source")
+    ).filter(SystemAudit.user_id == id)
     
+    # دمج الاستعلامين
+    combined_query = union_all(audit_query, system_audit_query)
+    
+    # تطبيق فلاتر التاريخ والنوع
+    filters = []
     if action_filter:
-        query = query.filter(AuditLog.action == action_filter)
-    
+        filters.append(f"action = '{action_filter}'")
     if entity_filter:
-        query = query.filter(AuditLog.entity_type == entity_filter)
-    
+        filters.append(f"entity_type = '{entity_filter}'")
     if date_from:
         try:
             from datetime import datetime
             date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
-            query = query.filter(AuditLog.timestamp >= date_from_obj)
+            filters.append(f"timestamp >= '{date_from_obj.isoformat()}'")
         except ValueError:
             pass
-    
     if date_to:
         try:
             from datetime import datetime
             date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
-            query = query.filter(AuditLog.timestamp <= date_to_obj)
+            filters.append(f"timestamp <= '{date_to_obj.isoformat()}'")
         except ValueError:
             pass
     
-    # ترتيب وتقسيم الصفحات
-    activities = query.order_by(AuditLog.timestamp.desc()).paginate(
-        page=page, per_page=per_page, error_out=False
-    )
+    # تطبيق الفلاتر إذا وجدت
+    if filters:
+        filter_clause = ' AND '.join(filters)
+        combined_query = combined_query.filter(text(filter_clause))
     
-    # تشخيص: طباعة عدد السجلات في الصفحة الحالية
-    print(f"عدد السجلات في الصفحة الحالية: {len(activities.items)}")
-    if activities.items:
-        print(f"أول سجل: {activities.items[0].action} - {activities.items[0].details}")
+    # ترتيب النتائج
+    final_query = combined_query.order_by(text('timestamp DESC'))
     
-    # جلب قائمة الإجراءات والكيانات الفريدة للفلتر
-    actions = db.session.query(AuditLog.action).filter_by(user_id=id).distinct().all()
-    entity_types = db.session.query(AuditLog.entity_type).filter_by(user_id=id).distinct().all()
+    # تنفيذ الاستعلام والحصول على البيانات
+    activities_data = final_query.offset((page - 1) * per_page).limit(per_page).all()
+    
+    # حساب العدد الإجمالي للسجلات
+    count_query = db.session.query(db.func.count()).select_from(combined_query.subquery())
+    if filters:
+        # إعادة تطبيق الفلاتر على استعلام العد
+        audit_count = AuditLog.query.filter(AuditLog.user_id == id)
+        system_count = SystemAudit.query.filter(SystemAudit.user_id == id)
+        
+        if action_filter:
+            audit_count = audit_count.filter(AuditLog.action == action_filter)
+            system_count = system_count.filter(SystemAudit.action == action_filter)
+        if entity_filter:
+            audit_count = audit_count.filter(AuditLog.entity_type == entity_filter)
+            system_count = system_count.filter(SystemAudit.entity_type == entity_filter)
+        if date_from:
+            try:
+                audit_count = audit_count.filter(AuditLog.timestamp >= date_from_obj)
+                system_count = system_count.filter(SystemAudit.timestamp >= date_from_obj)
+            except:
+                pass
+        if date_to:
+            try:
+                audit_count = audit_count.filter(AuditLog.timestamp <= date_to_obj)
+                system_count = system_count.filter(SystemAudit.timestamp <= date_to_obj)
+            except:
+                pass
+        
+        total_count = audit_count.count() + system_count.count()
+    else:
+        total_count = AuditLog.query.filter(AuditLog.user_id == id).count() + SystemAudit.query.filter(SystemAudit.user_id == id).count()
+    
+    # تحويل البيانات إلى تنسيق مناسب للعرض
+    activities_list = []
+    for row in activities_data:
+        activity = {
+            'id': row[0],
+            'action': row[1],
+            'entity_type': row[2],
+            'entity_id': row[3],
+            'details': row[4],
+            'timestamp': row[5],
+            'source': row[6]
+        }
+        activities_list.append(activity)
+    
+    print(f"إجمالي سجلات النشاط للمستخدم {id}: {total_count}")
+    print(f"عدد السجلات في الصفحة الحالية: {len(activities_list)}")
+    
+    # حساب معلومات التصفح
+    has_prev = page > 1
+    has_next = (page * per_page) < total_count
+    prev_num = page - 1 if has_prev else None
+    next_num = page + 1 if has_next else None
+    
+    # إنشاء كائن pagination مشابه
+    class PaginationObj:
+        def __init__(self, items, page, per_page, total, has_prev, has_next, prev_num, next_num):
+            self.items = items
+            self.page = page
+            self.per_page = per_page
+            self.total = total
+            self.has_prev = has_prev
+            self.has_next = has_next
+            self.prev_num = prev_num
+            self.next_num = next_num
+            self.pages = (total + per_page - 1) // per_page
+    
+    activities = PaginationObj(activities_list, page, per_page, total_count, has_prev, has_next, prev_num, next_num)
+    
+    # جلب قائمة الإجراءات والكيانات الفريدة للفلتر من كلا الجدولين
+    audit_actions = db.session.query(AuditLog.action).filter_by(user_id=id).distinct().all()
+    system_actions = db.session.query(SystemAudit.action).filter_by(user_id=id).distinct().all()
+    all_actions = list(set([a[0] for a in audit_actions] + [a[0] for a in system_actions]))
+    
+    audit_entities = db.session.query(AuditLog.entity_type).filter_by(user_id=id).distinct().all()
+    system_entities = db.session.query(SystemAudit.entity_type).filter_by(user_id=id).distinct().all()
+    all_entities = list(set([e[0] for e in audit_entities] + [e[0] for e in system_entities]))
     
     return render_template('users/activity_log.html', 
                          user=user, 
                          activities=activities,
-                         actions=[a[0] for a in actions],
-                         entity_types=[e[0] for e in entity_types],
+                         actions=all_actions,
+                         entity_types=all_entities,
                          current_filters={
                              'action': action_filter,
                              'entity_type': entity_filter,
