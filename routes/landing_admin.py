@@ -22,8 +22,10 @@ def admin_required(f):
 def admin_login():
     """صفحة تسجيل دخول المدير لإعدادات صفحة الهبوط"""
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        print(f"DEBUG: محاولة تسجيل دخول - المستخدم: '{username}', كلمة المرور: '{password[:3]}***'")
         
         if not username or not password:
             flash('يرجى إدخال اسم المستخدم وكلمة المرور', 'error')
@@ -32,16 +34,26 @@ def admin_login():
         # البحث عن المستخدم المدير
         user = User.query.filter_by(username=username).first()
         
-        if user and user.role == UserRole.ADMIN and check_password_hash(user.password_hash, password):
-            login_user(user)
-            
-            # التوجه إلى الصفحة المطلوبة أو لوحة التحكم
-            next_page = request.args.get('next')
-            if next_page:
-                return redirect(next_page)
-            return redirect(url_for('landing_admin.dashboard'))
+        print(f"DEBUG: المستخدم الموجود: {user.username if user else 'لا يوجد'}")
+        print(f"DEBUG: دور المستخدم: {user.role if user else 'لا يوجد'}")
+        print(f"DEBUG: نشط: {user.is_active if user else 'لا يوجد'}")
+        
+        if user and user.role == UserRole.ADMIN and user.is_active:
+            if check_password_hash(user.password_hash, password):
+                print("DEBUG: كلمة المرور صحيحة - تسجيل الدخول")
+                login_user(user)
+                
+                # التوجه إلى الصفحة المطلوبة أو لوحة التحكم
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)
+                return redirect(url_for('landing_admin.dashboard'))
+            else:
+                print("DEBUG: كلمة المرور خاطئة")
+                flash('كلمة المرور غير صحيحة', 'error')
         else:
-            flash('اسم المستخدم أو كلمة المرور غير صحيحة', 'error')
+            print("DEBUG: المستخدم غير موجود أو ليس مديراً أو غير نشط")
+            flash('اسم المستخدم غير صحيح أو ليس لديك صلاحيات إدارية', 'error')
     
     return render_template('landing_admin/login.html')
 
