@@ -26,33 +26,38 @@ function initializeSignatureFix() {
                     }
                 }
                 
-                // إعداد أبعاد Canvas
-                const container = el.closest('.signature-pad-container') || el.parentElement;
-                const rect = container.getBoundingClientRect();
-                const width = Math.max(Math.min(rect.width || 300, 400), 280);
+                // إعداد أبعاد Canvas بشكل ثابت
+                const width = 350;
                 const height = 150;
                 
-                // تحديد أبعاد HTML Canvas
-                el.width = width;
-                el.height = height;
-                el.style.width = '100%';
+                // تحديد أبعاد HTML Canvas بشكل صريح
+                el.setAttribute('width', width);
+                el.setAttribute('height', height);
+                el.style.width = width + 'px';
                 el.style.height = height + 'px';
                 el.style.border = '2px dashed #007bff';
                 el.style.borderRadius = '8px';
-                el.style.backgroundColor = '#f8f9fa';
+                el.style.backgroundColor = '#ffffff';
                 el.style.cursor = 'crosshair';
+                el.style.touchAction = 'none'; // منع التمرير على الأجهزة اللمسية
                 
-                // إنشاء Fabric Canvas جديد
+                // إنشاء Fabric Canvas جديد مع إعدادات محسنة
                 const canvas = new fabric.Canvas(canvasId, {
                     isDrawingMode: true,
-                    backgroundColor: 'transparent',
+                    backgroundColor: '#ffffff',
                     width: width,
-                    height: height
+                    height: height,
+                    selection: false,
+                    preserveObjectStacking: true
                 });
                 
-                // إعداد فرشاة الرسم
-                canvas.freeDrawingBrush.color = "#000";
-                canvas.freeDrawingBrush.width = 2;
+                // إعداد فرشاة الرسم بإعدادات محسنة
+                canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+                canvas.freeDrawingBrush.color = "#000000";
+                canvas.freeDrawingBrush.width = 3;
+                canvas.freeDrawingBrush.shadowColor = 'rgba(0,0,0,0.2)';
+                canvas.freeDrawingBrush.shadowOffsetX = 1;
+                canvas.freeDrawingBrush.shadowOffsetY = 1;
                 
                 // إعداد المتغير العام
                 if (!window.signaturePads) window.signaturePads = {};
@@ -64,10 +69,33 @@ function initializeSignatureFix() {
                     canvas.renderAll();
                 }, 200);
                 
-                // إضافة مؤشر بصري عند الرسم
-                canvas.on('path:created', function() {
+                // إضافة أحداث للتفاعل
+                canvas.on('path:created', function(e) {
                     console.log(`✏️ تم إضافة توقيع في: ${type}`);
+                    // تأكيد الحفظ
+                    e.path.selectable = false;
+                    e.path.evented = false;
                 });
+                
+                // منع فقدان الرسم عند التفاعل
+                canvas.on('selection:created', function() {
+                    canvas.discardActiveObject();
+                });
+                
+                // إضافة دعم للمس
+                canvas.on('mouse:down', function() {
+                    canvas.isDrawingMode = true;
+                });
+                
+                // إعداد للأجهزة اللمسية
+                el.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    canvas.isDrawingMode = true;
+                }, { passive: false });
+                
+                el.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                }, { passive: false });
                 
                 console.log(`✅ إصلاح تم بنجاح: ${type} (${width}x${height})`);
             } catch (error) {
@@ -76,13 +104,17 @@ function initializeSignatureFix() {
         }
     });
     
-    // إعادة تفعيل أزرار المسح
+    // إعادة تفعيل أزرار المسح مع تأكيد
     document.querySelectorAll('.clear-signature').forEach(btn => {
         btn.onclick = () => {
             const canvasId = btn.dataset.canvasId;
             if (window.signaturePads && window.signaturePads[canvasId]) {
-                window.signaturePads[canvasId].clear();
-                console.log(`🧹 تم مسح التوقيع: ${canvasId}`);
+                if (confirm('هل تريد مسح التوقيع؟')) {
+                    window.signaturePads[canvasId].clear();
+                    window.signaturePads[canvasId].backgroundColor = '#ffffff';
+                    window.signaturePads[canvasId].renderAll();
+                    console.log(`🧹 تم مسح التوقيع: ${canvasId}`);
+                }
             }
         };
     });
