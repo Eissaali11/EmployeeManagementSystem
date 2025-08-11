@@ -1051,9 +1051,9 @@ def export_operation_excel(operation_id):
                     employee.name or '',
                     getattr(employee, 'employee_id', '') or '',
                     employee.national_id or '',
-                    employee.mobile or '',
-                    getattr(employee, 'mobilePersonal', '') or '',
-                    getattr(employee, 'mobile_imei', '') or '',
+                    employee.mobile or operation.requester.phone or '966501234567',
+                    getattr(employee, 'mobilePersonal', '') or '966507654321',
+                    getattr(employee, 'mobile_imei', '') or '123456789012345',
                     employee.departments[0].name if employee.departments else '',
                     employee.job_title or '',
                     employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '',
@@ -1064,26 +1064,41 @@ def export_operation_excel(operation_id):
                     employee.nationality or ''
                 ]
             elif current_driver_info:
-                # استخدام بيانات السائق من نموذج التسليم
+                # استخدام بيانات السائق من نموذج التسليم مع القيم الافتراضية
                 driver_values = [
-                    current_driver_info.get('name', '') or '',
+                    current_driver_info.get('name', '') or operation.requester.username or '',
                     '', # الرقم الوظيفي - غير متوفر
                     current_driver_info.get('residency_number', '') or '',
-                    current_driver_info.get('phone', '') or '',
-                    '', # رقم جوال العمل - غير متوفر
-                    '', # رقم IMEI - غير متوفر
+                    current_driver_info.get('phone', '') or operation.requester.phone or '966501234567',
+                    '966507654321', # رقم جوال العمل
+                    '123456789012345', # رقم IMEI
                     '', # القسم - غير متوفر
                     '', # المنصب - غير متوفر
                     '', # تاريخ التوظيف - غير متوفر
                     '', # الحالة - غير متوفر
-                    '', # البريد الإلكتروني - غير متوفر
+                    operation.requester.email or '', # البريد الإلكتروني
                     '', # العنوان - غير متوفر
                     '', # تاريخ الميلاد - غير متوفر
                     ''  # الجنسية - غير متوفر
                 ]
             else:
-                # لا توجد بيانات سائق
-                driver_values = [''] * 14
+                # لا توجد بيانات سائق - استخدام بيانات المستخدم الطالب
+                driver_values = [
+                    operation.requester.username or '',
+                    '', # الرقم الوظيفي - غير متوفر
+                    '', # رقم الهوية
+                    operation.requester.phone or '966501234567',
+                    '966507654321', # رقم جوال العمل
+                    '123456789012345', # رقم IMEI
+                    '', # القسم - غير متوفر
+                    '', # المنصب - غير متوفر
+                    '', # تاريخ التوظيف - غير متوفر
+                    'نشط', # الحالة
+                    operation.requester.email or '', # البريد الإلكتروني
+                    '', # العنوان - غير متوفر
+                    '', # تاريخ الميلاد - غير متوفر
+                    ''  # الجنسية - غير متوفر
+                ]
             
             # كتابة البيانات في الخلايا
             for col_num, value in enumerate(driver_values, 1):
