@@ -414,6 +414,16 @@ def view_operation(operation_id):
         if not employee and hasattr(related_record, 'driver_name') and related_record.driver_name:
             employee = Employee.query.filter_by(name=related_record.driver_name).first()
     
+    # تحميل معلومات إضافية للطالب إذا كان موظفاً
+    if operation.requester and hasattr(operation.requester, 'id'):
+        try:
+            # تحميل العلاقات بشكل صريح
+            requester_employee = Employee.query.options(db.joinedload(Employee.departments)).get(operation.requester.id)
+            if requester_employee:
+                operation.requester = requester_employee
+        except Exception as e:
+            print(f"خطأ في تحميل بيانات الموظف الطالب: {e}")
+    
     return render_template('operations/view.html', 
                          operation=operation,
                          related_record=related_record,

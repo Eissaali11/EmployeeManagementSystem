@@ -790,6 +790,55 @@ body {
                 </div>
                 {% endif %}
                 
+                {% if operation.requester.mobile %}
+                <div class="info-item">
+                    <strong>رقم الجوال:</strong> 
+                    <div class="mt-1">
+                        <a href="tel:{{ operation.requester.mobile }}" class="text-primary text-decoration-none">
+                            <i class="fas fa-phone me-1"></i>{{ operation.requester.mobile }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if operation.requester.mobile_imei %}
+                <div class="info-item">
+                    <strong>رقم IMEI:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-mobile-alt me-1"></i>{{ operation.requester.mobile_imei }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if operation.requester.mobilePersonal %}
+                <div class="info-item">
+                    <strong>رقم الجوال الشخصي:</strong> 
+                    <div class="mt-1">
+                        <a href="tel:{{ operation.requester.mobilePersonal }}" class="text-success text-decoration-none">
+                            <i class="fas fa-phone me-1"></i>{{ operation.requester.mobilePersonal }}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if operation.requester.employee_id %}
+                <div class="info-item">
+                    <strong>الرقم الوظيفي:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-id-badge me-1"></i>{{ operation.requester.employee_id }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if operation.requester.departments %}
+                <div class="info-item">
+                    <strong>القسم:</strong> 
+                    <div class="mt-1">
+                        <i class="fas fa-building me-1"></i>{{ operation.requester.departments[0].name }}
+                    </div>
+                </div>
+                {% endif %}
+                
                 {% if operation.requester.phone %}
                 <div class="info-item">
                     <strong>رقم الهاتف:</strong> 
