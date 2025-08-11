@@ -924,15 +924,20 @@ def admin_external_safety_checks():
     
     # الحصول على معايير الفلترة من request
     vehicle_filter = request.args.get('vehicle_filter', '').strip()
+    vehicle_search = request.args.get('vehicle_search', '').strip()
     department_filter = request.args.get('department_filter', '').strip()
     status_filter = request.args.get('status_filter', '').strip()
     
     # بناء الاستعلام مع الفلاتر
     query = VehicleExternalSafetyCheck.query
     
-    # فلترة حسب رقم السيارة
+    # فلترة حسب رقم السيارة (من القائمة المنسدلة)
     if vehicle_filter:
         query = query.filter(VehicleExternalSafetyCheck.vehicle_plate_number.contains(vehicle_filter))
+    
+    # البحث في السيارة (من حقل البحث)
+    if vehicle_search:
+        query = query.filter(VehicleExternalSafetyCheck.vehicle_plate_number.contains(vehicle_search))
     
     # فلترة حسب القسم
     if department_filter:
@@ -961,6 +966,7 @@ def admin_external_safety_checks():
     return render_template('admin_external_safety_checks.html', 
                          safety_checks=safety_checks,
                          vehicle_filter=vehicle_filter,
+                         vehicle_search=vehicle_search,
                          department_filter=department_filter,
                          status_filter=status_filter,
                          vehicles_list=vehicles_list,
