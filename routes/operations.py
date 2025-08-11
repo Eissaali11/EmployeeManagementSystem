@@ -1003,9 +1003,9 @@ def export_operation_excel(operation_id):
         if employee or current_driver_info:
             ws3 = wb.create_sheet('بيانات السائق')
             
-            driver_headers = ['الاسم', 'رقم الهوية', 'الجوال', 'القسم', 'المنصب', 
-                             'تاريخ التوظيف', 'الحالة', 'البريد الإلكتروني', 'العنوان', 
-                             'تاريخ الميلاد', 'الجنسية']
+            driver_headers = ['الاسم', 'الرقم الوظيفي', 'رقم الهوية', 'رقم الجوال', 'رقم جوال العمل',
+                             'رقم IMEI', 'القسم', 'المنصب', 'تاريخ التوظيف', 'الحالة', 
+                             'البريد الإلكتروني', 'العنوان', 'تاريخ الميلاد', 'الجنسية']
             
             for col_num, header in enumerate(driver_headers, 1):
                 cell = ws3.cell(row=1, column=col_num, value=header)
@@ -1025,8 +1025,11 @@ def export_operation_excel(operation_id):
             if employee:
                 driver_values = [
                     getattr(employee, 'name', '') or '',
+                    getattr(employee, 'employee_id', '') or '',
                     getattr(employee, 'national_id', '') or '',
                     getattr(employee, 'mobile', '') or '',
+                    getattr(employee, 'mobilePersonal', '') or '',
+                    getattr(employee, 'mobile_imei', '') or '',
                     employee.department.name if hasattr(employee, 'department') and employee.department else '',
                     getattr(employee, 'position', '') or getattr(employee, 'job_title', '') or '',
                     employee.join_date.strftime('%Y-%m-%d') if hasattr(employee, 'join_date') and employee.join_date else '',
@@ -1045,8 +1048,11 @@ def export_operation_excel(operation_id):
             else:
                 driver_values = [
                     current_driver_info.get('name', ''),
+                    '', # الرقم الوظيفي
                     current_driver_info.get('residency_number', ''),
                     current_driver_info.get('phone', ''),
+                    '', # رقم جوال العمل
+                    '', # رقم IMEI
                     '', '', '', '', '', '', '', ''
                 ]
             
@@ -1059,10 +1065,15 @@ def export_operation_excel(operation_id):
             
             handover_headers = ['نوع العملية', 'تاريخ العملية', 'اسم الشخص', 'رقم الجوال', 
                                'رقم الهوية', 'قراءة العداد', 'مستوى الوقود', 'حالة المركبة',
-                               'ملاحظات', 'الموقع', 'تاريخ الإنشاء', 'أنشئ بواسطة', 'مصدر الإنشاء']
+                               'ملاحظات', 'الموقع', 'تاريخ الإنشاء', 'أنشئ بواسطة', 'مصدر الإنشاء', 'رابط النموذج']
             
             for col_num, header in enumerate(handover_headers, 1):
                 ws4.cell(row=1, column=col_num, value=header)
+            
+            # إنشاء رابط النموذج
+            from flask import request
+            base_url = request.host_url.rstrip('/')
+            pdf_link = f"{base_url}/vehicles/handover/{related_record.id}/pdf/public"
             
             handover_values = [
                 'تسليم' if related_record.handover_type == 'delivery' else 'استلام',
@@ -1077,7 +1088,8 @@ def export_operation_excel(operation_id):
                 getattr(related_record, 'location', '') or '',
                 related_record.created_at.strftime('%Y-%m-%d %H:%M:%S') if hasattr(related_record, 'created_at') and related_record.created_at else '',
                 getattr(related_record, 'created_by_user', None).name if getattr(related_record, 'created_by_user', None) else '',
-                'موبايل' if getattr(related_record, 'created_via_mobile', False) else 'ويب'
+                'موبايل' if getattr(related_record, 'created_via_mobile', False) else 'ويب',
+                pdf_link
             ]
             
             for col_num, value in enumerate(handover_values, 1):
