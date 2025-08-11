@@ -131,7 +131,11 @@ def create_vehicle_handover_pdf(handover_data):
         
         # الحصول على اسم الشخص ورقم المركبة
         person_name = getattr(handover_data, 'person_name', 'غير محدد')
-        vehicle_number = getattr(handover_data.vehicle_rel if hasattr(handover_data, 'vehicle_rel') else handover_data, 'plate_number', 'غير محدد')
+        # التعامل مع ربط المركبة
+        if hasattr(handover_data, 'vehicle') and handover_data.vehicle:
+            vehicle_number = getattr(handover_data.vehicle, 'plate_number', 'غير محدد')
+        else:
+            vehicle_number = getattr(handover_data, 'vehicle_plate_number', 'غير محدد')
         
         doc_info = [
             f"Document ID: {getattr(handover_data, 'id', 85)}",
@@ -277,7 +281,7 @@ def create_vehicle_handover_pdf(handover_data):
             ["Supervisor", safe_arabic_text(str(handover_data.supervisor_name) if handover_data.supervisor_name else "Not Specified")],
             [safe_arabic_text("قراءة العداد"), safe_arabic_text(f"{handover_data.mileage} km" if handover_data.mileage else "Not Specified")],
             [safe_arabic_text("مستوى الوقود"), safe_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "Not Specified")],
-            ["Vehicle Condition", safe_arabic_text(str(handover_data.vehicle_condition) if handover_data.vehicle_condition else "Good")]
+            ["Vehicle Status", safe_arabic_text(str(handover_data.vehicle_status_summary) if handover_data.vehicle_status_summary else "طبيعية")]
         ]
         
         handover_table = Table(handover_details, colWidths=[2.2*inch, 2.8*inch])
