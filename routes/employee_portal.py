@@ -230,9 +230,9 @@ def my_vehicles():
         employee_operations = []
         
         # فحوصات السلامة للسيارة
-        safety_checks = VehicleVehicleSafetyCheck.query.filter_by(
+        safety_checks = VehicleSafetyCheck.query.filter_by(
             vehicle_id=vehicle.id
-        ).order_by(VehicleVehicleSafetyCheck.check_date.desc()).limit(3).all()
+        ).order_by(VehicleSafetyCheck.check_date.desc()).limit(3).all()
         
         # فحوصات السيارة الدورية
         inspections = VehiclePeriodicInspection.query.filter_by(
@@ -301,7 +301,7 @@ def my_vehicles():
     
     # إحصائيات شاملة للموظف
     total_operations = VehicleHandover.query.filter_by(employee_id=employee_id).count()
-    total_safety_checks = VehicleVehicleSafetyCheck.query.filter_by(vehicle_id__in=[v.id for v in current_driver_vehicles]).count() if current_driver_vehicles else 0
+    total_safety_checks = VehicleSafetyCheck.query.filter_by(vehicle_id__in=[v.id for v in current_driver_vehicles]).count() if current_driver_vehicles else 0
     pending_operations = OperationRequest.query.filter_by(status='pending').count()
     approved_operations = OperationRequest.query.filter_by(status='approved').count()
     
