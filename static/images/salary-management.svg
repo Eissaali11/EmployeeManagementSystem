@@ -1,83 +1,180 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 500">
   <!-- Background -->
-  <rect width="400" height="300" fill="linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%)"/>
+  <rect width="700" height="500" fill="linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)"/>
   
-  <!-- Saudi Riyal Background Pattern -->
-  <g opacity="0.1">
-    <text x="50" y="50" font-family="Arial" font-size="24" fill="#48bb78">﷼</text>
-    <text x="350" y="80" font-family="Arial" font-size="20" fill="#48bb78">﷼</text>
-    <text x="100" y="250" font-family="Arial" font-size="18" fill="#48bb78">﷼</text>
-    <text x="300" y="200" font-family="Arial" font-size="22" fill="#48bb78">﷼</text>
+  <!-- Main dashboard container -->
+  <g transform="translate(100, 50)">
+    <!-- Dashboard frame -->
+    <rect x="0" y="0" width="500" height="400" fill="white" rx="15" stroke="#d1d5db" stroke-width="2"/>
+    
+    <!-- Header -->
+    <rect x="0" y="0" width="500" height="60" fill="#065f46" rx="15"/>
+    <rect x="0" y="30" width="500" height="30" fill="#065f46"/>
+    <text x="250" y="38" font-family="Arial" font-size="18" fill="white" text-anchor="middle" font-weight="bold">إدارة الرواتب والأجور</text>
+    
+    <!-- Salary summary cards -->
+    <g transform="translate(30, 90)">
+      <!-- Total payroll -->
+      <rect x="0" y="0" width="140" height="80" fill="#f0fdf4" rx="10" stroke="#22c55e" stroke-width="2"/>
+      <circle cx="25" cy="25" r="12" fill="#16a34a"/>
+      <text x="25" y="30" font-family="Arial" font-size="16" fill="white" text-anchor="middle" font-weight="bold">﷼</text>
+      <text x="55" y="20" font-family="Arial" font-size="14" fill="#15803d" font-weight="bold">إجمالي الرواتب</text>
+      <text x="55" y="35" font-family="Arial" font-size="18" fill="#16a34a" font-weight="bold">450,000 ﷼</text>
+      <text x="55" y="50" font-family="Arial" font-size="10" fill="#22c55e">هذا الشهر</text>
+      <text x="55" y="65" font-family="Arial" font-size="8" fill="#86efac">+5.2% من الشهر الماضي</text>
+    </g>
+    
+    <g transform="translate(200, 90)">
+      <!-- Employees paid -->
+      <rect x="0" y="0" width="140" height="80" fill="#eff6ff" rx="10" stroke="#3b82f6" stroke-width="2"/>
+      <circle cx="25" cy="25" r="12" fill="#2563eb"/>
+      <text x="25" y="30" font-family="Arial" font-size="14" fill="white" text-anchor="middle" font-weight="bold">👥</text>
+      <text x="55" y="20" font-family="Arial" font-size="14" fill="#1d4ed8" font-weight="bold">الموظفين المدفوعين</text>
+      <text x="55" y="35" font-family="Arial" font-size="18" fill="#2563eb" font-weight="bold">142 موظف</text>
+      <text x="55" y="50" font-family="Arial" font-size="10" fill="#3b82f6">تم الدفع</text>
+      <text x="55" y="65" font-family="Arial" font-size="8" fill="#93c5fd">معدل الدفع 98.5%</text>
+    </g>
+    
+    <g transform="translate(370, 90)">
+      <!-- Pending payments -->
+      <rect x="0" y="0" width="100" height="80" fill="#fef3c7" rx="10" stroke="#f59e0b" stroke-width="2"/>
+      <circle cx="20" cy="25" r="12" fill="#d97706"/>
+      <text x="20" y="30" font-family="Arial" font-size="14" fill="white" text-anchor="middle" font-weight="bold">⏳</text>
+      <text x="40" y="20" font-family="Arial" font-size="12" fill="#92400e" font-weight="bold">قيد المعالجة</text>
+      <text x="40" y="35" font-family="Arial" font-size="16" fill="#d97706" font-weight="bold">3 موظف</text>
+      <text x="40" y="50" font-family="Arial" font-size="8" fill="#f59e0b">يتطلب مراجعة</text>
+      <text x="40" y="65" font-family="Arial" font-size="8" fill="#fbbf24">12,500 ﷼</text>
+    </g>
+    
+    <!-- Payment method section -->
+    <g transform="translate(30, 200)">
+      <text x="0" y="0" font-family="Arial" font-size="16" fill="#374151" font-weight="bold">طرق الدفع</text>
+      
+      <!-- Bank transfer -->
+      <g transform="translate(0, 20)">
+        <rect x="0" y="0" width="200" height="40" fill="#f8fafc" rx="8" stroke="#e2e8f0"/>
+        <rect x="10" y="10" width="30" height="20" fill="#1e40af" rx="4"/>
+        <text x="25" y="23" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">🏦</text>
+        <text x="50" y="18" font-family="Arial" font-size="12" fill="#1f2937" font-weight="bold">تحويل بنكي (SARIE)</text>
+        <text x="50" y="32" font-family="Arial" font-size="10" fill="#6b7280">139 موظف - 437,500 ﷼</text>
+        
+        <!-- Progress bar -->
+        <rect x="220" y="12" width="100" height="6" fill="#e5e7eb" rx="3"/>
+        <rect x="220" y="12" width="95" height="6" fill="#10b981" rx="3"/>
+        <text x="330" y="25" font-family="Arial" font-size="10" fill="#059669">95%</text>
+      </g>
+      
+      <!-- Cash -->
+      <g transform="translate(0, 70)">
+        <rect x="0" y="0" width="200" height="40" fill="#f8fafc" rx="8" stroke="#e2e8f0"/>
+        <rect x="10" y="10" width="30" height="20" fill="#16a34a" rx="4"/>
+        <text x="25" y="23" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">💰</text>
+        <text x="50" y="18" font-family="Arial" font-size="12" fill="#1f2937" font-weight="bold">نقدي</text>
+        <text x="50" y="32" font-family="Arial" font-size="10" fill="#6b7280">3 موظف - 12,500 ﷼</text>
+        
+        <!-- Progress bar -->
+        <rect x="220" y="12" width="100" height="6" fill="#e5e7eb" rx="3"/>
+        <rect x="220" y="12" width="5" height="6" fill="#f59e0b" rx="3"/>
+        <text x="330" y="25" font-family="Arial" font-size="10" fill="#d97706">5%</text>
+      </g>
+    </g>
+    
+    <!-- Salary breakdown -->
+    <g transform="translate(30, 320)">
+      <text x="0" y="0" font-family="Arial" font-size="16" fill="#374151" font-weight="bold">تفصيل الرواتب</text>
+      
+      <g transform="translate(0, 25)">
+        <!-- Basic salary -->
+        <rect x="0" y="0" width="80" height="15" fill="#dbeafe" rx="3"/>
+        <text x="5" y="12" font-family="Arial" font-size="10" fill="#1e40af">الراتب الأساسي</text>
+        <text x="90" y="12" font-family="Arial" font-size="10" fill="#1f2937" font-weight="bold">320,000 ﷼</text>
+        
+        <!-- Allowances -->
+        <g transform="translate(160, 0)">
+          <rect x="0" y="0" width="60" height="15" fill="#dcfce7" rx="3"/>
+          <text x="5" y="12" font-family="Arial" font-size="10" fill="#16a34a">البدلات</text>
+          <text x="70" y="12" font-family="Arial" font-size="10" fill="#1f2937" font-weight="bold">85,000 ﷼</text>
+        </g>
+        
+        <!-- Overtime -->
+        <g transform="translate(280, 0)">
+          <rect x="0" y="0" width="70" height="15" fill="#fef3c7" rx="3"/>
+          <text x="5" y="12" font-family="Arial" font-size="10" fill="#d97706">الساعات الإضافية</text>
+          <text x="80" y="12" font-family="Arial" font-size="10" fill="#1f2937" font-weight="bold">25,000 ﷼</text>
+        </g>
+        
+        <!-- Deductions -->
+        <g transform="translate(400, 0)">
+          <rect x="0" y="0" width="50" height="15" fill="#fee2e2" rx="3"/>
+          <text x="5" y="12" font-family="Arial" font-size="10" fill="#dc2626">الخصومات</text>
+          <text x="60" y="12" font-family="Arial" font-size="10" fill="#1f2937" font-weight="bold">-15,000 ﷼</text>
+        </g>
+      </g>
+    </g>
   </g>
   
-  <!-- Main Dashboard -->
-  <rect x="50" y="60" width="300" height="180" fill="white" rx="15" stroke="#e2e8f0" stroke-width="2"/>
-  <text x="200" y="45" font-family="Arial" font-size="16" fill="#2d3748" text-anchor="middle" font-weight="bold">نظام إدارة الرواتب</text>
-  
-  <!-- Header Bar -->
-  <rect x="50" y="60" width="300" height="40" fill="#4299e1" rx="15"/>
-  <rect x="50" y="75" width="300" height="25" fill="#4299e1"/>
-  <text x="200" y="85" font-family="Arial" font-size="12" fill="white" text-anchor="middle" font-weight="bold">كشف رواتب شهر رجب ١٤٤٦هـ</text>
-  
-  <!-- Employee Salary Rows -->
-  <rect x="70" y="120" width="260" height="25" fill="#f7fafc" rx="3"/>
-  <text x="80" y="135" font-family="Arial" font-size="10" fill="#2d3748">أحمد محمد العلي</text>
-  <text x="200" y="135" font-family="Arial" font-size="10" fill="#2d3748">مدير المبيعات</text>
-  <text x="300" y="135" font-family="Arial" font-size="10" fill="#48bb78" font-weight="bold">٨,٥٠٠ ﷼</text>
-  
-  <rect x="70" y="150" width="260" height="25" fill="white" rx="3"/>
-  <text x="80" y="165" font-family="Arial" font-size="10" fill="#2d3748">فاطمة أحمد القحطاني</text>
-  <text x="200" y="165" font-family="Arial" font-size="10" fill="#2d3748">محاسبة</text>
-  <text x="300" y="165" font-family="Arial" font-size="10" fill="#48bb78" font-weight="bold">٦,٢٠٠ ﷼</text>
-  
-  <rect x="70" y="180" width="260" height="25" fill="#f7fafc" rx="3"/>
-  <text x="80" y="195" font-family="Arial" font-size="10" fill="#2d3748">سالم عبدالله النهدي</text>
-  <text x="200" y="195" font-family="Arial" font-size="10" fill="#2d3748">سائق</text>
-  <text x="300" y="195" font-family="Arial" font-size="10" fill="#48bb78" font-weight="bold">٤,٨٠٠ ﷼</text>
-  
-  <rect x="70" y="210" width="260" height="25" fill="white" rx="3"/>
-  <text x="80" y="225" font-family="Arial" font-size="10" fill="#2d3748">مريم سعد الغامدي</text>
-  <text x="200" y="225" font-family="Arial" font-size="10" fill="#2d3748">موظفة استقبال</text>
-  <text x="300" y="225" font-family="Arial" font-size="10" fill="#48bb78" font-weight="bold">٥,٠٠٠ ﷼</text>
-  
-  <!-- Total Summary -->
-  <rect x="200" y="250" width="130" height="30" fill="#48bb78" rx="5"/>
-  <text x="215" y="270" font-family="Arial" font-size="12" fill="white" font-weight="bold">المجموع: ٢٤,٥٠٠ ﷼</text>
-  
-  <!-- Calculation Icons -->
-  <g transform="translate(320, 120)">
-    <circle r="8" fill="#4299e1" opacity="0.3"/>
-    <text x="0" y="3" font-family="Arial" font-size="8" fill="#4299e1" text-anchor="middle">%</text>
+  <!-- Security and compliance badges -->
+  <g transform="translate(50, 400)">
+    <!-- Security badge -->
+    <g>
+      <rect x="0" y="0" width="100" height="30" fill="rgba(34,197,94,0.1)" rx="6" stroke="#22c55e"/>
+      <circle cx="15" cy="15" r="8" fill="#16a34a"/>
+      <text x="15" y="19" font-family="Arial" font-size="8" fill="white" text-anchor="middle" font-weight="bold">🔒</text>
+      <text x="30" y="12" font-family="Arial" font-size="10" fill="#15803d" font-weight="bold">آمان 256-bit</text>
+      <text x="30" y="22" font-family="Arial" font-size="8" fill="#22c55e">معتمد من SAMA</text>
+    </g>
+    
+    <!-- Compliance badge -->
+    <g transform="translate(120, 0)">
+      <rect x="0" y="0" width="100" height="30" fill="rgba(59,130,246,0.1)" rx="6" stroke="#3b82f6"/>
+      <circle cx="15" cy="15" r="8" fill="#2563eb"/>
+      <text x="15" y="19" font-family="Arial" font-size="8" fill="white" text-anchor="middle" font-weight="bold">✓</text>
+      <text x="30" y="12" font-family="Arial" font-size="10" fill="#1d4ed8" font-weight="bold">متوافق مع ZATCA</text>
+      <text x="30" y="22" font-family="Arial" font-size="8" fill="#3b82f6">ضرائب السعودية</text>
+    </g>
+    
+    <!-- Backup badge -->
+    <g transform="translate(240, 0)">
+      <rect x="0" y="0" width="100" height="30" fill="rgba(16,185,129,0.1)" rx="6" stroke="#10b981"/>
+      <circle cx="15" cy="15" r="8" fill="#059669"/>
+      <text x="15" y="19" font-family="Arial" font-size="8" fill="white" text-anchor="middle" font-weight="bold">☁</text>
+      <text x="30" y="12" font-family="Arial" font-size="10" fill="#047857" font-weight="bold">نسخ احتياطي</text>
+      <text x="30" y="22" font-family="Arial" font-size="8" fill="#10b981">كل 6 ساعات</text>
+    </g>
   </g>
   
-  <g transform="translate(320, 150)">
-    <circle r="8" fill="#ed8936" opacity="0.3"/>
-    <text x="0" y="3" font-family="Arial" font-size="8" fill="#ed8936" text-anchor="middle">-</text>
+  <!-- Floating money icons -->
+  <g transform="translate(550, 100)" opacity="0.6">
+    <g>
+      <circle cx="0" cy="0" r="20" fill="rgba(34,197,94,0.2)"/>
+      <text x="0" y="5" font-family="Arial" font-size="18" text-anchor="middle">﷼</text>
+      <animate attributeName="transform" values="translate(550, 100) rotate(0); translate(550, 100) rotate(360)" dur="20s" repeatCount="indefinite"/>
+    </g>
   </g>
   
-  <g transform="translate(320, 180)">
-    <circle r="8" fill="#48bb78" opacity="0.3"/>
-    <text x="0" y="3" font-family="Arial" font-size="8" fill="#48bb78" text-anchor="middle">+</text>
+  <g transform="translate(580, 250)" opacity="0.4">
+    <g>
+      <circle cx="0" cy="0" r="15" fill="rgba(251,191,36,0.2)"/>
+      <text x="0" y="4" font-family="Arial" font-size="12" text-anchor="middle">💳</text>
+      <animate attributeName="transform" values="translate(580, 250) rotate(0); translate(580, 250) rotate(-360)" dur="15s" repeatCount="indefinite"/>
+    </g>
   </g>
   
-  <!-- Bank Transfer Icon -->
-  <g transform="translate(30, 200)">
-    <rect width="25" height="15" fill="#4a5568" rx="2"/>
-    <rect x="2" y="2" width="21" height="11" fill="#4fd1c7" opacity="0.5" rx="1"/>
-    <text x="12.5" y="10" font-family="Arial" font-size="6" fill="#2d3748" text-anchor="middle">البنك</text>
+  <!-- Animated floating elements -->
+  <g opacity="0.3">
+    <circle cx="50" cy="200" r="3" fill="#22c55e">
+      <animate attributeName="cy" values="200;180;200" dur="4s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="650" cy="150" r="2" fill="#3b82f6">
+      <animate attributeName="cy" values="150;130;150" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;0.7;0.3" dur="3s" repeatCount="indefinite"/>
+    </circle>
   </g>
   
-  <!-- Data Flow Animation -->
-  <path d="M55 210 Q30 190 30 150" stroke="#4fd1c7" stroke-width="2" fill="none" stroke-dasharray="4,4">
-    <animate attributeName="stroke-dashoffset" values="8;0" dur="2s" repeatCount="indefinite"/>
-  </path>
-  
-  <!-- Reports/PDF Icon -->
-  <g transform="translate(370, 160)">
-    <rect width="20" height="25" fill="white" stroke="#4a5568" stroke-width="1" rx="2"/>
-    <rect x="2" y="5" width="16" height="2" fill="#4a5568" rx="1"/>
-    <rect x="2" y="9" width="12" height="2" fill="#a0aec0" rx="1"/>
-    <rect x="2" y="13" width="14" height="2" fill="#a0aec0" rx="1"/>
-    <text x="10" y="23" font-family="Arial" font-size="6" fill="#4a5568" text-anchor="middle">PDF</text>
+  <!-- Saudi Riyal symbol -->
+  <g transform="translate(30, 30)">
+    <rect x="0" y="0" width="60" height="25" fill="rgba(16,185,129,0.1)" rx="4"/>
+    <text x="30" y="17" font-family="Arial" font-size="14" text-anchor="middle" fill="#059669" font-weight="bold">🇸🇦 ﷼ SAR</text>
   </g>
 </svg>
