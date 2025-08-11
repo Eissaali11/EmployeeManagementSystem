@@ -16,22 +16,22 @@
             <form id="contactForm">
                 <div class="mb-3">
                     <label for="companyPhone" class="form-label">رقم الهاتف</label>
-                    <input type="tel" class="form-control" id="companyPhone" value="{{ settings.contact_info.phone if settings.contact_info else '' }}">
+                    <input type="tel" class="form-control" id="companyPhone" value="{{ settings.contact_info.phone if settings.contact_info and settings.contact_info.phone else '' }}">
                 </div>
                 
                 <div class="mb-3">
                     <label for="companyEmail" class="form-label">البريد الإلكتروني</label>
-                    <input type="email" class="form-control" id="companyEmail" value="{{ settings.contact_info.email if settings.contact_info else '' }}">
+                    <input type="email" class="form-control" id="companyEmail" value="{{ settings.contact_info.email if settings.contact_info and settings.contact_info.email else '' }}">
                 </div>
                 
                 <div class="mb-3">
                     <label for="companyAddress" class="form-label">العنوان</label>
-                    <textarea class="form-control" id="companyAddress" rows="3">{{ settings.contact_info.address if settings.contact_info else '' }}</textarea>
+                    <textarea class="form-control" id="companyAddress" rows="3">{{ settings.contact_info.address if settings.contact_info and settings.contact_info.address else '' }}</textarea>
                 </div>
                 
                 <div class="mb-3">
                     <label for="workingHours" class="form-label">ساعات العمل</label>
-                    <input type="text" class="form-control" id="workingHours" value="{{ settings.contact_info.working_hours if settings.contact_info else '' }}" placeholder="الأحد - الخميس: 8:00 ص - 5:00 م">
+                    <input type="text" class="form-control" id="workingHours" value="{{ settings.contact_info.working_hours if settings.contact_info and settings.contact_info.working_hours else '' }}" placeholder="الأحد - الخميس: 8:00 ص - 5:00 م">
                 </div>
                 
                 <button type="button" class="btn btn-primary" onclick="saveContactInfo()">
@@ -52,22 +52,22 @@
             <form id="socialForm">
                 <div class="mb-3">
                     <label for="whatsappNumber" class="form-label">رقم الواتساب</label>
-                    <input type="tel" class="form-control" id="whatsappNumber" value="{{ settings.social_media.whatsapp if settings.social_media else '' }}">
+                    <input type="tel" class="form-control" id="whatsappNumber" value="{{ settings.social_media.whatsapp if settings.social_media and settings.social_media.whatsapp else '' }}">
                 </div>
                 
                 <div class="mb-3">
                     <label for="twitterUrl" class="form-label">رابط تويتر</label>
-                    <input type="url" class="form-control" id="twitterUrl" value="{{ settings.social_media.twitter if settings.social_media else '' }}">
+                    <input type="url" class="form-control" id="twitterUrl" value="{{ settings.social_media.twitter if settings.social_media and settings.social_media.twitter else '' }}">
                 </div>
                 
                 <div class="mb-3">
                     <label for="linkedinUrl" class="form-label">رابط لينكد إن</label>
-                    <input type="url" class="form-control" id="linkedinUrl" value="{{ settings.social_media.linkedin if settings.social_media else '' }}">
+                    <input type="url" class="form-control" id="linkedinUrl" value="{{ settings.social_media.linkedin if settings.social_media and settings.social_media.linkedin else '' }}">
                 </div>
                 
                 <div class="mb-3">
                     <label for="instagramUrl" class="form-label">رابط إنستجرام</label>
-                    <input type="url" class="form-control" id="instagramUrl" value="{{ settings.social_media.instagram if settings.social_media else '' }}">
+                    <input type="url" class="form-control" id="instagramUrl" value="{{ settings.social_media.instagram if settings.social_media and settings.social_media.instagram else '' }}">
                 </div>
                 
                 <button type="button" class="btn btn-primary" onclick="saveSocialMedia()">
@@ -90,21 +90,21 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="formTitle" class="form-label">عنوان النموذج</label>
-                            <input type="text" class="form-control" id="formTitle" value="{{ settings.contact_form.title if settings.contact_form else '' }}">
+                            <input type="text" class="form-control" id="formTitle" value="{{ settings.contact_form.title if settings.contact_form and settings.contact_form.title else '' }}">
                         </div>
                         <div class="mb-3">
                             <label for="formSubtitle" class="form-label">النص التوضيحي</label>
-                            <textarea class="form-control" id="formSubtitle" rows="3">{{ settings.contact_form.subtitle if settings.contact_form else '' }}</textarea>
+                            <textarea class="form-control" id="formSubtitle" rows="3">{{ settings.contact_form.subtitle if settings.contact_form and settings.contact_form.subtitle else '' }}</textarea>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label for="recipientEmail" class="form-label">البريد المستقبل للرسائل</label>
-                            <input type="email" class="form-control" id="recipientEmail" value="{{ settings.contact_form.recipient_email if settings.contact_form else '' }}">
+                            <input type="email" class="form-control" id="recipientEmail" value="{{ settings.contact_form.recipient_email if settings.contact_form and settings.contact_form.recipient_email else '' }}">
                         </div>
                         <div class="mb-3">
                             <label for="autoReplyMessage" class="form-label">رسالة الرد التلقائي</label>
-                            <textarea class="form-control" id="autoReplyMessage" rows="3">{{ settings.contact_form.auto_reply if settings.contact_form else '' }}</textarea>
+                            <textarea class="form-control" id="autoReplyMessage" rows="3">{{ settings.contact_form.auto_reply if settings.contact_form and settings.contact_form.auto_reply else '' }}</textarea>
                         </div>
                     </div>
                 </div>
