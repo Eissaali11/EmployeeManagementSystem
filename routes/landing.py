@@ -22,6 +22,7 @@ def index():
             'title': 'إدارة الموظفين',
             'description': 'نظام شامل لإدارة بيانات الموظفين مع تتبع المستندات وانتهاء الصلاحيات',
             'icon': 'fas fa-users',
+            'image': '/static/images/employee-management.svg',
             'capabilities': [
                 'إضافة وتعديل بيانات الموظفين الشخصية والوظيفية',
                 'إدارة المستندات مع تنبيهات انتهاء الصلاحية',
@@ -35,6 +36,7 @@ def index():
             'title': 'إدارة المركبات',
             'description': 'نظام متكامل لإدارة أسطول المركبات وتتبع العمليات',
             'icon': 'fas fa-car',
+            'image': '/static/images/vehicle-management.svg',
             'capabilities': [
                 'تسجيل وإدارة بيانات المركبات',
                 'نظام تسليم واستقبال المركبات',
@@ -48,6 +50,7 @@ def index():
             'title': 'نظام الحضور والانصراف',
             'description': 'تتبع دقيق لحضور الموظفين مع حساب الإضافي والخصم',
             'icon': 'fas fa-clock',
+            'image': '/static/images/attendance-system.svg',
             'capabilities': [
                 'تسجيل الحضور والانصراف اليومي',
                 'حساب ساعات العمل الإضافية',
@@ -61,6 +64,7 @@ def index():
             'title': 'إدارة الرواتب',
             'description': 'نظام محاسبي متكامل لحساب ومعالجة رواتب الموظفين',
             'icon': 'fas fa-money-bill-wave',
+            'image': '/static/images/salary-management.svg',
             'capabilities': [
                 'حساب الراتب الأساسي والبدلات',
                 'إدارة الخصومات والاستقطاعات',
