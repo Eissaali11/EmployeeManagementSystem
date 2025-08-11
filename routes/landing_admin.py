@@ -40,16 +40,20 @@ def dashboard():
 
 @landing_admin_bp.route('/demo-dashboard')
 def demo_dashboard():
-    """عرض توضيحي للوحة التحكم بدون حماية"""
+    """عرض توضيحي للوحة التحكم بدون حماية - للعرض التوضيحي فقط"""
+    # إشعار المستخدم أن هذا عرض توضيحي فقط
+    flash('هذا عرض توضيحي فقط. للوصول للنظام الرئيسي، يرجى تسجيل الدخول من الرابط أدناه.', 'info')
+    
     # قراءة إعدادات صفحة الهبوط
     landing_settings = load_landing_settings()
     
-    # إحصائيات أساسية
+    # إحصائيات أساسية للعرض التوضيحي
     stats = {
         'total_sections': 5,
         'active_features': len(landing_settings.get('features', [])),
         'testimonials_count': len(landing_settings.get('testimonials', [])),
         'contact_methods': len(landing_settings.get('contact_info', {})),
+        'is_demo': True  # تمييز أن هذا عرض توضيحي
     }
     
     return render_template('landing_admin/demo_dashboard.html', 
