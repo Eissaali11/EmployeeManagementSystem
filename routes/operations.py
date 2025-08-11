@@ -882,24 +882,42 @@ def export_operation_excel(operation_id):
         operation = OperationRequest.query.get_or_404(operation_id)
         related_record = operation.get_related_record()
         
-        # إنشاء ملف Excel  
+        # إنشاء ملف Excel مع تنسيق محسن
         from openpyxl import Workbook
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
         
         wb = Workbook()
         
-        # شيت 1: معلومات العملية الأساسية (دائماً موجود)
+        # شيت 1: معلومات العملية الأساسية
         ws1 = wb.active
         ws1.title = 'معلومات العملية'
         
-        # إضافة رؤوس الأعمدة
+        # تنسيقات الألوان والخطوط
+        header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+        header_fill = PatternFill(start_color='2D5AA0', end_color='2D5AA0', fill_type='solid')
+        data_font = Font(name='Arial', size=11)
+        alignment = Alignment(horizontal='right', vertical='center')
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # رؤوس الأعمدة
         operation_headers = ['رقم العملية', 'نوع العملية', 'العنوان', 'الوصف', 'الحالة', 
                            'الأولوية', 'تاريخ الطلب', 'تاريخ المراجعة', 'طالب العملية', 
                            'مراجع العملية', 'ملاحظات المراجعة']
         
         for col_num, header in enumerate(operation_headers, 1):
-            ws1.cell(row=1, column=col_num, value=header)
+            cell = ws1.cell(row=1, column=col_num, value=header)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = alignment
+            cell.border = border
+            ws1.column_dimensions[cell.column_letter].width = 15
         
-        # إضافة البيانات
+        # البيانات
         operation_values = [
             operation.id,
             get_operation_type_name(operation.operation_type),
@@ -915,7 +933,10 @@ def export_operation_excel(operation_id):
         ]
         
         for col_num, value in enumerate(operation_values, 1):
-            ws1.cell(row=2, column=col_num, value=value)
+            cell = ws1.cell(row=2, column=col_num, value=value)
+            cell.font = data_font
+            cell.alignment = alignment
+            cell.border = border
             
         # شيت 2: بيانات المركبة
         if operation.vehicle:
@@ -926,7 +947,12 @@ def export_operation_excel(operation_id):
                               'اللون', 'الحالة', 'ملاحظات']
             
             for col_num, header in enumerate(vehicle_headers, 1):
-                ws2.cell(row=1, column=col_num, value=header)
+                cell = ws2.cell(row=1, column=col_num, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = alignment
+                cell.border = border
+                ws2.column_dimensions[cell.column_letter].width = 18
             
             vehicle_values = [
                 vehicle.plate_number or '',
@@ -940,7 +966,10 @@ def export_operation_excel(operation_id):
             ]
             
             for col_num, value in enumerate(vehicle_values, 1):
-                ws2.cell(row=2, column=col_num, value=value)
+                cell = ws2.cell(row=2, column=col_num, value=value)
+                cell.font = data_font
+                cell.alignment = alignment
+                cell.border = border
             
         # شيت 3: بيانات السائق/الموظف
         employee = None
@@ -974,6 +1003,18 @@ def export_operation_excel(operation_id):
         if employee or current_driver_info:
             ws3 = wb.create_sheet('بيانات السائق')
             
+            driver_headers = ['الاسم', 'رقم الهوية', 'الجوال', 'القسم', 'المنصب', 
+                             'تاريخ التوظيف', 'الحالة', 'البريد الإلكتروني', 'العنوان', 
+                             'تاريخ الميلاد', 'الجنسية']
+            
+            for col_num, header in enumerate(driver_headers, 1):
+                cell = ws3.cell(row=1, column=col_num, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = alignment
+                cell.border = border
+                ws3.column_dimensions[cell.column_letter].width = 16
+            
             driver_headers = ['الاسم', 'رقم الهوية', 'رقم الجوال', 'القسم', 'المسمى الوظيفي',
                              'تاريخ التوظيف', 'الحالة', 'البريد الإلكتروني', 'العنوان', 
                              'تاريخ الميلاد', 'الجنسية']
@@ -995,6 +1036,12 @@ def export_operation_excel(operation_id):
                     employee.birth_date.strftime('%Y-%m-%d') if hasattr(employee, 'birth_date') and employee.birth_date else '',
                     getattr(employee, 'nationality', '') or ''
                 ]
+            
+            for col_num, value in enumerate(driver_values, 1):
+                cell = ws3.cell(row=2, column=col_num, value=value)
+                cell.font = data_font
+                cell.alignment = alignment
+                cell.border = border
             else:
                 driver_values = [
                     current_driver_info.get('name', ''),
@@ -1034,7 +1081,10 @@ def export_operation_excel(operation_id):
             ]
             
             for col_num, value in enumerate(handover_values, 1):
-                ws4.cell(row=2, column=col_num, value=value)
+                cell = ws4.cell(row=2, column=col_num, value=value)
+                cell.font = data_font
+                cell.alignment = alignment
+                cell.border = border
             
         # شيت 5: سجلات الورشة (إذا كانت متوفرة)
         if operation.operation_type == 'workshop_record' and related_record:
@@ -1044,7 +1094,12 @@ def export_operation_excel(operation_id):
                                'تاريخ الدخول', 'تاريخ الخروج', 'الحالة', 'الفني المسؤول', 'ملاحظات']
             
             for col_num, header in enumerate(workshop_headers, 1):
-                ws5.cell(row=1, column=col_num, value=header)
+                cell = ws5.cell(row=1, column=col_num, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = alignment
+                cell.border = border
+                ws5.column_dimensions[cell.column_letter].width = 16
             
             workshop_values = [
                 getattr(related_record, 'service_type', '') or '',
@@ -1059,7 +1114,10 @@ def export_operation_excel(operation_id):
             ]
             
             for col_num, value in enumerate(workshop_values, 1):
-                ws5.cell(row=2, column=col_num, value=value)
+                cell = ws5.cell(row=2, column=col_num, value=value)
+                cell.font = data_font
+                cell.alignment = alignment
+                cell.border = border
         
         # حفظ الملف
         output = io.BytesIO()

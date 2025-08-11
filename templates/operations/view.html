@@ -696,11 +696,24 @@ body {
                 {% endif %}
                 
                 <div class="mt-3">
-                    <a href="{{ url_for('vehicles.view_handover', id=related_record.id) if operation.operation_type == 'handover' else operation.get_operation_url() }}" 
-                       class="action-btn btn btn-outline-primary" target="_blank">
-                        <i class="fas fa-external-link-alt me-2"></i>
-                        عرض السجل الكامل
-                    </a>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('vehicles.view_handover', id=related_record.id) if operation.operation_type == 'handover' else operation.get_operation_url() }}" 
+                               class="action-btn btn btn-outline-primary w-100" target="_blank">
+                                <i class="fas fa-external-link-alt me-2"></i>
+                                عرض السجل الكامل
+                            </a>
+                        </div>
+                        {% if operation.operation_type == 'handover' and related_record %}
+                        <div class="col-md-6">
+                            <a href="{{ url_for('vehicles.handover_pdf', id=related_record.id, visibility='public') }}" 
+                               class="action-btn btn btn-outline-success w-100" target="_blank">
+                                <i class="fas fa-file-pdf me-2"></i>
+                                نموذج التسليم/الاستلام
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% endif %}
