@@ -909,8 +909,8 @@ def export_operation_excel(operation_id):
             get_priority_name(operation.priority),
             operation.requested_at.strftime('%Y-%m-%d %H:%M:%S') if operation.requested_at else '',
             operation.reviewed_at.strftime('%Y-%m-%d %H:%M:%S') if operation.reviewed_at else '',
-            operation.requested_by_user.name if operation.requested_by_user else '',
-            operation.reviewed_by_user.name if operation.reviewed_by_user else '',
+            operation.requester.name if operation.requester else '',
+            operation.reviewer.name if operation.reviewer else '',
             operation.review_notes or ''
         ]
         
@@ -1032,7 +1032,7 @@ def export_operation_excel(operation_id):
                 related_record.notes or '',
                 related_record.location or '',
                 related_record.created_at.strftime('%Y-%m-%d %H:%M:%S') if related_record.created_at else '',
-                related_record.created_by_user.name if related_record.created_by_user else '',
+                getattr(related_record, 'created_by_user', None).name if getattr(related_record, 'created_by_user', None) else '',
                 'موبايل' if getattr(related_record, 'created_via_mobile', False) else 'ويب'
             ]
             
