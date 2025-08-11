@@ -1015,13 +1015,6 @@ def export_operation_excel(operation_id):
                 cell.border = border
                 ws3.column_dimensions[cell.column_letter].width = 16
             
-            driver_headers = ['الاسم', 'رقم الهوية', 'رقم الجوال', 'القسم', 'المسمى الوظيفي',
-                             'تاريخ التوظيف', 'الحالة', 'البريد الإلكتروني', 'العنوان', 
-                             'تاريخ الميلاد', 'الجنسية']
-            
-            for col_num, header in enumerate(driver_headers, 1):
-                ws3.cell(row=1, column=col_num, value=header)
-            
             if employee:
                 driver_values = [
                     getattr(employee, 'name', '') or '',
@@ -1047,17 +1040,20 @@ def export_operation_excel(operation_id):
                 cell.border = border
             else:
                 driver_values = [
-                    current_driver_info.get('name', ''),
+                    current_driver_info.get('name', '') if current_driver_info else '',
                     '', # الرقم الوظيفي
-                    current_driver_info.get('residency_number', ''),
-                    current_driver_info.get('phone', ''),
+                    current_driver_info.get('residency_number', '') if current_driver_info else '',
+                    current_driver_info.get('phone', '') if current_driver_info else '',
                     '', # رقم جوال العمل
                     '', # رقم IMEI
                     '', '', '', '', '', '', '', ''
                 ]
-            
-            for col_num, value in enumerate(driver_values, 1):
-                ws3.cell(row=2, column=col_num, value=value)
+                
+                for col_num, value in enumerate(driver_values, 1):
+                    cell = ws3.cell(row=2, column=col_num, value=value)
+                    cell.font = data_font
+                    cell.alignment = alignment
+                    cell.border = border
             
         # شيت 4: تفاصيل نموذج التسليم/الاستلام
         if related_record and hasattr(related_record, 'handover_type'):
@@ -1068,7 +1064,12 @@ def export_operation_excel(operation_id):
                                'ملاحظات', 'الموقع', 'تاريخ الإنشاء', 'أنشئ بواسطة', 'مصدر الإنشاء', 'رابط النموذج']
             
             for col_num, header in enumerate(handover_headers, 1):
-                ws4.cell(row=1, column=col_num, value=header)
+                cell = ws4.cell(row=1, column=col_num, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = alignment
+                cell.border = border
+                ws4.column_dimensions[cell.column_letter].width = 15
             
             # إنشاء رابط النموذج
             from flask import request
