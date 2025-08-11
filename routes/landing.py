@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template
 from models import Employee, Vehicle, Department, User, Salary
 
-landing_bp = Blueprint('landing', __name__, url_prefix='/landing')
+landing_bp = Blueprint('landing', __name__)
 
-@landing_bp.route('/')
+@landing_bp.route('/nuzum')
 def index():
     """صفحة هبوط نظام نُظم - عرض المواصفات والإمكانيات"""
     
@@ -163,17 +163,22 @@ def index():
                          features=features, 
                          advantages=advantages)
 
-@landing_bp.route('/features')
+@landing_bp.route('/nuzum/features')
 def features():
     """صفحة تفصيلية للميزات"""
     return render_template('landing/features.html')
 
-@landing_bp.route('/pricing') 
+@landing_bp.route('/nuzum/pricing') 
 def pricing():
     """صفحة الأسعار والباقات"""
     return render_template('landing/pricing.html')
 
-@landing_bp.route('/contact')
+@landing_bp.route('/nuzum/contact')
 def contact():
     """صفحة التواصل"""
     return render_template('landing/contact.html')
+
+@landing_bp.route('/nuzum/demo')
+def demo():
+    """صفحة عرض توضيحي"""
+    return render_template('landing/demo.html')

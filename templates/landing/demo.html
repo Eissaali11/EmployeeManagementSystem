@@ -1,0 +1,83 @@
+{% extends "landing/layout.html" %}
+
+{% block title %}عرض توضيحي - نُظم{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 text-center">
+            <h1 class="display-4 fw-bold text-primary mb-4">عرض توضيحي لنظام نُظم</h1>
+            <p class="lead text-muted mb-5">جرب النظام مجاناً واكتشف كيف يمكن لنُظم تحويل طريقة إدارة مؤسستك</p>
+            
+            <div class="alert alert-info mb-5">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>ملاحظة:</strong> العرض التوضيحي متاح بحساب تجريبي محدود الصلاحيات لاستكشاف الميزات الأساسية
+            </div>
+            
+            <div class="row mb-5">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-shield text-primary fs-1 mb-3"></i>
+                            <h5 class="card-title">حساب مدير النظام</h5>
+                            <p class="card-text text-muted">وصول كامل لجميع الميزات والإعدادات</p>
+                            <a href="/login" class="btn btn-primary">دخول كمدير</a>
+                            <small class="d-block text-muted mt-2">admin@demo.com / demo123</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user text-success fs-1 mb-3"></i>
+                            <h5 class="card-title">حساب موظف</h5>
+                            <p class="card-text text-muted">وصول محدود للميزات المخصصة للموظفين</p>
+                            <a href="/login" class="btn btn-success">دخول كموظف</a>
+                            <small class="d-block text-muted mt-2">employee@demo.com / demo123</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-5">
+                <h3 class="mb-4">ما يمكنك تجربته في العرض التوضيحي:</h3>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users text-primary fs-3 mb-2"></i>
+                                <h6>إدارة الموظفين</h6>
+                                <small class="text-muted">إضافة وتعديل بيانات الموظفين</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-car text-primary fs-3 mb-2"></i>
+                                <h6>إدارة المركبات</h6>
+                                <small class="text-muted">تسجيل وتتبع المركبات</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-bar text-primary fs-3 mb-2"></i>
+                                <h6>التقارير</h6>
+                                <small class="text-muted">تقارير PDF وExcel</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>تنبيه:</strong> البيانات في العرض التوضيحي هي بيانات وهمية وتتم إعادة تعيينها دورياً
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

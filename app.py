@@ -394,9 +394,9 @@ with app.app_context():
     app.register_blueprint(device_assignment_bp, url_prefix='/device-assignment')
     app.register_blueprint(vehicle_operations_bp, url_prefix='/vehicle-operations')
     
-    # استيراد وتسجيل مسار صفحة الهبوط
+    # استيراد وتسجيل مسار صفحة الهبوط - مسار منفصل عن النظام
     from routes.landing import landing_bp
-    app.register_blueprint(landing_bp, url_prefix='/landing')
+    app.register_blueprint(landing_bp)
 
     # إضافة route لخدمة الصور من مجلد uploads
     @app.route('/uploads/<path:filename>')
