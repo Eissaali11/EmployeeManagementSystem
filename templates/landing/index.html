@@ -1,0 +1,415 @@
+{% extends "layout.html" %}
+
+{% block title %}نُظم - نظام إدارة شامل للموظفين والمركبات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none"><polygon fill="%23ffffff20" points="1000,100 1000,0 0,100"/></svg>') no-repeat;
+        background-size: cover;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .hero-subtitle {
+        font-size: 1.4rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+    
+    .stats-section {
+        background: #f8f9fa;
+        padding: 60px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 30px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1e3a5c;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    .features-section {
+        padding: 80px 0;
+        background: white;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 40px;
+        border: 1px solid #f1f3f4;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        border-color: #1e3a5c;
+    }
+    
+    .feature-icon {
+        background: linear-gradient(135deg, #1e3a5c, #2c5282);
+        color: white;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 2rem;
+    }
+    
+    .feature-title {
+        color: #1e3a5c;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .feature-description {
+        color: #6c757d;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    .capabilities-list {
+        text-align: right;
+        list-style: none;
+        padding: 0;
+    }
+    
+    .capabilities-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f3f4;
+        color: #495057;
+        position: relative;
+        padding-right: 25px;
+    }
+    
+    .capabilities-list li:before {
+        content: '✓';
+        color: #28a745;
+        font-weight: bold;
+        position: absolute;
+        right: 0;
+    }
+    
+    .advantages-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .advantage-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px 25px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+        margin-bottom: 30px;
+        height: 100%;
+    }
+    
+    .advantage-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .advantage-icon {
+        color: #1e3a5c;
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+    
+    .advantage-title {
+        color: #1e3a5c;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .advantage-description {
+        color: #6c757d;
+        line-height: 1.6;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+    
+    .cta-title {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+    
+    .cta-button {
+        background: white;
+        color: #28a745;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .cta-button:hover {
+        transform: scale(1.05);
+        color: #20c997;
+        text-decoration: none;
+    }
+    
+    .section-title {
+        text-align: center;
+        color: #1e3a5c;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    
+    .section-title:after {
+        content: '';
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(135deg, #1e3a5c, #2c5282);
+        display: block;
+        margin: 15px auto;
+        border-radius: 2px;
+    }
+
+    /* تحسينات الاستجابة */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+        }
+        
+        .feature-card {
+            padding: 30px 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="container">
+            <h1 class="hero-title">نُظم</h1>
+            <p class="hero-subtitle">نظام إدارة شامل للموظفين والمركبات والعمليات الإدارية</p>
+            <p class="lead">الحل المتكامل لإدارة الموارد البشرية وأسطول المركبات مع واجهة عربية احترافية</p>
+            <div class="mt-4">
+                <a href="#features" class="btn btn-light btn-lg mx-2">استكشف الميزات</a>
+                <a href="/login" class="btn btn-outline-light btn-lg mx-2">تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات النظام -->
+<div class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.employees }}</div>
+                    <div class="stat-label">موظف مسجل</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.vehicles }}</div>
+                    <div class="stat-label">مركبة</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.departments }}</div>
+                    <div class="stat-label">قسم</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.users }}</div>
+                    <div class="stat-label">مستخدم نشط</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.salary_records }}</div>
+                    <div class="stat-label">سجل راتب</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">نموذج متكامل</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ميزات النظام -->
+<div class="features-section" id="features">
+    <div class="container">
+        <h2 class="section-title">ميزات النظام الشاملة</h2>
+        <div class="row">
+            {% for feature in features %}
+            <div class="col-lg-6 col-md-12">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="{{ feature.icon }}"></i>
+                    </div>
+                    <h3 class="feature-title">{{ feature.title }}</h3>
+                    <p class="feature-description">{{ feature.description }}</p>
+                    <ul class="capabilities-list">
+                        {% for capability in feature.capabilities %}
+                        <li>{{ capability }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- المزايا التنافسية -->
+<div class="advantages-section">
+    <div class="container">
+        <h2 class="section-title">المزايا التنافسية</h2>
+        <div class="row">
+            {% for advantage in advantages %}
+            <div class="col-lg-4 col-md-6">
+                <div class="advantage-card">
+                    <div class="advantage-icon">
+                        <i class="{{ advantage.icon }}"></i>
+                    </div>
+                    <h4 class="advantage-title">{{ advantage.title }}</h4>
+                    <p class="advantage-description">{{ advantage.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- دعوة للعمل -->
+<div class="cta-section">
+    <div class="container">
+        <h2 class="cta-title">ابدأ مع نُظم اليوم</h2>
+        <p class="lead mb-4">انضم إلى المؤسسات التي تثق في نُظم لإدارة عملياتها</p>
+        <a href="/login" class="cta-button">تسجيل الدخول الآن</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // إضافة تأثيرات تفاعلية
+    document.addEventListener('DOMContentLoaded', function() {
+        // تأثير العد التصاعدي للإحصائيات
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(stat => {
+            const targetNumber = parseInt(stat.textContent);
+            let currentNumber = 0;
+            const increment = targetNumber / 50;
+            
+            const timer = setInterval(() => {
+                currentNumber += increment;
+                if (currentNumber >= targetNumber) {
+                    stat.textContent = targetNumber;
+                    clearInterval(timer);
+                } else {
+                    stat.textContent = Math.floor(currentNumber);
+                }
+            }, 20);
+        });
+        
+        // تأثير الظهور التدريجي للبطاقات
+        const cards = document.querySelectorAll('.feature-card, .advantage-card, .stat-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+        
+        cards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}
