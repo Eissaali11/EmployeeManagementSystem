@@ -1044,12 +1044,12 @@ def export_operation_excel(operation_id):
                     employee.mobile or '',
                     getattr(employee, 'mobilePersonal', '') or '',
                     getattr(employee, 'mobile_imei', '') or '',
-                    employee.department.name if employee.department else '',
+                    employee.departments[0].name if employee.departments else '',
                     employee.job_title or '',
                     employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '',
                     employee.status or '',
                     employee.email or '',
-                    getattr(employee, 'address', '') or getattr(employee, 'location', '') or '',
+                    getattr(employee, 'location', '') or '',
                     employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '',
                     employee.nationality or ''
                 ]
