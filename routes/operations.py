@@ -886,22 +886,20 @@ def export_operation_excel(operation_id):
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             
-            # شيت 1: معلومات العملية الأساسية
-            operation_data = []
-            operation_info = {
-                'رقم العملية': operation.id,
-                'نوع العملية': get_operation_type_name(operation.operation_type),
-                'العنوان': operation.title or '',
-                'الوصف': operation.description or '',
-                'الحالة': get_status_name(operation.status),
-                'الأولوية': get_priority_name(operation.priority),
-                'تاريخ الطلب': operation.requested_at.strftime('%Y-%m-%d %H:%M:%S') if operation.requested_at else '',
-                'تاريخ المراجعة': operation.reviewed_at.strftime('%Y-%m-%d %H:%M:%S') if operation.reviewed_at else '',
-                'طالب العملية': operation.requested_by_user.name if operation.requested_by_user else '',
-                'مراجع العملية': operation.reviewed_by_user.name if operation.reviewed_by_user else '',
-                'ملاحظات المراجعة': operation.review_notes or ''
+            # شيت 1: معلومات العملية الأساسية (دائماً موجود)
+            operation_data = {
+                'رقم العملية': [operation.id],
+                'نوع العملية': [get_operation_type_name(operation.operation_type)],
+                'العنوان': [operation.title or ''],
+                'الوصف': [operation.description or ''],
+                'الحالة': [get_status_name(operation.status)],
+                'الأولوية': [get_priority_name(operation.priority)],
+                'تاريخ الطلب': [operation.requested_at.strftime('%Y-%m-%d %H:%M:%S') if operation.requested_at else ''],
+                'تاريخ المراجعة': [operation.reviewed_at.strftime('%Y-%m-%d %H:%M:%S') if operation.reviewed_at else ''],
+                'طالب العملية': [operation.requested_by_user.name if operation.requested_by_user else ''],
+                'مراجع العملية': [operation.reviewed_by_user.name if operation.reviewed_by_user else ''],
+                'ملاحظات المراجعة': [operation.review_notes or '']
             }
-            operation_data.append(operation_info)
             
             operation_df = pd.DataFrame(operation_data)
             operation_df.to_excel(writer, sheet_name='معلومات العملية', index=False)
@@ -909,21 +907,19 @@ def export_operation_excel(operation_id):
             # شيت 2: بيانات المركبة
             if operation.vehicle:
                 vehicle = operation.vehicle
-                vehicle_data = []
-                vehicle_info = {
-                    'رقم اللوحة': vehicle.plate_number or '',
-                    'نوع المركبة': vehicle.vehicle_type or '',
-                    'الماركة': vehicle.brand or '',
-                    'الموديل': vehicle.model or '',
-                    'السنة': vehicle.year or '',
-                    'اللون': vehicle.color or '',
-                    'رقم الشاصي': vehicle.chassis_number or '',
-                    'رقم المحرك': vehicle.engine_number or '',
-                    'الحالة': vehicle.status or '',
-                    'القسم': vehicle.department.name if vehicle.department else '',
-                    'ملاحظات': vehicle.notes or ''
+                vehicle_data = {
+                    'رقم اللوحة': [vehicle.plate_number or ''],
+                    'نوع المركبة': [vehicle.vehicle_type or ''],
+                    'الماركة': [vehicle.brand or ''],
+                    'الموديل': [vehicle.model or ''],
+                    'السنة': [vehicle.year or ''],
+                    'اللون': [vehicle.color or ''],
+                    'رقم الشاصي': [vehicle.chassis_number or ''],
+                    'رقم المحرك': [vehicle.engine_number or ''],
+                    'الحالة': [vehicle.status or ''],
+                    'القسم': [vehicle.department.name if vehicle.department else ''],
+                    'ملاحظات': [vehicle.notes or '']
                 }
-                vehicle_data.append(vehicle_info)
                 
                 vehicle_df = pd.DataFrame(vehicle_data)
                 vehicle_df.to_excel(writer, sheet_name='بيانات المركبة', index=False)
@@ -959,78 +955,72 @@ def export_operation_excel(operation_id):
                         ).first()
             
             if employee:
-                driver_info = {
-                    'الاسم': employee.name or '',
-                    'رقم الهوية': employee.national_id or '',
-                    'رقم الجوال': employee.phone or '',
-                    'القسم': employee.department.name if employee.department else '',
-                    'المسمى الوظيفي': employee.position or '',
-                    'تاريخ التوظيف': employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else '',
-                    'الحالة': employee.status or '',
-                    'البريد الإلكتروني': employee.email or '',
-                    'العنوان': employee.address or '',
-                    'تاريخ الميلاد': employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '',
-                    'الجنسية': employee.nationality or ''
+                driver_data = {
+                    'الاسم': [employee.name or ''],
+                    'رقم الهوية': [employee.national_id or ''],
+                    'رقم الجوال': [employee.phone or ''],
+                    'القسم': [employee.department.name if employee.department else ''],
+                    'المسمى الوظيفي': [employee.position or ''],
+                    'تاريخ التوظيف': [employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else ''],
+                    'الحالة': [employee.status or ''],
+                    'البريد الإلكتروني': [employee.email or ''],
+                    'العنوان': [employee.address or ''],
+                    'تاريخ الميلاد': [employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else ''],
+                    'الجنسية': [employee.nationality or '']
                 }
-                driver_data.append(driver_info)
+                driver_df = pd.DataFrame(driver_data)
+                driver_df.to_excel(writer, sheet_name='بيانات السائق', index=False)
             elif current_driver_info:
-                driver_info = {
-                    'الاسم': current_driver_info.get('name', ''),
-                    'رقم الهوية': current_driver_info.get('residency_number', ''),
-                    'رقم الجوال': current_driver_info.get('phone', ''),
-                    'القسم': '',
-                    'المسمى الوظيفي': '',
-                    'تاريخ التوظيف': '',
-                    'الحالة': '',
-                    'البريد الإلكتروني': '',
-                    'العنوان': '',
-                    'تاريخ الميلاد': '',
-                    'الجنسية': ''
+                driver_data = {
+                    'الاسم': [current_driver_info.get('name', '')],
+                    'رقم الهوية': [current_driver_info.get('residency_number', '')],
+                    'رقم الجوال': [current_driver_info.get('phone', '')],
+                    'القسم': [''],
+                    'المسمى الوظيفي': [''],
+                    'تاريخ التوظيف': [''],
+                    'الحالة': [''],
+                    'البريد الإلكتروني': [''],
+                    'العنوان': [''],
+                    'تاريخ الميلاد': [''],
+                    'الجنسية': ['']
                 }
-                driver_data.append(driver_info)
-            
-            if driver_data:
                 driver_df = pd.DataFrame(driver_data)
                 driver_df.to_excel(writer, sheet_name='بيانات السائق', index=False)
             
             # شيت 4: تفاصيل نموذج التسليم/الاستلام
             if related_record and hasattr(related_record, 'handover_type'):
-                handover_data = []
-                handover_info = {
-                    'نوع العملية': 'تسليم' if related_record.handover_type == 'delivery' else 'استلام',
-                    'تاريخ العملية': related_record.handover_date.strftime('%Y-%m-%d %H:%M:%S') if related_record.handover_date else '',
-                    'اسم الشخص': related_record.person_name or '',
-                    'رقم الجوال': related_record.driver_phone_number or '',
-                    'رقم الهوية': related_record.driver_residency_number or '',
-                    'قراءة العداد': related_record.mileage_reading or '',
-                    'مستوى الوقود': related_record.fuel_level or '',
-                    'حالة المركبة': related_record.vehicle_condition or '',
-                    'ملاحظات': related_record.notes or '',
-                    'الموقع': related_record.location or '',
-                    'تاريخ الإنشاء': related_record.created_at.strftime('%Y-%m-%d %H:%M:%S') if related_record.created_at else '',
-                    'أنشئ بواسطة': related_record.created_by_user.name if related_record.created_by_user else '',
-                    'مصدر الإنشاء': 'موبايل' if related_record.created_via_mobile else 'ويب'
+                handover_data = {
+                    'نوع العملية': ['تسليم' if related_record.handover_type == 'delivery' else 'استلام'],
+                    'تاريخ العملية': [related_record.handover_date.strftime('%Y-%m-%d %H:%M:%S') if related_record.handover_date else ''],
+                    'اسم الشخص': [related_record.person_name or ''],
+                    'رقم الجوال': [related_record.driver_phone_number or ''],
+                    'رقم الهوية': [related_record.driver_residency_number or ''],
+                    'قراءة العداد': [str(related_record.mileage_reading) if related_record.mileage_reading else ''],
+                    'مستوى الوقود': [related_record.fuel_level or ''],
+                    'حالة المركبة': [related_record.vehicle_condition or ''],
+                    'ملاحظات': [related_record.notes or ''],
+                    'الموقع': [related_record.location or ''],
+                    'تاريخ الإنشاء': [related_record.created_at.strftime('%Y-%m-%d %H:%M:%S') if related_record.created_at else ''],
+                    'أنشئ بواسطة': [related_record.created_by_user.name if related_record.created_by_user else ''],
+                    'مصدر الإنشاء': ['موبايل' if getattr(related_record, 'created_via_mobile', False) else 'ويب']
                 }
-                handover_data.append(handover_info)
                 
                 handover_df = pd.DataFrame(handover_data)
                 handover_df.to_excel(writer, sheet_name='نموذج التسليم-الاستلام', index=False)
             
             # شيت 5: سجلات الورشة (إذا كانت متوفرة)
             if operation.operation_type == 'workshop_record' and related_record:
-                workshop_data = []
-                workshop_info = {
-                    'نوع الخدمة': related_record.service_type or '',
-                    'وصف المشكلة': related_record.problem_description or '',
-                    'الحل المطبق': related_record.solution_applied or '',
-                    'التكلفة': related_record.cost or '',
-                    'تاريخ الدخول': related_record.entry_date.strftime('%Y-%m-%d') if related_record.entry_date else '',
-                    'تاريخ الخروج': related_record.exit_date.strftime('%Y-%m-%d') if related_record.exit_date else '',
-                    'الحالة': related_record.status or '',
-                    'الفني المسؤول': related_record.technician_name or '',
-                    'ملاحظات': related_record.notes or ''
+                workshop_data = {
+                    'نوع الخدمة': [getattr(related_record, 'service_type', '') or ''],
+                    'وصف المشكلة': [getattr(related_record, 'problem_description', '') or ''],
+                    'الحل المطبق': [getattr(related_record, 'solution_applied', '') or ''],
+                    'التكلفة': [str(getattr(related_record, 'cost', '')) if getattr(related_record, 'cost', None) else ''],
+                    'تاريخ الدخول': [related_record.entry_date.strftime('%Y-%m-%d') if getattr(related_record, 'entry_date', None) else ''],
+                    'تاريخ الخروج': [related_record.exit_date.strftime('%Y-%m-%d') if getattr(related_record, 'exit_date', None) else ''],
+                    'الحالة': [getattr(related_record, 'status', '') or ''],
+                    'الفني المسؤول': [getattr(related_record, 'technician_name', '') or ''],
+                    'ملاحظات': [getattr(related_record, 'notes', '') or '']
                 }
-                workshop_data.append(workshop_info)
                 
                 workshop_df = pd.DataFrame(workshop_data)
                 workshop_df.to_excel(writer, sheet_name='سجل الورشة', index=False)
