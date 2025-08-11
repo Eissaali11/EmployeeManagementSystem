@@ -315,8 +315,31 @@
                 <div class="col-md-4">
                     <div class="employee-photo-section">
                         {% if employee.profile_image %}
-                            <img src="{{ url_for('static', filename='uploads/employees/' + employee.profile_image) }}" 
-                                 alt="{{ employee.name }}" class="employee-photo">
+                            {% if employee.profile_image.startswith('uploads/') %}
+                                <img src="{{ url_for('static', filename=employee.profile_image) }}" 
+                                     alt="{{ employee.name }}" class="employee-photo"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + employee.profile_image) }}" 
+                                     alt="{{ employee.name }}" class="employee-photo"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% endif %}
+                            <div class="default-photo" style="display:none;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        {% elif employee.national_id_image %}
+                            {% if employee.national_id_image.startswith('uploads/') %}
+                                <img src="{{ url_for('static', filename=employee.national_id_image) }}" 
+                                     alt="{{ employee.name }}" class="employee-photo"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='uploads/' + employee.national_id_image) }}" 
+                                     alt="{{ employee.name }}" class="employee-photo"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            {% endif %}
+                            <div class="default-photo" style="display:none;">
+                                <i class="fas fa-user"></i>
+                            </div>
                         {% else %}
                             <div class="default-photo">
                                 <i class="fas fa-user"></i>
