@@ -1018,12 +1018,14 @@ function quickApprove(operationId) {
 
 function quickReject(operationId) {
     currentOperationId = operationId;
-    $('#rejectModal').modal('show');
+    const rejectModal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    rejectModal.show();
 }
 
 function deleteOperation(operationId) {
     currentOperationId = operationId;
-    $('#deleteModal').modal('show');
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
 }
 
 function confirmDelete() {
@@ -1039,7 +1041,8 @@ function confirmDelete() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            $('#deleteModal').modal('hide');
+            const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+            deleteModal.hide();
             showToast('تم حذف العملية بنجاح', 'success');
             setTimeout(() => {
                 window.location.href = '/operations/';
@@ -1067,7 +1070,8 @@ document.getElementById('approveForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            $('#approveModal').modal('hide');
+            const approveModal = bootstrap.Modal.getInstance(document.getElementById('approveModal'));
+            approveModal.hide();
             showToast('تمت الموافقة على العملية بنجاح', 'success');
             setTimeout(() => location.reload(), 1500);
         } else {
@@ -1093,7 +1097,8 @@ document.getElementById('rejectForm').addEventListener('submit', function(e) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            $('#rejectModal').modal('hide');
+            const rejectModal = bootstrap.Modal.getInstance(document.getElementById('rejectModal'));
+            rejectModal.hide();
             showToast('تم رفض العملية', 'success');
             setTimeout(() => location.reload(), 1500);
         } else {
