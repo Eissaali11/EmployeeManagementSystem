@@ -29,6 +29,52 @@ import json
 
 documents_bp = Blueprint('documents', __name__)
 
+@documents_bp.route('/update_expiry_date/<int:document_id>', methods=['POST'])
+@login_required
+def update_expiry_date(document_id):
+    """تحديث تاريخ انتهاء الوثيقة"""
+    try:
+        document = Document.query.get_or_404(document_id)
+        
+        # الحصول على التاريخ الجديد من الطلب
+        new_expiry_date = request.form.get('new_expiry_date')
+        
+        if not new_expiry_date:
+            flash('يجب إدخال تاريخ الانتهاء الجديد', 'error')
+            return redirect(request.referrer or url_for('documents.expiring'))
+        
+        # تحويل التاريخ من string إلى date object
+        try:
+            new_date = datetime.strptime(new_expiry_date, '%Y-%m-%d').date()
+        except ValueError:
+            flash('تنسيق التاريخ غير صحيح', 'error')
+            return redirect(request.referrer or url_for('documents.expiring'))
+        
+        # حفظ التاريخ القديم للسجل
+        old_expiry_date = document.expiry_date
+        
+        # تحديث التاريخ
+        document.expiry_date = new_date
+        document.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # تسجيل العملية في سجل النشاط
+        log_activity(
+            action='update',
+            entity_type='document',
+            entity_id=document_id,
+            details=f'تم تحديث تاريخ انتهاء الوثيقة من {old_expiry_date} إلى {new_date} للموظف {document.employee.name}'
+        )
+        
+        flash('تم تحديث تاريخ انتهاء الوثيقة بنجاح', 'success')
+        return redirect(request.referrer or url_for('documents.expiring'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'حدث خطأ أثناء تحديث تاريخ الانتهاء: {str(e)}', 'error')
+        return redirect(request.referrer or url_for('documents.expiring'))
+
 @documents_bp.route('/delete/<int:document_id>', methods=['GET', 'POST'])
 @login_required
 def delete_document(document_id):

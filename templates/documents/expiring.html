@@ -267,6 +267,9 @@
                             <td>{{ document.notes or '-' }}</td>
                             <td>
                                 <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-primary" title="تحديث تاريخ الانتهاء" onclick="updateExpiryDate({{ document.id }}, '{{ document.expiry_date }}')">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </button>
                                     <a href="{{ url_for('documents.create') }}" class="btn btn-sm btn-success" title="تجديد">
                                         <i class="fas fa-sync-alt"></i>
                                     </a>
@@ -296,6 +299,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // إظهار/إخفاء حقل اختيار الأيام بناءً على نوع الوثائق المطلوبة
@@ -350,5 +354,43 @@
                 console.error('Error fetching document statistics:', error);
             });
     });
+
+    // دالة تحديث تاريخ انتهاء الوثيقة
+    function updateExpiryDate(documentId, currentDate) {
+        // إظهار نافذة التأكيد مع حقل إدخال التاريخ
+        Swal.fire({
+            title: 'تحديث تاريخ الانتهاء',
+            html: '<input type="date" id="newExpiryDate" class="swal2-input" value="' + currentDate + '" required>',
+            showCancelButton: true,
+            confirmButtonText: 'تحديث',
+            cancelButtonText: 'إلغاء',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            preConfirm: () => {
+                const newDate = document.getElementById('newExpiryDate').value;
+                if (!newDate) {
+                    Swal.showValidationMessage('يجب إدخال تاريخ الانتهاء الجديد');
+                    return false;
+                }
+                return newDate;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // إنشاء نموذج لإرسال البيانات
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ url_for("documents.update_expiry_date", document_id=0) }}'.replace('0', documentId);
+                
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'new_expiry_date';
+                input.value = result.value;
+                
+                form.appendChild(input);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
 </script>
 {% endblock %}
