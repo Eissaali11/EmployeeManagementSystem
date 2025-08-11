@@ -1790,6 +1790,7 @@
                             <form action="{{ url_for('vehicles.confirm_delete_handovers', vehicle_id=vehicle.id) }}" 
                                   method="post" 
                                   id="handover-delete-form">
+                                {{ csrf_token() }}
                                 <div class="mb-3 d-flex justify-content-end">
                                     <button type="submit" 
                                             class="btn btn-sm btn-danger" 
