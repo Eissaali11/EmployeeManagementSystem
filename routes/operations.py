@@ -867,3 +867,215 @@ def api_operations_count():
         'under_review': under_review_count,
         'unread_notifications': get_unread_notifications_count(current_user.id)
     })
+
+@operations_bp.route('/<int:operation_id>/export-excel')
+@login_required
+def export_operation_excel(operation_id):
+    """تصدير جميع بيانات العملية إلى Excel"""
+    
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    try:
+        # جلب العملية والبيانات المرتبطة
+        operation = OperationRequest.query.get_or_404(operation_id)
+        related_record = operation.get_related_record()
+        
+        # إنشاء ملف Excel
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            
+            # شيت 1: معلومات العملية الأساسية
+            operation_data = []
+            operation_info = {
+                'رقم العملية': operation.id,
+                'نوع العملية': get_operation_type_name(operation.operation_type),
+                'العنوان': operation.title or '',
+                'الوصف': operation.description or '',
+                'الحالة': get_status_name(operation.status),
+                'الأولوية': get_priority_name(operation.priority),
+                'تاريخ الطلب': operation.requested_at.strftime('%Y-%m-%d %H:%M:%S') if operation.requested_at else '',
+                'تاريخ المراجعة': operation.reviewed_at.strftime('%Y-%m-%d %H:%M:%S') if operation.reviewed_at else '',
+                'طالب العملية': operation.requested_by_user.name if operation.requested_by_user else '',
+                'مراجع العملية': operation.reviewed_by_user.name if operation.reviewed_by_user else '',
+                'ملاحظات المراجعة': operation.review_notes or ''
+            }
+            operation_data.append(operation_info)
+            
+            operation_df = pd.DataFrame(operation_data)
+            operation_df.to_excel(writer, sheet_name='معلومات العملية', index=False)
+            
+            # شيت 2: بيانات المركبة
+            if operation.vehicle:
+                vehicle = operation.vehicle
+                vehicle_data = []
+                vehicle_info = {
+                    'رقم اللوحة': vehicle.plate_number or '',
+                    'نوع المركبة': vehicle.vehicle_type or '',
+                    'الماركة': vehicle.brand or '',
+                    'الموديل': vehicle.model or '',
+                    'السنة': vehicle.year or '',
+                    'اللون': vehicle.color or '',
+                    'رقم الشاصي': vehicle.chassis_number or '',
+                    'رقم المحرك': vehicle.engine_number or '',
+                    'الحالة': vehicle.status or '',
+                    'القسم': vehicle.department.name if vehicle.department else '',
+                    'ملاحظات': vehicle.notes or ''
+                }
+                vehicle_data.append(vehicle_info)
+                
+                vehicle_df = pd.DataFrame(vehicle_data)
+                vehicle_df.to_excel(writer, sheet_name='بيانات المركبة', index=False)
+            
+            # شيت 3: بيانات السائق/الموظف
+            driver_data = []
+            employee = None
+            current_driver_info = None
+            
+            # البحث عن السائق من آخر تسليم
+            if operation.vehicle_id:
+                last_handover = VehicleHandover.query.filter_by(
+                    vehicle_id=operation.vehicle_id,
+                    handover_type='delivery'
+                ).order_by(VehicleHandover.handover_date.desc()).first()
+                
+                if last_handover:
+                    current_driver_info = {
+                        'name': last_handover.person_name,
+                        'phone': last_handover.driver_phone_number,
+                        'residency_number': last_handover.driver_residency_number
+                    }
+                    
+                    # البحث عن الموظف في النظام
+                    if last_handover.driver_residency_number:
+                        employee = Employee.query.filter_by(
+                            national_id=last_handover.driver_residency_number
+                        ).first()
+                    
+                    if not employee and last_handover.person_name:
+                        employee = Employee.query.filter_by(
+                            name=last_handover.person_name
+                        ).first()
+            
+            if employee:
+                driver_info = {
+                    'الاسم': employee.name or '',
+                    'رقم الهوية': employee.national_id or '',
+                    'رقم الجوال': employee.phone or '',
+                    'القسم': employee.department.name if employee.department else '',
+                    'المسمى الوظيفي': employee.position or '',
+                    'تاريخ التوظيف': employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else '',
+                    'الحالة': employee.status or '',
+                    'البريد الإلكتروني': employee.email or '',
+                    'العنوان': employee.address or '',
+                    'تاريخ الميلاد': employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '',
+                    'الجنسية': employee.nationality or ''
+                }
+                driver_data.append(driver_info)
+            elif current_driver_info:
+                driver_info = {
+                    'الاسم': current_driver_info.get('name', ''),
+                    'رقم الهوية': current_driver_info.get('residency_number', ''),
+                    'رقم الجوال': current_driver_info.get('phone', ''),
+                    'القسم': '',
+                    'المسمى الوظيفي': '',
+                    'تاريخ التوظيف': '',
+                    'الحالة': '',
+                    'البريد الإلكتروني': '',
+                    'العنوان': '',
+                    'تاريخ الميلاد': '',
+                    'الجنسية': ''
+                }
+                driver_data.append(driver_info)
+            
+            if driver_data:
+                driver_df = pd.DataFrame(driver_data)
+                driver_df.to_excel(writer, sheet_name='بيانات السائق', index=False)
+            
+            # شيت 4: تفاصيل نموذج التسليم/الاستلام
+            if related_record and hasattr(related_record, 'handover_type'):
+                handover_data = []
+                handover_info = {
+                    'نوع العملية': 'تسليم' if related_record.handover_type == 'delivery' else 'استلام',
+                    'تاريخ العملية': related_record.handover_date.strftime('%Y-%m-%d %H:%M:%S') if related_record.handover_date else '',
+                    'اسم الشخص': related_record.person_name or '',
+                    'رقم الجوال': related_record.driver_phone_number or '',
+                    'رقم الهوية': related_record.driver_residency_number or '',
+                    'قراءة العداد': related_record.mileage_reading or '',
+                    'مستوى الوقود': related_record.fuel_level or '',
+                    'حالة المركبة': related_record.vehicle_condition or '',
+                    'ملاحظات': related_record.notes or '',
+                    'الموقع': related_record.location or '',
+                    'تاريخ الإنشاء': related_record.created_at.strftime('%Y-%m-%d %H:%M:%S') if related_record.created_at else '',
+                    'أنشئ بواسطة': related_record.created_by_user.name if related_record.created_by_user else '',
+                    'مصدر الإنشاء': 'موبايل' if related_record.created_via_mobile else 'ويب'
+                }
+                handover_data.append(handover_info)
+                
+                handover_df = pd.DataFrame(handover_data)
+                handover_df.to_excel(writer, sheet_name='نموذج التسليم-الاستلام', index=False)
+            
+            # شيت 5: سجلات الورشة (إذا كانت متوفرة)
+            if operation.operation_type == 'workshop_record' and related_record:
+                workshop_data = []
+                workshop_info = {
+                    'نوع الخدمة': related_record.service_type or '',
+                    'وصف المشكلة': related_record.problem_description or '',
+                    'الحل المطبق': related_record.solution_applied or '',
+                    'التكلفة': related_record.cost or '',
+                    'تاريخ الدخول': related_record.entry_date.strftime('%Y-%m-%d') if related_record.entry_date else '',
+                    'تاريخ الخروج': related_record.exit_date.strftime('%Y-%m-%d') if related_record.exit_date else '',
+                    'الحالة': related_record.status or '',
+                    'الفني المسؤول': related_record.technician_name or '',
+                    'ملاحظات': related_record.notes or ''
+                }
+                workshop_data.append(workshop_info)
+                
+                workshop_df = pd.DataFrame(workshop_data)
+                workshop_df.to_excel(writer, sheet_name='سجل الورشة', index=False)
+        
+        output.seek(0)
+        
+        # إنشاء اسم الملف
+        filename = f"operation_details_{operation.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        # تسجيل العملية
+        log_audit(
+            user_id=current_user.id,
+            action='export',
+            table_name='operation_request',
+            record_id=operation_id,
+            details=f'تصدير تفاصيل العملية {operation_id} إلى Excel'
+        )
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        flash(f'خطأ في تصدير البيانات: {str(e)}', 'danger')
+        return redirect(url_for('operations.view_operation', operation_id=operation_id))
+
+def get_status_name(status):
+    """تحويل حالة العملية إلى النص العربي"""
+    status_names = {
+        'pending': 'معلقة',
+        'under_review': 'تحت المراجعة',
+        'approved': 'موافق عليها',
+        'rejected': 'مرفوضة'
+    }
+    return status_names.get(status, status)
+
+def get_priority_name(priority):
+    """تحويل أولوية العملية إلى النص العربي"""
+    priority_names = {
+        'urgent': 'عاجل',
+        'high': 'عالي',
+        'normal': 'عادي',
+        'low': 'منخفض'
+    }
+    return priority_names.get(priority, priority)

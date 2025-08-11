@@ -234,7 +234,12 @@ body {
                 <p class="mb-0 mt-2 opacity-75">{{ operation.title }}</p>
             </div>
             <div class="col-md-4 text-end">
-                <div class="d-flex flex-wrap justify-content-end">
+                <div class="d-flex flex-wrap justify-content-end align-items-center gap-2">
+                    <a href="{{ url_for('operations.export_operation_excel', operation_id=operation.id) }}" 
+                       class="action-btn bg-success text-white">
+                        <i class="fas fa-file-excel me-2"></i>تصدير Excel
+                    </a>
+                    
                     {% if operation.status == 'pending' %}
                         <span class="status-badge bg-warning text-dark">
                             <i class="fas fa-clock me-2"></i>معلقة
