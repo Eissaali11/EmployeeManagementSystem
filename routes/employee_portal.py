@@ -474,20 +474,120 @@ def my_attendance():
 @employee_portal_bp.route('/profile')
 @employee_login_required
 def my_profile():
-    """الملف الشخصي للموظف"""
+    """الملف الشخصي المحسن للموظف مع جميع البيانات"""
     employee_id = session.get('employee_id')
     employee = Employee.query.get_or_404(employee_id)
     
     # معلومات القسم
     department = Department.query.get(employee.department_id) if employee.department_id else None
     
-    # تنسيق التواريخ
-    employee.formatted_hire_date = employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد'
-    employee.formatted_birth_date = employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد'
+    # السيارات المخصصة للموظف
+    latest_handovers = db.session.query(
+        VehicleHandover.vehicle_id,
+        func.max(VehicleHandover.handover_date).label('latest_date')
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).group_by(VehicleHandover.vehicle_id).subquery()
     
-    return render_template('employee_portal/profile.html',
+    assigned_vehicles = db.session.query(Vehicle).join(
+        VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
+    ).join(
+        latest_handovers, 
+        and_(
+            VehicleHandover.vehicle_id == latest_handovers.c.vehicle_id,
+            VehicleHandover.handover_date == latest_handovers.c.latest_date
+        )
+    ).filter(
+        VehicleHandover.employee_id == employee_id,
+        VehicleHandover.handover_type == 'delivery'
+    ).all()
+    
+    # آخر 5 أيام حضور
+    recent_attendance = Attendance.query.filter_by(
+        employee_id=employee_id
+    ).order_by(Attendance.date.desc()).limit(5).all()
+    
+    # آخر 3 رواتب
+    salary_history = Salary.query.filter_by(
+        employee_id=employee_id
+    ).order_by(Salary.created_at.desc()).limit(3).all()
+    
+    # حالة الوثائق (فحص انتهاء الصلاحية)
+    from datetime import datetime, timedelta
+    warning_days = 30  # تحذير قبل 30 يوم
+    
+    documents_status = {
+        'id_expiry_warning': False,
+        'license_expiry_warning': False,
+        'passport_expiry_warning': False,
+        'id_expired': False,
+        'license_expired': False,
+        'passport_expired': False
+    }
+    
+    today = datetime.now().date()
+    warning_date = today + timedelta(days=warning_days)
+    
+    if employee.id_expiry_date:
+        if employee.id_expiry_date < today:
+            documents_status['id_expired'] = True
+        elif employee.id_expiry_date < warning_date:
+            documents_status['id_expiry_warning'] = True
+            
+    if employee.license_expiry_date:
+        if employee.license_expiry_date < today:
+            documents_status['license_expired'] = True
+        elif employee.license_expiry_date < warning_date:
+            documents_status['license_expiry_warning'] = True
+            
+    if employee.passport_expiry_date:
+        if employee.passport_expiry_date < today:
+            documents_status['passport_expired'] = True
+        elif employee.passport_expiry_date < warning_date:
+            documents_status['passport_expiry_warning'] = True
+    
+    # إحصائيات شاملة
+    stats = {
+        'total_vehicles': len(assigned_vehicles),
+        'total_handovers': VehicleHandover.query.filter_by(employee_id=employee_id).count(),
+        'present_days_recent': len([a for a in recent_attendance if a.status == 'present']),
+        'total_salary_payments': len(salary_history),
+        'years_of_service': 0,
+        'mobile_devices': 0
+    }
+    
+    # حساب سنوات الخدمة
+    if employee.hire_date:
+        years_of_service = (datetime.now().date() - employee.hire_date).days / 365.25
+        stats['years_of_service'] = round(years_of_service, 1)
+    elif employee.join_date:
+        years_of_service = (datetime.now().date() - employee.join_date).days / 365.25
+        stats['years_of_service'] = round(years_of_service, 1)
+    
+    # عد الأجهزة المحمولة المخصصة
+    from models import MobileDevice
+    mobile_devices_count = MobileDevice.query.filter_by(employee_id=employee_id).count()
+    stats['mobile_devices'] = mobile_devices_count
+    
+    # تنسيق التواريخ
+    formatted_dates = {
+        'hire_date': employee.hire_date.strftime('%Y-%m-%d') if employee.hire_date else (employee.join_date.strftime('%Y-%m-%d') if employee.join_date else 'غير محدد'),
+        'birth_date': employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else 'غير محدد',
+        'id_expiry': employee.id_expiry_date.strftime('%Y-%m-%d') if employee.id_expiry_date else 'غير محدد',
+        'license_expiry': employee.license_expiry_date.strftime('%Y-%m-%d') if employee.license_expiry_date else 'غير محدد',
+        'passport_expiry': employee.passport_expiry_date.strftime('%Y-%m-%d') if employee.passport_expiry_date else 'غير محدد'
+    }
+    
+    return render_template('employee_portal/profile_enhanced.html',
                          employee=employee,
-                         department=department)
+                         department=department,
+                         assigned_vehicles=assigned_vehicles,
+                         recent_attendance=recent_attendance,
+                         salary_history=salary_history,
+                         documents_status=documents_status,
+                         stats=stats,
+                         formatted_dates=formatted_dates)
 
 @employee_portal_bp.route('/api/attendance_chart/<int:year>')
 @employee_login_required
