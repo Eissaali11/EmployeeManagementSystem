@@ -907,10 +907,10 @@ body {
                     {% endif %}
                     
                     <!-- زر الحذف المطلوب -->
-                    <button class="delete-btn" onclick="deleteOperation({{ operation.id }})">
+                    <a href="{{ url_for('operations.delete_operation', id=operation.id) }}" class="delete-btn text-decoration-none">
                         <i class="fas fa-trash-alt me-2"></i>
                         حذف العملية
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -1022,11 +1022,7 @@ function quickReject(operationId) {
     rejectModal.show();
 }
 
-function deleteOperation(operationId) {
-    currentOperationId = operationId;
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    deleteModal.show();
-}
+// دالة الحذف غير مطلوبة بعد الآن لأننا نستخدم صفحة منفصلة
 
 function confirmDelete() {
     if (!currentOperationId) return;

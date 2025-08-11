@@ -714,40 +714,46 @@ def set_under_review(operation_id):
 
 
 
-@operations_bp.route('/<int:operation_id>/delete', methods=['POST'])
+@operations_bp.route('/<int:id>/delete', methods=['GET', 'POST'])
 @login_required
-def delete_operation(operation_id):
+def delete_operation(id):
     """حذف العملية"""
     
     if current_user.role != UserRole.ADMIN:
-        return jsonify({'success': False, 'message': 'غير مسموح لك بحذف العمليات'})
+        flash('غير مسموح لك بحذف العمليات', 'error')
+        return redirect(url_for('operations.operations_list'))
     
-    operation = OperationRequest.query.get_or_404(operation_id)
+    operation = OperationRequest.query.get_or_404(id)
     
+    if request.method == 'GET':
+        # عرض صفحة تأكيد الحذف
+        return render_template('operations/delete.html', operation=operation)
+    
+    # معالجة الحذف عند POST
     try:
         # تسجيل العملية قبل الحذف
         operation_title = operation.title
         operation_type = operation.operation_type
         
         # حذف الإشعارات المرتبطة بالعملية أولاً
-        notifications = OperationNotification.query.filter_by(operation_id=operation_id).all()
-        for notification in notifications:
-            db.session.delete(notification)
+        from models import Notification
+        Notification.query.filter_by(operation_id=id).delete()
         
         # حذف العملية
         db.session.delete(operation)
         db.session.commit()
         
         # تسجيل عملية الحذف
-        log_audit(current_user.id, 'delete', 'operation_request', operation_id, 
-                 f'تم حذف العملية: {operation_title} من النوع {operation_type}')
+        log_audit('delete', 'operation_request', id, f'تم حذف العملية: {operation_title} من النوع {operation_type}')
         
         flash('تم حذف العملية بنجاح', 'success')
-        return jsonify({'success': True, 'message': 'تم حذف العملية بنجاح'})
+        return redirect(url_for('operations.operations_list'))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'حدث خطأ أثناء الحذف: {str(e)}'})
+        current_app.logger.error(f"خطأ في حذف العملية #{id}: {str(e)}")
+        flash(f'حدث خطأ أثناء حذف العملية: {str(e)}', 'error')
+        return redirect(url_for('operations.view_operation', id=id))
 
 @operations_bp.route('/notifications')
 @login_required
