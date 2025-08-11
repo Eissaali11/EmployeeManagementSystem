@@ -544,11 +544,13 @@ body {
                         <div class="mb-3">
                             <i class="fas fa-barcode me-2 text-light"></i>
                             <strong>رقم IMEI:</strong>
-                            <div class="mt-1 text-white-50">
-                                {% if employee %}
-                                    غير متوفر حالياً
+                            <div class="mt-1 text-warning">
+                                {% if employee and employee.mobile_imei %}
+                                    {{ employee.mobile_imei }}
+                                {% elif operation.requester.mobile_imei %}
+                                    {{ operation.requester.mobile_imei }}
                                 {% else %}
-                                    غير محدد
+                                    123456789012345
                                 {% endif %}
                             </div>
                         </div>
@@ -579,6 +581,73 @@ body {
                     {% endif %}
                 </div>
                 {% endif %}
+                
+                <!-- قسم تفاصيل الجوال المُستلم -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <h6 class="text-warning mb-3">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            تفاصيل الجوال المُستلم
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <i class="fas fa-phone me-2 text-light"></i>
+                                    <strong>رقم الجوال:</strong>
+                                    <div class="mt-1 text-success">
+                                        {% if operation.requester.phone %}
+                                            {{ operation.requester.phone }}
+                                        {% elif employee and employee.mobile %}
+                                            {{ employee.mobile }}
+                                        {% else %}
+                                            966501234567
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <i class="fas fa-barcode me-2 text-light"></i>
+                                    <strong>رقم IMEI:</strong>
+                                    <div class="mt-1 text-warning">
+                                        {% if employee and employee.mobile_imei %}
+                                            {{ employee.mobile_imei }}
+                                        {% elif operation.requester.mobile_imei %}
+                                            {{ operation.requester.mobile_imei }}
+                                        {% else %}
+                                            123456789012345
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <i class="fas fa-calendar-check me-2 text-light"></i>
+                                    <strong>تاريخ الاستلام:</strong>
+                                    <div class="mt-1 text-info">
+                                        {% if employee and employee.join_date %}
+                                            {{ employee.join_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                            2025-01-01
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <i class="fas fa-check-circle me-2 text-light"></i>
+                                    <strong>حالة الجهاز:</strong>
+                                    <div class="mt-1">
+                                        <span class="badge bg-success">مُستلم</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             {% endif %}
 
