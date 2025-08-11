@@ -3970,6 +3970,7 @@ def export_vehicles_excel():
                         'الموديل': vehicle.model,
                         'السنة': vehicle.year,
                         'اللون': vehicle.color,
+                        'نوع السيارة': vehicle.type_of_car or 'سيارة عادية',
                         'الحالة': status_map.get(vehicle.status, vehicle.status),
                         'تكاليف الصيانة الإجمالية': total_maintenance_cost,
                         'المؤجر': active_rental.lessor_name if active_rental else '',
@@ -5455,7 +5456,7 @@ def import_vehicles():
         df = pd.read_excel(file)
         
         # التحقق من وجود الأعمدة المطلوبة
-        required_columns = ['رقم اللوحة', 'الشركة المصنعة', 'الموديل', 'السنة', 'اللون']
+        required_columns = ['رقم اللوحة', 'الشركة المصنعة', 'الموديل', 'السنة', 'اللون', 'نوع السيارة']
         missing_columns = [col for col in required_columns if col not in df.columns]
         
         if missing_columns:
@@ -5498,6 +5499,7 @@ def import_vehicles():
                 vehicle.make = str(row['الشركة المصنعة']).strip() if not pd.isna(row['الشركة المصنعة']) else ''
                 vehicle.model = str(row['الموديل']).strip() if not pd.isna(row['الموديل']) else ''
                 vehicle.color = str(row['اللون']).strip() if not pd.isna(row['اللون']) else ''
+                vehicle.type_of_car = str(row['نوع السيارة']).strip() if not pd.isna(row['نوع السيارة']) else 'سيارة عادية'
                 
                 # معالجة السنة
                 if not pd.isna(row['السنة']):
