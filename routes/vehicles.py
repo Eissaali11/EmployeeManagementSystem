@@ -5618,7 +5618,7 @@ def delete_single_handover(handover_id):
 
 @vehicles_bp.route('/<int:vehicle_id>/external-authorization/create', methods=['GET', 'POST'])
 @login_required  
-def create_external_authorization_new(vehicle_id):
+def create_external_authorization(vehicle_id):
     """إنشاء تفويض خارجي جديد"""
     vehicle = Vehicle.query.get_or_404(vehicle_id)
 
