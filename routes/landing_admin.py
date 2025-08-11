@@ -38,6 +38,24 @@ def dashboard():
                          settings=landing_settings,
                          stats=stats)
 
+@landing_admin_bp.route('/demo-dashboard')
+def demo_dashboard():
+    """عرض توضيحي للوحة التحكم بدون حماية"""
+    # قراءة إعدادات صفحة الهبوط
+    landing_settings = load_landing_settings()
+    
+    # إحصائيات أساسية
+    stats = {
+        'total_sections': 5,
+        'active_features': len(landing_settings.get('features', [])),
+        'testimonials_count': len(landing_settings.get('testimonials', [])),
+        'contact_methods': len(landing_settings.get('contact_info', {})),
+    }
+    
+    return render_template('landing_admin/demo_dashboard.html', 
+                         settings=landing_settings,
+                         stats=stats)
+
 @landing_admin_bp.route('/content')
 @login_required
 @admin_required

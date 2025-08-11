@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض توضيحي - إدارة صفحة الهبوط</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- خطوط عربية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Cairo', Arial, sans-serif;
+            direction: rtl;
+            text-align: right;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .demo-banner {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--card-color, #007bff);
+        }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--card-color, #007bff), rgba(var(--card-color-rgb, 0,123,255), 0.8));
+        }
+        
+        .btn {
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            border: none;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            border: none;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #fc466b, #3f5efb);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- بانر العرض التوضيحي -->
+    <div class="demo-banner">
+        <h4 class="mb-2">
+            <i class="fas fa-eye me-2"></i>
+            عرض توضيحي - لوحة تحكم إدارة صفحة الهبوط
+        </h4>
+        <p class="mb-0">هذا عرض توضيحي للوحة التحكم. للوصول الكامل يرجى تسجيل الدخول بصلاحيات المدير</p>
+    </div>
+
+    <!-- الإحصائيات الرئيسية -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card" style="--card-color: #667eea; --card-color-rgb: 102,126,234;">
+                <div class="stats-icon">
+                    <i class="fas fa-th-large"></i>
+                </div>
+                <h3 class="text-white mb-1">{{ stats.total_sections }}</h3>
+                <p class="text-white-50 mb-0">أقسام الموقع</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card" style="--card-color: #11998e; --card-color-rgb: 17,153,142;">
+                <div class="stats-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <h3 class="text-white mb-1">{{ stats.active_features }}</h3>
+                <p class="text-white-50 mb-0">الميزات النشطة</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card" style="--card-color: #f093fb; --card-color-rgb: 240,147,251;">
+                <div class="stats-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3 class="text-white mb-1">{{ stats.testimonials_count }}</h3>
+                <p class="text-white-50 mb-0">آراء العملاء</p>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stats-card" style="--card-color: #fc466b; --card-color-rgb: 252,70,107;">
+                <div class="stats-icon">
+                    <i class="fas fa-address-book"></i>
+                </div>
+                <h3 class="text-white mb-1">{{ stats.contact_methods }}</h3>
+                <p class="text-white-50 mb-0">طرق التواصل</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات الموقع -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="content-card">
+                <h5 class="text-primary mb-4">
+                    <i class="fas fa-info-circle me-2"></i>
+                    معلومات الموقع الأساسية
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>عنوان الموقع:</strong>
+                            <div class="text-muted">{{ settings.site_title }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>العنوان الرئيسي:</strong>
+                            <div class="text-muted">{{ settings.hero_title }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <strong>اسم الشركة:</strong>
+                            <div class="text-muted">{{ settings.company_info.name }}</div>
+                        </div>
+                        <div class="mb-3">
+                            <strong>وصف الشركة:</strong>
+                            <div class="text-muted">{{ settings.company_info.description }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإجراءات المتاحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="content-card">
+                <h5 class="text-success mb-4">
+                    <i class="fas fa-cogs me-2"></i>
+                    الإجراءات المتاحة
+                </h5>
+                
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-primary w-100" onclick="showMessage()">
+                            <i class="fas fa-edit me-2"></i>
+                            تحرير المحتوى
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-success w-100" onclick="showMessage()">
+                            <i class="fas fa-star me-2"></i>
+                            إدارة الميزات
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-warning w-100" onclick="showMessage()">
+                            <i class="fas fa-comments me-2"></i>
+                            آراء العملاء
+                        </button>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <button class="btn btn-danger w-100" onclick="showMessage()">
+                            <i class="fas fa-dollar-sign me-2"></i>
+                            خطط الأسعار
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- روابط الوصول -->
+    <div class="row">
+        <div class="col-12">
+            <div class="content-card text-center">
+                <h5 class="text-info mb-4">
+                    <i class="fas fa-link me-2"></i>
+                    روابط الوصول السريع
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="/nuzum" target="_blank" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-eye me-2"></i>
+                            عرض صفحة الهبوط
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="/auth/login?next=/landing-admin/dashboard" class="btn btn-outline-success w-100">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            تسجيل الدخول للوصول الكامل
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="/admin/dashboard" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-cogs me-2"></i>
+                            لوحة التحكم الرئيسية
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معاينة الإحصائيات -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="content-card">
+                <h5 class="text-warning mb-4">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    إحصائيات الموقع المعروضة
+                </h5>
+                
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-primary mb-1">{{ settings.stats.companies }}</h3>
+                            <p class="text-muted mb-0 small">شركة تثق بنا</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-success mb-1">{{ settings.stats.employees }}</h3>
+                            <p class="text-muted mb-0 small">موظف يستخدم النظام</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-warning mb-1">{{ settings.stats.vehicles }}</h3>
+                            <p class="text-muted mb-0 small">مركبة مُدارة</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h3 class="text-info mb-1">{{ settings.stats.satisfaction }}%</h3>
+                            <p class="text-muted mb-0 small">معدل رضا العملاء</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function showMessage() {
+            alert('للوصول إلى هذه الميزة، يرجى تسجيل الدخول بصلاحيات المدير أولاً');
+        }
+    </script>
+</body>
+</html>
