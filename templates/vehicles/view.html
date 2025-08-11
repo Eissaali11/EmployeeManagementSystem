@@ -2560,3 +2560,65 @@ ${formUrl}
 </div>
 </div>
 {% endblock %}
+<!-- JavaScript for handover records selection and bulk delete -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get elements
+    const selectAllCheckbox = document.getElementById('select-all');
+    const handoverCheckboxes = document.querySelectorAll('.handover-checkbox');
+    const deleteSelectedBtn = document.getElementById('delete-selected-btn');
+    const handoverDeleteForm = document.getElementById('handover-delete-form');
+
+    // Function to update delete button state
+    function updateDeleteButtonState() {
+        const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+        deleteSelectedBtn.disabled = checkedBoxes.length === 0;
+        
+        if (checkedBoxes.length > 0) {
+            deleteSelectedBtn.classList.remove('btn-secondary');
+            deleteSelectedBtn.classList.add('btn-danger');
+        } else {
+            deleteSelectedBtn.classList.remove('btn-danger');
+            deleteSelectedBtn.classList.add('btn-secondary');
+        }
+    }
+
+    // Select all functionality
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            handoverCheckboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+            });
+            updateDeleteButtonState();
+        });
+    }
+
+    // Individual checkbox change
+    handoverCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Update select all checkbox state
+            if (selectAllCheckbox) {
+                const checkedCount = document.querySelectorAll('.handover-checkbox:checked').length;
+                selectAllCheckbox.checked = checkedCount === handoverCheckboxes.length;
+                selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < handoverCheckboxes.length;
+            }
+            updateDeleteButtonState();
+        });
+    });
+
+    // Form submission validation
+    if (handoverDeleteForm) {
+        handoverDeleteForm.addEventListener('submit', function(e) {
+            const checkedBoxes = document.querySelectorAll('.handover-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                e.preventDefault();
+                alert('يرجى تحديد سجل واحد على الأقل للحذف');
+                return false;
+            }
+        });
+    }
+
+    // Initialize button state
+    updateDeleteButtonState();
+});
+</script>
