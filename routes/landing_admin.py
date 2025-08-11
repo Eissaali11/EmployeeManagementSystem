@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import check_password_hash
 from datetime import datetime
-from models import db, User
+from models import db, User, UserRole
 import json
 import os
 
@@ -11,7 +11,7 @@ landing_admin_bp = Blueprint('landing_admin', __name__, url_prefix='/landing-adm
 def admin_required(f):
     """ديكوريتر للتحقق من صلاحيات المدير"""
     def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not getattr(current_user, 'is_admin', False):
+        if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
             flash('ليس لديك صلاحية للوصول لهذه الصفحة', 'error')
             return redirect(url_for('landing_admin.admin_login'))
         return f(*args, **kwargs)
@@ -32,7 +32,7 @@ def admin_login():
         # البحث عن المستخدم المدير
         user = User.query.filter_by(username=username).first()
         
-        if user and getattr(user, 'is_admin', False) and check_password_hash(user.password_hash, password):
+        if user and user.role == UserRole.ADMIN and check_password_hash(user.password_hash, password):
             login_user(user)
             
             # التوجه إلى الصفحة المطلوبة أو لوحة التحكم
