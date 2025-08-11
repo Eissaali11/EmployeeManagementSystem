@@ -885,6 +885,15 @@ body {
                         لوحة الإدارة
                     </a>
                     
+                    <!-- زر عرض PDF التسليم/الاستلام -->
+                    {% if operation.operation_type == 'handover' and related_record %}
+                    <a href="{{ url_for('vehicles.handover_pdf_public', id=related_record.id) }}" 
+                       class="action-btn btn btn-outline-info" target="_blank">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        عرض نموذج التسليم/الاستلام
+                    </a>
+                    {% endif %}
+                    
                     {% if operation.status == 'pending' or operation.status == 'under_review' %}
                     <button class="action-btn btn btn-success" onclick="quickApprove({{ operation.id }})">
                         <i class="fas fa-calendar-check me-2"></i>
