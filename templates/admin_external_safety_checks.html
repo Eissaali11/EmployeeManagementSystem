@@ -902,12 +902,12 @@
 /* Enhanced Dark theme for Select2 Search Dropdowns */
 .search-dropdown + .select2-container--default .select2-selection--single,
 .vehicle-search-dropdown + .select2-container--default .select2-selection--single {
-    background: linear-gradient(135deg, rgba(45, 74, 107, 0.8) 0%, rgba(30, 58, 92, 0.8) 100%) !important;
-    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+    background: linear-gradient(135deg, rgba(20, 25, 35, 0.95) 0%, rgba(15, 20, 30, 0.95) 100%) !important;
+    border: 2px solid rgba(80, 100, 120, 0.5) !important;
     border-radius: 12px !important;
     height: 45px !important;
     line-height: 41px !important;
-    color: white !important;
+    color: #e0e0e0 !important;
     transition: all 0.3s ease !important;
     position: relative;
 }
@@ -923,17 +923,20 @@
     box-shadow: 0 0 20px rgba(52, 152, 219, 0.3) !important;
 }
 
-.vehicle-search-dropdown + .select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: white !important;
-    padding-left: 40px !important;
+.vehicle-search-dropdown + .select2-container--default .select2-selection--single .select2-selection__rendered,
+.search-dropdown + .select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #e0e0e0 !important;
+    padding-left: 15px !important;
+    padding-right: 40px !important;
     font-size: 14px !important;
     font-weight: 500 !important;
 }
 
-.vehicle-search-dropdown + .select2-container--default .select2-selection--single .select2-selection__placeholder {
-    color: rgba(255, 255, 255, 0.7) !important;
+.vehicle-search-dropdown + .select2-container--default .select2-selection--single .select2-selection__placeholder,
+.search-dropdown + .select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: rgba(224, 224, 224, 0.7) !important;
     font-style: italic !important;
-    padding-left: 40px !important;
+    padding-left: 15px !important;
 }
 
 /* Search icon inside select2 */
@@ -1170,5 +1173,44 @@ $(document).ready(function() {
 .search-dropdown + .select2-container--default .select2-selection--single:hover {
     border-color: rgba(120, 140, 160, 0.6) !important;
     box-shadow: 0 0 15px rgba(70, 130, 180, 0.2) !important;
+}
+</style>
+
+<style>
+/* Force dark theme for all Select2 elements */
+.select2-container--default .select2-selection--single {
+    background: rgba(20, 25, 35, 0.95) !important;
+    border: 2px solid rgba(80, 100, 120, 0.5) !important;
+    color: #e0e0e0 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #e0e0e0 !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: rgba(224, 224, 224, 0.7) !important;
+}
+
+/* Override any white backgrounds */
+.select2-dropdown {
+    background: rgba(20, 25, 35, 0.98) !important;
+    border: 1px solid rgba(80, 100, 120, 0.4) !important;
+}
+
+.select2-results__option {
+    background: transparent !important;
+    color: #d0d0d0 !important;
+}
+
+.select2-results__option--highlighted {
+    background: rgba(70, 130, 180, 0.4) !important;
+    color: #f0f0f0 !important;
+}
+
+.select2-search__field {
+    background: rgba(35, 45, 55, 0.9) !important;
+    border: 1px solid rgba(100, 120, 140, 0.4) !important;
+    color: #e0e0e0 !important;
 }
 </style>
