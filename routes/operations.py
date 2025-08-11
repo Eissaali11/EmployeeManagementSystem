@@ -975,8 +975,28 @@ def export_operation_excel(operation_id):
         employee = None
         current_driver_info = None
         
-        # البحث عن السائق من آخر تسليم
-        if operation.vehicle_id:
+        # البحث عن السائق من العملية الحالية أولاً
+        if operation.operation_type == 'handover' and related_record:
+            current_driver_info = {
+                'name': getattr(related_record, 'person_name', ''),
+                'phone': getattr(related_record, 'driver_phone_number', ''),
+                'residency_number': getattr(related_record, 'driver_residency_number', '')
+            }
+            
+            # البحث عن الموظف في النظام بالهوية
+            if related_record.driver_residency_number:
+                employee = Employee.query.filter_by(
+                    national_id=related_record.driver_residency_number
+                ).first()
+            
+            # البحث بالاسم إذا لم نجد بالهوية
+            if not employee and related_record.person_name:
+                employee = Employee.query.filter_by(
+                    name=related_record.person_name
+                ).first()
+        
+        # إذا لم نجد من العملية الحالية، ابحث من آخر تسليم للمركبة
+        if not employee and not current_driver_info and operation.vehicle_id:
             last_handover = VehicleHandover.query.filter_by(
                 vehicle_id=operation.vehicle_id,
                 handover_type='delivery'
@@ -984,9 +1004,9 @@ def export_operation_excel(operation_id):
             
             if last_handover:
                 current_driver_info = {
-                    'name': last_handover.person_name,
-                    'phone': last_handover.driver_phone_number,
-                    'residency_number': last_handover.driver_residency_number
+                    'name': getattr(last_handover, 'person_name', ''),
+                    'phone': getattr(last_handover, 'driver_phone_number', ''),
+                    'residency_number': getattr(last_handover, 'driver_residency_number', '')
                 }
                 
                 # البحث عن الموظف في النظام
@@ -1015,45 +1035,52 @@ def export_operation_excel(operation_id):
                 cell.border = border
                 ws3.column_dimensions[cell.column_letter].width = 16
             
+            # ملء البيانات - أولوية للموظف المسجل في النظام
             if employee:
                 driver_values = [
-                    getattr(employee, 'name', '') or '',
+                    employee.name or '',
                     getattr(employee, 'employee_id', '') or '',
-                    getattr(employee, 'national_id', '') or '',
-                    getattr(employee, 'mobile', '') or '',
+                    employee.national_id or '',
+                    employee.mobile or '',
                     getattr(employee, 'mobilePersonal', '') or '',
                     getattr(employee, 'mobile_imei', '') or '',
-                    employee.department.name if hasattr(employee, 'department') and employee.department else '',
-                    getattr(employee, 'position', '') or getattr(employee, 'job_title', '') or '',
-                    employee.join_date.strftime('%Y-%m-%d') if hasattr(employee, 'join_date') and employee.join_date else '',
-                    getattr(employee, 'status', '') or '',
-                    getattr(employee, 'email', '') or '',
-                    getattr(employee, 'address', '') or '',
-                    employee.birth_date.strftime('%Y-%m-%d') if hasattr(employee, 'birth_date') and employee.birth_date else '',
-                    getattr(employee, 'nationality', '') or ''
+                    employee.department.name if employee.department else '',
+                    employee.job_title or '',
+                    employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '',
+                    employee.status or '',
+                    employee.email or '',
+                    getattr(employee, 'address', '') or getattr(employee, 'location', '') or '',
+                    employee.birth_date.strftime('%Y-%m-%d') if employee.birth_date else '',
+                    employee.nationality or ''
                 ]
+            elif current_driver_info:
+                # استخدام بيانات السائق من نموذج التسليم
+                driver_values = [
+                    current_driver_info.get('name', '') or '',
+                    '', # الرقم الوظيفي - غير متوفر
+                    current_driver_info.get('residency_number', '') or '',
+                    current_driver_info.get('phone', '') or '',
+                    '', # رقم جوال العمل - غير متوفر
+                    '', # رقم IMEI - غير متوفر
+                    '', # القسم - غير متوفر
+                    '', # المنصب - غير متوفر
+                    '', # تاريخ التوظيف - غير متوفر
+                    '', # الحالة - غير متوفر
+                    '', # البريد الإلكتروني - غير متوفر
+                    '', # العنوان - غير متوفر
+                    '', # تاريخ الميلاد - غير متوفر
+                    ''  # الجنسية - غير متوفر
+                ]
+            else:
+                # لا توجد بيانات سائق
+                driver_values = [''] * 14
             
+            # كتابة البيانات في الخلايا
             for col_num, value in enumerate(driver_values, 1):
                 cell = ws3.cell(row=2, column=col_num, value=value)
                 cell.font = data_font
                 cell.alignment = alignment
                 cell.border = border
-            else:
-                driver_values = [
-                    current_driver_info.get('name', '') if current_driver_info else '',
-                    '', # الرقم الوظيفي
-                    current_driver_info.get('residency_number', '') if current_driver_info else '',
-                    current_driver_info.get('phone', '') if current_driver_info else '',
-                    '', # رقم جوال العمل
-                    '', # رقم IMEI
-                    '', '', '', '', '', '', '', ''
-                ]
-                
-                for col_num, value in enumerate(driver_values, 1):
-                    cell = ws3.cell(row=2, column=col_num, value=value)
-                    cell.font = data_font
-                    cell.alignment = alignment
-                    cell.border = border
             
         # شيت 4: تفاصيل نموذج التسليم/الاستلام
         if related_record and hasattr(related_record, 'handover_type'):
