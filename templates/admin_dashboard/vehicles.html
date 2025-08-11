@@ -1,0 +1,239 @@
+{% extends "admin_dashboard/layout.html" %}
+
+{% block title %}إدارة المركبات - لوحة التحكم{% endblock %}
+{% block page_title %}إدارة المركبات{% endblock %}
+
+{% block content %}
+<!-- أدوات البحث والفلترة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control search-box" name="search" 
+                               value="{{ search }}" placeholder="البحث برقم اللوحة أو الموديل أو رقم الشاسية">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="status">
+                            <option value="">جميع الحالات</option>
+                            <option value="متاح" {% if status == 'متاح' %}selected{% endif %}>متاح</option>
+                            <option value="محجوز" {% if status == 'محجوز' %}selected{% endif %}>محجوز</option>
+                            <option value="في الصيانة" {% if status == 'في الصيانة' %}selected{% endif %}>في الصيانة</option>
+                            <option value="خارج الخدمة" {% if status == 'خارج الخدمة' %}selected{% endif %}>خارج الخدمة</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>بحث
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="btn-group w-100">
+                            <a href="{{ url_for('vehicles.add') }}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>إضافة مركبة
+                            </a>
+                            <button type="button" class="btn btn-danger" onclick="bulkDelete('vehicles')">
+                                <i class="fas fa-trash me-2"></i>حذف المحدد
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول المركبات -->
+<div class="row">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-success">
+                    <i class="fas fa-car me-2"></i>
+                    قائمة المركبات ({{ vehicles.total }})
+                </h5>
+                <div>
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll('vehicles')">
+                    <label for="selectAll" class="me-2">تحديد الكل</label>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader">
+                            </th>
+                            <th>رقم اللوحة</th>
+                            <th>الموديل</th>
+                            <th>النوع</th>
+                            <th>الحالة</th>
+                            <th>تاريخ التسجيل</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in vehicles.items %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="select-item" value="{{ vehicle.id }}">
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ vehicle.license_plate }}</div>
+                                <small class="text-muted">{{ vehicle.chassis_number[:15] }}...</small>
+                            </td>
+                            <td>{{ vehicle.model }}</td>
+                            <td>{{ vehicle.vehicle_type or 'غير محدد' }}</td>
+                            <td>
+                                <span class="badge {% if vehicle.status == 'متاح' %}bg-success{% elif vehicle.status == 'محجوز' %}bg-warning{% elif vehicle.status == 'في الصيانة' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {{ vehicle.status or 'غير محدد' }}
+                                </span>
+                            </td>
+                            <td>{{ vehicle.registration_date.strftime('%Y-%m-%d') if vehicle.registration_date else 'غير محدد' }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" 
+                                       class="btn btn-outline-info btn-sm" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" 
+                                       class="btn btn-outline-success btn-sm" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="deleteItem('vehicle', {{ vehicle.id }}, '{{ vehicle.license_plate }}')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-car fa-3x mb-3 text-muted"></i>
+                                <div>لا توجد مركبات</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- الترقيم -->
+            {% if vehicles.pages > 1 %}
+            <div class="p-3 border-top">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if vehicles.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.vehicles', page=vehicles.prev_num, search=search, status=status) }}">السابق</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page in vehicles.iter_pages() %}
+                        {% if page %}
+                        <li class="page-item {% if page == vehicles.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.vehicles', page=page, search=search, status=status) }}">{{ page }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if vehicles.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.vehicles', page=vehicles.next_num, search=search, status=status) }}">التالي</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديد/إلغاء تحديد الكل
+function toggleSelectAll(type) {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.select-item');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// حذف عنصر واحد
+function deleteItem(type, id, name) {
+    if (!confirmDelete(`هل أنت متأكد من حذف ${name}؟`)) {
+        return;
+    }
+    
+    fetch(`/admin/api/${type}/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في الحذف', 'error');
+    });
+}
+
+// الحذف المجمع
+function bulkDelete(type) {
+    const selected = document.querySelectorAll('.select-item:checked');
+    
+    if (selected.length === 0) {
+        alert('يرجى تحديد عنصر واحد على الأقل');
+        return;
+    }
+    
+    if (!confirmDelete(`هل أنت متأكد من حذف ${selected.length} عنصر؟`)) {
+        return;
+    }
+    
+    const ids = Array.from(selected).map(checkbox => parseInt(checkbox.value));
+    
+    fetch('/admin/bulk-actions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'delete',
+            ids: ids,
+            table: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في العملية', 'error');
+    });
+}
+</script>
+{% endblock %}

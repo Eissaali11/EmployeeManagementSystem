@@ -1,0 +1,255 @@
+{% extends "admin_dashboard/layout.html" %}
+
+{% block title %}إدارة الموظفين - لوحة التحكم{% endblock %}
+{% block page_title %}إدارة الموظفين{% endblock %}
+
+{% block content %}
+<!-- أدوات البحث والفلترة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control search-box" name="search" 
+                               value="{{ search }}" placeholder="البحث بالاسم أو رقم الموظف أو الهاتف">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" name="department_id">
+                            <option value="">جميع الأقسام</option>
+                            {% for dept in departments %}
+                            <option value="{{ dept.id }}" 
+                                    {% if department_id == dept.id %}selected{% endif %}>
+                                {{ dept.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>بحث
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="btn-group w-100">
+                            <a href="{{ url_for('employees.add') }}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>إضافة موظف
+                            </a>
+                            <button type="button" class="btn btn-danger" onclick="bulkDelete('employees')">
+                                <i class="fas fa-trash me-2"></i>حذف المحدد
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول الموظفين -->
+<div class="row">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary">
+                    <i class="fas fa-users me-2"></i>
+                    قائمة الموظفين ({{ employees.total }})
+                </h5>
+                <div>
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll('employees')">
+                    <label for="selectAll" class="me-2">تحديد الكل</label>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader">
+                            </th>
+                            <th>الموظف</th>
+                            <th>القسم</th>
+                            <th>المنصب</th>
+                            <th>تاريخ التعيين</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in employees.items %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="select-item" value="{{ employee.id }}">
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    {% if employee.photo %}
+                                    <img src="{{ employee.photo }}" alt="صورة {{ employee.name }}" 
+                                         class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="bg-primary text-white rounded-circle p-2 me-2" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <strong style="font-size: 12px;">{{ employee.name[:2] }}</strong>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ employee.name }}</div>
+                                        <small class="text-muted">{{ employee.employee_id }}</small>
+                                        <div><small class="text-muted">{{ employee.phone }}</small></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ employee.department.name if employee.department else 'غير محدد' }}</td>
+                            <td>{{ employee.position or 'غير محدد' }}</td>
+                            <td>{{ employee.date_joined.strftime('%Y-%m-%d') if employee.date_joined else 'غير محدد' }}</td>
+                            <td>
+                                <span class="badge {% if employee.status == 'نشط' %}bg-success{% elif employee.status == 'معطل' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ employee.status or 'غير محدد' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('employees.view', id=employee.id) }}" 
+                                       class="btn btn-outline-info btn-sm" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('employees.edit', id=employee.id) }}" 
+                                       class="btn btn-outline-success btn-sm" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="deleteItem('employee', {{ employee.id }}, '{{ employee.name }}')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-users fa-3x mb-3 text-muted"></i>
+                                <div>لا توجد موظفين</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- الترقيم -->
+            {% if employees.pages > 1 %}
+            <div class="p-3 border-top">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if employees.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.employees', page=employees.prev_num, search=search, department_id=department_id) }}">السابق</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page in employees.iter_pages() %}
+                        {% if page %}
+                        <li class="page-item {% if page == employees.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.employees', page=page, search=search, department_id=department_id) }}">{{ page }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if employees.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.employees', page=employees.next_num, search=search, department_id=department_id) }}">التالي</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديد/إلغاء تحديد الكل
+function toggleSelectAll(type) {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.select-item');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// حذف عنصر واحد
+function deleteItem(type, id, name) {
+    if (!confirmDelete(`هل أنت متأكد من حذف ${name}؟`)) {
+        return;
+    }
+    
+    fetch(`/admin/api/${type}/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في الحذف', 'error');
+    });
+}
+
+// الحذف المجمع
+function bulkDelete(type) {
+    const selected = document.querySelectorAll('.select-item:checked');
+    
+    if (selected.length === 0) {
+        alert('يرجى تحديد عنصر واحد على الأقل');
+        return;
+    }
+    
+    if (!confirmDelete(`هل أنت متأكد من حذف ${selected.length} عنصر؟`)) {
+        return;
+    }
+    
+    const ids = Array.from(selected).map(checkbox => parseInt(checkbox.value));
+    
+    fetch('/admin/bulk-actions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'delete',
+            ids: ids,
+            table: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في العملية', 'error');
+    });
+}
+</script>
+{% endblock %}

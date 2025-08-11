@@ -1,0 +1,357 @@
+{% extends "admin_dashboard/layout.html" %}
+
+{% block title %}الرئيسية - لوحة التحكم الإدارية{% endblock %}
+{% block page_title %}الرئيسية{% endblock %}
+
+{% block content %}
+<!-- الإحصائيات الرئيسية -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #007bff;">
+            <div class="stats-icon" style="background: #007bff;">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3 class="text-primary mb-1">{{ stats.employees }}</h3>
+            <p class="text-muted mb-0">إجمالي الموظفين</p>
+            <small class="text-success">
+                <i class="fas fa-arrow-up me-1"></i>
+                +{{ monthly_stats.new_employees }} هذا الشهر
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #28a745;">
+            <div class="stats-icon" style="background: #28a745;">
+                <i class="fas fa-car"></i>
+            </div>
+            <h3 class="text-success mb-1">{{ stats.vehicles }}</h3>
+            <p class="text-muted mb-0">إجمالي المركبات</p>
+            <small class="text-success">
+                <i class="fas fa-arrow-up me-1"></i>
+                +{{ monthly_stats.new_vehicles }} هذا الشهر
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #ffc107;">
+            <div class="stats-icon" style="background: #ffc107;">
+                <i class="fas fa-building"></i>
+            </div>
+            <h3 class="text-warning mb-1">{{ stats.departments }}</h3>
+            <p class="text-muted mb-0">الأقسام</p>
+            <small class="text-info">
+                <i class="fas fa-info-circle me-1"></i>
+                نشطة
+            </small>
+        </div>
+    </div>
+    
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #dc3545;">
+            <div class="stats-icon" style="background: #dc3545;">
+                <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3 class="text-danger mb-1">{{ stats.mobile_devices }}</h3>
+            <p class="text-muted mb-0">الأجهزة المحمولة</p>
+            <small class="text-info">
+                <i class="fas fa-signal me-1"></i>
+                مُدارة
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات إضافية -->
+<div class="row mb-4">
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #6f42c1;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-primary mb-1">{{ stats.active_handovers }}</h4>
+                    <p class="text-muted mb-0">تسليم مركبات نشط</p>
+                </div>
+                <div class="stats-icon" style="background: #6f42c1; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-key"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #17a2b8;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-info mb-1">{{ stats.users }}</h4>
+                    <p class="text-muted mb-0">مستخدمي النظام</p>
+                </div>
+                <div class="stats-icon" style="background: #17a2b8; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-user-cog"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 col-md-6 mb-3">
+        <div class="stats-card" style="--card-color: #fd7e14;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-warning mb-1">{{ stats.pending_documents }}</h4>
+                    <p class="text-muted mb-0">وثائق تنتهي قريباً</p>
+                </div>
+                <div class="stats-icon" style="background: #fd7e14; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قسم العمليات السريعة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0 text-primary">
+                    <i class="fas fa-bolt me-2"></i>
+                    العمليات السريعة
+                </h5>
+            </div>
+            <div class="p-3">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('employees.add') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-user-plus me-2"></i>
+                            إضافة موظف جديد
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('vehicles.add') }}" class="btn btn-success w-100">
+                            <i class="fas fa-car me-2"></i>
+                            إضافة مركبة جديدة
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('departments.add') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-building me-2"></i>
+                            إضافة قسم جديد
+                        </a>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <a href="{{ url_for('mobile_devices.add') }}" class="btn btn-info w-100">
+                            <i class="fas fa-mobile-alt me-2"></i>
+                            إضافة جهاز جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- أحدث الموظفين -->
+    <div class="col-lg-6 mb-4">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-primary">
+                    <i class="fas fa-user-plus me-2"></i>
+                    أحدث الموظفين
+                </h5>
+                <a href="{{ url_for('admin_dashboard.employees') }}" class="btn btn-outline-primary btn-sm">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>القسم</th>
+                            <th>تاريخ التعيين</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in recent_employees %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white rounded-circle p-2 me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <strong style="font-size: 12px;">{{ employee.name[:2] }}</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ employee.name }}</div>
+                                        <small class="text-muted">{{ employee.employee_id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ employee.department.name if employee.department else 'غير محدد' }}</td>
+                            <td>{{ employee.date_joined.strftime('%Y-%m-%d') if employee.date_joined else 'غير محدد' }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('employees.view', id=employee.id) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('employees.edit', id=employee.id) }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">لا توجد بيانات</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- أحدث المركبات -->
+    <div class="col-lg-6 mb-4">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-success">
+                    <i class="fas fa-car me-2"></i>
+                    أحدث المركبات
+                </h5>
+                <a href="{{ url_for('admin_dashboard.vehicles') }}" class="btn btn-outline-success btn-sm">
+                    عرض الكل
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>رقم اللوحة</th>
+                            <th>الموديل</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vehicle in recent_vehicles %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ vehicle.license_plate }}</div>
+                                <small class="text-muted">{{ vehicle.chassis_number[:10] }}...</small>
+                            </td>
+                            <td>{{ vehicle.model }}</td>
+                            <td>
+                                <span class="badge {% if vehicle.status == 'متاح' %}bg-success{% elif vehicle.status == 'محجوز' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {{ vehicle.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('vehicles.edit', id=vehicle.id) }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">لا توجد بيانات</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- المستندات منتهية الصلاحية -->
+{% if expiring_docs %}
+<div class="row">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom">
+                <h5 class="mb-0 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    وثائق تنتهي صلاحيتها قريباً
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>الموظف</th>
+                            <th>نوع الوثيقة</th>
+                            <th>تاريخ الانتهاء</th>
+                            <th>المتبقي</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in expiring_docs %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ emp.name }}</div>
+                                <small class="text-muted">{{ emp.employee_id }}</small>
+                            </td>
+                            <td>هوية شخصية</td>
+                            <td>{{ emp.id_expiry.strftime('%Y-%m-%d') if emp.id_expiry else 'غير محدد' }}</td>
+                            <td>
+                                {% if emp.id_expiry %}
+                                    {% set days_left = (emp.id_expiry - moment().date()).days %}
+                                    <span class="badge {% if days_left <= 7 %}bg-danger{% elif days_left <= 30 %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ days_left }} يوم
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غير محدد</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('employees.edit', id=emp.id) }}" class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-edit me-1"></i>تحديث
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحديث الإحصائيات كل 30 ثانية
+    setInterval(updateStats, 30000);
+    
+    function updateStats() {
+        fetch('{{ url_for("admin_dashboard.api_stats") }}')
+            .then(response => response.json())
+            .then(data => {
+                // تحديث قيم الإحصائيات
+                const statsElements = {
+                    'employees': document.querySelector('.stats-card:nth-child(1) h3'),
+                    'vehicles': document.querySelector('.stats-card:nth-child(2) h3'),
+                    'departments': document.querySelector('.stats-card:nth-child(3) h3'),
+                    'mobile_devices': document.querySelector('.stats-card:nth-child(4) h3')
+                };
+                
+                Object.keys(statsElements).forEach(key => {
+                    if (statsElements[key]) {
+                        statsElements[key].textContent = data[key];
+                    }
+                });
+            })
+            .catch(error => console.error('Error updating stats:', error));
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% extends "admin_dashboard/layout.html" %}
+
+{% block title %}إدارة الأجهزة المحمولة - لوحة التحكم{% endblock %}
+{% block page_title %}إدارة الأجهزة المحمولة{% endblock %}
+
+{% block content %}
+<!-- أدوات البحث والفلترة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control search-box" name="search" 
+                               value="{{ search }}" placeholder="البحث برقم الجهاز أو IMEI أو رقم الهاتف">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>بحث
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="btn-group w-100">
+                            <a href="{{ url_for('mobile_devices.add') }}" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>إضافة جهاز
+                            </a>
+                            <button type="button" class="btn btn-danger" onclick="bulkDelete('mobile_devices')">
+                                <i class="fas fa-trash me-2"></i>حذف المحدد
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول الأجهزة المحمولة -->
+<div class="row">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-secondary">
+                    <i class="fas fa-mobile-alt me-2"></i>
+                    قائمة الأجهزة المحمولة ({{ devices.total }})
+                </h5>
+                <div>
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll('mobile_devices')">
+                    <label for="selectAll" class="me-2">تحديد الكل</label>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader">
+                            </th>
+                            <th>رقم الجهاز</th>
+                            <th>IMEI</th>
+                            <th>رقم الهاتف</th>
+                            <th>الموظف المكلف</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for device in devices.items %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="select-item" value="{{ device.id }}">
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ device.device_id }}</div>
+                                <small class="text-muted">{{ device.brand }} {{ device.model if device.model else '' }}</small>
+                            </td>
+                            <td>
+                                <code>{{ device.imei }}</code>
+                            </td>
+                            <td>{{ device.phone_number or 'غير محدد' }}</td>
+                            <td>
+                                {% if device.assigned_employee %}
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary text-white rounded-circle me-2" style="width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+                                        {{ device.assigned_employee.name[:2] }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold" style="font-size: 12px;">{{ device.assigned_employee.name }}</div>
+                                        <small class="text-muted">{{ device.assigned_employee.employee_id }}</small>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">غير مكلف</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if device.status == 'نشط' %}bg-success{% elif device.status == 'معطل' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                    {{ device.status or 'غير محدد' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('mobile_devices.view', id=device.id) }}" 
+                                       class="btn btn-outline-info btn-sm" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('mobile_devices.edit', id=device.id) }}" 
+                                       class="btn btn-outline-success btn-sm" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="deleteItem('mobile-device', {{ device.id }}, '{{ device.device_id }}')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-mobile-alt fa-3x mb-3 text-muted"></i>
+                                <div>لا توجد أجهزة محمولة</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- الترقيم -->
+            {% if devices.pages > 1 %}
+            <div class="p-3 border-top">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if devices.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.mobile_devices', page=devices.prev_num, search=search) }}">السابق</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page in devices.iter_pages() %}
+                        {% if page %}
+                        <li class="page-item {% if page == devices.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.mobile_devices', page=page, search=search) }}">{{ page }}</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+                        
+                        {% if devices.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin_dashboard.mobile_devices', page=devices.next_num, search=search) }}">التالي</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات الأجهزة -->
+<div class="row mt-4">
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #28a745;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-success mb-1">
+                        {{ devices.items|selectattr('status', 'equalto', 'نشط')|list|length }}
+                    </h4>
+                    <p class="text-muted mb-0">أجهزة نشطة</p>
+                </div>
+                <div class="stats-icon" style="background: #28a745; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #dc3545;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-danger mb-1">
+                        {{ devices.items|selectattr('status', 'equalto', 'معطل')|list|length }}
+                    </h4>
+                    <p class="text-muted mb-0">أجهزة معطلة</p>
+                </div>
+                <div class="stats-icon" style="background: #dc3545; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #007bff;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-primary mb-1">
+                        {{ devices.items|selectattr('assigned_employee')|list|length }}
+                    </h4>
+                    <p class="text-muted mb-0">أجهزة مكلفة</p>
+                </div>
+                <div class="stats-icon" style="background: #007bff; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-user-check"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #6c757d;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-secondary mb-1">
+                        {{ (devices.items|list|length) - (devices.items|selectattr('assigned_employee')|list|length) }}
+                    </h4>
+                    <p class="text-muted mb-0">أجهزة متاحة</p>
+                </div>
+                <div class="stats-icon" style="background: #6c757d; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-mobile"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديد/إلغاء تحديد الكل
+function toggleSelectAll(type) {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.select-item');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// حذف عنصر واحد
+function deleteItem(type, id, name) {
+    if (!confirmDelete(`هل أنت متأكد من حذف الجهاز ${name}؟`)) {
+        return;
+    }
+    
+    fetch(`/admin/api/${type}/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في الحذف', 'error');
+    });
+}
+
+// الحذف المجمع
+function bulkDelete(type) {
+    const selected = document.querySelectorAll('.select-item:checked');
+    
+    if (selected.length === 0) {
+        alert('يرجى تحديد جهاز واحد على الأقل');
+        return;
+    }
+    
+    if (!confirmDelete(`هل أنت متأكد من حذف ${selected.length} جهاز؟`)) {
+        return;
+    }
+    
+    const ids = Array.from(selected).map(checkbox => parseInt(checkbox.value));
+    
+    fetch('/admin/bulk-actions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'delete',
+            ids: ids,
+            table: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في العملية', 'error');
+    });
+}
+</script>
+{% endblock %}

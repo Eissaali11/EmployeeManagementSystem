@@ -397,6 +397,10 @@ with app.app_context():
     # استيراد وتسجيل مسار صفحة الهبوط - مسار منفصل عن النظام
     from routes.landing import landing_bp
     app.register_blueprint(landing_bp)
+    
+    # استيراد وتسجيل لوحة التحكم الإدارية
+    from routes.admin_dashboard import admin_dashboard_bp
+    app.register_blueprint(admin_dashboard_bp, url_prefix='/admin')
 
     # إضافة route لخدمة الصور من مجلد uploads
     @app.route('/uploads/<path:filename>')

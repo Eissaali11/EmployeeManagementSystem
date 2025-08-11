@@ -1,0 +1,277 @@
+{% extends "admin_dashboard/layout.html" %}
+
+{% block title %}إدارة المستخدمين - لوحة التحكم{% endblock %}
+{% block page_title %}إدارة المستخدمين{% endblock %}
+
+{% block content %}
+<!-- أدوات الإضافة -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">إضافة مستخدم جديد</h6>
+                    <div>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-success me-2">
+                            <i class="fas fa-user-plus me-2"></i>إضافة مستخدم
+                        </a>
+                        <button type="button" class="btn btn-danger" onclick="bulkDelete('users')">
+                            <i class="fas fa-trash me-2"></i>حذف المحدد
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- جدول المستخدمين -->
+<div class="row">
+    <div class="col-12">
+        <div class="data-table">
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-info">
+                    <i class="fas fa-user-cog me-2"></i>
+                    قائمة المستخدمين ({{ users|length }})
+                </h5>
+                <div>
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll('users')">
+                    <label for="selectAll" class="me-2">تحديد الكل</label>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th width="50">
+                                <input type="checkbox" id="selectAllHeader">
+                            </th>
+                            <th>المستخدم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>الدور</th>
+                            <th>آخر دخول</th>
+                            <th>الحالة</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr {% if user.id == current_user.id %}class="bg-light"{% endif %}>
+                            <td>
+                                {% if user.id != current_user.id %}
+                                <input type="checkbox" class="select-item" value="{{ user.id }}">
+                                {% else %}
+                                <i class="fas fa-lock text-muted" title="لا يمكن تحديد حسابك الخاص"></i>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-info text-white rounded-circle p-2 me-2" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <strong style="font-size: 12px;">{{ user.name[:2] if user.name else user.username[:2] }}</strong>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">
+                                            {{ user.name or user.username }}
+                                            {% if user.id == current_user.id %}
+                                            <span class="badge bg-primary ms-2">أنت</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ user.username }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge {% if user.role == 'admin' %}bg-danger{% elif user.role == 'manager' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                    {% if user.role == 'admin' %}مدير نظام
+                                    {% elif user.role == 'manager' %}مدير
+                                    {% elif user.role == 'employee' %}موظف
+                                    {% else %}{{ user.role }}
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'لم يسجل دخول بعد' }}</td>
+                            <td>
+                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ 'نشط' if user.is_active else 'معطل' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('users.view', id=user.id) }}" 
+                                       class="btn btn-outline-info btn-sm" title="عرض">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if user.id != current_user.id %}
+                                    <a href="{{ url_for('users.edit', id=user.id) }}" 
+                                       class="btn btn-outline-success btn-sm" title="تعديل">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="deleteItem('user', {{ user.id }}, '{{ user.name or user.username }}')" title="حذف">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                    {% else %}
+                                    <span class="btn btn-outline-secondary btn-sm disabled" title="لا يمكن تعديل حسابك من هنا">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-user-cog fa-3x mb-3 text-muted"></i>
+                                <div>لا توجد مستخدمين</div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات المستخدمين -->
+<div class="row mt-4">
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #dc3545;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-danger mb-1">{{ users|selectattr('role', 'equalto', 'admin')|list|length }}</h4>
+                    <p class="text-muted mb-0">مدراء النظام</p>
+                </div>
+                <div class="stats-icon" style="background: #dc3545; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #ffc107;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-warning mb-1">{{ users|selectattr('role', 'equalto', 'manager')|list|length }}</h4>
+                    <p class="text-muted mb-0">المدراء</p>
+                </div>
+                <div class="stats-icon" style="background: #ffc107; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #6c757d;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-secondary mb-1">{{ users|selectattr('role', 'equalto', 'employee')|list|length }}</h4>
+                    <p class="text-muted mb-0">الموظفون</p>
+                </div>
+                <div class="stats-icon" style="background: #6c757d; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="stats-card" style="--card-color: #28a745;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="text-success mb-1">{{ users|selectattr('is_active')|list|length }}</h4>
+                    <p class="text-muted mb-0">المستخدمون النشطون</p>
+                </div>
+                <div class="stats-icon" style="background: #28a745; width: 50px; height: 50px; font-size: 20px;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// تحديد/إلغاء تحديد الكل
+function toggleSelectAll(type) {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.select-item');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// حذف عنصر واحد
+function deleteItem(type, id, name) {
+    if (!confirmDelete(`هل أنت متأكد من حذف المستخدم ${name}؟\nسيفقد المستخدم إمكانية الوصول للنظام`)) {
+        return;
+    }
+    
+    fetch(`/admin/api/${type}/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في الحذف', 'error');
+    });
+}
+
+// الحذف المجمع
+function bulkDelete(type) {
+    const selected = document.querySelectorAll('.select-item:checked');
+    
+    if (selected.length === 0) {
+        alert('يرجى تحديد مستخدم واحد على الأقل');
+        return;
+    }
+    
+    if (!confirmDelete(`هل أنت متأكد من حذف ${selected.length} مستخدم؟\nسيفقد هؤلاء المستخدمون إمكانية الوصول للنظام`)) {
+        return;
+    }
+    
+    const ids = Array.from(selected).map(checkbox => parseInt(checkbox.value));
+    
+    fetch('/admin/bulk-actions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: 'delete',
+            ids: ids,
+            table: type
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('حدث خطأ في العملية', 'error');
+    });
+}
+</script>
+{% endblock %}
