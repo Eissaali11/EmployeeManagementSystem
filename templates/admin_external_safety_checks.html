@@ -485,8 +485,8 @@
             <!-- Filters Section -->
             <div class="row">
                 <div class="col-md-3 mb-3">
-                    <label class="form-label text-light mb-1">الحالة:</label>
-                    <select class="form-control filter-input-enhanced" name="status_filter">
+                    <label class="form-label text-light mb-1"><i class="fas fa-filter ml-1"></i> الحالة:</label>
+                    <select class="form-control filter-input-enhanced search-dropdown" id="statusFilterSelect" name="status_filter" style="width: 100%;">
                         <option value="">جميع الحالات</option>
                         <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>قيد المراجعة</option>
                         <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>معتمدة</option>
@@ -494,8 +494,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label text-light mb-1">السيارة:</label>
-                    <select class="form-control filter-input-enhanced" name="vehicle_filter">
+                    <label class="form-label text-light mb-1"><i class="fas fa-car ml-1"></i> السيارة:</label>
+                    <select class="form-control filter-input-enhanced search-dropdown" id="vehicleFilterSelect" name="vehicle_filter" style="width: 100%;">
                         <option value="">جميع السيارات</option>
                         {% for vehicle in vehicles_list %}
                         <option value="{{ vehicle }}" {% if vehicle_filter == vehicle %}selected{% endif %}>{{ vehicle }}</option>
@@ -503,8 +503,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label text-light mb-1">القسم:</label>
-                    <select class="form-control filter-input-enhanced" name="department_filter">
+                    <label class="form-label text-light mb-1"><i class="fas fa-building ml-1"></i> القسم:</label>
+                    <select class="form-control filter-input-enhanced search-dropdown" id="departmentFilterSelect" name="department_filter" style="width: 100%;">
                         <option value="">جميع الأقسام</option>
                         {% for department in departments_list %}
                         <option value="{{ department }}" {% if department_filter == department %}selected{% endif %}>{{ department }}</option>
@@ -933,7 +933,63 @@ $(document).ready(function() {
         }
     };
     
-    // Initialize Select2 with enhanced search
+    // Initialize Select2 for all search dropdowns with enhanced search
+    $('.search-dropdown').each(function() {
+        var placeholder = '';
+        var icon = '';
+        
+        if ($(this).attr('name') === 'status_filter') {
+            placeholder = 'اختر الحالة...';
+            icon = 'fas fa-filter';
+        } else if ($(this).attr('name') === 'vehicle_filter') {
+            placeholder = 'اختر السيارة...';
+            icon = 'fas fa-car';
+        } else if ($(this).attr('name') === 'department_filter') {
+            placeholder = 'اختر القسم...';
+            icon = 'fas fa-building';
+        }
+        
+        $(this).select2({
+            placeholder: placeholder,
+            allowClear: true,
+            dir: 'rtl',
+            theme: 'default',
+            width: '100%',
+            dropdownCssClass: 'select2-dropdown-dark',
+            minimumInputLength: 0,
+            language: {
+                noResults: function() {
+                    return "لا توجد نتائج مطابقة";
+                },
+                searching: function() {
+                    return "جاري البحث...";
+                },
+                inputTooShort: function() {
+                    return "ابحث أو اختر من القائمة";
+                }
+            },
+            matcher: function(params, data) {
+                // إذا لم يكن هناك بحث، عرض جميع الخيارات
+                if ($.trim(params.term) === '') {
+                    return data;
+                }
+
+                // البحث في النص العربي والإنجليزي
+                if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                    return data;
+                }
+
+                // البحث في الأرقام
+                if (data.text.indexOf(params.term) > -1) {
+                    return data;
+                }
+
+                return null;
+            }
+        });
+    });
+
+    // Initialize vehicle search select specifically  
     $('#vehicleSearchSelect').select2({
         placeholder: 'اكتب أو ابحث عن رقم السيارة...',
         allowClear: true,
@@ -986,7 +1042,8 @@ $(document).ready(function() {
 </script>
 
 <style>
-/* Enhanced Dark theme for Select2 Vehicle Search */
+/* Enhanced Dark theme for Select2 Search Dropdowns */
+.search-dropdown + .select2-container--default .select2-selection--single,
 .vehicle-search-dropdown + .select2-container--default .select2-selection--single {
     background: linear-gradient(135deg, rgba(45, 74, 107, 0.8) 0%, rgba(30, 58, 92, 0.8) 100%) !important;
     border: 2px solid rgba(255, 255, 255, 0.2) !important;
@@ -998,6 +1055,7 @@ $(document).ready(function() {
     position: relative;
 }
 
+.search-dropdown + .select2-container--default .select2-selection--single:hover,
 .vehicle-search-dropdown + .select2-container--default .select2-selection--single:hover {
     border-color: rgba(255, 255, 255, 0.4) !important;
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important;
@@ -1129,3 +1187,24 @@ $(document).ready(function() {
     color: #e74c3c !important;
 }
 </style>
+
+<script>
+// Additional enhancements for all filter dropdowns
+$(document).ready(function() {
+    // Override clearFilters for Select2 compatibility
+    window.clearFilters = function() {
+        // Clear all search dropdowns using Select2
+        $('.search-dropdown').each(function() {
+            $(this).val('').trigger('change');
+        });
+        
+        // Clear vehicle search as well
+        $('#vehicleSearchSelect').val('').trigger('change');
+        
+        // Submit form
+        setTimeout(function() {
+            document.getElementById('filterForm').submit();
+        }, 100);
+    };
+});
+</script>
