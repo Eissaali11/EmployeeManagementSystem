@@ -1160,7 +1160,7 @@ def edit_safety_check(check_id):
     """تعديل طلب فحص السلامة"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('external_safety.admin_external_safety_checks'))
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
     
@@ -1249,7 +1249,7 @@ def export_safety_check_pdf(check_id):
     """تصدير طلب فحص السلامة كملف PDF"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('external_safety.admin_external_safety_checks'))
     
     try:
         safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
@@ -1635,7 +1635,7 @@ def bulk_delete_safety_checks():
     """حذف عدة طلبات فحص سلامة جماعياً"""
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('external_safety.admin_external_safety_checks'))
     
     try:
         # الحصول على معرفات الطلبات المحددة

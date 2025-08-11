@@ -522,48 +522,86 @@
         
         // عرض النافذة المنبثقة
         try {
-            if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
-                console.log('Using jQuery Bootstrap modal');
-                $('#imageModal').modal('show');
-            } else if (typeof bootstrap !== 'undefined') {
-                console.log('Using Bootstrap 5 modal');
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-            } else {
-                console.log('Bootstrap not available, using fallback');
-                modalElement.style.display = 'block';
-                modalElement.classList.add('show');
-                document.body.classList.add('modal-open');
-                
-                const backdrop = document.createElement('div');
-                backdrop.className = 'modal-backdrop fade show';
-                backdrop.id = 'imageModalBackdrop';
-                document.body.appendChild(backdrop);
-                
-                backdrop.addEventListener('click', function() {
-                    closeImageModal();
-                });
-            }
+            // استخدام Bootstrap 5 مباشرة
+            console.log('Attempting to show modal with Bootstrap 5');
+            const modal = new bootstrap.Modal(modalElement, {
+                keyboard: true,
+                backdrop: true,
+                focus: true
+            });
+            modal.show();
+            console.log('Modal shown successfully');
+            
         } catch (error) {
-            console.error('Error showing modal:', error);
-            window.open(imageSrc, '_blank');
+            console.error('Error showing modal with Bootstrap:', error);
+            
+            // طريقة بديلة باستخدام jQuery إذا كان متوفراً
+            try {
+                if (typeof $ !== 'undefined') {
+                    console.log('Fallback: Using jQuery modal');
+                    $('#imageModal').modal('show');
+                } else {
+                    console.log('Fallback: Manual modal display');
+                    modalElement.style.display = 'block';
+                    modalElement.classList.add('show');
+                    document.body.classList.add('modal-open');
+                    
+                    // إضافة backdrop يدوياً
+                    const backdrop = document.createElement('div');
+                    backdrop.className = 'modal-backdrop fade show';
+                    backdrop.id = 'imageModalBackdrop';
+                    document.body.appendChild(backdrop);
+                    
+                    backdrop.addEventListener('click', function() {
+                        closeImageModal();
+                    });
+                }
+            } catch (fallbackError) {
+                console.error('All modal methods failed, opening in new tab:', fallbackError);
+                window.open(imageSrc, '_blank');
+            }
         }
     }
     
     function closeImageModal() {
         const modalElement = document.getElementById('imageModal');
-        const backdrop = document.getElementById('imageModalBackdrop');
         
-        if (modalElement) {
-            modalElement.style.display = 'none';
-            modalElement.classList.remove('show');
+        try {
+            // استخدام Bootstrap 5 لإغلاق Modal
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            } else {
+                // إذا لم يكن هناك instance، أنشئ واحد واغلقه
+                const newModal = new bootstrap.Modal(modalElement);
+                newModal.hide();
+            }
+        } catch (error) {
+            console.error('Error closing modal with Bootstrap:', error);
+            
+            // طريقة بديلة
+            try {
+                if (typeof $ !== 'undefined') {
+                    $('#imageModal').modal('hide');
+                } else {
+                    // إغلاق يدوي
+                    const backdrop = document.getElementById('imageModalBackdrop');
+                    
+                    if (modalElement) {
+                        modalElement.style.display = 'none';
+                        modalElement.classList.remove('show');
+                    }
+                    
+                    if (backdrop) {
+                        backdrop.remove();
+                    }
+                    
+                    document.body.classList.remove('modal-open');
+                }
+            } catch (fallbackError) {
+                console.error('All close methods failed:', fallbackError);
+            }
         }
-        
-        if (backdrop) {
-            backdrop.remove();
-        }
-        
-        document.body.classList.remove('modal-open');
     }
     
     function zoomImage(deltaZoom) {
@@ -658,11 +696,23 @@
         });
         
         // إعادة تعيين الموضع عند إغلاق النافذة
-        $('#imageModal').on('hidden.bs.modal', function () {
-            resetZoom();
-            initialX = 0;
-            initialY = 0;
-        });
+        const modalElement = document.getElementById('imageModal');
+        if (modalElement) {
+            modalElement.addEventListener('hidden.bs.modal', function () {
+                resetZoom();
+                initialX = 0;
+                initialY = 0;
+            });
+        }
+        
+        // دعم jQuery إذا كان متوفراً
+        if (typeof $ !== 'undefined') {
+            $('#imageModal').on('hidden.bs.modal', function () {
+                resetZoom();
+                initialX = 0;
+                initialY = 0;
+            });
+        }
     });
 </script>
 {% endblock %}
