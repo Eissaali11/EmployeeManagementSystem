@@ -458,29 +458,7 @@
     <!-- Enhanced Filter Section -->
     <div class="filter-card-enhanced">
         <form method="GET" id="filterForm">
-            <!-- Vehicle Search Section -->
-            <div class="row mb-3">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label text-light mb-1">
-                        <i class="fas fa-search ml-1"></i> البحث السريع بالسيارة:
-                    </label>
-                    <select class="form-control filter-input-enhanced vehicle-search-dropdown" id="vehicleSearchSelect" name="vehicle_search" style="width: 100%;">
-                        <option value=""></option>
-                        {% for vehicle in vehicles_list %}
-                        <option value="{{ vehicle }}" {% if vehicle_search == vehicle %}selected{% endif %}>{{ vehicle }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3 d-flex align-items-end">
-                    <button type="submit" class="btn btn-action-enhanced me-2" style="background: var(--info-gradient);">
-                        <i class="fas fa-search"></i> بحث
-                    </button>
-                    <button type="button" class="btn btn-action-enhanced" style="background: var(--secondary-gradient);" 
-                            onclick="clearSearch()">
-                        <i class="fas fa-times"></i> مسح البحث
-                    </button>
-                </div>
-            </div>
+
             
             <!-- Filters Section -->
             <div class="row">
@@ -496,7 +474,7 @@
                 <div class="col-md-3 mb-3">
                     <label class="form-label text-light mb-1"><i class="fas fa-car ml-1"></i> السيارة:</label>
                     <select class="form-control filter-input-enhanced search-dropdown" id="vehicleFilterSelect" name="vehicle_filter" style="width: 100%;">
-                        <option value="">جميع السيارات</option>
+                        <option value="">ابحث برقم السيارة أو اختر...</option>
                         {% for vehicle in vehicles_list %}
                         <option value="{{ vehicle }}" {% if vehicle_filter == vehicle %}selected{% endif %}>{{ vehicle }}</option>
                         {% endfor %}
@@ -1118,3 +1096,51 @@ $(document).ready(function() {
     }, 500);
 });
 </script>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Initialize all filter dropdowns with Select2 and search capability
+    $('.search-dropdown').each(function() {
+        var placeholder = '';
+        
+        if ($(this).attr('name') === 'status_filter') {
+            placeholder = 'اختر الحالة...';
+        } else if ($(this).attr('name') === 'vehicle_filter') {
+            placeholder = 'ابحث برقم السيارة...'; 
+        } else if ($(this).attr('name') === 'department_filter') {
+            placeholder = 'اختر القسم...';
+        }
+        
+        $(this).select2({
+            placeholder: placeholder,
+            allowClear: true,
+            dir: 'rtl',
+            theme: 'default',
+            width: '100%',
+            dropdownCssClass: 'select2-dropdown-dark',
+            minimumInputLength: 0,
+            language: {
+                noResults: function() {
+                    return "لا توجد نتائج مطابقة";
+                },
+                searching: function() {
+                    return "جاري البحث...";
+                },
+                inputTooShort: function() {
+                    return "ابحث أو اختر من القائمة";
+                }
+            }
+        });
+    });
+
+    // Enhanced clearFilters function
+    window.clearFilters = function() {
+        $('.search-dropdown').each(function() {
+            $(this).val('').trigger('change');
+        });
+        document.getElementById('filterForm').submit();
+    };
+});
+</script>
+{% endblock %}
