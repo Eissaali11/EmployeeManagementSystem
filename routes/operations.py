@@ -753,7 +753,7 @@ def delete_operation(id):
         db.session.rollback()
         current_app.logger.error(f"خطأ في حذف العملية #{id}: {str(e)}")
         flash(f'حدث خطأ أثناء حذف العملية: {str(e)}', 'error')
-        return redirect(url_for('operations.view_operation', id=id))
+        return redirect(url_for('operations.view_operation', operation_id=id))
 
 @operations_bp.route('/notifications')
 @login_required
