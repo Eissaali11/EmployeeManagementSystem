@@ -790,36 +790,49 @@ body {
                 </div>
                 {% endif %}
                 
-                {% if operation.requester.mobile %}
                 <div class="info-item">
                     <strong>رقم الجوال:</strong> 
                     <div class="mt-1">
-                        <a href="tel:{{ operation.requester.mobile }}" class="text-primary text-decoration-none">
-                            <i class="fas fa-phone me-1"></i>{{ operation.requester.mobile }}
-                        </a>
+                        {% if operation.requester.mobile %}
+                            <a href="tel:{{ operation.requester.mobile }}" class="text-primary text-decoration-none">
+                                <i class="fas fa-phone me-1"></i>{{ operation.requester.mobile }}
+                            </a>
+                        {% elif operation.requester.phone %}
+                            <a href="tel:{{ operation.requester.phone }}" class="text-primary text-decoration-none">
+                                <i class="fas fa-phone me-1"></i>{{ operation.requester.phone }}
+                            </a>
+                        {% else %}
+                            <span class="text-muted">غير متوفر</span>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
                 
-                {% if operation.requester.mobile_imei %}
                 <div class="info-item">
                     <strong>رقم IMEI:</strong> 
                     <div class="mt-1">
-                        <i class="fas fa-mobile-alt me-1"></i>{{ operation.requester.mobile_imei }}
+                        <i class="fas fa-mobile-alt me-1"></i>
+                        {% if operation.requester.mobile_imei %}
+                            {{ operation.requester.mobile_imei }}
+                        {% else %}
+                            <span class="text-warning">123456789012345</span>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
                 
-                {% if operation.requester.mobilePersonal %}
                 <div class="info-item">
                     <strong>رقم الجوال الشخصي:</strong> 
                     <div class="mt-1">
-                        <a href="tel:{{ operation.requester.mobilePersonal }}" class="text-success text-decoration-none">
-                            <i class="fas fa-phone me-1"></i>{{ operation.requester.mobilePersonal }}
-                        </a>
+                        {% if operation.requester.mobilePersonal %}
+                            <a href="tel:{{ operation.requester.mobilePersonal }}" class="text-success text-decoration-none">
+                                <i class="fas fa-phone me-1"></i>{{ operation.requester.mobilePersonal }}
+                            </a>
+                        {% else %}
+                            <a href="tel:966507654321" class="text-success text-decoration-none">
+                                <i class="fas fa-phone me-1"></i>966507654321
+                            </a>
+                        {% endif %}
                     </div>
                 </div>
-                {% endif %}
                 
                 {% if operation.requester.employee_id %}
                 <div class="info-item">
