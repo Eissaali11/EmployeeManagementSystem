@@ -1,0 +1,202 @@
+{% extends "landing_admin/layout.html" %}
+
+{% block title %}إدارة الميزات - إدارة صفحة الهبوط{% endblock %}
+{% block page_title %}إدارة ميزات النظام{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0">
+                    <i class="fas fa-star me-2"></i>
+                    ميزات النظام
+                </h5>
+                <button class="btn btn-primary" onclick="addFeature()">
+                    <i class="fas fa-plus me-2"></i>إضافة ميزة جديدة
+                </button>
+            </div>
+            
+            <div class="row" id="features-container">
+                {% for feature in settings.features %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="{{ feature.icon }}"></i>
+                        </div>
+                        <h6 class="feature-title">{{ feature.title }}</h6>
+                        <p class="feature-description">{{ feature.description }}</p>
+                        <div class="feature-actions">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editFeature({{ loop.index0 }})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteFeature({{ loop.index0 }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal إضافة/تعديل ميزة -->
+<div class="modal fade" id="featureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="featureModalTitle">إضافة ميزة جديدة</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="featureForm">
+                    <div class="mb-3">
+                        <label for="featureTitle" class="form-label">عنوان الميزة</label>
+                        <input type="text" class="form-control" id="featureTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="featureIcon" class="form-label">أيقونة الميزة (Font Awesome)</label>
+                        <input type="text" class="form-control" id="featureIcon" placeholder="fas fa-cog" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="featureDescription" class="form-label">وصف الميزة</label>
+                        <textarea class="form-control" id="featureDescription" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-primary" onclick="saveFeature()">حفظ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.feature-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    text-align: center;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    color: white;
+    font-size: 24px;
+}
+
+.feature-title {
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.feature-description {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.feature-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.feature-card:hover .feature-actions {
+    opacity: 1;
+}
+</style>
+
+<script>
+let editingIndex = -1;
+
+function addFeature() {
+    editingIndex = -1;
+    document.getElementById('featureModalTitle').textContent = 'إضافة ميزة جديدة';
+    document.getElementById('featureForm').reset();
+    new bootstrap.Modal(document.getElementById('featureModal')).show();
+}
+
+function editFeature(index) {
+    editingIndex = index;
+    document.getElementById('featureModalTitle').textContent = 'تعديل الميزة';
+    
+    // جلب بيانات الميزة من الخادم
+    fetch(`/landing-admin/api/features/${index}`)
+        .then(response => response.json())
+        .then(feature => {
+            document.getElementById('featureTitle').value = feature.title;
+            document.getElementById('featureIcon').value = feature.icon;
+            document.getElementById('featureDescription').value = feature.description;
+            new bootstrap.Modal(document.getElementById('featureModal')).show();
+        });
+}
+
+function deleteFeature(index) {
+    if (confirm('هل أنت متأكد من حذف هذه الميزة؟')) {
+        fetch(`/landing-admin/api/features/${index}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('حدث خطأ أثناء الحذف');
+            }
+        });
+    }
+}
+
+function saveFeature() {
+    const formData = {
+        title: document.getElementById('featureTitle').value,
+        icon: document.getElementById('featureIcon').value,
+        description: document.getElementById('featureDescription').value
+    };
+    
+    const url = editingIndex >= 0 ? 
+        `/landing-admin/api/features/${editingIndex}` : 
+        '/landing-admin/api/features';
+    
+    const method = editingIndex >= 0 ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('featureModal')).hide();
+            location.reload();
+        } else {
+            alert('حدث خطأ أثناء الحفظ');
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -123,6 +123,77 @@ def features_management():
     settings = load_landing_settings()
     return render_template('landing_admin/features.html', settings=settings)
 
+# API endpoints for features management
+@landing_admin_bp.route('/api/features', methods=['POST'])
+@login_required
+@admin_required
+def add_feature():
+    """إضافة ميزة جديدة"""
+    data = request.get_json()
+    settings = load_landing_settings()
+    
+    new_feature = {
+        'title': data.get('title'),
+        'icon': data.get('icon'),
+        'description': data.get('description')
+    }
+    
+    if 'features' not in settings:
+        settings['features'] = []
+    
+    settings['features'].append(new_feature)
+    save_landing_settings(settings)
+    
+    return jsonify({'success': True})
+
+@landing_admin_bp.route('/api/features/<int:index>', methods=['GET'])
+@login_required
+@admin_required
+def get_feature(index):
+    """جلب ميزة محددة"""
+    settings = load_landing_settings()
+    features = settings.get('features', [])
+    
+    if 0 <= index < len(features):
+        return jsonify(features[index])
+    
+    return jsonify({'error': 'Feature not found'}), 404
+
+@landing_admin_bp.route('/api/features/<int:index>', methods=['PUT'])
+@login_required
+@admin_required
+def update_feature(index):
+    """تحديث ميزة"""
+    data = request.get_json()
+    settings = load_landing_settings()
+    features = settings.get('features', [])
+    
+    if 0 <= index < len(features):
+        features[index] = {
+            'title': data.get('title'),
+            'icon': data.get('icon'),
+            'description': data.get('description')
+        }
+        save_landing_settings(settings)
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Feature not found'}), 404
+
+@landing_admin_bp.route('/api/features/<int:index>', methods=['DELETE'])
+@login_required
+@admin_required
+def delete_feature(index):
+    """حذف ميزة"""
+    settings = load_landing_settings()
+    features = settings.get('features', [])
+    
+    if 0 <= index < len(features):
+        features.pop(index)
+        save_landing_settings(settings)
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Feature not found'}), 404
+
 @landing_admin_bp.route('/testimonials')
 @login_required
 @admin_required
