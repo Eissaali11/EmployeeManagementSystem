@@ -3256,6 +3256,9 @@ def confirm_delete_handovers(vehicle_id):
 
         # الحصول على معرفات السجلات المحددة
         record_ids = request.form.getlist('handover_ids[]')
+        # إضافة logs للتشخيص
+        print(f"DEBUG: Form data received: {request.form}")
+        print(f"DEBUG: Handover IDs: {record_ids}")
 
         if not record_ids:
                 flash('لم يتم تحديد أي سجل للحذف!', 'warning')
