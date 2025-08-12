@@ -272,3 +272,22 @@ def login():
             flash('بيانات الدخول غير صحيحة. جرب بيانات التجربة المعروضة', 'error')
     
     return render_template('landing/login.html')
+
+# روتات العروض التوضيحية المدمجة (iframe)
+@landing_bp.route('/nuzum/demo-iframe/<demo_type>')
+def demo_iframe(demo_type):
+    """عرض iframe للنظام الحقيقي"""
+    
+    # تحديد الصفحة المطلوبة حسب النوع
+    demo_routes = {
+        'employees': '/dashboard/employees',
+        'vehicles': '/dashboard/vehicles', 
+        'attendance': '/dashboard/attendance',
+        'reports': '/dashboard/reports'
+    }
+    
+    target_route = demo_routes.get(demo_type, '/dashboard')
+    
+    return render_template('landing/demo_iframe.html', 
+                         demo_type=demo_type,
+                         target_route=target_route)
