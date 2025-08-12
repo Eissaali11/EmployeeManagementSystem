@@ -1,0 +1,854 @@
+{% extends "landing/layout.html" %}
+
+{% block title %}الميزات - نُظم{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* تحسينات بصرية متطورة */
+    .hero-features {
+        background: linear-gradient(135deg, rgba(30, 58, 92, 0.95) 0%, rgba(44, 82, 130, 0.95) 100%), 
+                    url('/static/images/placeholder-saudi-office.svg') center/cover no-repeat;
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .features-stats {
+        background: linear-gradient(135deg, #4fd1c7 0%, #06b6d4 100%);
+        color: white;
+        padding: 60px 0;
+        margin: 60px 0;
+        border-radius: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .features-stats::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.03) 2deg, transparent 4deg);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    .feature-showcase {
+        background: white;
+        border-radius: 25px;
+        padding: 50px 30px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-bottom: 50px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-showcase::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(77,209,199,0.1), transparent);
+        transition: left 1s ease;
+    }
+    
+    .feature-showcase:hover::before {
+        left: 100%;
+    }
+    
+    .feature-showcase:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 30px 80px rgba(30,58,92,0.15);
+    }
+    
+    .feature-icon-large {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #4fd1c7, #06b6d4, #4299e1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 30px;
+        font-size: 3rem;
+        color: white;
+        position: relative;
+        animation: pulse 3s ease-in-out infinite;
+        box-shadow: 0 15px 35px rgba(77,209,199,0.4);
+    }
+    
+    @keyframes pulse {
+        0% { box-shadow: 0 15px 35px rgba(77,209,199,0.4); }
+        50% { box-shadow: 0 20px 45px rgba(77,209,199,0.6); }
+        100% { box-shadow: 0 15px 35px rgba(77,209,199,0.4); }
+    }
+    
+    .benefit-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
+        border: 2px solid transparent;
+    }
+    
+    .benefit-card:hover {
+        transform: translateY(-10px);
+        border-color: #4fd1c7;
+        box-shadow: 0 20px 50px rgba(77,209,199,0.2);
+    }
+    
+    .roi-section {
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border-radius: 25px;
+        padding: 60px 30px;
+        text-align: center;
+        margin: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .pricing-teaser {
+        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        color: white;
+        border-radius: 25px;
+        padding: 50px 30px;
+        text-align: center;
+        margin: 60px 0;
+        position: relative;
+    }
+    
+    .demo-cta {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 25px;
+        padding: 80px 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .floating-element {
+        position: absolute;
+        animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+    
+    .success-story {
+        background: #f8f9fa;
+        border-left: 5px solid #4fd1c7;
+        padding: 25px;
+        border-radius: 15px;
+        margin: 30px 0;
+        position: relative;
+    }
+    
+    .feature-comparison {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        margin: 40px 0;
+    }
+    
+    .comparison-header {
+        background: linear-gradient(135deg, #1e3a5c, #2c5282);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .testimonial-feature {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        margin: 30px 0;
+        position: relative;
+    }
+    
+    .testimonial-feature::before {
+        content: '"';
+        font-size: 4rem;
+        color: #4fd1c7;
+        position: absolute;
+        top: 10px;
+        left: 20px;
+        opacity: 0.3;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section للميزات -->
+<div class="hero-features">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="display-3 fw-bold mb-4">ميزات تحويلية لنجاح مؤسستك</h1>
+                <p class="lead mb-5">اكتشف كيف يمكن لنُظم أن يوفر +40% من وقت العمليات الإدارية ويزيد الإنتاجية بنسبة 65%</p>
+                
+                <!-- شعار الثقة -->
+                <div class="d-inline-flex align-items-center bg-white bg-opacity-20 rounded-pill px-4 py-2 mb-4">
+                    <span class="me-2" style="font-size: 1.5rem;">🏆</span>
+                    <span style="font-weight: 600;">الخيار الأول لأكثر من 500 شركة سعودية</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات النجاح -->
+<div class="container">
+    <div class="features-stats">
+        <div class="row text-center">
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold counter">40</h2>
+                <p class="lead">% توفير في الوقت</p>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold counter">65</h2>
+                <p class="lead">% زيادة الإنتاجية</p>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold counter">98</h2>
+                <p class="lead">% رضا العملاء</p>
+            </div>
+            <div class="col-md-3 col-6 mb-4">
+                <h2 class="display-4 fw-bold counter">500</h2>
+                <p class="lead">+ شركة تثق بنا</p>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<!-- الميزة الأولى: إدارة الموظفين -->
+<div class="container my-5">
+    <div class="feature-showcase">
+        <div class="row align-items-center">
+            <div class="col-lg-6 order-lg-2">
+                <div class="feature-icon-large">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-primary mb-4">إدارة الموظفين الذكية</h2>
+                <p class="lead text-muted mb-4">
+                    نظام متكامل يوفر 40% من الوقت المستنفذ في إدارة الموظفين مع دقة 99% في البيانات
+                </p>
+                
+                <!-- قصة نجاح قصيرة -->
+                <div class="success-story">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="me-3" style="width: 50px; height: 50px; background: #4299e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">شركة البناء السعودية</h6>
+                            <small class="text-muted">وفرت 15 ساعة أسبوعياً في إدارة 200 موظف</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 order-lg-1">
+                <img src="/static/images/employee-management.svg" alt="إدارة الموظفين" class="img-fluid mb-4">
+                
+                <!-- الفوائد الرئيسية -->
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #48bb78; font-size: 2rem;">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <h6 class="fw-bold">ملفات شاملة</h6>
+                            <small class="text-muted">بيانات كاملة للموظفين</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #ed8936; font-size: 2rem;">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <h6 class="fw-bold">تنبيهات ذكية</h6>
+                            <small class="text-muted">انتهاء المستندات</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #4299e1; font-size: 2rem;">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <h6 class="fw-bold">استيراد ذكي</h6>
+                            <small class="text-muted">من Excel مباشرة</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #f093fb; font-size: 2rem;">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <h6 class="fw-bold">بحث متقدم</h6>
+                            <small class="text-muted">فلترة وتصنيف</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<!-- الميزة الثانية: إدارة المركبات -->
+<div class="container my-5">
+    <div class="feature-showcase">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="feature-icon-large">
+                    <i class="fas fa-car"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-info mb-4">إدارة أسطول ذكية</h2>
+                <p class="lead text-muted mb-4">
+                    تتبع دقيق لأسطولك مع توفير 30% من تكاليف الصيانة وضمان 95% كفاءة التشغيل
+                </p>
+                
+                <!-- مقارنة سريعة -->
+                <div class="feature-comparison">
+                    <div class="comparison-header">
+                        <h5 class="mb-0">قبل وبعد استخدام نُظم</h5>
+                    </div>
+                    <div class="p-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <h6 class="text-danger">❌ قبل نُظم</h6>
+                                <small class="d-block text-muted">• متابعة يدوية للصيانة</small>
+                                <small class="d-block text-muted">• فقدان الوثائق</small>
+                                <small class="d-block text-muted">• تكاليف غير متوقعة</small>
+                            </div>
+                            <div class="col-6">
+                                <h6 class="text-success">✅ مع نُظم</h6>
+                                <small class="d-block text-success">• تنبيهات تلقائية</small>
+                                <small class="d-block text-success">• حفظ رقمي آمن</small>
+                                <small class="d-block text-success">• توفير 30% تكاليف</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <img src="/static/images/vehicle-management.svg" alt="إدارة المركبات" class="img-fluid mb-4">
+                
+                <!-- ROI للمركبات -->
+                <div class="roi-section">
+                    <h4 class="fw-bold mb-3">🚗 لأسطول 20 مركبة</h4>
+                    <div class="row">
+                        <div class="col-6">
+                            <h3 class="fw-bold">12,000 ﷼</h3>
+                            <p class="mb-0">توفير شهري في الصيانة</p>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="fw-bold">25 ساعة</h3>
+                            <p class="mb-0">توفير أسبوعي في المتابعة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<!-- الميزة الثالثة: نظام الحضور -->
+<div class="container my-5">
+    <div class="feature-showcase">
+        <div class="row align-items-center">
+            <div class="col-lg-6 order-lg-2">
+                <div class="feature-icon-large">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-warning mb-4">حضور ذكي ودقيق</h2>
+                <p class="lead text-muted mb-4">
+                    نظام حضور متطور يوفر 85% من الوقت المستهلك في المتابعة اليدوية
+                </p>
+                
+                <!-- شهادة عميل -->
+                <div class="testimonial-feature">
+                    <p class="mb-3 fst-italic">
+                        "النظام وفر علينا 20 ساعة شهرياً كانت تُستهلك في حساب الحضور والغياب والساعات الإضافية."
+                    </p>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3" style="width: 50px; height: 50px; background: #48bb78; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0">أ. سالم النهدي</h6>
+                            <small class="text-muted">مدير الموارد البشرية - مجموعة النهدي</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- إحصائيات سريعة -->
+                <div class="row mt-4">
+                    <div class="col-4 text-center">
+                        <h4 class="fw-bold text-success">99.9%</h4>
+                        <small class="text-muted">دقة التسجيل</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h4 class="fw-bold text-info">10 ثواني</h4>
+                        <small class="text-muted">سرعة المعالجة</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h4 class="fw-bold text-warning">24/7</h4>
+                        <small class="text-muted">التوفر</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 order-lg-1">
+                <img src="/static/images/attendance-system.svg" alt="نظام الحضور" class="img-fluid mb-4">
+                
+                <!-- مميزات التقويم -->
+                <div class="bg-light p-4 rounded-4 mt-4">
+                    <h5 class="fw-bold mb-3 text-primary">🕌 دعم التقويم الهجري الكامل</h5>
+                    <div class="row">
+                        <div class="col-6">
+                            <small class="d-block mb-2">✅ التقويم الهجري والميلادي</small>
+                            <small class="d-block mb-2">✅ إجازات المملكة الرسمية</small>
+                        </div>
+                        <div class="col-6">
+                            <small class="d-block mb-2">✅ مواقيت الصلاة المدمجة</small>
+                            <small class="d-block mb-2">✅ حساب شهر رمضان</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    
+<!-- الميزة الرابعة: إدارة الرواتب -->
+<div class="container my-5">
+    <div class="feature-showcase">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="feature-icon-large">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h2 class="display-5 fw-bold text-success mb-4">نظام رواتب محاسبي دقيق</h2>
+                <p class="lead text-muted mb-4">
+                    معالجة آمنة ودقيقة لرواتب الموظفين مع توفير 60% من الوقت المحاسبي
+                </p>
+                
+                <!-- عرض اقتصادي -->
+                <div class="pricing-teaser">
+                    <h4 class="fw-bold mb-3">💰 احسب التوفير لشركتك</h4>
+                    <p class="mb-3">لشركة بـ 50 موظف:</p>
+                    <div class="row">
+                        <div class="col-6">
+                            <h5 class="fw-bold">80 ساعة</h5>
+                            <small>توفير شهري</small>
+                        </div>
+                        <div class="col-6">
+                            <h5 class="fw-bold">4,800 ﷼</h5>
+                            <small>قيمة الوقت الموفر</small>
+                        </div>
+                    </div>
+                    <a href="/nuzum/pricing" class="btn btn-light btn-lg mt-3">
+                        <i class="fas fa-calculator me-2"></i>احسب التوفير لشركتك
+                    </a>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <img src="/static/images/salary-management.svg" alt="إدارة الرواتب" class="img-fluid mb-4">
+                
+                <!-- مميزات المحاسبة -->
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #48bb78; font-size: 2rem;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h6 class="fw-bold">أمان عالي</h6>
+                            <small class="text-muted">تشفير البيانات المالية</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #4299e1; font-size: 2rem;">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <h6 class="fw-bold">حساب تلقائي</h6>
+                            <small class="text-muted">بدلات وخصومات</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #ed8936; font-size: 2rem;">
+                                <i class="fas fa-university"></i>
+                            </div>
+                            <h6 class="fw-bold">تحويل بنكي</h6>
+                            <small class="text-muted">ملفات SARIE</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="benefit-card text-center">
+                            <div class="mb-2" style="color: #f093fb; font-size: 2rem;">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <h6 class="fw-bold">كشوف رواتب</h6>
+                            <small class="text-muted">PDF عربي جميل</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قسم التقارير والتحليلات -->
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="display-4 fw-bold text-primary">تقارير ذكية تساعد في اتخاذ القرار</h2>
+        <p class="lead text-muted">حول بياناتك إلى رؤى قابلة للتنفيذ</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <div class="benefit-card text-center h-100">
+                <div class="floating-element" style="top: 20px; right: 20px; color: #f56565; font-size: 1.2rem;">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <i class="fas fa-file-pdf text-danger mb-3" style="font-size: 4rem;"></i>
+                <h4 class="fw-bold mb-3">تقارير PDF احترافية</h4>
+                <p class="text-muted mb-4">تقارير جميلة وواضحة بدعم كامل للغة العربية والخطوط السعودية</p>
+                <div class="bg-light p-3 rounded mb-3">
+                    <small class="d-block mb-1">✅ دعم الخط العربي الجميل</small>
+                    <small class="d-block mb-1">✅ شعار الشركة والختم</small>
+                    <small class="d-block mb-1">✅ جداول منسقة ومرتبة</small>
+                    <small class="d-block">✅ رسوم بيانية ملونة</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="benefit-card text-center h-100">
+                <div class="floating-element" style="top: 20px; right: 20px; color: #48bb78; font-size: 1.2rem;">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <i class="fas fa-file-excel text-success mb-3" style="font-size: 4rem;"></i>
+                <h4 class="fw-bold mb-3">تصدير Excel متقدم</h4>
+                <p class="text-muted mb-4">بيانات منظمة ومهيأة للتحليل المتقدم والمعالجة الإحصائية</p>
+                <div class="bg-light p-3 rounded mb-3">
+                    <small class="d-block mb-1">✅ فلترة وتجميع البيانات</small>
+                    <small class="d-block mb-1">✅ رسوم بيانية في Excel</small>
+                    <small class="d-block mb-1">✅ تنسيق احترافي للجداول</small>
+                    <small class="d-block">✅ معادلات محاسبية جاهزة</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="benefit-card text-center h-100">
+                <div class="floating-element" style="top: 20px; right: 20px; color: #4299e1; font-size: 1.2rem;">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <img src="/static/images/reports-analytics.svg" alt="التحليلات" class="img-fluid mb-3" style="height: 200px; object-fit: contain;">
+                <h4 class="fw-bold mb-3">لوحة تحليلات تفاعلية</h4>
+                <p class="text-muted mb-4">رسوم بيانية حية تُحدث تلقائياً لمساعدتك في اتخاذ قرارات مدروسة</p>
+                <div class="bg-light p-3 rounded mb-3">
+                    <small class="d-block mb-1">✅ رسوم بيانية تفاعلية</small>
+                    <small class="d-block mb-1">✅ مؤشرات الأداء الرئيسية</small>
+                    <small class="d-block mb-1">✅ توقعات وتحليل الاتجاهات</small>
+                    <small class="d-block">✅ تحديث تلقائي للبيانات</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قسم الضمان والأمان -->
+<div class="container my-5">
+    <div class="feature-showcase">
+        <div class="text-center mb-5">
+            <h2 class="display-4 fw-bold text-dark">🔒 أمان وثقة مطلقة</h2>
+            <p class="lead text-muted">نحمي بياناتك بأعلى معايير الأمان العالمية</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card text-center h-100">
+                    <div class="mb-3" style="color: #48bb78; font-size: 3rem;">
+                        <i class="fas fa-shield-check"></i>
+                    </div>
+                    <h5 class="fw-bold">تشفير 256-bit</h5>
+                    <p class="text-muted">حماية قصوى للبيانات الحساسة</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card text-center h-100">
+                    <div class="mb-3" style="color: #4299e1; font-size: 3rem;">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h5 class="fw-bold">نسخ احتياطي تلقائي</h5>
+                    <p class="text-muted">حفظ آمن لجميع البيانات</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card text-center h-100">
+                    <div class="mb-3" style="color: #ed8936; font-size: 3rem;">
+                        <i class="fas fa-user-lock"></i>
+                    </div>
+                    <h5 class="fw-bold">صلاحيات متقدمة</h5>
+                    <p class="text-muted">تحكم دقيق في الوصول</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card text-center h-100">
+                    <div class="mb-3" style="color: #f093fb; font-size: 3rem;">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    <h5 class="fw-bold">سجل العمليات</h5>
+                    <p class="text-muted">تتبع كامل لجميع الأنشطة</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قسم المقارنة مع المنافسين -->
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="display-4 fw-bold text-primary">لماذا نُظم هو الخيار الأفضل؟</h2>
+        <p class="lead text-muted">مقارنة شاملة تُظهر تفوقنا على المنافسين</p>
+    </div>
+    
+    <div class="feature-comparison">
+        <div class="comparison-header">
+            <h3 class="mb-0">مقارنة شاملة بين نُظم والأنظمة الأخرى</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-borderless mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="fw-bold">الميزة</th>
+                        <th class="text-center fw-bold text-success">نُظم ✅</th>
+                        <th class="text-center fw-bold text-muted">المنافس أ</th>
+                        <th class="text-center fw-bold text-muted">المنافس ب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-bold">واجهة عربية كاملة</td>
+                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
+                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
+                        <td class="text-center text-warning"><i class="fas fa-minus-circle fa-lg"></i></td>
+                    </tr>
+                    <tr class="bg-light">
+                        <td class="fw-bold">دعم التقويم الهجري</td>
+                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
+                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
+                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">تكامل مع البنوك السعودية</td>
+                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
+                        <td class="text-center text-warning"><i class="fas fa-minus-circle fa-lg"></i></td>
+                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
+                    </tr>
+                    <tr class="bg-light">
+                        <td class="fw-bold">دعم فني باللغة العربية</td>
+                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
+                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
+                        <td class="text-center text-warning"><i class="fas fa-minus-circle fa-lg"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold">سعر تنافسي</td>
+                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
+                        <td class="text-center text-danger">3X أغلى</td>
+                        <td class="text-center text-danger">2X أغلى</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- قسم الأسئلة الشائعة -->
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="display-4 fw-bold text-primary">الأسئلة الشائعة</h2>
+        <p class="lead text-muted">إجابات سريعة على أكثر الأسئلة طرحاً</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item mb-3 border-0 shadow-sm">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            هل يمكن تجربة النظام مجاناً قبل الشراء؟
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            نعم! نقدم تجربة مجانية لمدة 30 يوماً تشمل جميع الميزات. لا نطلب بيانات بطاقة ائتمانية للتجربة المجانية.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item mb-3 border-0 shadow-sm">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            كم يستغرق تنفيذ النظام في شركتي؟
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            التنفيذ يتم في أقل من 7 أيام عمل. نوفر فريق تنفيذ متخصص لضمان الانتقال السلس من نظامك الحالي.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item mb-3 border-0 shadow-sm">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            هل النظام متوافق مع الأنظمة الأخرى في شركتي؟
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            نعم، نُظم يدعم التكامل مع معظم الأنظمة المحاسبية والإدارية. كما نوفر واجهات برمجة تطبيقات (APIs) للتكامل المخصص.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion-item mb-3 border-0 shadow-sm">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            ما مستوى الدعم الفني المتوفر؟
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            نوفر دعم فني 24/7 باللغة العربية. فريق الدعم متخصص ومدرب على جميع ميزات النظام لضمان حل سريع لأي استفسار.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- دعوة قوية للعمل -->
+<div class="container my-5">
+    <div class="demo-cta">
+        <div class="floating-element" style="top: 30px; left: 30px; color: rgba(255,255,255,0.3); font-size: 3rem;">
+            <i class="fas fa-rocket"></i>
+        </div>
+        <div class="floating-element" style="bottom: 30px; right: 30px; color: rgba(255,255,255,0.3); font-size: 2rem;">
+            <i class="fas fa-star"></i>
+        </div>
+        
+        <h2 class="display-3 fw-bold mb-4">احصل على ميزة تنافسية اليوم!</h2>
+        <p class="lead mb-4">انضم إلى +500 شركة سعودية حققت نجاحاً استثنائياً مع نُظم</p>
+        
+        <div class="row justify-content-center mb-4">
+            <div class="col-auto">
+                <div class="d-flex align-items-center bg-white bg-opacity-20 rounded-pill px-4 py-2 mb-3">
+                    <i class="fas fa-gift me-2" style="font-size: 1.5rem;"></i>
+                    <span class="fw-bold">30 يوماً تجربة مجانية - بدون التزام!</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-auto me-3">
+                <a href="/nuzum/demo" class="btn btn-light btn-lg px-5 py-3" style="font-weight: 600; font-size: 1.2rem;">
+                    <i class="fas fa-play me-2"></i>ابدأ التجربة المجانية
+                </a>
+            </div>
+            <div class="col-auto">
+                <a href="/nuzum/contact" class="btn btn-outline-light btn-lg px-5 py-3" style="font-weight: 600; font-size: 1.2rem;">
+                    <i class="fas fa-phone me-2"></i>تحدث مع خبير
+                </a>
+            </div>
+        </div>
+        
+        <!-- ضمانات إضافية -->
+        <div class="row mt-5">
+            <div class="col-md-4 text-center mb-3">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <i class="fas fa-shield-check me-2" style="font-size: 1.5rem;"></i>
+                    <span class="fw-bold">ضمان استرداد 60 يوم</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <i class="fas fa-headset me-2" style="font-size: 1.5rem;"></i>
+                    <span class="fw-bold">دعم فني مجاني</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-center mb-3">
+                <div class="d-flex align-items-center justify-content-center mb-2">
+                    <i class="fas fa-cogs me-2" style="font-size: 1.5rem;"></i>
+                    <span class="fw-bold">تنفيذ مجاني</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إضافة JavaScript للتفاعل -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // تأثير العد التصاعدي للأرقام
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-target') || parseInt(counter.innerText);
+                const count = +counter.innerText;
+                const speed = 200;
+                const inc = target / speed;
+                
+                if (count < target) {
+                    counter.innerText = Math.ceil(count + inc);
+                    setTimeout(updateCount, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            
+            // تشغيل العد عند ظهور العنصر في الشاشة
+            const observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        updateCount();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+            
+            counter.setAttribute('data-target', counter.innerText);
+            counter.innerText = '0';
+            observer.observe(counter);
+        });
+    });
+</script>
+
+{% endblock %}

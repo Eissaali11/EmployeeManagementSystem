@@ -1,854 +1,1060 @@
 {% extends "landing/layout.html" %}
 
-{% block title %}الميزات - نُظم{% endblock %}
+{% block title %}ميزات نُظم - نظام إدارة شامل{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* تحسينات بصرية متطورة */
-    .hero-features {
-        background: linear-gradient(135deg, rgba(30, 58, 92, 0.95) 0%, rgba(44, 82, 130, 0.95) 100%), 
-                    url('/static/images/placeholder-saudi-office.svg') center/cover no-repeat;
+    :root {
+        --primary-color: #1e3a5c;
+        --secondary-color: #2c5282;
+        --accent-color: #4fd1c7;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --gradient-primary: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+        --gradient-accent: linear-gradient(135deg, #4fd1c7 0%, #38b2ac 100%);
+        --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        --gradient-info: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+        --shadow-primary: 0 10px 40px rgba(30, 58, 92, 0.15);
+        --shadow-hover: 0 20px 60px rgba(30, 58, 92, 0.25);
+    }
+
+    /* Hero Section للميزات */
+    .features-hero {
+        background: var(--gradient-primary);
         color: white;
-        padding: 100px 0;
-        text-align: center;
+        padding: 120px 0 80px;
         position: relative;
         overflow: hidden;
     }
-    
-    .features-stats {
-        background: linear-gradient(135deg, #4fd1c7 0%, #06b6d4 100%);
-        color: white;
-        padding: 60px 0;
-        margin: 60px 0;
-        border-radius: 25px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .features-stats::before {
+
+    .features-hero::before {
         content: '';
         position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg, rgba(255,255,255,0.03) 2deg, transparent 4deg);
-        animation: rotate 20s linear infinite;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="2" fill="%23ffffff" opacity="0.1"/><circle cx="80" cy="80" r="2" fill="%23ffffff" opacity="0.1"/><line x1="20" y1="20" x2="80" y2="80" stroke="%23ffffff" stroke-width="1" opacity="0.1"/></pattern></defs><rect width="1000" height="1000" fill="url(%23circuit)"/></svg>') repeat;
+        opacity: 0.3;
     }
-    
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
     }
-    
-    .feature-showcase {
+
+    .hero-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .hero-subtitle {
+        font-size: 1.4rem;
+        opacity: 0.95;
+        max-width: 700px;
+        margin: 0 auto 3rem;
+        line-height: 1.6;
+    }
+
+    .breadcrumb-nav {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 15px 30px;
+        border-radius: 50px;
+        display: inline-block;
+        margin-bottom: 2rem;
+    }
+
+    .breadcrumb-nav a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        margin: 0 10px;
+        transition: color 0.3s ease;
+    }
+
+    .breadcrumb-nav a:hover {
+        color: white;
+    }
+
+    .breadcrumb-nav .current {
+        color: white;
+        font-weight: 600;
+    }
+
+    /* تصنيفات الميزات */
+    .features-categories {
+        background: #f8f9fa;
+        padding: 60px 0;
+    }
+
+    .category-tabs {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 60px;
+    }
+
+    .category-tab {
+        background: white;
+        color: #6c757d;
+        padding: 12px 30px;
+        border-radius: 50px;
+        border: 2px solid #e9ecef;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .category-tab:hover,
+    .category-tab.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(30, 58, 92, 0.2);
+        text-decoration: none;
+    }
+
+    /* بطاقات الميزات المطورة */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 40px;
+        margin-bottom: 60px;
+    }
+
+    .feature-card {
         background: white;
         border-radius: 25px;
-        padding: 50px 30px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        margin-bottom: 50px;
+        overflow: hidden;
+        box-shadow: var(--shadow-primary);
+        transition: all 0.4s ease;
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-15px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .feature-header {
+        padding: 40px 30px 30px;
+        position: relative;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        color: white;
+        margin-bottom: 25px;
+        position: relative;
+        transition: all 0.4s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .feature-icon.management {
+        background: var(--gradient-primary);
+    }
+
+    .feature-icon.vehicles {
+        background: var(--gradient-success);
+    }
+
+    .feature-icon.employees {
+        background: var(--gradient-warning);
+    }
+
+    .feature-icon.reports {
+        background: var(--gradient-info);
+    }
+
+    .feature-icon.security {
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+    }
+
+    .feature-icon.technical {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+    }
+
+    .feature-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+
+    .feature-description {
+        color: #6c757d;
+        line-height: 1.6;
+        margin-bottom: 0;
+    }
+
+    .feature-body {
+        padding: 30px;
+    }
+
+    .feature-capabilities {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .feature-capabilities li {
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f3f4;
+        display: flex;
+        align-items: center;
+        color: #495057;
+        transition: all 0.3s ease;
+    }
+
+    .feature-capabilities li:last-child {
+        border-bottom: none;
+    }
+
+    .feature-capabilities li:hover {
+        color: var(--primary-color);
+        padding-right: 10px;
+    }
+
+    .feature-capabilities li i {
+        margin-left: 12px;
+        color: var(--success-color);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .feature-capabilities li:hover i {
+        transform: scale(1.2);
+    }
+
+    .feature-footer {
+        padding: 20px 30px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .feature-cta {
+        display: inline-block;
+        background: var(--gradient-accent);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
     }
-    
-    .feature-showcase::before {
+
+    .feature-cta::before {
         content: '';
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(77,209,199,0.1), transparent);
-        transition: left 1s ease;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s ease;
     }
-    
-    .feature-showcase:hover::before {
+
+    .feature-cta:hover::before {
         left: 100%;
     }
-    
-    .feature-showcase:hover {
-        transform: translateY(-15px) scale(1.02);
-        box-shadow: 0 30px 80px rgba(30,58,92,0.15);
+
+    .feature-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 209, 199, 0.4);
+        text-decoration: none;
+        color: white;
     }
-    
-    .feature-icon-large {
-        width: 120px;
-        height: 120px;
-        background: linear-gradient(135deg, #4fd1c7, #06b6d4, #4299e1);
-        border-radius: 50%;
+
+    /* قسم المقارنة */
+    .comparison-section {
+        padding: 80px 0;
+        background: white;
+    }
+
+    .comparison-table {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow-primary);
+        margin-top: 40px;
+    }
+
+    .comparison-header {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .comparison-body {
+        padding: 40px;
+    }
+
+    .comparison-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 20px;
+        padding: 20px 0;
+        border-bottom: 1px solid #e9ecef;
+        align-items: center;
+    }
+
+    .comparison-row:last-child {
+        border-bottom: none;
+    }
+
+    .comparison-feature {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .comparison-check {
+        text-align: center;
+        font-size: 1.5rem;
+    }
+
+    .check-yes {
+        color: var(--success-color);
+    }
+
+    .check-no {
+        color: #dc3545;
+    }
+
+    /* قسم الشهادات */
+    .testimonials-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 80px 0;
+    }
+
+    .testimonial-card {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: var(--shadow-primary);
+        text-align: center;
+        margin-bottom: 30px;
+        transition: all 0.4s ease;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .testimonial-content {
+        font-size: 1.1rem;
+        color: #495057;
+        line-height: 1.6;
+        margin-bottom: 25px;
+        font-style: italic;
+    }
+
+    .testimonial-author {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 30px;
+        gap: 15px;
+    }
+
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--gradient-accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .author-info h5 {
+        margin: 0;
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .author-info p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .rating {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 15px;
+    }
+
+    .star {
+        color: #ffc107;
+        font-size: 1.2rem;
+    }
+
+    /* قسم CTA النهائي */
+    .final-cta {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 80px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .final-cta::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>') repeat;
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .cta-title {
         font-size: 3rem;
-        color: white;
-        position: relative;
-        animation: pulse 3s ease-in-out infinite;
-        box-shadow: 0 15px 35px rgba(77,209,199,0.4);
+        font-weight: 800;
+        margin-bottom: 20px;
     }
-    
-    @keyframes pulse {
-        0% { box-shadow: 0 15px 35px rgba(77,209,199,0.4); }
-        50% { box-shadow: 0 20px 45px rgba(77,209,199,0.6); }
-        100% { box-shadow: 0 15px 35px rgba(77,209,199,0.4); }
+
+    .cta-subtitle {
+        font-size: 1.3rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto 40px;
+        line-height: 1.6;
     }
-    
-    .benefit-card {
+
+    .cta-buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .cta-button {
         background: white;
-        border-radius: 20px;
-        padding: 30px 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        margin-bottom: 30px;
-        border: 2px solid transparent;
+        color: var(--primary-color);
+        padding: 18px 40px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.4s ease;
+        border: 2px solid white;
     }
-    
-    .benefit-card:hover {
-        transform: translateY(-10px);
-        border-color: #4fd1c7;
-        box-shadow: 0 20px 50px rgba(77,209,199,0.2);
+
+    .cta-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        text-decoration: none;
+        color: var(--primary-color);
     }
-    
-    .roi-section {
-        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+
+    .cta-button.secondary {
+        background: transparent;
         color: white;
-        border-radius: 25px;
-        padding: 60px 30px;
-        text-align: center;
-        margin: 80px 0;
-        position: relative;
-        overflow: hidden;
+        border: 2px solid white;
     }
-    
-    .pricing-teaser {
-        background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-        color: white;
-        border-radius: 25px;
-        padding: 50px 30px;
-        text-align: center;
-        margin: 60px 0;
-        position: relative;
-    }
-    
-    .demo-cta {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        border-radius: 25px;
-        padding: 80px 30px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .floating-element {
-        position: absolute;
-        animation: float 6s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-        100% { transform: translateY(0px); }
-    }
-    
-    .success-story {
-        background: #f8f9fa;
-        border-left: 5px solid #4fd1c7;
-        padding: 25px;
-        border-radius: 15px;
-        margin: 30px 0;
-        position: relative;
-    }
-    
-    .feature-comparison {
+
+    .cta-button.secondary:hover {
         background: white;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        margin: 40px 0;
+        color: var(--primary-color);
     }
-    
-    .comparison-header {
-        background: linear-gradient(135deg, #1e3a5c, #2c5282);
-        color: white;
-        padding: 20px;
-        text-align: center;
+
+    /* التصميم المتجاوب */
+    @media (max-width: 992px) {
+        .features-grid {
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .hero-title {
+            font-size: 2.8rem;
+        }
+        
+        .comparison-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+            text-align: center;
+        }
     }
-    
-    .testimonial-feature {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        margin: 30px 0;
-        position: relative;
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .category-tabs {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .feature-card {
+            margin-bottom: 20px;
+        }
+        
+        .cta-title {
+            font-size: 2.2rem;
+        }
+        
+        .cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .cta-button {
+            width: 100%;
+            max-width: 300px;
+        }
     }
-    
-    .testimonial-feature::before {
-        content: '"';
-        font-size: 4rem;
-        color: #4fd1c7;
-        position: absolute;
-        top: 10px;
-        left: 20px;
-        opacity: 0.3;
+
+    /* تأثيرات الانيميشن */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    .feature-card {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.6s ease;
+    }
+
+    .feature-card.animate {
+        opacity: 1;
+        transform: translateY(0);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Hero Section للميزات -->
-<div class="hero-features">
+<!-- Hero Section -->
+<section class="features-hero">
     <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-8 mx-auto">
-                <h1 class="display-3 fw-bold mb-4">ميزات تحويلية لنجاح مؤسستك</h1>
-                <p class="lead mb-5">اكتشف كيف يمكن لنُظم أن يوفر +40% من وقت العمليات الإدارية ويزيد الإنتاجية بنسبة 65%</p>
-                
-                <!-- شعار الثقة -->
-                <div class="d-inline-flex align-items-center bg-white bg-opacity-20 rounded-pill px-4 py-2 mb-4">
-                    <span class="me-2" style="font-size: 1.5rem;">🏆</span>
-                    <span style="font-weight: 600;">الخيار الأول لأكثر من 500 شركة سعودية</span>
-                </div>
-            </div>
+        <div class="hero-content">
+            <nav class="breadcrumb-nav">
+                <a href="/nuzum">الرئيسية</a>
+                <span>/</span>
+                <span class="current">الميزات</span>
+            </nav>
+            
+            <h1 class="hero-title">ميزات نُظم الشاملة</h1>
+            <p class="hero-subtitle">
+                اكتشف كيف يمكن لنُظم تحويل إدارة مؤسستك من خلال مجموعة شاملة من الأدوات المتطورة والميزات الاحترافية المصممة خصيصاً للشركات السعودية
+            </p>
         </div>
     </div>
-</div>
+</section>
 
-<!-- إحصائيات النجاح -->
-<div class="container">
-    <div class="features-stats">
-        <div class="row text-center">
-            <div class="col-md-3 col-6 mb-4">
-                <h2 class="display-4 fw-bold counter">40</h2>
-                <p class="lead">% توفير في الوقت</p>
-            </div>
-            <div class="col-md-3 col-6 mb-4">
-                <h2 class="display-4 fw-bold counter">65</h2>
-                <p class="lead">% زيادة الإنتاجية</p>
-            </div>
-            <div class="col-md-3 col-6 mb-4">
-                <h2 class="display-4 fw-bold counter">98</h2>
-                <p class="lead">% رضا العملاء</p>
-            </div>
-            <div class="col-md-3 col-6 mb-4">
-                <h2 class="display-4 fw-bold counter">500</h2>
-                <p class="lead">+ شركة تثق بنا</p>
-            </div>
+<!-- تصنيفات الميزات -->
+<section class="features-categories">
+    <div class="container">
+        <div class="category-tabs">
+            <a href="#" class="category-tab active" data-category="all">جميع الميزات</a>
+            <a href="#" class="category-tab" data-category="management">الإدارة</a>
+            <a href="#" class="category-tab" data-category="vehicles">المركبات</a>
+            <a href="#" class="category-tab" data-category="employees">الموظفين</a>
+            <a href="#" class="category-tab" data-category="reports">التقارير</a>
+            <a href="#" class="category-tab" data-category="security">الأمان</a>
+            <a href="#" class="category-tab" data-category="technical">التقنية</a>
         </div>
-    </div>
-</div>
-    
-<!-- الميزة الأولى: إدارة الموظفين -->
-<div class="container my-5">
-    <div class="feature-showcase">
-        <div class="row align-items-center">
-            <div class="col-lg-6 order-lg-2">
-                <div class="feature-icon-large">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h2 class="display-5 fw-bold text-primary mb-4">إدارة الموظفين الذكية</h2>
-                <p class="lead text-muted mb-4">
-                    نظام متكامل يوفر 40% من الوقت المستنفذ في إدارة الموظفين مع دقة 99% في البيانات
-                </p>
-                
-                <!-- قصة نجاح قصيرة -->
-                <div class="success-story">
-                    <div class="d-flex align-items-center mb-2">
-                        <div class="me-3" style="width: 50px; height: 50px; background: #4299e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-building"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0 fw-bold">شركة البناء السعودية</h6>
-                            <small class="text-muted">وفرت 15 ساعة أسبوعياً في إدارة 200 موظف</small>
-                        </div>
+
+        <div class="features-grid">
+            <!-- إدارة الموظفين -->
+            <div class="feature-card" data-category="management employees">
+                <div class="feature-header">
+                    <div class="feature-icon management">
+                        <i class="fas fa-users"></i>
                     </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-6 order-lg-1">
-                <img src="/static/images/employee-management.svg" alt="إدارة الموظفين" class="img-fluid mb-4">
-                
-                <!-- الفوائد الرئيسية -->
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #48bb78; font-size: 2rem;">
-                                <i class="fas fa-id-card"></i>
-                            </div>
-                            <h6 class="fw-bold">ملفات شاملة</h6>
-                            <small class="text-muted">بيانات كاملة للموظفين</small>
-                        </div>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #ed8936; font-size: 2rem;">
-                                <i class="fas fa-bell"></i>
-                            </div>
-                            <h6 class="fw-bold">تنبيهات ذكية</h6>
-                            <small class="text-muted">انتهاء المستندات</small>
-                        </div>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #4299e1; font-size: 2rem;">
-                                <i class="fas fa-file-excel"></i>
-                            </div>
-                            <h6 class="fw-bold">استيراد ذكي</h6>
-                            <small class="text-muted">من Excel مباشرة</small>
-                        </div>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #f093fb; font-size: 2rem;">
-                                <i class="fas fa-search"></i>
-                            </div>
-                            <h6 class="fw-bold">بحث متقدم</h6>
-                            <small class="text-muted">فلترة وتصنيف</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    
-<!-- الميزة الثانية: إدارة المركبات -->
-<div class="container my-5">
-    <div class="feature-showcase">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <div class="feature-icon-large">
-                    <i class="fas fa-car"></i>
-                </div>
-                <h2 class="display-5 fw-bold text-info mb-4">إدارة أسطول ذكية</h2>
-                <p class="lead text-muted mb-4">
-                    تتبع دقيق لأسطولك مع توفير 30% من تكاليف الصيانة وضمان 95% كفاءة التشغيل
-                </p>
-                
-                <!-- مقارنة سريعة -->
-                <div class="feature-comparison">
-                    <div class="comparison-header">
-                        <h5 class="mb-0">قبل وبعد استخدام نُظم</h5>
-                    </div>
-                    <div class="p-3">
-                        <div class="row">
-                            <div class="col-6">
-                                <h6 class="text-danger">❌ قبل نُظم</h6>
-                                <small class="d-block text-muted">• متابعة يدوية للصيانة</small>
-                                <small class="d-block text-muted">• فقدان الوثائق</small>
-                                <small class="d-block text-muted">• تكاليف غير متوقعة</small>
-                            </div>
-                            <div class="col-6">
-                                <h6 class="text-success">✅ مع نُظم</h6>
-                                <small class="d-block text-success">• تنبيهات تلقائية</small>
-                                <small class="d-block text-success">• حفظ رقمي آمن</small>
-                                <small class="d-block text-success">• توفير 30% تكاليف</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-6">
-                <img src="/static/images/vehicle-management.svg" alt="إدارة المركبات" class="img-fluid mb-4">
-                
-                <!-- ROI للمركبات -->
-                <div class="roi-section">
-                    <h4 class="fw-bold mb-3">🚗 لأسطول 20 مركبة</h4>
-                    <div class="row">
-                        <div class="col-6">
-                            <h3 class="fw-bold">12,000 ﷼</h3>
-                            <p class="mb-0">توفير شهري في الصيانة</p>
-                        </div>
-                        <div class="col-6">
-                            <h3 class="fw-bold">25 ساعة</h3>
-                            <p class="mb-0">توفير أسبوعي في المتابعة</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    
-<!-- الميزة الثالثة: نظام الحضور -->
-<div class="container my-5">
-    <div class="feature-showcase">
-        <div class="row align-items-center">
-            <div class="col-lg-6 order-lg-2">
-                <div class="feature-icon-large">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h2 class="display-5 fw-bold text-warning mb-4">حضور ذكي ودقيق</h2>
-                <p class="lead text-muted mb-4">
-                    نظام حضور متطور يوفر 85% من الوقت المستهلك في المتابعة اليدوية
-                </p>
-                
-                <!-- شهادة عميل -->
-                <div class="testimonial-feature">
-                    <p class="mb-3 fst-italic">
-                        "النظام وفر علينا 20 ساعة شهرياً كانت تُستهلك في حساب الحضور والغياب والساعات الإضافية."
+                    <h3 class="feature-title">إدارة الموظفين الشاملة</h3>
+                    <p class="feature-description">
+                        نظام متكامل لإدارة جميع بيانات الموظفين مع تتبع المستندات وتواريخ الانتهاء وإدارة الملفات الشخصية
                     </p>
-                    <div class="d-flex align-items-center">
-                        <div class="me-3" style="width: 50px; height: 50px; background: #48bb78; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="fas fa-user-tie"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-0">أ. سالم النهدي</h6>
-                            <small class="text-muted">مدير الموارد البشرية - مجموعة النهدي</small>
-                        </div>
-                    </div>
                 </div>
-                
-                <!-- إحصائيات سريعة -->
-                <div class="row mt-4">
-                    <div class="col-4 text-center">
-                        <h4 class="fw-bold text-success">99.9%</h4>
-                        <small class="text-muted">دقة التسجيل</small>
-                    </div>
-                    <div class="col-4 text-center">
-                        <h4 class="fw-bold text-info">10 ثواني</h4>
-                        <small class="text-muted">سرعة المعالجة</small>
-                    </div>
-                    <div class="col-4 text-center">
-                        <h4 class="fw-bold text-warning">24/7</h4>
-                        <small class="text-muted">التوفر</small>
-                    </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> إدارة البيانات الشخصية والوظيفية</li>
+                        <li><i class="fas fa-check"></i> تتبع المستندات وتواريخ انتهائها</li>
+                        <li><i class="fas fa-check"></i> رفع وإدارة الصور والملفات</li>
+                        <li><i class="fas fa-check"></i> استيراد البيانات من Excel</li>
+                        <li><i class="fas fa-check"></i> نظام بحث وفلترة متقدم</li>
+                        <li><i class="fas fa-check"></i> إدارة الأقسام والوظائف</li>
+                    </ul>
                 </div>
-            </div>
-            
-            <div class="col-lg-6 order-lg-1">
-                <img src="/static/images/attendance-system.svg" alt="نظام الحضور" class="img-fluid mb-4">
-                
-                <!-- مميزات التقويم -->
-                <div class="bg-light p-4 rounded-4 mt-4">
-                    <h5 class="fw-bold mb-3 text-primary">🕌 دعم التقويم الهجري الكامل</h5>
-                    <div class="row">
-                        <div class="col-6">
-                            <small class="d-block mb-2">✅ التقويم الهجري والميلادي</small>
-                            <small class="d-block mb-2">✅ إجازات المملكة الرسمية</small>
-                        </div>
-                        <div class="col-6">
-                            <small class="d-block mb-2">✅ مواقيت الصلاة المدمجة</small>
-                            <small class="d-block mb-2">✅ حساب شهر رمضان</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-    
-<!-- الميزة الرابعة: إدارة الرواتب -->
-<div class="container my-5">
-    <div class="feature-showcase">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <div class="feature-icon-large">
-                    <i class="fas fa-money-bill-wave"></i>
-                </div>
-                <h2 class="display-5 fw-bold text-success mb-4">نظام رواتب محاسبي دقيق</h2>
-                <p class="lead text-muted mb-4">
-                    معالجة آمنة ودقيقة لرواتب الموظفين مع توفير 60% من الوقت المحاسبي
-                </p>
-                
-                <!-- عرض اقتصادي -->
-                <div class="pricing-teaser">
-                    <h4 class="fw-bold mb-3">💰 احسب التوفير لشركتك</h4>
-                    <p class="mb-3">لشركة بـ 50 موظف:</p>
-                    <div class="row">
-                        <div class="col-6">
-                            <h5 class="fw-bold">80 ساعة</h5>
-                            <small>توفير شهري</small>
-                        </div>
-                        <div class="col-6">
-                            <h5 class="fw-bold">4,800 ﷼</h5>
-                            <small>قيمة الوقت الموفر</small>
-                        </div>
-                    </div>
-                    <a href="/nuzum/pricing" class="btn btn-light btn-lg mt-3">
-                        <i class="fas fa-calculator me-2"></i>احسب التوفير لشركتك
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
                     </a>
                 </div>
             </div>
-            
-            <div class="col-lg-6">
-                <img src="/static/images/salary-management.svg" alt="إدارة الرواتب" class="img-fluid mb-4">
-                
-                <!-- مميزات المحاسبة -->
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #48bb78; font-size: 2rem;">
-                                <i class="fas fa-shield-alt"></i>
-                            </div>
-                            <h6 class="fw-bold">أمان عالي</h6>
-                            <small class="text-muted">تشفير البيانات المالية</small>
-                        </div>
+
+            <!-- إدارة المركبات -->
+            <div class="feature-card" data-category="vehicles">
+                <div class="feature-header">
+                    <div class="feature-icon vehicles">
+                        <i class="fas fa-car"></i>
                     </div>
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #4299e1; font-size: 2rem;">
-                                <i class="fas fa-calculator"></i>
-                            </div>
-                            <h6 class="fw-bold">حساب تلقائي</h6>
-                            <small class="text-muted">بدلات وخصومات</small>
-                        </div>
+                    <h3 class="feature-title">إدارة أسطول المركبات</h3>
+                    <p class="feature-description">
+                        نظام متطور لإدارة وتتبع جميع المركبات مع إدارة الوثائق والصيانة والتسليم والاستلام
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> تسجيل بيانات المركبات والوثائق</li>
+                        <li><i class="fas fa-check"></i> نظام تسليم واستلام المركبات</li>
+                        <li><i class="fas fa-check"></i> إدارة الصيانة والورش</li>
+                        <li><i class="fas fa-check"></i> تتبع الفحوصات الدورية</li>
+                        <li><i class="fas fa-check"></i> رفع صور الأضرار والتقارير</li>
+                        <li><i class="fas fa-check"></i> التوقيع الرقمي والموافقات</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
+                </div>
+            </div>
+
+            <!-- نظام الحضور والغياب -->
+            <div class="feature-card" data-category="employees">
+                <div class="feature-header">
+                    <div class="feature-icon employees">
+                        <i class="fas fa-clock"></i>
                     </div>
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #ed8936; font-size: 2rem;">
-                                <i class="fas fa-university"></i>
-                            </div>
-                            <h6 class="fw-bold">تحويل بنكي</h6>
-                            <small class="text-muted">ملفات SARIE</small>
-                        </div>
+                    <h3 class="feature-title">نظام الحضور والغياب</h3>
+                    <p class="feature-description">
+                        تتبع دقيق لحضور الموظفين مع حساب الساعات الإضافية ودعم التقويم الهجري والميلادي
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> تسجيل الحضور والانصراف</li>
+                        <li><i class="fas fa-check"></i> حساب الساعات الإضافية تلقائياً</li>
+                        <li><i class="fas fa-check"></i> دعم التقويم الهجري والميلادي</li>
+                        <li><i class="fas fa-check"></i> تقارير الحضور الشهرية</li>
+                        <li><i class="fas fa-check"></i> إدارة الإجازات والغياب</li>
+                        <li><i class="fas fa-check"></i> تنبيهات التأخير والغياب</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
+                </div>
+            </div>
+
+            <!-- إدارة الرواتب -->
+            <div class="feature-card" data-category="management reports">
+                <div class="feature-header">
+                    <div class="feature-icon reports">
+                        <i class="fas fa-money-bill-wave"></i>
                     </div>
-                    <div class="col-6 mb-3">
-                        <div class="benefit-card text-center">
-                            <div class="mb-2" style="color: #f093fb; font-size: 2rem;">
-                                <i class="fas fa-file-pdf"></i>
-                            </div>
-                            <h6 class="fw-bold">كشوف رواتب</h6>
-                            <small class="text-muted">PDF عربي جميل</small>
-                        </div>
+                    <h3 class="feature-title">نظام إدارة الرواتب</h3>
+                    <p class="feature-description">
+                        نظام محاسبي متكامل لحساب ومعالجة رواتب الموظفين مع البدلات والخصومات والتقارير المالية
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> حساب الرواتب تلقائياً</li>
+                        <li><i class="fas fa-check"></i> إدارة البدلات والخصومات</li>
+                        <li><i class="fas fa-check"></i> ربط الحضور بالراتب</li>
+                        <li><i class="fas fa-check"></i> كشوفات رواتب PDF</li>
+                        <li><i class="fas fa-check"></i> تقارير مالية شاملة</li>
+                        <li><i class="fas fa-check"></i> أرشفة البيانات المالية</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
+                </div>
+            </div>
+
+            <!-- التقارير والتحليلات -->
+            <div class="feature-card" data-category="reports">
+                <div class="feature-header">
+                    <div class="feature-icon reports">
+                        <i class="fas fa-chart-bar"></i>
                     </div>
+                    <h3 class="feature-title">التقارير والتحليلات</h3>
+                    <p class="feature-description">
+                        تقارير شاملة ومرئيات بيانية احترافية تدعم اتخاذ القرارات مع إمكانية التصدير والطباعة
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> تقارير PDF احترافية بالعربية</li>
+                        <li><i class="fas fa-check"></i> تصدير Excel للبيانات</li>
+                        <li><i class="fas fa-check"></i> رسوم بيانية تفاعلية</li>
+                        <li><i class="fas fa-check"></i> تقارير مخصصة حسب الفترة</li>
+                        <li><i class="fas fa-check"></i> لوحات معلومات تفاعلية</li>
+                        <li><i class="fas fa-check"></i> إحصائيات الأداء الشاملة</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
+                </div>
+            </div>
+
+            <!-- إدارة الأجهزة المحمولة -->
+            <div class="feature-card" data-category="technical management">
+                <div class="feature-header">
+                    <div class="feature-icon technical">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3 class="feature-title">إدارة الأجهزة المحمولة</h3>
+                    <p class="feature-description">
+                        نظام شامل لتتبع وإدارة الأجهزة المحمولة المخصصة للموظفين مع تتبع IMEI وحالة الجهاز
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> تسجيل تفاصيل الأجهزة والـ IMEI</li>
+                        <li><i class="fas fa-check"></i> ربط الأجهزة بالموظفين</li>
+                        <li><i class="fas fa-check"></i> تتبع حالة الجهاز والصيانة</li>
+                        <li><i class="fas fa-check"></i> إدارة أرقام الهواتف</li>
+                        <li><i class="fas fa-check"></i> تقارير استخدام الأجهزة</li>
+                        <li><i class="fas fa-check"></i> نظام بحث متقدم للأجهزة</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
+                </div>
+            </div>
+
+            <!-- الأمان والحماية -->
+            <div class="feature-card" data-category="security">
+                <div class="feature-header">
+                    <div class="feature-icon security">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="feature-title">الأمان والحماية</h3>
+                    <p class="feature-description">
+                        نظام أمان متقدم لحماية البيانات مع تشفير المعلومات الحساسة وإدارة الصلاحيات
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> تشفير البيانات الحساسة</li>
+                        <li><i class="fas fa-check"></i> إدارة الأدوار والصلاحيات</li>
+                        <li><i class="fas fa-check"></i> سجل العمليات والأنشطة</li>
+                        <li><i class="fas fa-check"></i> نسخ احتياطية تلقائية</li>
+                        <li><i class="fas fa-check"></i> حماية ضد الاختراق</li>
+                        <li><i class="fas fa-check"></i> مصادقة ثنائية العامل</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
+                </div>
+            </div>
+
+            <!-- الواجهة العربية -->
+            <div class="feature-card" data-category="technical">
+                <div class="feature-header">
+                    <div class="feature-icon technical">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3 class="feature-title">واجهة عربية كاملة</h3>
+                    <p class="feature-description">
+                        تصميم احترافي يدعم الكتابة من اليمين لليسار مع خطوط عربية واضحة وتجربة مستخدم متميزة
+                    </p>
+                </div>
+                <div class="feature-body">
+                    <ul class="feature-capabilities">
+                        <li><i class="fas fa-check"></i> تصميم RTL كامل</li>
+                        <li><i class="fas fa-check"></i> خطوط عربية احترافية</li>
+                        <li><i class="fas fa-check"></i> دعم التقويم الهجري</li>
+                        <li><i class="fas fa-check"></i> تواريخ وأرقام عربية</li>
+                        <li><i class="fas fa-check"></i> واجهة سهلة الاستخدام</li>
+                        <li><i class="fas fa-check"></i> تجربة مستخدم محلية</li>
+                    </ul>
+                </div>
+                <div class="feature-footer">
+                    <a href="/nuzum/demo" class="feature-cta">
+                        <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- قسم التقارير والتحليلات -->
-<div class="container my-5">
-    <div class="text-center mb-5">
-        <h2 class="display-4 fw-bold text-primary">تقارير ذكية تساعد في اتخاذ القرار</h2>
-        <p class="lead text-muted">حول بياناتك إلى رؤى قابلة للتنفيذ</p>
-    </div>
-    
-    <div class="row">
-        <div class="col-lg-4 mb-4">
-            <div class="benefit-card text-center h-100">
-                <div class="floating-element" style="top: 20px; right: 20px; color: #f56565; font-size: 1.2rem;">
-                    <i class="fas fa-fire"></i>
-                </div>
-                <i class="fas fa-file-pdf text-danger mb-3" style="font-size: 4rem;"></i>
-                <h4 class="fw-bold mb-3">تقارير PDF احترافية</h4>
-                <p class="text-muted mb-4">تقارير جميلة وواضحة بدعم كامل للغة العربية والخطوط السعودية</p>
-                <div class="bg-light p-3 rounded mb-3">
-                    <small class="d-block mb-1">✅ دعم الخط العربي الجميل</small>
-                    <small class="d-block mb-1">✅ شعار الشركة والختم</small>
-                    <small class="d-block mb-1">✅ جداول منسقة ومرتبة</small>
-                    <small class="d-block">✅ رسوم بيانية ملونة</small>
-                </div>
+<!-- قسم المقارنة -->
+<section class="comparison-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">مقارنة مع الحلول التقليدية</h2>
+                <p class="section-subtitle">اكتشف الفرق الذي يحدثه نُظم في إدارة مؤسستك</p>
             </div>
         </div>
         
-        <div class="col-lg-4 mb-4">
-            <div class="benefit-card text-center h-100">
-                <div class="floating-element" style="top: 20px; right: 20px; color: #48bb78; font-size: 1.2rem;">
-                    <i class="fas fa-rocket"></i>
-                </div>
-                <i class="fas fa-file-excel text-success mb-3" style="font-size: 4rem;"></i>
-                <h4 class="fw-bold mb-3">تصدير Excel متقدم</h4>
-                <p class="text-muted mb-4">بيانات منظمة ومهيأة للتحليل المتقدم والمعالجة الإحصائية</p>
-                <div class="bg-light p-3 rounded mb-3">
-                    <small class="d-block mb-1">✅ فلترة وتجميع البيانات</small>
-                    <small class="d-block mb-1">✅ رسوم بيانية في Excel</small>
-                    <small class="d-block mb-1">✅ تنسيق احترافي للجداول</small>
-                    <small class="d-block">✅ معادلات محاسبية جاهزة</small>
-                </div>
+        <div class="comparison-table">
+            <div class="comparison-header">
+                <h3>نُظم مقابل الطرق التقليدية</h3>
             </div>
-        </div>
-        
-        <div class="col-lg-4 mb-4">
-            <div class="benefit-card text-center h-100">
-                <div class="floating-element" style="top: 20px; right: 20px; color: #4299e1; font-size: 1.2rem;">
-                    <i class="fas fa-chart-line"></i>
+            <div class="comparison-body">
+                <div class="comparison-row">
+                    <div class="comparison-feature">واجهة عربية كاملة</div>
+                    <div class="comparison-check check-yes"><i class="fas fa-check-circle"></i></div>
+                    <div class="comparison-check check-no"><i class="fas fa-times-circle"></i></div>
                 </div>
-                <img src="/static/images/reports-analytics.svg" alt="التحليلات" class="img-fluid mb-3" style="height: 200px; object-fit: contain;">
-                <h4 class="fw-bold mb-3">لوحة تحليلات تفاعلية</h4>
-                <p class="text-muted mb-4">رسوم بيانية حية تُحدث تلقائياً لمساعدتك في اتخاذ قرارات مدروسة</p>
-                <div class="bg-light p-3 rounded mb-3">
-                    <small class="d-block mb-1">✅ رسوم بيانية تفاعلية</small>
-                    <small class="d-block mb-1">✅ مؤشرات الأداء الرئيسية</small>
-                    <small class="d-block mb-1">✅ توقعات وتحليل الاتجاهات</small>
-                    <small class="d-block">✅ تحديث تلقائي للبيانات</small>
+                <div class="comparison-row">
+                    <div class="comparison-feature">تقارير PDF احترافية</div>
+                    <div class="comparison-check check-yes"><i class="fas fa-check-circle"></i></div>
+                    <div class="comparison-check check-no"><i class="fas fa-times-circle"></i></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-feature">نظام أمان متقدم</div>
+                    <div class="comparison-check check-yes"><i class="fas fa-check-circle"></i></div>
+                    <div class="comparison-check check-no"><i class="fas fa-times-circle"></i></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-feature">تتبع المركبات والصيانة</div>
+                    <div class="comparison-check check-yes"><i class="fas fa-check-circle"></i></div>
+                    <div class="comparison-check check-no"><i class="fas fa-times-circle"></i></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-feature">إدارة الأجهزة المحمولة</div>
+                    <div class="comparison-check check-yes"><i class="fas fa-check-circle"></i></div>
+                    <div class="comparison-check check-no"><i class="fas fa-times-circle"></i></div>
+                </div>
+                <div class="comparison-row">
+                    <div class="comparison-feature">دعم فني متخصص</div>
+                    <div class="comparison-check check-yes"><i class="fas fa-check-circle"></i></div>
+                    <div class="comparison-check check-no"><i class="fas fa-times-circle"></i></div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- قسم الضمان والأمان -->
-<div class="container my-5">
-    <div class="feature-showcase">
-        <div class="text-center mb-5">
-            <h2 class="display-4 fw-bold text-dark">🔒 أمان وثقة مطلقة</h2>
-            <p class="lead text-muted">نحمي بياناتك بأعلى معايير الأمان العالمية</p>
+<!-- شهادات العملاء -->
+<section class="testimonials-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">ماذا يقول عملاؤنا</h2>
+                <p class="section-subtitle">تجارب حقيقية من الشركات التي تستخدم نُظم</p>
+            </div>
         </div>
         
         <div class="row">
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="benefit-card text-center h-100">
-                    <div class="mb-3" style="color: #48bb78; font-size: 3rem;">
-                        <i class="fas fa-shield-check"></i>
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        "نُظم غيّر طريقة عملنا بالكامل. أصبحت إدارة الموظفين والمركبات أسهل وأكثر دقة، ووفرنا الكثير من الوقت والجهد."
                     </div>
-                    <h5 class="fw-bold">تشفير 256-bit</h5>
-                    <p class="text-muted">حماية قصوى للبيانات الحساسة</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">أ.س</div>
+                        <div class="author-info">
+                            <h5>أحمد السعيد</h5>
+                            <p>مدير الموارد البشرية - شركة الرياض للخدمات</p>
+                        </div>
+                    </div>
+                    <div class="rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="benefit-card text-center h-100">
-                    <div class="mb-3" style="color: #4299e1; font-size: 3rem;">
-                        <i class="fas fa-cloud-upload-alt"></i>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        "النظام سهل الاستخدام ويوفر تقارير مفصلة تساعدنا في اتخاذ القرارات. الواجهة العربية تجعل العمل أكثر سلاسة."
                     </div>
-                    <h5 class="fw-bold">نسخ احتياطي تلقائي</h5>
-                    <p class="text-muted">حفظ آمن لجميع البيانات</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">ف.ع</div>
+                        <div class="author-info">
+                            <h5>فاطمة العتيبي</h5>
+                            <p>مديرة العمليات - مؤسسة الخليج التجارية</p>
+                        </div>
+                    </div>
+                    <div class="rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="benefit-card text-center h-100">
-                    <div class="mb-3" style="color: #ed8936; font-size: 3rem;">
-                        <i class="fas fa-user-lock"></i>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-content">
+                        "دعم فني ممتاز وتطوير مستمر للنظام. نُظم شريك موثوق في نجاح أعمالنا وتطوير عملياتنا الداخلية."
                     </div>
-                    <h5 class="fw-bold">صلاحيات متقدمة</h5>
-                    <p class="text-muted">تحكم دقيق في الوصول</p>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="benefit-card text-center h-100">
-                    <div class="mb-3" style="color: #f093fb; font-size: 3rem;">
-                        <i class="fas fa-history"></i>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">م.ص</div>
+                        <div class="author-info">
+                            <h5>محمد الصالح</h5>
+                            <p>المدير التنفيذي - شركة النماء للاستثمار</p>
+                        </div>
                     </div>
-                    <h5 class="fw-bold">سجل العمليات</h5>
-                    <p class="text-muted">تتبع كامل لجميع الأنشطة</p>
+                    <div class="rating">
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                        <span class="star">★</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- قسم المقارنة مع المنافسين -->
-<div class="container my-5">
-    <div class="text-center mb-5">
-        <h2 class="display-4 fw-bold text-primary">لماذا نُظم هو الخيار الأفضل؟</h2>
-        <p class="lead text-muted">مقارنة شاملة تُظهر تفوقنا على المنافسين</p>
-    </div>
-    
-    <div class="feature-comparison">
-        <div class="comparison-header">
-            <h3 class="mb-0">مقارنة شاملة بين نُظم والأنظمة الأخرى</h3>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-borderless mb-0">
-                <thead class="bg-light">
-                    <tr>
-                        <th class="fw-bold">الميزة</th>
-                        <th class="text-center fw-bold text-success">نُظم ✅</th>
-                        <th class="text-center fw-bold text-muted">المنافس أ</th>
-                        <th class="text-center fw-bold text-muted">المنافس ب</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="fw-bold">واجهة عربية كاملة</td>
-                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
-                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
-                        <td class="text-center text-warning"><i class="fas fa-minus-circle fa-lg"></i></td>
-                    </tr>
-                    <tr class="bg-light">
-                        <td class="fw-bold">دعم التقويم الهجري</td>
-                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
-                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
-                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">تكامل مع البنوك السعودية</td>
-                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
-                        <td class="text-center text-warning"><i class="fas fa-minus-circle fa-lg"></i></td>
-                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
-                    </tr>
-                    <tr class="bg-light">
-                        <td class="fw-bold">دعم فني باللغة العربية</td>
-                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
-                        <td class="text-center text-danger"><i class="fas fa-times-circle fa-lg"></i></td>
-                        <td class="text-center text-warning"><i class="fas fa-minus-circle fa-lg"></i></td>
-                    </tr>
-                    <tr>
-                        <td class="fw-bold">سعر تنافسي</td>
-                        <td class="text-center text-success"><i class="fas fa-check-circle fa-lg"></i></td>
-                        <td class="text-center text-danger">3X أغلى</td>
-                        <td class="text-center text-danger">2X أغلى</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- قسم الأسئلة الشائعة -->
-<div class="container my-5">
-    <div class="text-center mb-5">
-        <h2 class="display-4 fw-bold text-primary">الأسئلة الشائعة</h2>
-        <p class="lead text-muted">إجابات سريعة على أكثر الأسئلة طرحاً</p>
-    </div>
-    
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="accordion" id="faqAccordion">
-                <div class="accordion-item mb-3 border-0 shadow-sm">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                            هل يمكن تجربة النظام مجاناً قبل الشراء؟
-                        </button>
-                    </h2>
-                    <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            نعم! نقدم تجربة مجانية لمدة 30 يوماً تشمل جميع الميزات. لا نطلب بيانات بطاقة ائتمانية للتجربة المجانية.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="accordion-item mb-3 border-0 shadow-sm">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                            كم يستغرق تنفيذ النظام في شركتي؟
-                        </button>
-                    </h2>
-                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            التنفيذ يتم في أقل من 7 أيام عمل. نوفر فريق تنفيذ متخصص لضمان الانتقال السلس من نظامك الحالي.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="accordion-item mb-3 border-0 shadow-sm">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                            هل النظام متوافق مع الأنظمة الأخرى في شركتي؟
-                        </button>
-                    </h2>
-                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            نعم، نُظم يدعم التكامل مع معظم الأنظمة المحاسبية والإدارية. كما نوفر واجهات برمجة تطبيقات (APIs) للتكامل المخصص.
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="accordion-item mb-3 border-0 shadow-sm">
-                    <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                            ما مستوى الدعم الفني المتوفر؟
-                        </button>
-                    </h2>
-                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            نوفر دعم فني 24/7 باللغة العربية. فريق الدعم متخصص ومدرب على جميع ميزات النظام لضمان حل سريع لأي استفسار.
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- دعوة قوية للعمل -->
-<div class="container my-5">
-    <div class="demo-cta">
-        <div class="floating-element" style="top: 30px; left: 30px; color: rgba(255,255,255,0.3); font-size: 3rem;">
-            <i class="fas fa-rocket"></i>
-        </div>
-        <div class="floating-element" style="bottom: 30px; right: 30px; color: rgba(255,255,255,0.3); font-size: 2rem;">
-            <i class="fas fa-star"></i>
-        </div>
-        
-        <h2 class="display-3 fw-bold mb-4">احصل على ميزة تنافسية اليوم!</h2>
-        <p class="lead mb-4">انضم إلى +500 شركة سعودية حققت نجاحاً استثنائياً مع نُظم</p>
-        
-        <div class="row justify-content-center mb-4">
-            <div class="col-auto">
-                <div class="d-flex align-items-center bg-white bg-opacity-20 rounded-pill px-4 py-2 mb-3">
-                    <i class="fas fa-gift me-2" style="font-size: 1.5rem;"></i>
-                    <span class="fw-bold">30 يوماً تجربة مجانية - بدون التزام!</span>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-auto me-3">
-                <a href="/nuzum/demo" class="btn btn-light btn-lg px-5 py-3" style="font-weight: 600; font-size: 1.2rem;">
-                    <i class="fas fa-play me-2"></i>ابدأ التجربة المجانية
+<!-- CTA النهائي -->
+<section class="final-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">جاهز لتحويل إدارة مؤسستك؟</h2>
+            <p class="cta-subtitle">
+                ابدأ رحلتك مع نُظم اليوم واكتشف كيف يمكن لهذه الميزات المتطورة تحسين كفاءة عملياتك وتوفير الوقت والجهد
+            </p>
+            <div class="cta-buttons">
+                <a href="/nuzum/demo" class="cta-button">
+                    <i class="fas fa-rocket me-2"></i>ابدأ التجربة المجانية
                 </a>
-            </div>
-            <div class="col-auto">
-                <a href="/nuzum/contact" class="btn btn-outline-light btn-lg px-5 py-3" style="font-weight: 600; font-size: 1.2rem;">
+                <a href="/nuzum/contact" class="cta-button secondary">
                     <i class="fas fa-phone me-2"></i>تحدث مع خبير
                 </a>
             </div>
         </div>
-        
-        <!-- ضمانات إضافية -->
-        <div class="row mt-5">
-            <div class="col-md-4 text-center mb-3">
-                <div class="d-flex align-items-center justify-content-center mb-2">
-                    <i class="fas fa-shield-check me-2" style="font-size: 1.5rem;"></i>
-                    <span class="fw-bold">ضمان استرداد 60 يوم</span>
-                </div>
-            </div>
-            <div class="col-md-4 text-center mb-3">
-                <div class="d-flex align-items-center justify-content-center mb-2">
-                    <i class="fas fa-headset me-2" style="font-size: 1.5rem;"></i>
-                    <span class="fw-bold">دعم فني مجاني</span>
-                </div>
-            </div>
-            <div class="col-md-4 text-center mb-3">
-                <div class="d-flex align-items-center justify-content-center mb-2">
-                    <i class="fas fa-cogs me-2" style="font-size: 1.5rem;"></i>
-                    <span class="fw-bold">تنفيذ مجاني</span>
-                </div>
-            </div>
-        </div>
     </div>
-</div>
+</section>
+{% endblock %}
 
-<!-- إضافة JavaScript للتفاعل -->
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // تأثير العد التصاعدي للأرقام
-        const counters = document.querySelectorAll('.counter');
-        counters.forEach(counter => {
-            const updateCount = () => {
-                const target = +counter.getAttribute('data-target') || parseInt(counter.innerText);
-                const count = +counter.innerText;
-                const speed = 200;
-                const inc = target / speed;
+// تفعيل التبويبات
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryTabs = document.querySelectorAll('.category-tab');
+    const featureCards = document.querySelectorAll('.feature-card');
+    
+    categoryTabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // إزالة الحالة النشطة من جميع التبويبات
+            categoryTabs.forEach(t => t.classList.remove('active'));
+            // إضافة الحالة النشطة للتبويب المحدد
+            this.classList.add('active');
+            
+            const selectedCategory = this.getAttribute('data-category');
+            
+            // فلترة البطاقات
+            featureCards.forEach(card => {
+                const cardCategories = card.getAttribute('data-category');
                 
-                if (count < target) {
-                    counter.innerText = Math.ceil(count + inc);
-                    setTimeout(updateCount, 1);
+                if (selectedCategory === 'all' || cardCategories.includes(selectedCategory)) {
+                    card.style.display = 'block';
+                    setTimeout(() => {
+                        card.classList.add('animate');
+                    }, 100);
                 } else {
-                    counter.innerText = target;
+                    card.style.display = 'none';
+                    card.classList.remove('animate');
                 }
-            };
-            
-            // تشغيل العد عند ظهور العنصر في الشاشة
-            const observer = new IntersectionObserver(entries => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        updateCount();
-                        observer.unobserve(entry.target);
-                    }
-                });
             });
-            
-            counter.setAttribute('data-target', counter.innerText);
-            counter.innerText = '0';
-            observer.observe(counter);
         });
     });
-</script>
+    
+    // تأثيرات الانيميشن عند التمرير
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    featureCards.forEach(card => {
+        observer.observe(card);
+    });
+    
+    // تأثيرات إضافية للشهادات
+    const testimonialCards = document.querySelectorAll('.testimonial-card');
+    testimonialCards.forEach(card => {
+        observer.observe(card);
+    });
+});
 
+// تأثير التحريك السلس للروابط
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
 {% endblock %}
