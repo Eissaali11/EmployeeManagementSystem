@@ -1,0 +1,793 @@
+{% extends "landing/layout.html" %}
+
+{% block title %}نُظم - نظام إدارة شامل للموظفين والمركبات{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, rgba(30, 58, 92, 0.95) 0%, rgba(44, 82, 130, 0.95) 100%), 
+                    url('/static/images/placeholder-saudi-office.svg') center/cover no-repeat;
+        color: white;
+        padding: 120px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        min-height: 70vh;
+        animation: gradientShift 15s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" preserveAspectRatio="none"><polygon fill="%23ffffff20" points="1000,100 1000,0 0,100"/></svg>') no-repeat;
+        background-size: cover;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .hero-title {
+        font-size: 4rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+        background: linear-gradient(45deg, #ffffff, #f0f9ff, #e0f2fe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+    
+    @keyframes titleGlow {
+        from { text-shadow: 2px 2px 8px rgba(0,0,0,0.4); }
+        to { text-shadow: 2px 2px 20px rgba(255,255,255,0.3), 0 0 30px rgba(77,209,199,0.4); }
+    }
+    
+    .hero-subtitle {
+        font-size: 1.6rem;
+        margin-bottom: 2rem;
+        opacity: 0.95;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        animation: fadeInUp 2s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 0.95; transform: translateY(0); }
+    }
+    
+    .hero-actions {
+        animation: fadeInUp 2.5s ease-out;
+    }
+    
+    .hero-actions .btn {
+        transition: all 0.4s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-actions .btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s ease;
+    }
+    
+    .hero-actions .btn:hover::before {
+        left: 100%;
+    }
+    
+    .hero-actions .btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    
+    .stats-section {
+        background: #f8f9fa;
+        padding: 60px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .stat-card {
+        text-align: center;
+        padding: 30px 20px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #1e3a5c;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+    
+    .features-section {
+        padding: 80px 0;
+        background: white;
+    }
+    
+    .feature-card {
+        background: white;
+        border-radius: 25px;
+        padding: 40px 30px;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin-bottom: 40px;
+        border: 1px solid #f1f3f4;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(77,209,199,0.1), transparent);
+        transition: left 0.8s ease;
+    }
+    
+    .feature-card:hover::before {
+        left: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(30,58,92,0.15);
+        border-color: #4fd1c7;
+        border-width: 2px;
+    }
+    
+    .feature-icon {
+        background: linear-gradient(135deg, #1e3a5c, #2c5282, #4fd1c7);
+        color: white;
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 25px;
+        font-size: 2.2rem;
+        position: relative;
+        transition: all 0.4s ease;
+        box-shadow: 0 10px 25px rgba(30,58,92,0.3);
+    }
+    
+    .feature-icon::after {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: -5px;
+        right: -5px;
+        bottom: -5px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #4fd1c7, #06b6d4, #4299e1);
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+    }
+    
+    .feature-card:hover .feature-icon {
+        transform: rotateY(360deg);
+        box-shadow: 0 15px 35px rgba(77,209,199,0.4);
+    }
+    
+    .feature-card:hover .feature-icon::after {
+        opacity: 1;
+    }
+    
+    .feature-title {
+        color: #1e3a5c;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .feature-description {
+        color: #6c757d;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    
+    .capabilities-list {
+        text-align: right;
+        list-style: none;
+        padding: 0;
+    }
+    
+    .capabilities-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #f1f3f4;
+        color: #495057;
+        position: relative;
+        padding-right: 25px;
+    }
+    
+    .capabilities-list li:before {
+        content: '✓';
+        color: #28a745;
+        font-weight: bold;
+        position: absolute;
+        right: 0;
+    }
+    
+    .advantages-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+    
+    .advantage-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px 25px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease;
+        margin-bottom: 30px;
+        height: 100%;
+    }
+    
+    .advantage-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .advantage-icon {
+        color: #1e3a5c;
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+    
+    .advantage-title {
+        color: #1e3a5c;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    
+    .advantage-description {
+        color: #6c757d;
+        line-height: 1.6;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+    
+    .cta-title {
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+    }
+    
+    .cta-button {
+        background: white;
+        color: #28a745;
+        padding: 15px 40px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+    
+    .cta-button:hover {
+        transform: scale(1.05);
+        color: #20c997;
+        text-decoration: none;
+    }
+    
+    .section-title {
+        text-align: center;
+        color: #1e3a5c;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 60px;
+        position: relative;
+    }
+    
+    .section-title:after {
+        content: '';
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(135deg, #1e3a5c, #2c5282);
+        display: block;
+        margin: 15px auto;
+        border-radius: 2px;
+    }
+
+    /* تحسينات إضافية للتصميم */
+    .contact-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .contact-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1) !important;
+        border-color: #4fd1c7;
+    }
+    
+    .testimonial-card {
+        transition: all 0.4s ease;
+    }
+    
+    .testimonial-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+    }
+    
+    /* تأثيرات متقدمة للتمرير */
+    .feature-image img {
+        transition: all 0.4s ease;
+    }
+    
+    .feature-card:hover .feature-image img {
+        transform: scale(1.05);
+    }
+    
+    /* تحسين الأزرار */
+    .cta-button {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        transition: left 0.8s ease;
+    }
+    
+    .cta-button:hover::before {
+        left: 100%;
+    }
+    
+    /* تحسينات الاستجابة */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.8rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.3rem;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .section-title {
+            font-size: 2.2rem;
+        }
+        
+        .feature-card {
+            padding: 30px 20px;
+        }
+        
+        .feature-icon {
+            width: 70px;
+            height: 70px;
+            font-size: 1.8rem;
+        }
+        
+        .cta-title {
+            font-size: 2rem;
+        }
+        
+        .contact-item {
+            margin-bottom: 20px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .hero-title {
+            font-size: 2.2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="container">
+            <h1 class="hero-title">نُظم</h1>
+            <p class="hero-subtitle">نظام إدارة شامل للموظفين والمركبات والعمليات الإدارية</p>
+            <p class="lead">الحل المتكامل لإدارة الموارد البشرية وأسطول المركبات مع واجهة عربية احترافية</p>
+            
+            <!-- شعار الجودة السعودية -->
+            <div class="mb-4">
+                <div class="d-inline-flex align-items-center bg-white bg-opacity-20 rounded-pill px-4 py-2 mb-3">
+                    <span class="me-2" style="font-size: 1.5rem;">🇸🇦</span>
+                    <span style="font-weight: 600;">صُنع بفخر في المملكة العربية السعودية</span>
+                </div>
+            </div>
+            
+            <!-- أزرار العمل -->
+            <div class="hero-actions mt-4">
+                <a href="#features" class="btn btn-light btn-lg mx-2 mb-2" style="min-width: 180px; font-weight: 600;">
+                    <i class="fas fa-rocket me-2"></i>استكشف الميزات
+                </a>
+                <a href="/nuzum/demo" class="btn btn-outline-light btn-lg mx-2 mb-2" style="min-width: 180px; font-weight: 600;">
+                    <i class="fas fa-play me-2"></i>تجربة مجانية
+                </a>
+                <a href="/auth/login" class="btn btn-outline-light btn-lg mx-2 mb-2" style="min-width: 180px; font-weight: 600;">
+                    <i class="fas fa-sign-in-alt me-2"></i>تسجيل الدخول
+                </a>
+            </div>
+            
+            <!-- معاينة الجوال -->
+            <div class="mt-5 d-none d-md-block">
+                <img src="/static/images/hero-mobile.svg" alt="نُظم على الجوال" style="max-height: 400px; opacity: 0.9;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات النظام -->
+<div class="stats-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.employees }}</div>
+                    <div class="stat-label">موظف مسجل</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.vehicles }}</div>
+                    <div class="stat-label">مركبة</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.departments }}</div>
+                    <div class="stat-label">قسم</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.users }}</div>
+                    <div class="stat-label">مستخدم نشط</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.salary_records }}</div>
+                    <div class="stat-label">سجل راتب</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-sm-6">
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">نموذج متكامل</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ميزات النظام -->
+<div class="features-section" id="features">
+    <div class="container">
+        <h2 class="section-title">ميزات النظام الشاملة</h2>
+        <div class="row">
+            {% for feature in features %}
+            <div class="col-lg-6 col-md-12">
+                <div class="feature-card">
+                    <!-- إضافة صورة توضيحية للميزة -->
+                    {% if feature.image %}
+                    <div class="feature-image mb-4">
+                        <img src="{{ feature.image }}" alt="{{ feature.title }}" class="img-fluid rounded" style="height: 200px; width: 100%; object-fit: cover;">
+                    </div>
+                    {% endif %}
+                    <div class="feature-icon">
+                        <i class="{{ feature.icon }}"></i>
+                    </div>
+                    <h3 class="feature-title">{{ feature.title }}</h3>
+                    <p class="feature-description">{{ feature.description }}</p>
+                    <ul class="capabilities-list">
+                        {% for capability in feature.capabilities %}
+                        <li>{{ capability }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- المزايا التنافسية -->
+<div class="advantages-section">
+    <div class="container">
+        <h2 class="section-title">المزايا التنافسية</h2>
+        <div class="row">
+            {% for advantage in advantages %}
+            <div class="col-lg-4 col-md-6">
+                <div class="advantage-card">
+                    <div class="advantage-icon">
+                        <i class="{{ advantage.icon }}"></i>
+                    </div>
+                    <h4 class="advantage-title">{{ advantage.title }}</h4>
+                    <p class="advantage-description">{{ advantage.description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- قسم آراء العملاء مع الصور -->
+<div class="testimonials-section" style="padding: 80px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+    <div class="container">
+        <h2 class="section-title">آراء عملائنا</h2>
+        <div class="row justify-content-center">
+            <div class="col-12 text-center mb-5">
+                <img src="/static/images/saudi-testimonials.svg" alt="آراء العملاء" class="img-fluid" style="max-height: 400px;">
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;">
+                    <div class="client-avatar mb-3">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #4299e1, #06b6d4); display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 24px;">
+                            👨‍💼
+                        </div>
+                    </div>
+                    <h5 style="color: #2d3748; font-weight: bold;">م. أحمد العلي</h5>
+                    <p style="color: #4a5568; font-size: 14px;">مدير تقنية المعلومات - شركة البناء السعودية</p>
+                    <p style="color: #4a5568; font-style: italic; margin: 20px 0;">"نُظم غيّر طريقة إدارتنا للموظفين والمركبات. وفرنا ٤٠٪ من الوقت في العمليات الإدارية"</p>
+                    <div style="color: #ffd700; font-size: 18px;">★★★★★</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;">
+                    <div class="client-avatar mb-3">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #48bb78, #38a169); display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 24px;">
+                            👩‍💼
+                        </div>
+                    </div>
+                    <h5 style="color: #2d3748; font-weight: bold;">د. فاطمة القحطاني</h5>
+                    <p style="color: #4a5568; font-size: 14px;">مديرة الموارد البشرية - مجموعة الخليج التجارية</p>
+                    <p style="color: #4a5568; font-style: italic; margin: 20px 0;">"واجهة عربية ممتازة وسهولة في الاستخدام. أنصح به لكل الشركات السعودية"</p>
+                    <div style="color: #ffd700; font-size: 18px;">★★★★★</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="testimonial-card" style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;">
+                    <div class="client-avatar mb-3">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #ed8936, #dd6b20); display: flex; align-items: center; justify-content: center; margin: 0 auto; color: white; font-size: 24px;">
+                            🏢
+                        </div>
+                    </div>
+                    <h5 style="color: #2d3748; font-weight: bold;">أ. سالم النهدي</h5>
+                    <p style="color: #4a5568; font-size: 14px;">مدير العمليات - الهيئة العامة للنقل</p>
+                    <p style="color: #4a5568; font-style: italic; margin: 20px 0;">"تتبع دقيق لأسطول المركبات والموظفين. يتماشى مع متطلبات القطاع الحكومي"</p>
+                    <div style="color: #ffd700; font-size: 18px;">★★★★★</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- إحصائيات الثقة -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div style="background: linear-gradient(135deg, #4299e1, #06b6d4); border-radius: 20px; padding: 40px; text-align: center; color: white;">
+                    <div class="row">
+                        <div class="col-md-3 col-6 mb-3">
+                            <h3 style="font-size: 2.5rem; font-weight: bold;">+٥٠٠</h3>
+                            <p>شركة سعودية تثق بنا</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <h3 style="font-size: 2.5rem; font-weight: bold;">٩٨٪</h3>
+                            <p>معدل رضا العملاء</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <h3 style="font-size: 2.5rem; font-weight: bold;">٢٤/٧</h3>
+                            <p>دعم فني متواصل</p>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <h3 style="font-size: 2.5rem; font-weight: bold;">٥</h3>
+                            <p>سنوات من الخبرة</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- دعوة للعمل -->
+<div class="cta-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 text-center text-lg-right">
+                <h2 class="cta-title">ابدأ مع نُظم اليوم</h2>
+                <p class="lead mb-4">انضم إلى المؤسسات التي تثق في نُظم لإدارة عملياتها</p>
+                <div class="mb-3">
+                    <a href="/nuzum/demo" class="cta-button me-3">جرب النظام مجاناً</a>
+                    <a href="#contact" class="btn btn-outline-light btn-lg">تواصل معنا</a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <img src="/static/images/reports-analytics.svg" alt="التقارير والتحليلات" class="img-fluid" style="max-height: 300px;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- قسم التواصل -->
+<div class="contact-section" id="contact" style="padding: 80px 0; background: white;">
+    <div class="container">
+        <h2 class="section-title">تواصل معنا</h2>
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <img src="/static/images/contact-section.svg" alt="تواصل معنا" class="img-fluid">
+            </div>
+            <div class="col-lg-6">
+                <div class="contact-info">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="contact-item p-4 rounded shadow-sm h-100">
+                                <div class="contact-icon mb-3">
+                                    <i class="fas fa-phone fa-2x text-primary"></i>
+                                </div>
+                                <h5 class="text-dark">اتصل بنا</h5>
+                                <p class="text-muted mb-0">+966-11-XXX-XXXX</p>
+                                <p class="text-muted">دعم فني مباشر</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="contact-item p-4 rounded shadow-sm h-100">
+                                <div class="contact-icon mb-3">
+                                    <i class="fas fa-envelope fa-2x text-success"></i>
+                                </div>
+                                <h5 class="text-dark">راسلنا</h5>
+                                <p class="text-muted mb-0">info@nuzum.sa</p>
+                                <p class="text-muted">للاستفسارات العامة</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="contact-item p-4 rounded shadow-sm h-100">
+                                <div class="contact-icon mb-3">
+                                    <i class="fab fa-whatsapp fa-2x text-success"></i>
+                                </div>
+                                <h5 class="text-dark">واتساب</h5>
+                                <p class="text-muted mb-0">+966-5X-XXX-XXXX</p>
+                                <p class="text-muted">دعم فوري 24/7</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-4">
+                            <div class="contact-item p-4 rounded shadow-sm h-100">
+                                <div class="contact-icon mb-3">
+                                    <i class="fas fa-map-marker-alt fa-2x text-warning"></i>
+                                </div>
+                                <h5 class="text-dark">موقعنا</h5>
+                                <p class="text-muted mb-0">الرياض</p>
+                                <p class="text-muted">المملكة العربية السعودية</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- معلومات إضافية -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="bg-light p-4 rounded text-center">
+                    <h4 class="text-primary mb-3">🏢 نخدم جميع أنحاء المملكة</h4>
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        ساعات العمل: الأحد - الخميس، 8:00 صباحاً - 5:00 مساءً
+                    </p>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-headset text-success me-2"></i>
+                        دعم فني متاح 24/7 عبر النظام والواتساب
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // إضافة تأثيرات تفاعلية
+    document.addEventListener('DOMContentLoaded', function() {
+        // تأثير العد التصاعدي للإحصائيات
+        const statNumbers = document.querySelectorAll('.stat-number');
+        statNumbers.forEach(stat => {
+            const targetNumber = parseInt(stat.textContent);
+            let currentNumber = 0;
+            const increment = targetNumber / 50;
+            
+            const timer = setInterval(() => {
+                currentNumber += increment;
+                if (currentNumber >= targetNumber) {
+                    stat.textContent = targetNumber;
+                    clearInterval(timer);
+                } else {
+                    stat.textContent = Math.floor(currentNumber);
+                }
+            }, 20);
+        });
+        
+        // تأثير الظهور التدريجي للبطاقات
+        const cards = document.querySelectorAll('.feature-card, .advantage-card, .stat-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        });
+        
+        cards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(card);
+        });
+    });
+</script>
+{% endblock %}
