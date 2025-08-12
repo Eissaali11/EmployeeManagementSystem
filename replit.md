@@ -11,6 +11,8 @@ Preferred communication style: Simple, everyday language.
 - **Demo Page Development**: Enhanced demo page with interactive features, customer testimonials, step-by-step guidance, and trial account access
 - **Marketing Features**: Added animated statistics, feature showcases, video placeholders, and professional CTA sections
 - **Landing Page Routes**: All landing pages now use `/nuzum/` prefix (features, pricing, contact, demo) with separate layout and navigation
+- **Demo Page Video Fix (Aug 2025)**: Replaced generic movie videos with interactive iframe demos showing actual system interfaces for employees, vehicles, attendance, and reports management
+- **Marketing Presentation Plan**: Created comprehensive 30-45 minute presentation strategy with detailed slides, visual guidelines, pricing structure, and follow-up strategies for B2B sales
 
 ## System Architecture
 ### Frontend Architecture
