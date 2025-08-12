@@ -502,3 +502,79 @@ def save_landing_settings(settings):
     except Exception as e:
         print(f"Error saving settings: {e}")
         return False
+
+# مسارات API لحفظ المحتوى
+@landing_admin_bp.route('/api/save-hero', methods=['POST'])
+@login_required
+@admin_required
+def api_save_hero():
+    """حفظ إعدادات القسم الرئيسي"""
+    try:
+        data = request.get_json()
+        settings = load_landing_settings()
+        
+        # تحديث إعدادات القسم الرئيسي
+        settings['hero_title'] = data.get('hero_title', settings.get('hero_title'))
+        settings['hero_subtitle'] = data.get('hero_subtitle', settings.get('hero_subtitle'))
+        settings['hero_primary_btn'] = data.get('hero_primary_btn', settings.get('hero_primary_btn'))
+        settings['hero_secondary_btn'] = data.get('hero_secondary_btn', settings.get('hero_secondary_btn'))
+        
+        if save_landing_settings(settings):
+            return jsonify({'success': True, 'message': 'تم حفظ القسم الرئيسي بنجاح'})
+        else:
+            return jsonify({'success': False, 'message': 'حدث خطأ في الحفظ'})
+    
+    except Exception as e:
+        print(f"خطأ في حفظ القسم الرئيسي: {e}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في معالجة البيانات'})
+
+@landing_admin_bp.route('/api/save-stats', methods=['POST'])
+@login_required
+@admin_required
+def api_save_stats():
+    """حفظ إعدادات الإحصائيات"""
+    try:
+        data = request.get_json()
+        settings = load_landing_settings()
+        
+        # تحديث الإحصائيات
+        settings['stats']['companies'] = int(data.get('stats_companies', settings['stats']['companies']))
+        settings['stats']['employees'] = int(data.get('stats_employees', settings['stats']['employees']))
+        settings['stats']['vehicles'] = int(data.get('stats_vehicles', settings['stats']['vehicles']))
+        settings['stats']['satisfaction'] = int(data.get('stats_satisfaction', settings['stats']['satisfaction']))
+        
+        if save_landing_settings(settings):
+            return jsonify({'success': True, 'message': 'تم حفظ الإحصائيات بنجاح'})
+        else:
+            return jsonify({'success': False, 'message': 'حدث خطأ في الحفظ'})
+    
+    except Exception as e:
+        print(f"خطأ في حفظ الإحصائيات: {e}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في معالجة البيانات'})
+
+@landing_admin_bp.route('/api/save-company', methods=['POST'])
+@login_required
+@admin_required
+def api_save_company():
+    """حفظ معلومات الشركة"""
+    try:
+        data = request.get_json()
+        settings = load_landing_settings()
+        
+        # تحديث معلومات الشركة
+        if 'company_info' not in settings:
+            settings['company_info'] = {}
+        
+        settings['company_info']['name'] = data.get('company_name', settings['company_info'].get('name', ''))
+        settings['company_info']['description'] = data.get('company_description', settings['company_info'].get('description', ''))
+        settings['company_info']['year'] = int(data.get('company_year', settings['company_info'].get('year', 2020)))
+        settings['company_info']['location'] = data.get('company_location', settings['company_info'].get('location', ''))
+        
+        if save_landing_settings(settings):
+            return jsonify({'success': True, 'message': 'تم حفظ معلومات الشركة بنجاح'})
+        else:
+            return jsonify({'success': False, 'message': 'حدث خطأ في الحفظ'})
+    
+    except Exception as e:
+        print(f"خطأ في حفظ معلومات الشركة: {e}")
+        return jsonify({'success': False, 'message': 'حدث خطأ في معالجة البيانات'})

@@ -7,14 +7,52 @@ landing_bp = Blueprint('landing', __name__)
 def index():
     """صفحة هبوط نظام نُظم - عرض المواصفات والإمكانيات"""
     
-    # إحصائيات النظام
-    stats = {
+    # تحميل إعدادات صفحة الهبوط
+    import os
+    import json
+    
+    def load_landing_settings():
+        settings_file = 'landing_settings.json'
+        default_settings = {
+            'hero_title': 'نُظم - نظام إدارة الموظفين والمركبات',
+            'hero_subtitle': 'حل شامل ومتكامل لإدارة العمليات الداخلية للشركات والمؤسسات',
+            'hero_primary_btn': 'جرب النظام مجاناً',
+            'hero_secondary_btn': 'تعرف على المزايا',
+            'company_info': {
+                'name': 'نُظم للتقنية',
+                'description': 'شركة رائدة في تطوير حلول إدارة الموارد البشرية والمركبات',
+                'year': 2020,
+                'location': 'الرياض، المملكة العربية السعودية'
+            },
+            'stats': {
+                'companies': 250,
+                'employees': 15000,
+                'vehicles': 3200,
+                'satisfaction': 98
+            }
+        }
+        
+        try:
+            if os.path.exists(settings_file):
+                with open(settings_file, 'r', encoding='utf-8') as f:
+                    settings = json.load(f)
+                    return settings
+        except Exception as e:
+            print(f"خطأ في تحميل إعدادات صفحة الهبوط: {e}")
+        
+        return default_settings
+    
+    # تحميل الإعدادات المحفوظة
+    settings = load_landing_settings()
+    
+    # إحصائيات النظام (يمكن استخدام الإعدادات المحفوظة أو الحقيقية)
+    stats = settings.get('stats', {
         'employees': Employee.query.count(),
         'vehicles': Vehicle.query.count(), 
         'departments': Department.query.count(),
         'users': User.query.count(),
         'salary_records': Salary.query.count()
-    }
+    })
     
     # ميزات النظام
     features = [
@@ -165,7 +203,8 @@ def index():
     return render_template('landing/index.html', 
                          stats=stats,
                          features=features, 
-                         advantages=advantages)
+                         advantages=advantages,
+                         settings=settings)
 
 @landing_bp.route('/nuzum/features')
 def features():

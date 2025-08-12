@@ -126,6 +126,141 @@
     </div>
 </div>
 
+<!-- إدارة محتوى صفحة الهبوط الشامل -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="text-primary mb-0">
+                    <i class="fas fa-globe me-2"></i>
+                    إدارة محتوى صفحة الهبوط
+                </h5>
+                <a href="/nuzum" target="_blank" class="btn btn-outline-info">
+                    <i class="fas fa-external-link-alt me-2"></i>معاينة الصفحة
+                </a>
+            </div>
+            
+            <!-- التبويبات الرئيسية -->
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#hero-section">
+                        <i class="fas fa-home me-2"></i>القسم الرئيسي
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#stats-section">
+                        <i class="fas fa-chart-bar me-2"></i>الإحصائيات
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#company-section">
+                        <i class="fas fa-building me-2"></i>معلومات الشركة
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="tab-content mt-4">
+                <!-- القسم الرئيسي -->
+                <div class="tab-pane fade show active" id="hero-section">
+                    <form id="heroForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">عنوان الصفحة الرئيسي</label>
+                                    <input type="text" class="form-control" id="heroTitle" value="نُظم - نظام إدارة الموظفين والمركبات">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">العنوان الفرعي</label>
+                                    <textarea class="form-control" id="heroSubtitle" rows="3">حل شامل ومتكامل لإدارة العمليات الداخلية للشركات والمؤسسات</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">نص زر التجربة المجانية</label>
+                                    <input type="text" class="form-control" id="heroPrimaryBtn" value="جرب النظام مجاناً">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">نص زر المزايا</label>
+                                    <input type="text" class="form-control" id="heroSecondaryBtn" value="تعرف على المزايا">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="saveHeroSection()">
+                            <i class="fas fa-save me-2"></i>حفظ التغييرات
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- قسم الإحصائيات -->
+                <div class="tab-pane fade" id="stats-section">
+                    <form id="statsForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">عدد الشركات</label>
+                                    <input type="number" class="form-control" id="statsCompanies" value="250">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">عدد الموظفين</label>
+                                    <input type="number" class="form-control" id="statsEmployees" value="15000">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">عدد المركبات</label>
+                                    <input type="number" class="form-control" id="statsVehicles" value="3200">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label class="form-label">معدل الرضا (%)</label>
+                                    <input type="number" class="form-control" id="statsSatisfaction" value="98" min="0" max="100">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-success" onclick="saveStatsSection()">
+                            <i class="fas fa-save me-2"></i>حفظ الإحصائيات
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- معلومات الشركة -->
+                <div class="tab-pane fade" id="company-section">
+                    <form id="companyForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">اسم الشركة</label>
+                                    <input type="text" class="form-control" id="companyName" value="نُظم للتقنية">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">وصف الشركة</label>
+                                    <textarea class="form-control" id="companyDescription" rows="4">شركة رائدة في تطوير حلول إدارة الموارد البشرية والمركبات</textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">سنة التأسيس</label>
+                                    <input type="number" class="form-control" id="companyYear" value="2020">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">موقع الشركة</label>
+                                    <input type="text" class="form-control" id="companyLocation" value="الرياض، المملكة العربية السعودية">
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-info" onclick="saveCompanySection()">
+                            <i class="fas fa-save me-2"></i>حفظ معلومات الشركة
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- معاينة الميزات -->
     <div class="col-lg-6 mb-4">
@@ -237,6 +372,114 @@
 function editBasicInfo() {
     // في التطبيق الحقيقي، يمكن فتح نافذة تعديل
     alert('سيتم إضافة نافذة تعديل المعلومات الأساسية');
+}
+
+// حفظ القسم الرئيسي
+function saveHeroSection() {
+    const data = {
+        hero_title: document.getElementById('heroTitle').value,
+        hero_subtitle: document.getElementById('heroSubtitle').value,
+        hero_primary_btn: document.getElementById('heroPrimaryBtn').value,
+        hero_secondary_btn: document.getElementById('heroSecondaryBtn').value
+    };
+    
+    fetch('/landing-admin/api/save-hero', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('تم حفظ القسم الرئيسي بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ في الحفظ', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('خطأ:', error);
+        showAlert('حدث خطأ في الاتصال', 'danger');
+    });
+}
+
+// حفظ الإحصائيات
+function saveStatsSection() {
+    const data = {
+        stats_companies: document.getElementById('statsCompanies').value,
+        stats_employees: document.getElementById('statsEmployees').value,
+        stats_vehicles: document.getElementById('statsVehicles').value,
+        stats_satisfaction: document.getElementById('statsSatisfaction').value
+    };
+    
+    fetch('/landing-admin/api/save-stats', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('تم حفظ الإحصائيات بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ في الحفظ', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('خطأ:', error);
+        showAlert('حدث خطأ في الاتصال', 'danger');
+    });
+}
+
+// حفظ معلومات الشركة
+function saveCompanySection() {
+    const data = {
+        company_name: document.getElementById('companyName').value,
+        company_description: document.getElementById('companyDescription').value,
+        company_year: document.getElementById('companyYear').value,
+        company_location: document.getElementById('companyLocation').value
+    };
+    
+    fetch('/landing-admin/api/save-company', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            showAlert('تم حفظ معلومات الشركة بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ في الحفظ', 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('خطأ:', error);
+        showAlert('حدث خطأ في الاتصال', 'danger');
+    });
+}
+
+// عرض رسائل التنبيه
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // إزالة التنبيه بعد 3 ثوان
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
 }
 
 // تحديث الإحصائيات كل دقيقة
