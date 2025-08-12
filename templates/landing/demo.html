@@ -139,6 +139,60 @@
         background: #f8f9fa;
     }
 
+    .video-player {
+        position: relative;
+        border-radius: 15px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .video-player video {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 15px;
+    }
+
+    .video-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.8));
+        color: white;
+        padding: 30px 20px 20px;
+        transform: translateY(100%);
+        transition: all 0.3s ease;
+    }
+
+    .video-player:hover .video-overlay {
+        transform: translateY(0);
+    }
+
+    .video-overlay h4 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .video-overlay p {
+        font-size: 0.95rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    /* تحسين مشغل الفيديو */
+    .video-player video::-webkit-media-controls-panel {
+        background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    }
+
+    .video-player video::-webkit-media-controls-play-button {
+        background-color: var(--accent-color);
+        border-radius: 50%;
+    }
+
     .video-placeholder {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 15px;
@@ -559,13 +613,16 @@
                         <p class="video-description">شاهد كيفية إضافة موظف جديد وإدارة ملفه الشخصي</p>
                     </div>
                     <div class="video-container">
-                        <div class="video-placeholder" onclick="playVideo('employees')">
-                            <div class="play-button">
-                                <i class="fas fa-play"></i>
+                        <div class="video-player">
+                            <video controls poster="/static/images/video-poster-employees.svg" preload="metadata">
+                                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                                <p>متصفحك لا يدعم تشغيل الفيديو. <a href="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4">حمّل الفيديو</a></p>
+                            </video>
+                            <div class="video-overlay">
+                                <h4>عرض توضيحي: إدارة الموظفين</h4>
+                                <p>شاهد كيفية إضافة وإدارة بيانات الموظفين</p>
                             </div>
-                            <h4>عرض توضيحي: إدارة الموظفين</h4>
-                            <p>مدة العرض: 3 دقائق</p>
-                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
                         </div>
                     </div>
                     <div class="video-info">
@@ -592,13 +649,16 @@
                         <p class="video-description">تعلم كيفية تسجيل مركبة وإدارة عملية التسليم</p>
                     </div>
                     <div class="video-container">
-                        <div class="video-placeholder" onclick="playVideo('vehicles')">
-                            <div class="play-button">
-                                <i class="fas fa-play"></i>
+                        <div class="video-player">
+                            <video controls poster="/static/images/video-poster-vehicles.svg" preload="metadata">
+                                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4" type="video/mp4">
+                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+                                <p>متصفحك لا يدعم تشغيل الفيديو. <a href="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4">حمّل الفيديو</a></p>
+                            </video>
+                            <div class="video-overlay">
+                                <h4>عرض توضيحي: إدارة المركبات</h4>
+                                <p>تعلم كيفية تسجيل وتتبع المركبات</p>
                             </div>
-                            <h4>عرض توضيحي: إدارة المركبات</h4>
-                            <p>مدة العرض: 4 دقائق</p>
-                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
                         </div>
                     </div>
                     <div class="video-info">
@@ -627,13 +687,16 @@
                         <p class="video-description">استكشف ميزات تسجيل الحضور وحساب الساعات</p>
                     </div>
                     <div class="video-container">
-                        <div class="video-placeholder" onclick="playVideo('attendance')">
-                            <div class="play-button">
-                                <i class="fas fa-play"></i>
+                        <div class="video-player">
+                            <video controls poster="/static/images/video-poster-attendance.svg" preload="metadata">
+                                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_3mb.mp4" type="video/mp4">
+                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                                <p>متصفحك لا يدعم تشغيل الفيديو. <a href="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_3mb.mp4">حمّل الفيديو</a></p>
+                            </video>
+                            <div class="video-overlay">
+                                <h4>عرض توضيحي: نظام الحضور</h4>
+                                <p>استكشف ميزات تسجيل الحضور الذكي</p>
                             </div>
-                            <h4>عرض توضيحي: نظام الحضور</h4>
-                            <p>مدة العرض: 2.5 دقيقة</p>
-                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
                         </div>
                     </div>
                     <div class="video-info">
@@ -660,13 +723,16 @@
                         <p class="video-description">اكتشف قوة التقارير المتقدمة ولوحات المعلومات</p>
                     </div>
                     <div class="video-container">
-                        <div class="video-placeholder" onclick="playVideo('reports')">
-                            <div class="play-button">
-                                <i class="fas fa-play"></i>
+                        <div class="video-player">
+                            <video controls poster="/static/images/video-poster-reports.svg" preload="metadata">
+                                <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4" type="video/mp4">
+                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4" type="video/mp4">
+                                <p>متصفحك لا يدعم تشغيل الفيديو. <a href="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4">حمّل الفيديو</a></p>
+                            </video>
+                            <div class="video-overlay">
+                                <h4>عرض توضيحي: التقارير المتقدمة</h4>
+                                <p>اكتشف قوة التقارير والتحليلات</p>
                             </div>
-                            <h4>عرض توضيحي: التقارير المتقدمة</h4>
-                            <p>مدة العرض: 3.5 دقيقة</p>
-                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
                         </div>
                     </div>
                     <div class="video-info">
@@ -832,87 +898,48 @@
 
 {% block extra_js %}
 <script>
-// معالج تشغيل الفيديوهات
-function playVideo(type) {
-    const modal = new bootstrap.Modal(document.getElementById('videoModal'));
-    const modalLabel = document.getElementById('videoModalLabel');
-    const videoContent = document.getElementById('videoContent');
+// تحسين تشغيل الفيديوهات
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة تحكم مخصص للفيديوهات
+    const videos = document.querySelectorAll('.video-player video');
     
-    let title = '';
-    let content = '';
-    
-    switch(type) {
-        case 'employees':
-            title = 'عرض توضيحي: إدارة الموظفين';
-            content = generateVideoContent('إدارة الموظفين', [
-                'إضافة موظف جديد بالتفصيل',
-                'رفع المستندات والصور الشخصية',
-                'إدارة البيانات الوظيفية والشخصية',
-                'تتبع تواريخ انتهاء المستندات',
-                'البحث والفلترة المتقدمة',
-                'تصدير البيانات وطباعة التقارير'
-            ]);
-            break;
-        case 'vehicles':
-            title = 'عرض توضيحي: إدارة المركبات';
-            content = generateVideoContent('إدارة أسطول المركبات', [
-                'تسجيل مركبة جديدة في النظام',
-                'رفع وثائق المركبة والتأمين',
-                'إجراء عملية تسليم مركبة',
-                'استخدام التوقيع الرقمي',
-                'تتبع حالة المركبة وصيانتها',
-                'إدارة الفحوصات الدورية'
-            ]);
-            break;
-        case 'attendance':
-            title = 'عرض توضيحي: نظام الحضور';
-            content = generateVideoContent('نظام الحضور الذكي', [
-                'تسجيل الحضور والانصراف',
-                'حساب الساعات الإضافية تلقائياً',
-                'إنشاء تقارير الحضور الشهرية',
-                'دعم التقويم الهجري والميلادي',
-                'إدارة الإجازات والغياب',
-                'تنبيهات التأخير والمخالفات'
-            ]);
-            break;
-        case 'reports':
-            title = 'عرض توضيحي: التقارير والتحليلات';
-            content = generateVideoContent('التقارير المتقدمة', [
-                'إنشاء تقارير PDF احترافية',
-                'تصدير البيانات إلى Excel',
-                'الرسوم البيانية التفاعلية',
-                'لوحات المعلومات الذكية',
-                'تحليلات الأداء المتقدمة',
-                'تقارير مخصصة حسب الفترة'
-            ]);
-            break;
-    }
-    
-    modalLabel.textContent = title;
-    videoContent.innerHTML = content;
-    modal.show();
-}
-
-function generateVideoContent(title, features) {
-    return `
-        <div class="video-simulation" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 60px 40px; color: white; text-align: center;">
-            <div style="font-size: 4rem; margin-bottom: 30px;">🎬</div>
-            <h3 style="margin-bottom: 20px;">${title}</h3>
-            <p style="opacity: 0.9; margin-bottom: 30px;">عذراً، هذا فيديو محاكاة بالذكاء الاصطناعي</p>
-            <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 30px; margin: 30px 0;">
-                <h5 style="margin-bottom: 20px;">ما سيتم عرضه في هذا الفيديو:</h5>
-                <ul style="list-style: none; padding: 0; text-align: right;">
-                    ${features.map(feature => `<li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-check" style="margin-left: 10px; color: #4fd1c7;"></i>${feature}</li>`).join('')}
-                </ul>
-            </div>
-            <div style="margin-top: 30px;">
-                <a href="/nuzum/contact" class="btn btn-light btn-lg" style="background: white; color: #667eea; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: 600;">
-                    <i class="fas fa-calendar me-2"></i>احجز عرضاً حقيقياً مخصصاً
-                </a>
-            </div>
-        </div>
-    `;
-}
+    videos.forEach(video => {
+        video.addEventListener('loadstart', function() {
+            console.log('بدء تحميل الفيديو:', this.src);
+        });
+        
+        video.addEventListener('canplay', function() {
+            console.log('الفيديو جاهز للتشغيل:', this.src);
+        });
+        
+        video.addEventListener('error', function(e) {
+            console.error('خطأ في تحميل الفيديو:', e);
+            // إظهار رسالة بديلة
+            const container = this.closest('.video-player');
+            if (container) {
+                container.innerHTML = `
+                    <div class="video-error" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 60px 40px; text-align: center; border-radius: 15px;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                        <h4>عذراً، لا يمكن تحميل الفيديو</h4>
+                        <p style="opacity: 0.9; margin: 20px 0;">يرجى التأكد من اتصالك بالإنترنت أو المحاولة لاحقاً</p>
+                        <a href="/nuzum/contact" class="btn btn-light" style="background: white; color: #dc3545; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: 600;">
+                            <i class="fas fa-phone me-2"></i>تواصل للمساعدة
+                        </a>
+                    </div>
+                `;
+            }
+        });
+        
+        // إضافة تأثير تفاعلي
+        video.addEventListener('play', function() {
+            this.closest('.video-showcase').classList.add('playing');
+        });
+        
+        video.addEventListener('pause', function() {
+            this.closest('.video-showcase').classList.remove('playing');
+        });
+    });
+});
 
 // تأثيرات الانيميشن عند التمرير
 document.addEventListener('DOMContentLoaded', function() {
