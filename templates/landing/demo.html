@@ -1,650 +1,949 @@
 {% extends "landing/layout.html" %}
 
-{% block title %}عرض توضيحي - نُظم{% endblock %}
+{% block title %}العرض التوضيحي - نُظم{% endblock %}
 
 {% block extra_css %}
 <style>
-    .hero-demo {
-        background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+    :root {
+        --primary-color: #1e3a5c;
+        --secondary-color: #2c5282;
+        --accent-color: #4fd1c7;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --gradient-primary: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+        --gradient-accent: linear-gradient(135deg, #4fd1c7 0%, #38b2ac 100%);
+        --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        --shadow-primary: 0 10px 40px rgba(30, 58, 92, 0.15);
+        --shadow-hover: 0 20px 60px rgba(30, 58, 92, 0.25);
+    }
+
+    /* Hero Section للعرض التوضيحي */
+    .demo-hero {
+        background: var(--gradient-primary);
         color: white;
-        padding: 60px 0;
-        margin-top: -80px;
-        padding-top: 140px;
-    }
-    
-    .demo-card {
-        border: none;
-        border-radius: 20px;
-        transition: all 0.3s ease;
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .demo-card:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    }
-    
-    .demo-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #28a745, #20c997);
-    }
-    
-    .feature-showcase {
-        background: #f8f9fa;
-        border-radius: 15px;
-        padding: 30px;
-        margin: 20px 0;
+        padding: 120px 0 80px;
         position: relative;
         overflow: hidden;
     }
-    
-    .feature-showcase::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(45deg, transparent, rgba(40, 167, 69, 0.1), transparent);
-        transform: rotate(45deg);
-        animation: shine 3s infinite;
-    }
-    
-    @keyframes shine {
-        0% { transform: translateX(-100%) rotate(45deg); }
-        100% { transform: translateX(100%) rotate(45deg); }
-    }
-    
-    .interactive-demo {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        margin: 20px 0;
-        border: 1px solid #e9ecef;
-    }
-    
-    .step-indicator {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #1e3a5c, #2c5282);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin: 0 auto 20px;
-    }
-    
-    .video-placeholder {
-        background: linear-gradient(135deg, #e9ecef, #f8f9fa);
-        border-radius: 10px;
-        height: 200px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .video-placeholder:hover {
-        background: linear-gradient(135deg, #dee2e6, #e9ecef);
-    }
-    
-    .play-button {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: rgba(30, 58, 92, 0.9);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        transition: all 0.3s ease;
-    }
-    
-    .play-button:hover {
-        background: rgba(30, 58, 92, 1);
-        transform: scale(1.1);
-    }
-    
-    .stats-counter {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1e3a5c;
-        display: block;
-        margin-bottom: 5px;
-    }
-    
-    .testimonial-card {
-        background: white;
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        height: 100%;
-        position: relative;
-    }
-    
-    .testimonial-card::before {
-        content: '"';
-        font-size: 4rem;
-        color: #e9ecef;
-        position: absolute;
-        top: 10px;
-        right: 20px;
-        font-family: serif;
-    }
-    
-    .trial-section {
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        color: white;
-        border-radius: 20px;
-        padding: 50px 30px;
-        margin: 40px 0;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .trial-section::before {
+
+    .demo-hero::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.05"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="demo-pattern" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse"><circle cx="30" cy="30" r="2" fill="%23ffffff" opacity="0.1"/><path d="M0,30 Q30,0 60,30 Q30,60 0,30" stroke="%23ffffff" stroke-width="1" fill="none" opacity="0.05"/></pattern></defs><rect width="1000" height="1000" fill="url(%23demo-pattern)"/></svg>') repeat;
     }
-    
-    .btn-demo {
-        background: linear-gradient(135deg, #1e3a5c, #2c5282);
-        border: none;
-        padding: 15px 30px;
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .demo-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .demo-subtitle {
+        font-size: 1.4rem;
+        opacity: 0.95;
+        max-width: 700px;
+        margin: 0 auto 3rem;
+        line-height: 1.6;
+    }
+
+    .demo-features-list {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 30px;
+        margin-bottom: 3rem;
+    }
+
+    .demo-feature-badge {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 25px;
+        padding: 15px 25px;
         color: white;
         font-weight: 600;
-        text-decoration: none;
-        display: inline-block;
         transition: all 0.3s ease;
+    }
+
+    .demo-feature-badge:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px);
+    }
+
+    /* قسم الفيديوهات التوضيحية */
+    .demo-videos-section {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+
+    .video-showcase {
+        background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: var(--shadow-primary);
+        margin-bottom: 40px;
+        transition: all 0.4s ease;
+    }
+
+    .video-showcase:hover {
+        transform: translateY(-10px);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .video-header {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .video-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 20px;
+    }
+
+    .video-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .video-description {
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+
+    .video-container {
+        position: relative;
+        padding: 40px;
+        background: #f8f9fa;
+    }
+
+    .video-placeholder {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 15px;
+        padding: 60px 40px;
+        text-align: center;
+        color: white;
         position: relative;
         overflow: hidden;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
-    
-    .btn-demo:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(30, 58, 92, 0.3);
-        color: white;
+
+    .video-placeholder:hover {
+        transform: scale(1.02);
     }
-    
-    .btn-demo::before {
+
+    .video-placeholder::before {
         content: '';
         position: absolute;
         top: 0;
         left: -100%;
         width: 100%;
         height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        transition: left 0.5s ease;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        transition: left 0.6s ease;
     }
-    
-    .btn-demo:hover::before {
+
+    .video-placeholder:hover::before {
         left: 100%;
+    }
+
+    .play-button {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin: 0 auto 20px;
+        transition: all 0.3s ease;
+    }
+
+    .video-placeholder:hover .play-button {
+        transform: scale(1.1);
+        background: white;
+    }
+
+    .video-info {
+        padding: 30px;
+    }
+
+    .video-features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .video-features li {
+        padding: 10px 0;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        color: #495057;
+    }
+
+    .video-features li:last-child {
+        border-bottom: none;
+    }
+
+    .video-features li i {
+        margin-left: 12px;
+        color: var(--success-color);
+        font-size: 1rem;
+    }
+
+    /* قسم الخطوات التفاعلية */
+    .interactive-steps {
+        padding: 80px 0;
+        background: white;
+    }
+
+    .step-card {
+        background: white;
+        border-radius: 20px;
+        padding: 40px 30px;
+        box-shadow: var(--shadow-primary);
+        text-align: center;
+        position: relative;
+        transition: all 0.4s ease;
+        border: 2px solid transparent;
+    }
+
+    .step-card:hover {
+        transform: translateY(-10px);
+        border-color: var(--accent-color);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        background: var(--gradient-accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 0 auto 25px;
+        position: relative;
+    }
+
+    .step-card:nth-child(2) .step-number {
+        background: var(--gradient-success);
+    }
+
+    .step-card:nth-child(3) .step-number {
+        background: var(--gradient-warning);
+    }
+
+    .step-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+    }
+
+    .step-description {
+        color: #6c757d;
+        line-height: 1.6;
+        margin-bottom: 25px;
+    }
+
+    .step-action {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 12px 25px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-block;
+    }
+
+    .step-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(30, 58, 92, 0.3);
+        text-decoration: none;
+        color: white;
+    }
+
+    /* قسم المزايا الفورية */
+    .immediate-benefits {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 80px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .immediate-benefits::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="benefits-pattern" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23benefits-pattern)"/></svg>') repeat;
+        opacity: 0.3;
+    }
+
+    .benefit-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 40px 30px;
+        text-align: center;
+        transition: all 0.4s ease;
+        position: relative;
+        z-index: 2;
+    }
+
+    .benefit-card:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-10px);
+    }
+
+    .benefit-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        opacity: 0.9;
+    }
+
+    .benefit-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+    }
+
+    .benefit-description {
+        opacity: 0.9;
+        line-height: 1.6;
+    }
+
+    /* قسم CTA النهائي */
+    .final-demo-cta {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 100px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .cta-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin-bottom: 25px;
+    }
+
+    .cta-subtitle {
+        font-size: 1.4rem;
+        opacity: 0.95;
+        max-width: 700px;
+        margin: 0 auto 40px;
+        line-height: 1.6;
+    }
+
+    .cta-buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 25px;
+    }
+
+    .cta-button {
+        background: white;
+        color: var(--primary-color);
+        padding: 20px 45px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.4s ease;
+        border: 2px solid white;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .cta-button:hover::before {
+        left: 100%;
+    }
+
+    .cta-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        text-decoration: none;
+        color: var(--primary-color);
+    }
+
+    .cta-button.secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+    }
+
+    .cta-button.secondary:hover {
+        background: white;
+        color: var(--primary-color);
+    }
+
+    /* التصميم المتجاوب */
+    @media (max-width: 992px) {
+        .demo-title {
+            font-size: 2.8rem;
+        }
+        
+        .demo-features-list {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .video-showcase {
+            margin-bottom: 30px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .demo-title {
+            font-size: 2.2rem;
+        }
+        
+        .demo-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .cta-title {
+            font-size: 2.4rem;
+        }
+        
+        .cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .cta-button {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+
+    /* تأثيرات الانيميشن */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .pulse {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .float {
+        animation: float 3s ease-in-out infinite;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- القسم الرئيسي -->
-<section class="hero-demo">
+<!-- Hero Section للعرض التوضيحي -->
+<section class="demo-hero">
     <div class="container">
-        <div class="row justify-content-center text-center">
-            <div class="col-lg-8">
-                <h1 class="display-3 fw-bold mb-4">اكتشف قوة نُظم</h1>
-                <p class="lead mb-5">جرب النظام الأكثر تطوراً لإدارة الموظفين والمركبات في المملكة العربية السعودية</p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <a href="#interactive-demo" class="btn btn-light btn-lg">شاهد العرض التفاعلي</a>
-                    <a href="#trial-accounts" class="btn btn-outline-light btn-lg">جرب الآن مجاناً</a>
+        <div class="hero-content">
+            <h1 class="demo-title">شاهد نُظم في العمل</h1>
+            <p class="demo-subtitle">
+                اكتشف كيف يمكن لنُظم تحويل عمليات مؤسستك من خلال عروض توضيحية تفاعلية تُظهر الإمكانيات الحقيقية للنظام
+            </p>
+            
+            <div class="demo-features-list">
+                <div class="demo-feature-badge">
+                    <i class="fas fa-users me-2"></i>إدارة الموظفين
+                </div>
+                <div class="demo-feature-badge">
+                    <i class="fas fa-car me-2"></i>إدارة المركبات
+                </div>
+                <div class="demo-feature-badge">
+                    <i class="fas fa-clock me-2"></i>نظام الحضور
+                </div>
+                <div class="demo-feature-badge">
+                    <i class="fas fa-chart-bar me-2"></i>التقارير المتقدمة
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<div class="container my-5">
-    <!-- الإحصائيات -->
-    <section class="row text-center mb-5">
-        <div class="col-md-3 mb-4">
-            <span class="stats-counter" data-target="500">0</span>
-            <p class="text-muted">شركة تثق بنا</p>
-        </div>
-        <div class="col-md-3 mb-4">
-            <span class="stats-counter" data-target="50000">0</span>
-            <p class="text-muted">موظف يستخدم النظام</p>
-        </div>
-        <div class="col-md-3 mb-4">
-            <span class="stats-counter" data-target="10000">0</span>
-            <p class="text-muted">مركبة مُدارة</p>
-        </div>
-        <div class="col-md-3 mb-4">
-            <span class="stats-counter" data-target="99">0</span><span class="stats-counter">%</span>
-            <p class="text-muted">معدل رضا العملاء</p>
-        </div>
-    </section>
-
-    <!-- العرض التفاعلي -->
-    <section id="interactive-demo" class="mb-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold text-primary">العرض التفاعلي</h2>
-            <p class="lead text-muted">شاهد النظام أثناء العمل مع بيانات حقيقية</p>
+<!-- قسم الفيديوهات التوضيحية -->
+<section class="demo-videos-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">عروض توضيحية تفاعلية</h2>
+                <p class="section-subtitle">شاهد النظام وهو يعمل في بيئة حقيقية</p>
+            </div>
         </div>
         
         <div class="row">
-            <div class="col-lg-8 mb-4">
-                <div class="video-placeholder" onclick="playDemo()">
-                    <div>
-                        <div class="play-button">
-                            <i class="fas fa-play"></i>
+            <!-- فيديو إدارة الموظفين -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="video-showcase">
+                    <div class="video-header">
+                        <div class="video-icon">
+                            <i class="fas fa-users"></i>
                         </div>
-                        <p class="mt-3 mb-0 text-muted">انقر لمشاهدة العرض التوضيحي (5 دقائق)</p>
+                        <h3 class="video-title">إدارة الموظفين الذكية</h3>
+                        <p class="video-description">شاهد كيفية إضافة موظف جديد وإدارة ملفه الشخصي</p>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="interactive-demo">
-                    <h5 class="text-primary mb-3">ستتعلم في هذا العرض:</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-3">
-                            <i class="fas fa-check-circle text-success me-2"></i>
-                            كيفية إضافة موظف جديد بالكامل
-                        </li>
-                        <li class="mb-3">
-                            <i class="fas fa-check-circle text-success me-2"></i>
-                            تسجيل مركبة وتسليمها للموظف
-                        </li>
-                        <li class="mb-3">
-                            <i class="fas fa-check-circle text-success me-2"></i>
-                            إنشاء تقرير احترافي بصيغة PDF
-                        </li>
-                        <li class="mb-3">
-                            <i class="fas fa-check-circle text-success me-2"></i>
-                            استيراد بيانات من ملف Excel
-                        </li>
-                        <li class="mb-3">
-                            <i class="fas fa-check-circle text-success me-2"></i>
-                            تتبع انتهاء صلاحية المستندات
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- خطوات التجربة -->
-    <section class="mb-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold text-primary">كيف تبدأ تجربتك؟</h2>
-            <p class="lead text-muted">ثلاث خطوات بسيطة للوصول للنظام الكامل</p>
-        </div>
-        
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="feature-showcase text-center">
-                    <div class="step-indicator">1</div>
-                    <h5 class="text-primary">اختر نوع الحساب</h5>
-                    <p class="text-muted">مدير نظام للوصول الكامل أو موظف للميزات المحددة</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="feature-showcase text-center">
-                    <div class="step-indicator">2</div>
-                    <h5 class="text-primary">اكتشف الميزات</h5>
-                    <p class="text-muted">استكشف جميع الأقسام وجرب العمليات المختلفة</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-4">
-                <div class="feature-showcase text-center">
-                    <div class="step-indicator">3</div>
-                    <h5 class="text-primary">اطلب النسخة الكاملة</h5>
-                    <p class="text-muted">تواصل معنا للحصول على النظام مخصص لشركتك</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- حسابات التجربة -->
-    <section id="trial-accounts" class="mb-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold text-primary">حسابات التجربة</h2>
-            <p class="lead text-muted">ادخل مباشرة وابدأ الاستكشاف</p>
-        </div>
-        
-        <div class="row justify-content-center">
-            <div class="col-lg-5 col-md-6 mb-4">
-                <div class="demo-card shadow-lg">
-                    <div class="card-body p-5 text-center">
-                        <div class="mb-4">
-                            <i class="fas fa-user-shield text-primary" style="font-size: 4rem;"></i>
+                    <div class="video-container">
+                        <div class="video-placeholder" onclick="playVideo('employees')">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <h4>عرض توضيحي: إدارة الموظفين</h4>
+                            <p>مدة العرض: 3 دقائق</p>
+                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
                         </div>
-                        <h4 class="card-title text-primary mb-3">حساب المدير</h4>
-                        <p class="card-text text-muted mb-4">وصول كامل لجميع الميزات والإعدادات مع إمكانية التحكم الشامل</p>
-                        <div class="mb-4">
-                            <small class="text-muted d-block">اسم المستخدم:</small>
-                            <code class="fs-6">admin@demo.com</code>
-                            <small class="text-muted d-block mt-2">كلمة المرور:</small>
-                            <code class="fs-6">demo123</code>
-                        </div>
-                        <a href="/nuzum/login" class="btn-demo w-100 text-center d-block">
-                            دخول كمدير النظام
-                        </a>
-                        <div class="mt-3">
-                            <small class="text-success">
-                                <i class="fas fa-unlock me-1"></i>
-                                جميع الصلاحيات متاحة
-                            </small>
-                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h5 class="mb-3">ما ستشاهده في هذا العرض:</h5>
+                        <ul class="video-features">
+                            <li><i class="fas fa-check"></i> إضافة موظف جديد بالتفصيل</li>
+                            <li><i class="fas fa-check"></i> رفع المستندات والصور</li>
+                            <li><i class="fas fa-check"></i> إدارة البيانات الشخصية</li>
+                            <li><i class="fas fa-check"></i> تتبع تواريخ انتهاء المستندات</li>
+                            <li><i class="fas fa-check"></i> البحث والفلترة المتقدمة</li>
+                        </ul>
                     </div>
                 </div>
             </div>
             
-            <div class="col-lg-5 col-md-6 mb-4">
-                <div class="demo-card shadow-lg">
-                    <div class="card-body p-5 text-center">
-                        <div class="mb-4">
-                            <i class="fas fa-user text-success" style="font-size: 4rem;"></i>
+            <!-- فيديو إدارة المركبات -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="video-showcase">
+                    <div class="video-header">
+                        <div class="video-icon">
+                            <i class="fas fa-car"></i>
                         </div>
-                        <h4 class="card-title text-success mb-3">حساب الموظف</h4>
-                        <p class="card-text text-muted mb-4">وصول محدود للميزات المخصصة للموظفين مع واجهة مبسطة</p>
-                        <div class="mb-4">
-                            <small class="text-muted d-block">اسم المستخدم:</small>
-                            <code class="fs-6">employee@demo.com</code>
-                            <small class="text-muted d-block mt-2">كلمة المرور:</small>
-                            <code class="fs-6">demo123</code>
+                        <h3 class="video-title">إدارة أسطول المركبات</h3>
+                        <p class="video-description">تعلم كيفية تسجيل مركبة وإدارة عملية التسليم</p>
+                    </div>
+                    <div class="video-container">
+                        <div class="video-placeholder" onclick="playVideo('vehicles')">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <h4>عرض توضيحي: إدارة المركبات</h4>
+                            <p>مدة العرض: 4 دقائق</p>
+                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
                         </div>
-                        <a href="/nuzum/login" class="btn btn-success w-100">
-                            دخول كموظف
-                        </a>
-                        <div class="mt-3">
-                            <small class="text-info">
-                                <i class="fas fa-eye me-1"></i>
-                                عرض البيانات الشخصية فقط
-                            </small>
-                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h5 class="mb-3">ما ستشاهده في هذا العرض:</h5>
+                        <ul class="video-features">
+                            <li><i class="fas fa-check"></i> تسجيل مركبة جديدة</li>
+                            <li><i class="fas fa-check"></i> رفع الوثائق والتأمين</li>
+                            <li><i class="fas fa-check"></i> عملية تسليم المركبة</li>
+                            <li><i class="fas fa-check"></i> التوقيع الرقمي</li>
+                            <li><i class="fas fa-check"></i> تتبع حالة المركبة</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+        
+        <div class="row">
+            <!-- فيديو نظام الحضور -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="video-showcase">
+                    <div class="video-header">
+                        <div class="video-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <h3 class="video-title">نظام الحضور الذكي</h3>
+                        <p class="video-description">استكشف ميزات تسجيل الحضور وحساب الساعات</p>
+                    </div>
+                    <div class="video-container">
+                        <div class="video-placeholder" onclick="playVideo('attendance')">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <h4>عرض توضيحي: نظام الحضور</h4>
+                            <p>مدة العرض: 2.5 دقيقة</p>
+                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h5 class="mb-3">ما ستشاهده في هذا العرض:</h5>
+                        <ul class="video-features">
+                            <li><i class="fas fa-check"></i> تسجيل الحضور والانصراف</li>
+                            <li><i class="fas fa-check"></i> حساب الساعات الإضافية</li>
+                            <li><i class="fas fa-check"></i> تقارير الحضور الشهرية</li>
+                            <li><i class="fas fa-check"></i> التقويم الهجري والميلادي</li>
+                            <li><i class="fas fa-check"></i> إدارة الإجازات</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- فيديو التقارير -->
+            <div class="col-lg-6 col-md-12 mb-4">
+                <div class="video-showcase">
+                    <div class="video-header">
+                        <div class="video-icon">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <h3 class="video-title">التقارير والتحليلات</h3>
+                        <p class="video-description">اكتشف قوة التقارير المتقدمة ولوحات المعلومات</p>
+                    </div>
+                    <div class="video-container">
+                        <div class="video-placeholder" onclick="playVideo('reports')">
+                            <div class="play-button">
+                                <i class="fas fa-play"></i>
+                            </div>
+                            <h4>عرض توضيحي: التقارير المتقدمة</h4>
+                            <p>مدة العرض: 3.5 دقيقة</p>
+                            <small>فيديو محاكاة بالذكاء الاصطناعي</small>
+                        </div>
+                    </div>
+                    <div class="video-info">
+                        <h5 class="mb-3">ما ستشاهده في هذا العرض:</h5>
+                        <ul class="video-features">
+                            <li><i class="fas fa-check"></i> إنشاء تقارير PDF احترافية</li>
+                            <li><i class="fas fa-check"></i> تصدير البيانات لـ Excel</li>
+                            <li><i class="fas fa-check"></i> الرسوم البيانية التفاعلية</li>
+                            <li><i class="fas fa-check"></i> لوحات معلومات ذكية</li>
+                            <li><i class="fas fa-check"></i> تحليلات الأداء</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    <!-- الميزات القابلة للتجربة -->
-    <section class="mb-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold text-primary">ما يمكنك تجربته الآن</h2>
-            <p class="lead text-muted">اكتشف الميزات المتقدمة بنفسك</p>
+<!-- قسم الخطوات التفاعلية -->
+<section class="interactive-steps">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">ابدأ رحلتك مع نُظم في 3 خطوات</h2>
+                <p class="section-subtitle">عملية بسيطة وسريعة للبدء مع النظام</p>
+            </div>
         </div>
         
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4">
-                <div class="interactive-demo h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-users text-primary fs-1"></i>
-                    </div>
-                    <h5 class="text-primary text-center mb-3">إدارة الموظفين</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2">• إضافة وتعديل بيانات الموظفين</li>
-                        <li class="mb-2">• رفع المستندات والصور الشخصية</li>
-                        <li class="mb-2">• تتبع انتهاء صلاحية الوثائق</li>
-                        <li class="mb-2">• استيراد من ملفات Excel</li>
-                        <li class="mb-2">• تقارير شاملة لكل موظف</li>
-                    </ul>
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3 class="step-title">احجز عرضاً مخصصاً</h3>
+                    <p class="step-description">
+                        تحدث مع أحد خبرائنا لفهم احتياجاتك وشاهد النظام يعمل مع بياناتك الحقيقية
+                    </p>
+                    <a href="/nuzum/contact" class="step-action">
+                        <i class="fas fa-calendar me-2"></i>احجز موعداً
+                    </a>
                 </div>
             </div>
             
             <div class="col-lg-4 col-md-6 mb-4">
-                <div class="interactive-demo h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-car text-info fs-1"></i>
-                    </div>
-                    <h5 class="text-info text-center mb-3">إدارة المركبات</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2">• تسجيل المركبات ووثائقها</li>
-                        <li class="mb-2">• نظام التسليم والاستلام</li>
-                        <li class="mb-2">• فحوصات السلامة مع الصور</li>
-                        <li class="mb-2">• إدارة ورش الصيانة</li>
-                        <li class="mb-2">• تقارير حالة الأسطول</li>
-                    </ul>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3 class="step-title">إعداد مخصص</h3>
+                    <p class="step-description">
+                        فريقنا التقني سيقوم بإعداد النظام ليناسب احتياجات مؤسستك وتدريب فريقك
+                    </p>
+                    <a href="/nuzum/contact" class="step-action">
+                        <i class="fas fa-cogs me-2"></i>ابدأ الإعداد
+                    </a>
                 </div>
             </div>
             
             <div class="col-lg-4 col-md-6 mb-4">
-                <div class="interactive-demo h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-clock text-warning fs-1"></i>
-                    </div>
-                    <h5 class="text-warning text-center mb-3">الحضور والانصراف</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2">• تسجيل أوقات العمل</li>
-                        <li class="mb-2">• حساب الساعات الإضافية</li>
-                        <li class="mb-2">• دعم التقويم الهجري</li>
-                        <li class="mb-2">• تقارير شهرية مفصلة</li>
-                        <li class="mb-2">• إشعارات التأخير</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="interactive-demo h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-money-bill text-success fs-1"></i>
-                    </div>
-                    <h5 class="text-success text-center mb-3">إدارة المرتبات</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2">• حساب المرتبات تلقائياً</li>
-                        <li class="mb-2">• إدارة البدلات والخصومات</li>
-                        <li class="mb-2">• كشوف مرتبات PDF</li>
-                        <li class="mb-2">• تقارير الرواتب الشهرية</li>
-                        <li class="mb-2">• أرشفة كشوف الرواتب</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="interactive-demo h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-chart-bar text-danger fs-1"></i>
-                    </div>
-                    <h5 class="text-danger text-center mb-3">التقارير المتقدمة</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2">• تقارير PDF احترافية</li>
-                        <li class="mb-2">• تصدير بيانات Excel</li>
-                        <li class="mb-2">• رسوم بيانية تفاعلية</li>
-                        <li class="mb-2">• تقارير مخصصة</li>
-                        <li class="mb-2">• جدولة إرسال التقارير</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="interactive-demo h-100">
-                    <div class="text-center mb-3">
-                        <i class="fas fa-mobile-alt text-secondary fs-1"></i>
-                    </div>
-                    <h5 class="text-secondary text-center mb-3">إدارة الأجهزة</h5>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2">• تسجيل الهواتف والأجهزة</li>
-                        <li class="mb-2">• تتبع IMEI والخطوط</li>
-                        <li class="mb-2">• ربط الأجهزة بالموظفين</li>
-                        <li class="mb-2">• إدارة الخطوط والباقات</li>
-                        <li class="mb-2">• تقارير استخدام الأجهزة</li>
-                    </ul>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3 class="step-title">انطلق نحو النجاح</h3>
+                    <p class="step-description">
+                        ابدأ في استخدام النظام مع دعم فني مستمر ومتابعة شخصية لضمان نجاحك
+                    </p>
+                    <a href="/nuzum/pricing" class="step-action">
+                        <i class="fas fa-rocket me-2"></i>اختر خطتك
+                    </a>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- آراء العملاء -->
-    <section class="mb-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold text-primary">ماذا يقول عملاؤنا</h2>
-            <p class="lead text-muted">تجارب حقيقية من شركات تستخدم نُظم</p>
+<!-- قسم المزايا الفورية -->
+<section class="immediate-benefits">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">فوائد فورية ستلاحظها من اليوم الأول</h2>
+                <p class="section-subtitle">نتائج حقيقية يحققها عملاؤنا بمجرد البدء مع نُظم</p>
+            </div>
         </div>
         
         <div class="row">
-            <div class="col-lg-4 mb-4">
-                <div class="testimonial-card">
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="bg-primary text-white rounded-circle p-2 me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
-                                <strong>أ.م</strong>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">أحمد محمد</h6>
-                                <small class="text-muted">مدير الموارد البشرية</small>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="mb-3">نُظم غيّر طريقة عملنا بالكامل. وفرنا أكثر من 20 ساعة أسبوعياً في إدارة الموظفين والمركبات.</p>
-                    <div class="text-warning">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card">
+                    <div class="benefit-icon">⚡</div>
+                    <h3 class="benefit-title">توفير 40% من الوقت</h3>
+                    <p class="benefit-description">
+                        أتمتة العمليات الإدارية توفر ساعات يومياً من العمل اليدوي
+                    </p>
                 </div>
             </div>
             
-            <div class="col-lg-4 mb-4">
-                <div class="testimonial-card">
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="bg-success text-white rounded-circle p-2 me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
-                                <strong>ف.ع</strong>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">فاطمة العلي</h6>
-                                <small class="text-muted">مديرة العمليات</small>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="mb-3">الواجهة العربية ممتازة والتقارير احترافية جداً. أصبح تتبع المستندات وانتهاء الصلاحيات سهل جداً.</p>
-                    <div class="text-warning">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card">
+                    <div class="benefit-icon">📊</div>
+                    <h3 class="benefit-title">دقة 99.9%</h3>
+                    <p class="benefit-description">
+                        إزالة الأخطاء البشرية وضمان دقة البيانات والحسابات
+                    </p>
                 </div>
             </div>
             
-            <div class="col-lg-4 mb-4">
-                <div class="testimonial-card">
-                    <div class="mb-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="bg-info text-white rounded-circle p-2 me-3" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;">
-                                <strong>خ.س</strong>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">خالد السعود</h6>
-                                <small class="text-muted">مدير الأسطول</small>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="mb-3">إدارة المركبات أصبحت سهلة ومنظمة. فحوصات السلامة والصيانة كلها منظمة في مكان واحد.</p>
-                    <div class="text-warning">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                    </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card">
+                    <div class="benefit-icon">💰</div>
+                    <h3 class="benefit-title">توفير التكاليف</h3>
+                    <p class="benefit-description">
+                        تقليل التكاليف التشغيلية بنسبة 30% من خلال الأتمتة الذكية
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🚀</div>
+                    <h3 class="benefit-title">زيادة الإنتاجية</h3>
+                    <p class="benefit-description">
+                        تحسين الإنتاجية بنسبة 65% من خلال تبسيط العمليات
+                    </p>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- قسم التجربة المجانية -->
-    <section class="trial-section position-relative">
-        <div class="position-relative">
-            <h2 class="display-4 fw-bold mb-4">ابدأ تجربتك المجانية اليوم</h2>
-            <p class="fs-5 mb-5">30 يوم تجربة مجانية كاملة • لا حاجة لبطاقة ائتمانية • إعداد فوري</p>
-            <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <a href="/nuzum/contact" class="btn btn-light btn-lg px-4 py-3">
-                    <i class="fas fa-rocket me-2"></i>ابدأ التجربة المجانية
+<!-- CTA النهائي -->
+<section class="final-demo-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">مستعد لرؤية نُظم في مؤسستك؟</h2>
+            <p class="cta-subtitle">
+                احجز عرضاً توضيحياً مخصصاً اليوم وشاهد كيف يمكن لنُظم تحويل طريقة عمل مؤسستك إلى الأفضل
+            </p>
+            <div class="cta-buttons">
+                <a href="/nuzum/contact" class="cta-button">
+                    <i class="fas fa-video me-2"></i>احجز عرضاً مخصصاً
                 </a>
-                <a href="/nuzum/contact" class="btn btn-outline-light btn-lg px-4 py-3">
+                <a href="/nuzum/contact" class="cta-button secondary">
                     <i class="fas fa-phone me-2"></i>تحدث مع خبير
                 </a>
             </div>
-            <p class="mt-4 opacity-75">
-                <i class="fas fa-shield-alt me-2"></i>
-                آمن ومحمي • دعم فني 24/7 • استضافة سحابية
-            </p>
         </div>
-    </section>
-</div>
+    </div>
+</section>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // تحريك العدادات
-    const counters = document.querySelectorAll('.stats-counter');
-    const observer = new IntersectionObserver(entries => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const counter = entry.target;
-                const target = parseInt(counter.getAttribute('data-target'));
-                const increment = target / 100;
-                let current = 0;
-                
-                const updateCounter = () => {
-                    if (current < target) {
-                        current += increment;
-                        if (current > target) current = target;
-                        counter.textContent = Math.floor(current).toLocaleString();
-                        setTimeout(updateCounter, 20);
-                    }
-                };
-                updateCounter();
-                observer.unobserve(counter);
-            }
-        });
-    }, { threshold: 0.5 });
-    
-    counters.forEach(counter => observer.observe(counter));
-});
-
-function playDemo() {
-    // محاكاة تشغيل الفيديو
-    const placeholder = document.querySelector('.video-placeholder');
-    const playButton = placeholder.querySelector('.play-button');
-    
-    playButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
-    setTimeout(() => {
-        placeholder.innerHTML = `
-            <div class="w-100 h-100 bg-dark d-flex align-items-center justify-content-center text-white rounded">
-                <div class="text-center">
-                    <i class="fas fa-play-circle fs-1 mb-3"></i>
-                    <p class="mb-0">العرض التوضيحي</p>
-                    <small class="text-muted">يتم تشغيل الفيديو...</small>
+<!-- نافذة الفيديو المنبثقة -->
+<div class="modal fade" id="videoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="videoModalLabel">عرض توضيحي</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
+            </div>
+            <div class="modal-body">
+                <div id="videoContent" class="text-center">
+                    <!-- سيتم إدراج محتوى الفيديو هنا -->
                 </div>
             </div>
-        `;
-        
-        // في التطبيق الحقيقي، يمكن تشغيل فيديو حقيقي هنا
-        setTimeout(() => {
-            alert('في النسخة الفعلية، سيتم عرض فيديو توضيحي مفصل للنظام');
-        }, 1000);
-    }, 1000);
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// معالج تشغيل الفيديوهات
+function playVideo(type) {
+    const modal = new bootstrap.Modal(document.getElementById('videoModal'));
+    const modalLabel = document.getElementById('videoModalLabel');
+    const videoContent = document.getElementById('videoContent');
+    
+    let title = '';
+    let content = '';
+    
+    switch(type) {
+        case 'employees':
+            title = 'عرض توضيحي: إدارة الموظفين';
+            content = generateVideoContent('إدارة الموظفين', [
+                'إضافة موظف جديد بالتفصيل',
+                'رفع المستندات والصور الشخصية',
+                'إدارة البيانات الوظيفية والشخصية',
+                'تتبع تواريخ انتهاء المستندات',
+                'البحث والفلترة المتقدمة',
+                'تصدير البيانات وطباعة التقارير'
+            ]);
+            break;
+        case 'vehicles':
+            title = 'عرض توضيحي: إدارة المركبات';
+            content = generateVideoContent('إدارة أسطول المركبات', [
+                'تسجيل مركبة جديدة في النظام',
+                'رفع وثائق المركبة والتأمين',
+                'إجراء عملية تسليم مركبة',
+                'استخدام التوقيع الرقمي',
+                'تتبع حالة المركبة وصيانتها',
+                'إدارة الفحوصات الدورية'
+            ]);
+            break;
+        case 'attendance':
+            title = 'عرض توضيحي: نظام الحضور';
+            content = generateVideoContent('نظام الحضور الذكي', [
+                'تسجيل الحضور والانصراف',
+                'حساب الساعات الإضافية تلقائياً',
+                'إنشاء تقارير الحضور الشهرية',
+                'دعم التقويم الهجري والميلادي',
+                'إدارة الإجازات والغياب',
+                'تنبيهات التأخير والمخالفات'
+            ]);
+            break;
+        case 'reports':
+            title = 'عرض توضيحي: التقارير والتحليلات';
+            content = generateVideoContent('التقارير المتقدمة', [
+                'إنشاء تقارير PDF احترافية',
+                'تصدير البيانات إلى Excel',
+                'الرسوم البيانية التفاعلية',
+                'لوحات المعلومات الذكية',
+                'تحليلات الأداء المتقدمة',
+                'تقارير مخصصة حسب الفترة'
+            ]);
+            break;
+    }
+    
+    modalLabel.textContent = title;
+    videoContent.innerHTML = content;
+    modal.show();
 }
+
+function generateVideoContent(title, features) {
+    return `
+        <div class="video-simulation" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 60px 40px; color: white; text-align: center;">
+            <div style="font-size: 4rem; margin-bottom: 30px;">🎬</div>
+            <h3 style="margin-bottom: 20px;">${title}</h3>
+            <p style="opacity: 0.9; margin-bottom: 30px;">عذراً، هذا فيديو محاكاة بالذكاء الاصطناعي</p>
+            <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 30px; margin: 30px 0;">
+                <h5 style="margin-bottom: 20px;">ما سيتم عرضه في هذا الفيديو:</h5>
+                <ul style="list-style: none; padding: 0; text-align: right;">
+                    ${features.map(feature => `<li style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);"><i class="fas fa-check" style="margin-left: 10px; color: #4fd1c7;"></i>${feature}</li>`).join('')}
+                </ul>
+            </div>
+            <div style="margin-top: 30px;">
+                <a href="/nuzum/contact" class="btn btn-light btn-lg" style="background: white; color: #667eea; padding: 15px 30px; border-radius: 25px; text-decoration: none; font-weight: 600;">
+                    <i class="fas fa-calendar me-2"></i>احجز عرضاً حقيقياً مخصصاً
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+// تأثيرات الانيميشن عند التمرير
+document.addEventListener('DOMContentLoaded', function() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in-up');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    // مراقبة العناصر للانيميشن
+    document.querySelectorAll('.video-showcase, .step-card, .benefit-card').forEach(el => {
+        observer.observe(el);
+    });
+    
+    // تأثير التحريك السلس للروابط
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
 </script>
 {% endblock %}
