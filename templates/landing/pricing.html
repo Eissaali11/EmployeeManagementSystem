@@ -1,196 +1,1001 @@
 {% extends "landing/layout.html" %}
 
-{% block title %}الأسعار - نُظم{% endblock %}
+{% block title %}الأسعار والخطط - نُظم{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #1e3a5c;
+        --secondary-color: #2c5282;
+        --accent-color: #4fd1c7;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --info-color: #17a2b8;
+        --gradient-primary: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+        --gradient-accent: linear-gradient(135deg, #4fd1c7 0%, #38b2ac 100%);
+        --gradient-success: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --gradient-warning: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        --gradient-info: linear-gradient(135deg, #17a2b8 0%, #6f42c1 100%);
+        --shadow-primary: 0 15px 45px rgba(30, 58, 92, 0.15);
+        --shadow-hover: 0 25px 65px rgba(30, 58, 92, 0.25);
+        --shadow-glow: 0 0 40px rgba(79, 209, 199, 0.3);
+    }
+
+    /* Hero Section للأسعار */
+    .pricing-hero {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 120px 0 80px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .pricing-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="pricing-pattern" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse"><circle cx="40" cy="40" r="3" fill="%23ffffff" opacity="0.1"/><path d="M20,40 Q40,20 60,40 Q40,60 20,40" stroke="%23ffffff" stroke-width="2" fill="none" opacity="0.05"/></pattern></defs><rect width="1000" height="1000" fill="url(%23pricing-pattern)"/></svg>') repeat;
+        animation: movePattern 20s linear infinite;
+    }
+
+    @keyframes movePattern {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(80px, 80px); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .pricing-title {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .pricing-subtitle {
+        font-size: 1.4rem;
+        opacity: 0.95;
+        max-width: 700px;
+        margin: 0 auto 3rem;
+        line-height: 1.6;
+    }
+
+    .pricing-promise {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 25px;
+        padding: 20px 30px;
+        display: inline-block;
+        margin-bottom: 2rem;
+    }
+
+    /* بطاقات الخطط */
+    .plans-section {
+        padding: 80px 0;
+        background: #f8f9fa;
+    }
+
+    .plan-card {
+        background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: var(--shadow-primary);
+        transition: all 0.4s ease;
+        position: relative;
+        margin-bottom: 40px;
+        border: 3px solid transparent;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-15px) scale(1.02);
+        box-shadow: var(--shadow-hover);
+    }
+
+    .plan-card.popular {
+        border-color: var(--accent-color);
+        box-shadow: var(--shadow-glow);
+        transform: scale(1.05);
+    }
+
+    .plan-card.popular:hover {
+        transform: translateY(-15px) scale(1.07);
+    }
+
+    .plan-header {
+        padding: 40px 30px 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .plan-card.starter .plan-header {
+        background: var(--gradient-success);
+        color: white;
+    }
+
+    .plan-card.professional .plan-header {
+        background: var(--gradient-primary);
+        color: white;
+    }
+
+    .plan-card.enterprise .plan-header {
+        background: var(--gradient-warning);
+        color: white;
+    }
+
+    .popular-badge {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent-color);
+        color: white;
+        padding: 8px 25px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        box-shadow: 0 5px 15px rgba(79, 209, 199, 0.4);
+    }
+
+    .plan-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin: 0 auto 25px;
+        transition: all 0.3s ease;
+    }
+
+    .plan-card:hover .plan-icon {
+        transform: scale(1.1) rotate(10deg);
+    }
+
+    .plan-name {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .plan-tagline {
+        opacity: 0.9;
+        font-size: 1.1rem;
+        margin-bottom: 0;
+    }
+
+    .plan-pricing {
+        padding: 30px;
+        text-align: center;
+        background: #f8f9fa;
+    }
+
+    .price-display {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+    }
+
+    .price-note {
+        color: #6c757d;
+        font-size: 0.95rem;
+        margin-bottom: 25px;
+    }
+
+    .contact-cta {
+        background: var(--gradient-accent);
+        color: white;
+        padding: 15px 35px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        display: inline-block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .contact-cta::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .contact-cta:hover::before {
+        left: 100%;
+    }
+
+    .contact-cta:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(79, 209, 199, 0.4);
+        text-decoration: none;
+        color: white;
+    }
+
+    .plan-features {
+        padding: 40px 30px;
+    }
+
+    .features-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .feature-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .feature-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f3f4;
+        display: flex;
+        align-items: center;
+        color: #495057;
+        transition: all 0.3s ease;
+    }
+
+    .feature-list li:last-child {
+        border-bottom: none;
+    }
+
+    .feature-list li:hover {
+        color: var(--primary-color);
+        padding-right: 10px;
+    }
+
+    .feature-list li i {
+        margin-left: 15px;
+        color: var(--success-color);
+        font-size: 1.1rem;
+        min-width: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .feature-list li:hover i {
+        transform: scale(1.2);
+    }
+
+    .feature-list li.premium {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .feature-list li.premium i {
+        color: var(--accent-color);
+    }
+
+    /* قسم المقارنة */
+    .comparison-section {
+        padding: 80px 0;
+        background: white;
+    }
+
+    .comparison-table {
+        background: white;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: var(--shadow-primary);
+    }
+
+    .comparison-header {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: 2fr repeat(3, 1fr);
+        gap: 0;
+    }
+
+    .comparison-row {
+        display: contents;
+    }
+
+    .comparison-cell {
+        padding: 20px 15px;
+        border-bottom: 1px solid #e9ecef;
+        border-right: 1px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .comparison-cell:hover {
+        background: #f8f9fa;
+    }
+
+    .comparison-cell:last-child {
+        border-right: none;
+    }
+
+    .comparison-feature {
+        font-weight: 600;
+        color: var(--primary-color);
+        text-align: right;
+        justify-content: flex-start;
+        padding-right: 30px;
+    }
+
+    .comparison-check {
+        font-size: 1.5rem;
+    }
+
+    .check-yes {
+        color: var(--success-color);
+    }
+
+    .check-no {
+        color: #dc3545;
+    }
+
+    .check-premium {
+        color: var(--accent-color);
+    }
+
+    /* قسم الأسئلة الشائعة */
+    .faq-section {
+        background: #f8f9fa;
+        padding: 80px 0;
+    }
+
+    .faq-item {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+    }
+
+    .faq-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+    }
+
+    .faq-question {
+        background: white;
+        border: none;
+        padding: 25px 30px;
+        width: 100%;
+        text-align: right;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .faq-question:hover {
+        background: #f8f9fa;
+    }
+
+    .faq-answer {
+        padding: 0 30px 25px;
+        color: #6c757d;
+        line-height: 1.6;
+        display: none;
+    }
+
+    .faq-answer.show {
+        display: block;
+        animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* قسم الدعوة للعمل */
+    .pricing-cta {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 100px 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .pricing-cta::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="cta-dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1.5" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23cta-dots)"/></svg>') repeat;
+    }
+
+    .cta-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .cta-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        margin-bottom: 25px;
+    }
+
+    .cta-subtitle {
+        font-size: 1.4rem;
+        opacity: 0.95;
+        max-width: 700px;
+        margin: 0 auto 40px;
+        line-height: 1.6;
+    }
+
+    .cta-benefits {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 40px;
+        margin-bottom: 40px;
+    }
+
+    .cta-benefit {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .cta-benefit i {
+        color: var(--accent-color);
+        font-size: 1.3rem;
+    }
+
+    .cta-buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 25px;
+    }
+
+    .cta-button {
+        background: white;
+        color: var(--primary-color);
+        padding: 20px 45px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.4s ease;
+        border: 2px solid white;
+    }
+
+    .cta-button:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        text-decoration: none;
+        color: var(--primary-color);
+    }
+
+    .cta-button.secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+    }
+
+    .cta-button.secondary:hover {
+        background: white;
+        color: var(--primary-color);
+    }
+
+    /* التصميم المتجاوب */
+    @media (max-width: 992px) {
+        .pricing-title {
+            font-size: 2.8rem;
+        }
+        
+        .comparison-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .comparison-cell {
+            text-align: center;
+            border-right: none;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .comparison-feature {
+            text-align: center;
+            justify-content: center;
+            padding: 20px;
+            background: #f8f9fa;
+            font-weight: 700;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .pricing-title {
+            font-size: 2.2rem;
+        }
+        
+        .pricing-subtitle {
+            font-size: 1.2rem;
+        }
+        
+        .plan-card {
+            transform: none;
+            margin-bottom: 30px;
+        }
+        
+        .plan-card.popular {
+            transform: none;
+        }
+        
+        .cta-title {
+            font-size: 2.4rem;
+        }
+        
+        .cta-benefits {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .cta-button {
+            width: 100%;
+            max-width: 300px;
+        }
+    }
+
+    /* تأثيرات الانيميشن */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .pulse {
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+        0% { background-position: -200px 0; }
+        100% { background-position: calc(200px + 100%) 0; }
+    }
+
+    .shimmer {
+        background: linear-gradient(90deg, #f0f0f0 0px, #e0e0e0 40px, #f0f0f0 80px);
+        background-size: 200px 100%;
+        animation: shimmer 1.5s infinite;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">خطط الأسعار</h1>
-        <p class="lead text-muted">اختر الخطة المناسبة لحجم مؤسستك واحتياجاتك</p>
+<!-- Hero Section للأسعار -->
+<section class="pricing-hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="pricing-title">خطط تناسب كل مؤسسة</h1>
+            <p class="pricing-subtitle">
+                اختر الخطة المثالية لحجم مؤسستك واحتياجاتك. جميع الخطط تشمل دعماً فنياً مميزاً وتحديثات مجانية
+            </p>
+            <div class="pricing-promise">
+                <i class="fas fa-shield-alt me-2"></i>
+                ضمان استرداد المبلغ خلال 30 يوماً + دعم فني 24/7
+            </div>
+        </div>
     </div>
-    
-    <!-- خطط الأسعار -->
-    <div class="row justify-content-center">
-        <!-- الخطة الأساسية -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow">
-                <div class="card-header bg-light text-center border-0 py-4">
-                    <h4 class="text-primary mb-0">الخطة الأساسية</h4>
-                    <p class="text-muted mt-2">للشركات الصغيرة</p>
-                </div>
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <span class="display-4 fw-bold text-primary">٩٩٩</span>
-                        <span class="text-muted">ريال/شهرياً</span>
+</section>
+
+<!-- بطاقات الخطط -->
+<section class="plans-section">
+    <div class="container">
+        <div class="row">
+            <!-- الخطة الأساسية -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card starter">
+                    <div class="plan-header">
+                        <div class="plan-icon">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <h3 class="plan-name">الباقة الأساسية</h3>
+                        <p class="plan-tagline">مثالية للشركات الناشئة والصغيرة</p>
                     </div>
-                    <ul class="list-unstyled text-start">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>حتى 50 موظف</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>حتى 20 مركبة</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>إدارة الحضور والانصراف</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تقارير أساسية</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>دعم فني عبر الإيميل</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>نسخ احتياطية يومية</li>
-                    </ul>
+                    <div class="plan-pricing">
+                        <div class="price-display">عرض خاص</div>
+                        <p class="price-note">للشركات حتى 50 موظف</p>
+                        <a href="/nuzum/contact" class="contact-cta">
+                            <i class="fas fa-phone me-2"></i>احصل على السعر
+                        </a>
+                    </div>
+                    <div class="plan-features">
+                        <h4 class="features-title">الميزات المتضمنة</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> إدارة حتى 50 موظف</li>
+                            <li><i class="fas fa-check"></i> إدارة 10 مركبات</li>
+                            <li><i class="fas fa-check"></i> نظام الحضور والغياب</li>
+                            <li><i class="fas fa-check"></i> تقارير أساسية</li>
+                            <li><i class="fas fa-check"></i> دعم فني عبر البريد</li>
+                            <li><i class="fas fa-check"></i> تطبيق المحمول</li>
+                            <li><i class="fas fa-check"></i> نسخ احتياطية يومية</li>
+                            <li><i class="fas fa-check"></i> تدريب أساسي للفريق</li>
+                        </ul>
+                    </div>
                 </div>
-                <div class="card-footer bg-transparent text-center border-0 pb-4">
-                    <a href="/nuzum/contact" class="btn btn-outline-primary w-100">تواصل معنا</a>
+            </div>
+            
+            <!-- الخطة المتقدمة -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card professional popular">
+                    <div class="popular-badge">الأكثر شيوعاً</div>
+                    <div class="plan-header">
+                        <div class="plan-icon">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <h3 class="plan-name">الباقة المتقدمة</h3>
+                        <p class="plan-tagline">للشركات المتوسطة والمتنامية</p>
+                    </div>
+                    <div class="plan-pricing">
+                        <div class="price-display">قيمة استثنائية</div>
+                        <p class="price-note">للشركات حتى 200 موظف</p>
+                        <a href="/nuzum/contact" class="contact-cta">
+                            <i class="fas fa-star me-2"></i>احصل على السعر
+                        </a>
+                    </div>
+                    <div class="plan-features">
+                        <h4 class="features-title">جميع ميزات الأساسية بالإضافة إلى</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> إدارة حتى 200 موظف</li>
+                            <li><i class="fas fa-check"></i> إدارة مركبات غير محدودة</li>
+                            <li><i class="fas fa-check"></i> تقارير متقدمة ومخصصة</li>
+                            <li><i class="fas fa-check"></i> إدارة الأجهزة المحمولة</li>
+                            <li class="premium"><i class="fas fa-crown"></i> دعم فني أولوية عالية</li>
+                            <li class="premium"><i class="fas fa-crown"></i> API للربط مع الأنظمة</li>
+                            <li class="premium"><i class="fas fa-crown"></i> تحليلات الأداء المتقدمة</li>
+                            <li class="premium"><i class="fas fa-crown"></i> تدريب شامل ومخصص</li>
+                        </ul>
+                    </div>
                 </div>
+            </div>
+            
+            <!-- خطة المؤسسات -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="plan-card enterprise">
+                    <div class="plan-header">
+                        <div class="plan-icon">
+                            <i class="fas fa-city"></i>
+                        </div>
+                        <h3 class="plan-name">باقة المؤسسات</h3>
+                        <p class="plan-tagline">للمؤسسات الكبيرة والحكومية</p>
+                    </div>
+                    <div class="plan-pricing">
+                        <div class="price-display">حلول مخصصة</div>
+                        <p class="price-note">للمؤسسات أكثر من 200 موظف</p>
+                        <a href="/nuzum/contact" class="contact-cta">
+                            <i class="fas fa-handshake me-2"></i>تواصل معنا
+                        </a>
+                    </div>
+                    <div class="plan-features">
+                        <h4 class="features-title">جميع الميزات المتقدمة بالإضافة إلى</h4>
+                        <ul class="feature-list">
+                            <li><i class="fas fa-check"></i> مستخدمين غير محدود</li>
+                            <li><i class="fas fa-check"></i> تخصيص كامل للنظام</li>
+                            <li><i class="fas fa-check"></i> استضافة مخصصة</li>
+                            <li><i class="fas fa-check"></i> تكامل مع الأنظمة الحالية</li>
+                            <li class="premium"><i class="fas fa-crown"></i> مدير حساب مخصص</li>
+                            <li class="premium"><i class="fas fa-crown"></i> دعم فني 24/7 مباشر</li>
+                            <li class="premium"><i class="fas fa-crown"></i> اتفاقية مستوى خدمة SLA</li>
+                            <li class="premium"><i class="fas fa-crown"></i> تطوير ميزات مخصصة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- قسم المقارنة التفصيلية -->
+<section class="comparison-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">مقارنة شاملة بين الخطط</h2>
+                <p class="section-subtitle">اختر الخطة المناسبة بناءً على احتياجاتك التفصيلية</p>
             </div>
         </div>
         
-        <!-- الخطة المتقدمة -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 border-primary shadow-lg position-relative">
-                <div class="badge bg-primary position-absolute top-0 start-50 translate-middle px-3 py-2">
-                    الأكثر شعبية
+        <div class="comparison-table">
+            <div class="comparison-header">
+                <h3>جدول مقارنة الميزات</h3>
+            </div>
+            <div class="comparison-grid">
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">الميزة</div>
+                    <div class="comparison-cell"><strong>الأساسية</strong></div>
+                    <div class="comparison-cell"><strong>المتقدمة</strong></div>
+                    <div class="comparison-cell"><strong>المؤسسات</strong></div>
                 </div>
-                <div class="card-header bg-primary text-white text-center border-0 py-4">
-                    <h4 class="mb-0">الخطة المتقدمة</h4>
-                    <p class="mt-2 mb-0 opacity-75">للشركات المتوسطة</p>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">عدد الموظفين</div>
+                    <div class="comparison-cell">حتى 50</div>
+                    <div class="comparison-cell">حتى 200</div>
+                    <div class="comparison-cell">غير محدود</div>
                 </div>
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <span class="display-4 fw-bold text-primary">١٩٩٩</span>
-                        <span class="text-muted">ريال/شهرياً</span>
-                    </div>
-                    <ul class="list-unstyled text-start">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>حتى 200 موظف</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>حتى 100 مركبة</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>جميع ميزات الخطة الأساسية</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>إدارة المرتبات المتقدمة</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تقارير متقدمة وتحليلات</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>دعم فني هاتفي</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تخصيص الواجهة</li>
-                    </ul>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">إدارة المركبات</div>
+                    <div class="comparison-cell">10 مركبات</div>
+                    <div class="comparison-cell">غير محدود</div>
+                    <div class="comparison-cell">غير محدود</div>
                 </div>
-                <div class="card-footer bg-transparent text-center border-0 pb-4">
-                    <a href="/nuzum/contact" class="btn btn-primary w-100">تواصل معنا</a>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">تقارير متقدمة</div>
+                    <div class="comparison-cell check-no"><i class="fas fa-times"></i></div>
+                    <div class="comparison-cell check-yes"><i class="fas fa-check"></i></div>
+                    <div class="comparison-cell check-yes"><i class="fas fa-check"></i></div>
                 </div>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">API للربط</div>
+                    <div class="comparison-cell check-no"><i class="fas fa-times"></i></div>
+                    <div class="comparison-cell check-yes"><i class="fas fa-check"></i></div>
+                    <div class="comparison-cell check-premium"><i class="fas fa-crown"></i></div>
+                </div>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">دعم فني</div>
+                    <div class="comparison-cell">بريد إلكتروني</div>
+                    <div class="comparison-cell">أولوية عالية</div>
+                    <div class="comparison-cell">24/7 مباشر</div>
+                </div>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">استضافة مخصصة</div>
+                    <div class="comparison-cell check-no"><i class="fas fa-times"></i></div>
+                    <div class="comparison-cell check-no"><i class="fas fa-times"></i></div>
+                    <div class="comparison-cell check-premium"><i class="fas fa-crown"></i></div>
+                </div>
+                
+                <div class="comparison-row">
+                    <div class="comparison-cell comparison-feature">تخصيص النظام</div>
+                    <div class="comparison-cell check-no"><i class="fas fa-times"></i></div>
+                    <div class="comparison-cell">محدود</div>
+                    <div class="comparison-cell check-premium"><i class="fas fa-crown"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- قسم الأسئلة الشائعة -->
+<section class="faq-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-title">الأسئلة الشائعة حول الأسعار</h2>
+                <p class="section-subtitle">إجابات واضحة على أهم الأسئلة حول خططنا وأسعارنا</p>
             </div>
         </div>
         
-        <!-- الخطة المؤسسية -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow">
-                <div class="card-header bg-dark text-white text-center border-0 py-4">
-                    <h4 class="mb-0">الخطة المؤسسية</h4>
-                    <p class="mt-2 mb-0 opacity-75">للشركات الكبيرة</p>
-                </div>
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <span class="display-4 fw-bold text-dark">حسب</span>
-                        <br>
-                        <span class="text-muted">الطلب</span>
-                    </div>
-                    <ul class="list-unstyled text-start">
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>عدد غير محدود من الموظفين</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>عدد غير محدود من المركبات</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>جميع ميزات الخطط السابقة</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تكامل مع أنظمة أخرى</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>دعم فني مخصص 24/7</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>تدريب شامل للفريق</li>
-                        <li class="mb-2"><i class="fas fa-check text-success me-2"></i>استضافة مخصصة</li>
-                    </ul>
-                </div>
-                <div class="card-footer bg-transparent text-center border-0 pb-4">
-                    <a href="/nuzum/contact" class="btn btn-outline-dark w-100">تواصل معنا</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- الميزات المشتركة -->
-    <div class="row mt-5">
-        <div class="col-12">
-            <div class="bg-light p-4 rounded">
-                <h4 class="text-center text-primary mb-4">ميزات مشتركة في جميع الخطط</h4>
-                <div class="row">
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="fas fa-shield-alt text-primary fs-3 mb-2"></i>
-                            <h6>أمان متقدم</h6>
-                            <small class="text-muted">تشفير SSL وحماية البيانات</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="fas fa-cloud text-primary fs-3 mb-2"></i>
-                            <h6>تخزين سحابي</h6>
-                            <small class="text-muted">نسخ احتياطية آمنة</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="fas fa-mobile-alt text-primary fs-3 mb-2"></i>
-                            <h6>تطبيق الجوال</h6>
-                            <small class="text-muted">وصول من أي مكان</small>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="text-center">
-                            <i class="fas fa-sync-alt text-primary fs-3 mb-2"></i>
-                            <h6>تحديثات مجانية</h6>
-                            <small class="text-muted">تحسينات وميزات جديدة</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- الأسئلة الشائعة -->
-    <div class="row mt-5">
-        <div class="col-lg-8 mx-auto">
-            <h3 class="text-center text-primary mb-4">الأسئلة الشائعة</h3>
-            <div class="accordion" id="faqAccordion">
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="faq1">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
-                            هل يمكنني تجربة النظام قبل الشراء؟
-                        </button>
-                    </h2>
-                    <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            نعم، نوفر تجربة مجانية لمدة 30 يوم مع إمكانية الوصول لجميع الميزات.
-                        </div>
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)">
+                        <span>كيف يتم تحديد السعر لكل خطة؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        يعتمد تسعير كل خطة على عدة عوامل منها عدد المستخدمين، حجم البيانات، مستوى الدعم المطلوب، والميزات المخصصة. نقدم عروض أسعار مخصصة تناسب احتياجات كل مؤسسة وميزانيتها.
                     </div>
                 </div>
                 
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="faq2">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
-                            هل يمكن ترقية أو تغيير الخطة لاحقاً؟
-                        </button>
-                    </h2>
-                    <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            نعم، يمكنك ترقية أو تغيير خطتك في أي وقت. سيتم احتساب الفرق في السعر بالتناسب.
-                        </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)">
+                        <span>هل يمكن تغيير الخطة لاحقاً؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        بالطبع! يمكنك ترقية أو تغيير خطتك في أي وقت. سيقوم فريقنا بمساعدتك في عملية الانتقال بسلاسة مع ضمان عدم فقدان أي بيانات.
                     </div>
                 </div>
                 
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="faq3">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
-                            هل تتضمن الأسعار الدعم الفني؟
-                        </button>
-                    </h2>
-                    <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                        <div class="accordion-body">
-                            نعم، جميع الخطط تشمل الدعم الفني. الخطة الأساسية تشمل دعم عبر الإيميل، والمتقدمة تشمل الدعم الهاتفي، والمؤسسية تشمل دعم مخصص 24/7.
-                        </div>
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)">
+                        <span>هل هناك رسوم إعداد أو تركيب؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        رسوم الإعداد والتدريب مدرجة في جميع الخطط. نوفر تدريباً شاملاً لفريقك وإعداداً كاملاً للنظام ليناسب احتياجات مؤسستك دون تكاليف إضافية.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)">
+                        <span>ما هي شروط ضمان استرداد المبلغ؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        نوفر ضماناً لاسترداد المبلغ خلال 30 يوماً من بدء الاشتراك في حال عدم رضاك عن الخدمة، دون أي شروط معقدة أو أسئلة إضافية.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)">
+                        <span>هل يشمل السعر التحديثات والصيانة؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        نعم، جميع التحديثات والصيانة الدورية مشمولة في السعر. نحرص على تطوير النظام باستمرار وإضافة ميزات جديدة دون تكاليف إضافية.
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFAQ(this)">
+                        <span>هل يمكن الحصول على فترة تجريبية مجانية؟</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        نقدم عروضاً توضيحية مخصصة مع بياناتك الحقيقية وفترات تجريبية حسب حجم المؤسسة ونوع الاستخدام. تواصل معنا لمناقشة أفضل خيار لك.
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <!-- دعوة للعمل -->
-    <div class="text-center mt-5 bg-primary text-white p-5 rounded">
-        <h3 class="mb-3">جاهز للبدء؟</h3>
-        <p class="lead mb-4">تواصل معنا اليوم للحصول على استشارة مجانية وعرض أسعار مخصص</p>
-        <a href="/nuzum/contact" class="btn btn-light btn-lg me-3">تواصل معنا</a>
-        <a href="/nuzum/demo" class="btn btn-outline-light btn-lg">تجربة مجانية</a>
+</section>
+
+<!-- CTA النهائي -->
+<section class="pricing-cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2 class="cta-title">جاهز لبدء رحلتك مع نُظم؟</h2>
+            <p class="cta-subtitle">
+                احصل على عرض سعر مخصص يناسب احتياجات مؤسستك تماماً واكتشف كيف يمكن لنُظم توفير الوقت والمال
+            </p>
+            
+            <div class="cta-benefits">
+                <div class="cta-benefit">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>ضمان 30 يوماً</span>
+                </div>
+                <div class="cta-benefit">
+                    <i class="fas fa-headset"></i>
+                    <span>دعم فني متميز</span>
+                </div>
+                <div class="cta-benefit">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>تحديثات مجانية</span>
+                </div>
+                <div class="cta-benefit">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>تدريب شامل</span>
+                </div>
+            </div>
+            
+            <div class="cta-buttons">
+                <a href="/nuzum/contact" class="cta-button">
+                    <i class="fas fa-calculator me-2"></i>احصل على عرض سعر
+                </a>
+                <a href="/nuzum/demo" class="cta-button secondary">
+                    <i class="fas fa-play me-2"></i>شاهد العرض التوضيحي
+                </a>
+            </div>
+        </div>
     </div>
-</div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// معالج الأسئلة الشائعة
+function toggleFAQ(button) {
+    const answer = button.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    // إغلاق جميع الأسئلة الأخرى
+    document.querySelectorAll('.faq-answer').forEach(otherAnswer => {
+        if (otherAnswer !== answer) {
+            otherAnswer.classList.remove('show');
+            otherAnswer.previousElementSibling.querySelector('i').classList.remove('fa-chevron-up');
+            otherAnswer.previousElementSibling.querySelector('i').classList.add('fa-chevron-down');
+        }
+    });
+    
+    // تبديل الحالة للسؤال الحالي
+    answer.classList.toggle('show');
+    icon.classList.toggle('fa-chevron-down');
+    icon.classList.toggle('fa-chevron-up');
+}
+
+// تأثيرات الانيميشن عند التمرير
+document.addEventListener('DOMContentLoaded', function() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in-up');
+            }
+        });
+    }, {
+        threshold: 0.1
+    });
+    
+    // مراقبة العناصر للانيميشن
+    document.querySelectorAll('.plan-card, .faq-item, .comparison-table').forEach(el => {
+        observer.observe(el);
+    });
+    
+    // تأثير التحريك السلس للروابط
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // تأثير hover للبطاقات
+    document.querySelectorAll('.plan-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = this.classList.contains('popular') ? 
+                'translateY(-15px) scale(1.07)' : 'translateY(-15px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = this.classList.contains('popular') ? 
+                'scale(1.05)' : '';
+        });
+    });
+});
+</script>
 {% endblock %}
