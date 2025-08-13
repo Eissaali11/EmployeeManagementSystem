@@ -645,6 +645,7 @@ def index():
     sponsorship_status = request.args.get('sponsorship_status', '')
     status_filter = request.args.get('expiring', '')  # Fixed parameter name
     show_all = request.args.get('show_all', 'false')
+    search_query = request.args.get('search_query', '').strip()  # حقل البحث الجديد
     
     # Build query
     query = Document.query
@@ -669,6 +670,21 @@ def index():
     
     if sponsorship_status:
         query = query.join(Employee).filter(Employee.sponsorship_status == sponsorship_status)
+    
+    # إضافة البحث بالاسم والرقم الوظيفي ورقم الهوية
+    if search_query:
+        # إذا لم يكن هناك join مسبق مع Employee، نضيفه
+        if not sponsorship_status and not department_id:
+            query = query.join(Employee)
+        
+        # البحث في اسم الموظف أو رقم الموظف أو رقم الهوية الوطنية
+        query = query.filter(
+            or_(
+                Employee.name.contains(search_query),
+                Employee.employee_id.contains(search_query),
+                Employee.national_id.contains(search_query)
+            )
+        )
     
     # تطبيق فلتر حالة الصلاحية
     today = datetime.now().date()
@@ -763,6 +779,7 @@ def index():
                           selected_department=department_id,
                           selected_sponsorship=sponsorship_status,
                           selected_status_filter=status_filter,
+                          search_query=search_query,
                           show_all=show_all.lower() == 'true',
                           total_docs=total_docs,
                           expired_docs=expired_docs,

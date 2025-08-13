@@ -524,12 +524,6 @@
                         <option value="valid" {% if status_filter == 'valid' %}selected{% endif %}>سارية</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="search_query" class="form-label">البحث (الاسم، الرقم الوظيفي، رقم الهوية)</label>
-                    <input type="text" class="form-control" id="search_query" name="search_query" 
-                           value="{{ search_query or '' }}" 
-                           placeholder="ابحث بالاسم أو الرقم الوظيفي أو رقم الهوية...">
-                </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i> بحث
@@ -558,7 +552,6 @@
                         <tr>
                             <th>اسم الموظف</th>
                             <th>رقم الموظف</th>
-                            <th>رقم الهوية</th>
                             <th>القسم</th>
                             <th>نوع الوثيقة</th>
                             <th>تاريخ الإصدار</th>
@@ -573,7 +566,6 @@
                         <tr>
                             <td data-label="اسم الموظف">{{ document.employee.name }}</td>
                             <td data-label="رقم الموظف">{{ document.employee.employee_id or 'غير محدد' }}</td>
-                            <td data-label="رقم الهوية">{{ document.employee.national_id or 'غير محدد' }}</td>
                             <td data-label="القسم">
                                 {% if document.employee.departments %}
                                     {% for dept in document.employee.departments %}
