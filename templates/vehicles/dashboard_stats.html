@@ -125,22 +125,22 @@
                                     <div>
                                         <div style="font-size: 0.7rem; opacity: 0.8;">منتهية</div>
                                         <div style="font-size: 1rem; font-weight: 600;">
-                                            {% set expired_docs = 0 %}
+                                            {% set expired_docs = [] %}
                                             {% for vehicle in vehicles %}
                                                 {% if vehicle.registration_expiry_date and vehicle.registration_expiry_date < now.date() %}
-                                                    {% set expired_docs = expired_docs + 1 %}
+                                                    {{ expired_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.insurance_expiry_date and vehicle.insurance_expiry_date < now.date() %}
-                                                    {% set expired_docs = expired_docs + 1 %}
+                                                    {{ expired_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date < now.date() %}
-                                                    {% set expired_docs = expired_docs + 1 %}
+                                                    {{ expired_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date < now.date() %}
-                                                    {% set expired_docs = expired_docs + 1 %}
+                                                    {{ expired_docs.append(1) or "" }}
                                                 {% endif %}
                                             {% endfor %}
-                                            {{ expired_docs }}
+                                            {{ expired_docs | length }}
                                         </div>
                                     </div>
                                 </div>
@@ -154,22 +154,22 @@
                                         <div style="font-size: 0.7rem; opacity: 0.8;">ستنتهي قريباً</div>
                                         <div style="font-size: 1rem; font-weight: 600;">
                                             {% set thirty_days_later = (now + timedelta(days=30)).date() %}
-                                            {% set expiring_docs = 0 %}
+                                            {% set expiring_docs = [] %}
                                             {% for vehicle in vehicles %}
                                                 {% if vehicle.registration_expiry_date and vehicle.registration_expiry_date >= now.date() and vehicle.registration_expiry_date <= thirty_days_later %}
-                                                    {% set expiring_docs = expiring_docs + 1 %}
+                                                    {{ expiring_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.insurance_expiry_date and vehicle.insurance_expiry_date >= now.date() and vehicle.insurance_expiry_date <= thirty_days_later %}
-                                                    {% set expiring_docs = expiring_docs + 1 %}
+                                                    {{ expiring_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date >= now.date() and vehicle.inspection_expiry_date <= thirty_days_later %}
-                                                    {% set expiring_docs = expiring_docs + 1 %}
+                                                    {{ expiring_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date >= now.date() and vehicle.authorization_expiry_date <= thirty_days_later %}
-                                                    {% set expiring_docs = expiring_docs + 1 %}
+                                                    {{ expiring_docs.append(1) or "" }}
                                                 {% endif %}
                                             {% endfor %}
-                                            {{ expiring_docs }}
+                                            {{ expiring_docs | length }}
                                         </div>
                                     </div>
                                 </div>
@@ -182,22 +182,22 @@
                                     <div>
                                         <div style="font-size: 0.7rem; opacity: 0.8;">سارية</div>
                                         <div style="font-size: 1rem; font-weight: 600;">
-                                            {% set valid_docs = 0 %}
+                                            {% set valid_docs = [] %}
                                             {% for vehicle in vehicles %}
                                                 {% if vehicle.registration_expiry_date and vehicle.registration_expiry_date > thirty_days_later %}
-                                                    {% set valid_docs = valid_docs + 1 %}
+                                                    {{ valid_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.insurance_expiry_date and vehicle.insurance_expiry_date > thirty_days_later %}
-                                                    {% set valid_docs = valid_docs + 1 %}
+                                                    {{ valid_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date > thirty_days_later %}
-                                                    {% set valid_docs = valid_docs + 1 %}
+                                                    {{ valid_docs.append(1) or "" }}
                                                 {% endif %}
                                                 {% if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date > thirty_days_later %}
-                                                    {% set valid_docs = valid_docs + 1 %}
+                                                    {{ valid_docs.append(1) or "" }}
                                                 {% endif %}
                                             {% endfor %}
-                                            {{ valid_docs }}
+                                            {{ valid_docs | length }}
                                         </div>
                                     </div>
                                 </div>
@@ -213,6 +213,17 @@
 <!-- JavaScript للرسوم البيانية -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // حساب بيانات الوثائق
+    var expiredDocsCount = {{ expired_docs | length }};
+    var expiringDocsCount = {{ expiring_docs | length }};
+    var validDocsCount = {{ valid_docs | length }};
+    
+    console.log('بيانات الوثائق:', {
+        expired: expiredDocsCount,
+        expiring: expiringDocsCount,
+        valid: validDocsCount
+    });
+
     // رسم بياني لحالة السيارات
     var ctx1 = document.getElementById('vehicleStatusChart').getContext('2d');
     var vehicleChart = new Chart(ctx1, {
@@ -255,34 +266,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // رسم بياني للوثائق
     var ctx2 = document.getElementById('documentsStatusChart').getContext('2d');
-    var documentsChart = new Chart(ctx2, {
-        type: 'doughnut',
-        data: {
-            labels: ['منتهية الصلاحية', 'ستنتهي قريباً', 'سارية المفعول'],
-            datasets: [{
-                data: [{{ expired_docs }}, {{ expiring_docs }}, {{ valid_docs }}],
-                backgroundColor: [
-                    '#ef4444',
-                    '#f59e0b', 
-                    '#10b981'
-                ],
-                borderWidth: 2,
-                borderColor: '#ffffff',
-                cutout: '65%'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    titleColor: '#ffffff',
-                    bodyColor: '#ffffff'
+    
+    // التأكد من وجود بيانات قبل إنشاء الرسم البياني
+    if (expiredDocsCount + expiringDocsCount + validDocsCount > 0) {
+        var documentsChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['منتهية الصلاحية', 'ستنتهي قريباً', 'سارية المفعول'],
+                datasets: [{
+                    data: [expiredDocsCount, expiringDocsCount, validDocsCount],
+                    backgroundColor: [
+                        '#ef4444',
+                        '#f59e0b', 
+                        '#10b981'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    cutout: '65%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff'
+                    }
                 }
             }
-        }
-    });
+        });
+    } else {
+        // إذا لم توجد بيانات، عرض رسالة أو رسم بياني فارغ
+        console.log('لا توجد بيانات وثائق لعرضها');
+        var documentsChart = new Chart(ctx2, {
+            type: 'doughnut',
+            data: {
+                labels: ['لا توجد بيانات'],
+                datasets: [{
+                    data: [1],
+                    backgroundColor: ['#6b7280'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    cutout: '65%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff'
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
