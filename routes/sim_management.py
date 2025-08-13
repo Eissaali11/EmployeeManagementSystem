@@ -48,14 +48,28 @@ def index():
             query = query.filter(SimCard.carrier == carrier_filter)
             
         if status_filter == 'available':
-            # الأرقام غير المربوطة (لا في employee_id ولا في DeviceAssignment)
+            # الأرقام المتاحة = غير مربوطة OR مربوطة بموظف غير نشط
+            from models import Employee
+            inactive_employee_sims = db.session.query(SimCard.id).join(Employee).filter(
+                SimCard.employee_id == Employee.id,
+                Employee.status != 'نشط'
+            ).subquery()
+            
             if device_assigned_phone_numbers:
                 query = query.filter(
-                    SimCard.employee_id.is_(None),
+                    db.or_(
+                        SimCard.employee_id.is_(None),  # غير مربوط أصلاً
+                        SimCard.id.in_(inactive_employee_sims)  # مربوط بموظف غير نشط
+                    ),
                     ~SimCard.phone_number.in_(device_assigned_phone_numbers)
                 )
             else:
-                query = query.filter(SimCard.employee_id.is_(None))
+                query = query.filter(
+                    db.or_(
+                        SimCard.employee_id.is_(None),  # غير مربوط أصلاً
+                        SimCard.id.in_(inactive_employee_sims)  # مربوط بموظف غير نشط
+                    )
+                )
         elif status_filter == 'assigned':
             # الأرقام المربوطة (إما employee_id أو في DeviceAssignment)
             if device_assigned_phone_numbers:
@@ -98,14 +112,28 @@ def index():
         sims_with_employee = SimCard.query.filter(SimCard.employee_id.isnot(None)).count()
         sims_in_device_assignment = len(device_assigned_phone_numbers)
         
-        # الأرقام المتاحة = الأرقام بدون employee_id وليست في DeviceAssignment
+        # الأرقام المتاحة = الأرقام بدون employee_id OR مربوطة بموظف غير نشط وليست في DeviceAssignment
+        from models import Employee
+        inactive_employee_sims_count = db.session.query(SimCard.id).join(Employee).filter(
+            SimCard.employee_id == Employee.id,
+            Employee.status != 'نشط'
+        ).subquery()
+        
         if device_assigned_phone_numbers:
             available_sims_count = SimCard.query.filter(
-                SimCard.employee_id.is_(None),
+                db.or_(
+                    SimCard.employee_id.is_(None),  # غير مربوط أصلاً
+                    SimCard.id.in_(inactive_employee_sims_count)  # مربوط بموظف غير نشط
+                ),
                 ~SimCard.phone_number.in_(device_assigned_phone_numbers)
             ).count()
         else:
-            available_sims_count = SimCard.query.filter(SimCard.employee_id.is_(None)).count()
+            available_sims_count = SimCard.query.filter(
+                db.or_(
+                    SimCard.employee_id.is_(None),  # غير مربوط أصلاً
+                    SimCard.id.in_(inactive_employee_sims_count)  # مربوط بموظف غير نشط
+                )
+            ).count()
         
         stats = {
             'total_sims': total_sims,
