@@ -1037,19 +1037,28 @@ def update_status(id):
             
             note = request.form.get('note', '')
             
-            # إذا تم تغيير الحالة إلى غير نشط، فك ربط جميع أرقام SIM
+            # إذا تم تغيير الحالة إلى غير نشط، فك ربط جميع أرقام SIM والأجهزة
             if new_status == 'inactive' and old_status != 'inactive':
                 try:
-                    # استيراد SimCard model
-                    from models import SimCard
+                    # استيراد النماذج المطلوبة
+                    from models import SimCard, DeviceAssignment, MobileDevice
                     from flask import current_app
                     
-                    current_app.logger.info(f"Checking SIM cards for employee {employee.id} ({employee.name}) who became inactive")
+                    current_app.logger.info(f"Checking SIM cards and devices for employee {employee.id} ({employee.name}) who became inactive")
                     
-                    # البحث عن جميع أرقام SIM المرتبطة بهذا الموظف
+                    # 1. البحث عن جميع أرقام SIM المرتبطة مباشرة بهذا الموظف
                     sim_cards = SimCard.query.filter_by(employee_id=employee.id).all()
                     
-                    current_app.logger.info(f"Found {len(sim_cards)} SIM cards linked to employee {employee.id}")
+                    # 2. البحث عن جميع تخصيصات الأجهزة النشطة للموظف
+                    device_assignments = DeviceAssignment.query.filter_by(
+                        employee_id=employee.id, 
+                        is_active=True
+                    ).all()
+                    
+                    total_unlinked = 0
+                    
+                    # فك ربط أرقام SIM المرتبطة مباشرة
+                    current_app.logger.info(f"Found {len(sim_cards)} SIM cards directly linked to employee {employee.id}")
                     
                     if sim_cards:
                         for sim_card in sim_cards:
@@ -1058,6 +1067,8 @@ def update_status(id):
                             # فك الربط
                             sim_card.employee_id = None
                             sim_card.assigned_date = None
+                            sim_card.status = 'متاح'
+                            total_unlinked += 1
                             
                             # تسجيل عملية فك الربط
                             try:
@@ -1069,12 +1080,61 @@ def update_status(id):
                                     details=f"فك ربط رقم SIM {sim_card.phone_number} تلقائياً بسبب تغيير حالة الموظف {employee.name} إلى غير نشط"
                                 )
                             except Exception as audit_e:
-                                current_app.logger.error(f"Failed to log audit: {str(audit_e)}")
-                        
-                        # حفظ التغييرات في قاعدة البيانات
-                        db.session.commit()
-                        flash(f'تم فك ربط {len(sim_cards)} رقم SIM مرتبط بالموظف تلقائياً', 'info')
-                        current_app.logger.info(f"Successfully unlinked {len(sim_cards)} SIM cards from employee {employee.id}")
+                                current_app.logger.error(f"Failed to log SIM audit: {str(audit_e)}")
+                    
+                    # فك ربط تخصيصات الأجهزة النشطة
+                    current_app.logger.info(f"Found {len(device_assignments)} active device assignments for employee {employee.id}")
+                    
+                    if device_assignments:
+                        for assignment in device_assignments:
+                            current_app.logger.info(f"Deactivating device assignment {assignment.id} for employee {employee.id}")
+                            
+                            # إلغاء تنشيط التخصيص
+                            assignment.is_active = False
+                            assignment.end_date = datetime.now()
+                            assignment.end_reason = f'فك ربط تلقائي - تغيير حالة الموظف إلى غير نشط'
+                            
+                            # فك ربط الجهاز إذا كان موجوداً
+                            if assignment.device:
+                                assignment.device.employee_id = None
+                                assignment.device.status = 'متاح'
+                            
+                            # فك ربط SIM إذا كان موجوداً
+                            if assignment.sim_card:
+                                assignment.sim_card.employee_id = None
+                                assignment.sim_card.assigned_date = None
+                                assignment.sim_card.status = 'متاح'
+                                total_unlinked += 1
+                            
+                            # تسجيل عملية فك الربط
+                            try:
+                                from utils.audit_logger import log_activity
+                                device_info = f"جهاز {assignment.device.brand} {assignment.device.model}" if assignment.device else "بدون جهاز"
+                                sim_info = f"رقم {assignment.sim_card.phone_number}" if assignment.sim_card else "بدون رقم"
+                                
+                                log_activity(
+                                    action="unassign_auto",
+                                    entity_type="DeviceAssignment",
+                                    entity_id=assignment.id,
+                                    details=f"فك ربط تخصيص الجهاز تلقائياً ({device_info} - {sim_info}) بسبب تغيير حالة الموظف {employee.name} إلى غير نشط"
+                                )
+                            except Exception as audit_e:
+                                current_app.logger.error(f"Failed to log device assignment audit: {str(audit_e)}")
+                    
+                    # حفظ التغييرات في قاعدة البيانات
+                    db.session.commit()
+                    
+                    # رسالة نجاح شاملة
+                    message_parts = []
+                    if len(sim_cards) > 0:
+                        message_parts.append(f'{len(sim_cards)} رقم SIM مرتبط مباشرة')
+                    if len(device_assignments) > 0:
+                        message_parts.append(f'{len(device_assignments)} تخصيص جهاز/رقم')
+                    
+                    if message_parts:
+                        flash(f'تم فك ربط {" و ".join(message_parts)} بالموظف تلقائياً', 'info')
+                    
+                    current_app.logger.info(f"Successfully processed employee {employee.id} deactivation: {len(sim_cards)} SIM cards, {len(device_assignments)} device assignments")
                 
                 except Exception as e:
                     current_app.logger.error(f"Error unassigning SIM cards for inactive employee: {str(e)}")
