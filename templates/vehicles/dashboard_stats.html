@@ -15,25 +15,25 @@
                     </div>
                 </div>
             </div>
-            <div class="card-body" style="padding: 2rem;">
+            <div class="card-body" style="padding: 1.5rem;">
                 <div class="row align-items-center">
                     <!-- الرسم البياني الدائري -->
-                    <div class="col-lg-8 col-md-7">
+                    <div class="col-lg-7 col-md-6">
                         <div class="position-relative d-flex justify-content-center">
-                            <canvas id="vehicleStatusChart" width="300" height="300"></canvas>
+                            <canvas id="vehicleStatusChart" width="200" height="200" style="max-width: 200px; max-height: 200px;"></canvas>
                         </div>
                     </div>
                     
                     <!-- المفاتيح والإحصائيات -->
-                    <div class="col-lg-4 col-md-5">
-                        <div class="row">
+                    <div class="col-lg-5 col-md-6">
+                        <div class="row g-2">
                             <!-- متاح -->
-                            <div class="col-12 mb-3">
-                                <div class="d-flex align-items-center p-3" style="background: rgba(255,255,255,0.1); border-radius: 12px; backdrop-filter: blur(10px);">
-                                    <div style="width: 20px; height: 20px; background: #4ade80; border-radius: 4px; margin-left: 15px;"></div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center p-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; backdrop-filter: blur(10px);">
+                                    <div style="width: 16px; height: 16px; background: #4ade80; border-radius: 3px; margin-left: 12px;"></div>
                                     <div>
-                                        <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 2px;">متاح</div>
-                                        <div style="font-size: 1.5rem; font-weight: 700;">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 1px;">متاح</div>
+                                        <div style="font-size: 1.2rem; font-weight: 600;">
                                             {% set available_count = vehicles | selectattr("status", "equalto", "available") | list | length %}
                                             {{ available_count }}
                                         </div>
@@ -42,12 +42,12 @@
                             </div>
                             
                             <!-- مؤجر -->
-                            <div class="col-12 mb-3">
-                                <div class="d-flex align-items-center p-3" style="background: rgba(255,255,255,0.1); border-radius: 12px; backdrop-filter: blur(10px);">
-                                    <div style="width: 20px; height: 20px; background: #06b6d4; border-radius: 4px; margin-left: 15px;"></div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center p-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; backdrop-filter: blur(10px);">
+                                    <div style="width: 16px; height: 16px; background: #06b6d4; border-radius: 3px; margin-left: 12px;"></div>
                                     <div>
-                                        <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 2px;">مؤجر</div>
-                                        <div style="font-size: 1.5rem; font-weight: 700;">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 1px;">مؤجر</div>
+                                        <div style="font-size: 1.2rem; font-weight: 600;">
                                             {% set rented_count = vehicles | selectattr("status", "equalto", "rented") | list | length %}
                                             {{ rented_count }}
                                         </div>
@@ -56,12 +56,12 @@
                             </div>
                             
                             <!-- في المشروع -->
-                            <div class="col-12 mb-3">
-                                <div class="d-flex align-items-center p-3" style="background: rgba(255,255,255,0.1); border-radius: 12px; backdrop-filter: blur(10px);">
-                                    <div style="width: 20px; height: 20px; background: #fbbf24; border-radius: 4px; margin-left: 15px;"></div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center p-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; backdrop-filter: blur(10px);">
+                                    <div style="width: 16px; height: 16px; background: #fbbf24; border-radius: 3px; margin-left: 12px;"></div>
                                     <div>
-                                        <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 2px;">في المشروع</div>
-                                        <div style="font-size: 1.5rem; font-weight: 700;">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 1px;">في المشروع</div>
+                                        <div style="font-size: 1.2rem; font-weight: 600;">
                                             {% set in_project_count = vehicles | selectattr("status", "equalto", "in_project") | list | length %}
                                             {{ in_project_count }}
                                         </div>
@@ -70,12 +70,12 @@
                             </div>
                             
                             <!-- في الورشة -->
-                            <div class="col-12 mb-3">
-                                <div class="d-flex align-items-center p-3" style="background: rgba(255,255,255,0.1); border-radius: 12px; backdrop-filter: blur(10px);">
-                                    <div style="width: 20px; height: 20px; background: #f97316; border-radius: 4px; margin-left: 15px;"></div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center p-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; backdrop-filter: blur(10px);">
+                                    <div style="width: 16px; height: 16px; background: #f97316; border-radius: 3px; margin-left: 12px;"></div>
                                     <div>
-                                        <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 2px;">في الورشة</div>
-                                        <div style="font-size: 1.5rem; font-weight: 700;">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 1px;">في الورشة</div>
+                                        <div style="font-size: 1.2rem; font-weight: 600;">
                                             {% set in_workshop_count = vehicles | selectattr("status", "equalto", "in_workshop") | list | length %}
                                             {{ in_workshop_count }}
                                         </div>
@@ -84,12 +84,12 @@
                             </div>
                             
                             <!-- حادث -->
-                            <div class="col-12 mb-3">
-                                <div class="d-flex align-items-center p-3" style="background: rgba(255,255,255,0.1); border-radius: 12px; backdrop-filter: blur(10px);">
-                                    <div style="width: 20px; height: 20px; background: #ef4444; border-radius: 4px; margin-left: 15px;"></div>
+                            <div class="col-12">
+                                <div class="d-flex align-items-center p-2" style="background: rgba(255,255,255,0.1); border-radius: 8px; backdrop-filter: blur(10px);">
+                                    <div style="width: 16px; height: 16px; background: #ef4444; border-radius: 3px; margin-left: 12px;"></div>
                                     <div>
-                                        <div style="font-size: 0.9rem; opacity: 0.8; margin-bottom: 2px;">حادث</div>
-                                        <div style="font-size: 1.5rem; font-weight: 700;">
+                                        <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 1px;">حادث</div>
+                                        <div style="font-size: 1.2rem; font-weight: 600;">
                                             {% set accident_count = vehicles | selectattr("status", "equalto", "accident") | list | length %}
                                             {{ accident_count }}
                                         </div>
