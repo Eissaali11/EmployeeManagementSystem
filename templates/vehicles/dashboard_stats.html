@@ -1,4 +1,80 @@
 <!-- لوحة المعلومات المدمجة -->
+<div class="row mb-3 g-3">
+    <!-- بطاقة إحصائيات سريعة للوثائق الهامة -->
+    <div class="col-12">
+        <div class="card" style="background: linear-gradient(135deg, #1f2937 0%, #111827 100%); border-radius: 10px; box-shadow: 0 6px 15px rgba(0,0,0,0.1); border: none; color: white;">
+            <div class="card-body" style="padding: 1rem;">
+                <div class="row g-2">
+                    <!-- التفويضات المنتهية -->
+                    <div class="col-lg-3 col-md-6 col-6">
+                        <div class="d-flex align-items-center p-2" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">
+                            <div class="me-2">
+                                <i class="fas fa-file-contract" style="color: #ef4444; font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">تفويضات منتهية</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
+                                    {% set expired_auth = vehicles | selectattr("authorization_expiry_date") | selectattr("authorization_expiry_date", "lt", now.date()) | list | length %}
+                                    {{ expired_auth }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- التفويضات المشرفة على الانتهاء -->
+                    <div class="col-lg-3 col-md-6 col-6">
+                        <div class="d-flex align-items-center p-2" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">
+                            <div class="me-2">
+                                <i class="fas fa-clock" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">تفويضات ستنتهي</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">
+                                    {% set thirty_days_later = (now + timedelta(days=30)).date() %}
+                                    {% set expiring_auth = vehicles | selectattr("authorization_expiry_date") | selectattr("authorization_expiry_date", "ge", now.date()) | selectattr("authorization_expiry_date", "le", thirty_days_later) | list | length %}
+                                    {{ expiring_auth }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الفحص الدوري المنتهي -->
+                    <div class="col-lg-3 col-md-6 col-6">
+                        <div class="d-flex align-items-center p-2" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px;">
+                            <div class="me-2">
+                                <i class="fas fa-clipboard-check" style="color: #ef4444; font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">فحص دوري منتهي</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
+                                    {% set expired_inspection = vehicles | selectattr("inspection_expiry_date") | selectattr("inspection_expiry_date", "lt", now.date()) | list | length %}
+                                    {{ expired_inspection }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الفحص الدوري المشرف على الانتهاء -->
+                    <div class="col-lg-3 col-md-6 col-6">
+                        <div class="d-flex align-items-center p-2" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px;">
+                            <div class="me-2">
+                                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 1.2rem;"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">فحص سينتهي</div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">
+                                    {% set expiring_inspection = vehicles | selectattr("inspection_expiry_date") | selectattr("inspection_expiry_date", "ge", now.date()) | selectattr("inspection_expiry_date", "le", thirty_days_later) | list | length %}
+                                    {{ expiring_inspection }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row mb-4 g-3">
     <!-- قسم توزيع حالة السيارات -->
     <div class="col-lg-6 col-md-12">
