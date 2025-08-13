@@ -673,16 +673,16 @@ def index():
     
     # إضافة البحث بالاسم والرقم الوظيفي ورقم الهوية
     if search_query:
-        # إذا لم يكن هناك join مسبق مع Employee، نضيفه
+        # نضمن أن هناك join مع Employee للبحث
         if not sponsorship_status and not department_id:
             query = query.join(Employee)
-        
+            
         # البحث في اسم الموظف أو رقم الموظف أو رقم الهوية الوطنية
         query = query.filter(
             or_(
-                Employee.name.contains(search_query),
-                Employee.employee_id.contains(search_query),
-                Employee.national_id.contains(search_query)
+                Employee.name.ilike(f'%{search_query}%'),
+                Employee.employee_id.ilike(f'%{search_query}%'),
+                Employee.national_id.ilike(f'%{search_query}%')
             )
         )
     
@@ -728,16 +728,16 @@ def index():
                 Document.expiry_date > future_date  # الوثائق التي تنتهي بعد أكثر من 30 يوم
             )
         )
-    elif show_all.lower() != 'true':
-        # العرض الافتراضي: الوثائق المنتهية أو القريبة من الانتهاء (خلال 30 يوم)
+    elif show_all.lower() != 'true' and not search_query:
+        # العرض الافتراضي فقط إذا لم يكن هناك بحث: الوثائق المنتهية أو القريبة من الانتهاء (خلال 30 يوم)
         future_date_30_days = today + timedelta(days=30)
         query = query.filter(
             Document.expiry_date.isnot(None),
             Document.expiry_date <= future_date_30_days
         )
     
-    # Execute query
-    documents = query.all()
+    # Execute query with eager loading للموظف
+    documents = query.options(selectinload(Document.employee)).all()
     
     # احسب عدد الوثائق الكلي والمنتهية والقريبة من الانتهاء
     total_docs = Document.query.count()
