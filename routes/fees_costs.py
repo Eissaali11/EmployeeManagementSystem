@@ -57,11 +57,13 @@ def create():
         insurance_fee = float(request.form.get('insurance_fee', 0))
         social_insurance_fee = float(request.form.get('social_insurance_fee', 0))
         transfer_sponsorship = True if request.form.get('transfer_sponsorship') else False
-        due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+        due_date_str = request.form.get('due_date')
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date() if due_date_str else None
         payment_status = request.form.get('payment_status')
         payment_date = None
-        if request.form.get('payment_date'):
-            payment_date = datetime.strptime(request.form.get('payment_date'), '%Y-%m-%d').date()
+        payment_date_str = request.form.get('payment_date')
+        if payment_date_str:
+            payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
         notes = request.form.get('notes')
         
         try:
@@ -132,11 +134,16 @@ def edit(id):
         fees_cost.insurance_fee = float(request.form.get('insurance_fee', 0))
         fees_cost.social_insurance_fee = float(request.form.get('social_insurance_fee', 0))
         fees_cost.transfer_sponsorship = True if request.form.get('transfer_sponsorship') else False
-        fees_cost.due_date = datetime.strptime(request.form.get('due_date'), '%Y-%m-%d').date()
+        due_date_str = request.form.get('due_date')
+        if due_date_str:
+            fees_cost.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
         fees_cost.payment_status = request.form.get('payment_status')
         
-        if request.form.get('payment_date'):
-            fees_cost.payment_date = datetime.strptime(request.form.get('payment_date'), '%Y-%m-%d').date()
+        payment_date_str = request.form.get('payment_date')
+        if payment_date_str:
+            fees_cost.payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
+        else:
+            fees_cost.payment_date = None
         
         fees_cost.notes = request.form.get('notes')
         

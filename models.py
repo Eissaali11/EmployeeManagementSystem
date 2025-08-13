@@ -139,6 +139,12 @@ class Employee(db.Model):
     documents = db.relationship('Document', back_populates='employee', cascade='all, delete-orphan')
     # vehicle_handovers = db.relationship('VehicleHandover', back_populates='employee_rel', foreign_keys='VehicleHandover.employee_id')
     nationality_rel = db.relationship('Nationality', back_populates='employees')
+    
+    # خاصية للتوافق مع الكود القديم - إرجاع أول قسم أو None
+    @property
+    def department(self):
+        """إرجاع أول قسم للموظف للتوافق مع الكود القديم"""
+        return self.departments[0] if self.departments else None
 
     handovers_as_driver = db.relationship(
         'VehicleHandover', 
