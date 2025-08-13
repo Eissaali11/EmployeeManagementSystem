@@ -1,99 +1,146 @@
-<!-- لوحة المعلومات المدمجة والاحترافية -->
-<div class="row mb-3">
+<!-- لوحة المعلومات الشاملة للوثائق المنتهية -->
+<div class="row mb-4">
     <div class="col-12">
-        <div style="background: linear-gradient(135deg, #1e3a5c 0%, #2d4a6b 100%); border-radius: 20px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                <h6 style="color: white; margin: 0; font-weight: 600; font-size: 1rem;">
-                    <i class="fas fa-tachometer-alt me-2"></i>لوحة معلومات الوثائق
-                </h6>
-                <span style="background: rgba(255,255,255,0.2); color: white; padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.8rem;">
-                    تحديث مباشر
-                </span>
+        <div class="card" style="background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.9) 100%); backdrop-filter: blur(15px); border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.3);">
+            <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px 16px 0 0; padding: 1.5rem; border: none;">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> لوحة المعلومات - إحصائيات الوثائق والفحص الدوري</h5>
             </div>
-            
+            <div class="card-body" style="padding: 2rem;">
                 <!-- الوثائق المنتهية -->
-                <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1rem; text-align: center; backdrop-filter: blur(10px); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="width: 60px; height: 60px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, #ef4444, #dc2626); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(239,68,68,0.3);">
-                        <i class="fas fa-times-circle" style="color: white; font-size: 1.5rem;"></i>
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-danger mb-4" style="font-weight: 600; font-size: 1.1rem;"><i class="fas fa-times-circle me-2"></i> الوثائق المنتهية الصلاحية</h6>
                     </div>
-                    <div style="color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem;">
-                        {{ vehicles | selectattr("registration_expiry_date") | selectattr("registration_expiry_date", "lt", now.date()) | list | length + 
-                           vehicles | selectattr("insurance_expiry_date") | selectattr("insurance_expiry_date", "lt", now.date()) | list | length + 
-                           vehicles | selectattr("inspection_expiry_date") | selectattr("inspection_expiry_date", "lt", now.date()) | list | length + 
-                           vehicles | selectattr("authorization_expiry_date") | selectattr("authorization_expiry_date", "lt", now.date()) | list | length }}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border: 1px solid #fca5a5; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #dc2626; margin-bottom: 1rem;">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #dc2626; margin: 0 0 0.5rem 0;">
+                                {{ vehicles | selectattr("registration_expiry_date") | selectattr("registration_expiry_date", "lt", now.date()) | list | length }}
+                            </h3>
+                            <p style="color: #7f1d1d; font-weight: 600; margin: 0; font-size: 0.9rem;">استمارات منتهية</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);"></div>
+                        </div>
                     </div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 500;">وثائق منتهية</div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); border: 1px solid #fb923c; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #ea580c; margin-bottom: 1rem;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #ea580c; margin: 0 0 0.5rem 0;">
+                                {{ vehicles | selectattr("insurance_expiry_date") | selectattr("insurance_expiry_date", "lt", now.date()) | list | length }}
+                            </h3>
+                            <p style="color: #c2410c; font-weight: 600; margin: 0; font-size: 0.9rem;">تأمين منتهي</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #fbbf24; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #ca8a04; margin-bottom: 1rem;">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #ca8a04; margin: 0 0 0.5rem 0;">
+                                {{ vehicles | selectattr("inspection_expiry_date") | selectattr("inspection_expiry_date", "lt", now.date()) | list | length }}
+                            </h3>
+                            <p style="color: #a16207; font-weight: 600; margin: 0; font-size: 0.9rem;">فحص دوري منتهي</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #ca8a04 0%, #a16207 100%);"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #e7e5e4 0%, #d6d3d1 100%); border: 1px solid #a8a29e; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #78716c; margin-bottom: 1rem;">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #78716c; margin: 0 0 0.5rem 0;">
+                                {{ vehicles | selectattr("authorization_expiry_date") | selectattr("authorization_expiry_date", "lt", now.date()) | list | length }}
+                            </h3>
+                            <p style="color: #57534e; font-weight: 600; margin: 0; font-size: 0.9rem;">تفويض منتهي</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #78716c 0%, #57534e 100%);"></div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- الوثائق المنتهية قريباً -->
-                <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1rem; text-align: center; backdrop-filter: blur(10px); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="width: 60px; height: 60px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(245,158,11,0.3);">
-                        <i class="fas fa-clock" style="color: white; font-size: 1.5rem;"></i>
-                    </div>
-                    <div style="color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem;">
-                        {% set thirty_days_later = (now + timedelta(days=30)).date() %}
-                        {% set expiring_total = [] %}
-                        {% for vehicle in vehicles %}
-                            {% if vehicle.registration_expiry_date and vehicle.registration_expiry_date >= now.date() and vehicle.registration_expiry_date <= thirty_days_later %}
-                                {{ expiring_total.append(vehicle) or "" }}
-                            {% endif %}
-                            {% if vehicle.insurance_expiry_date and vehicle.insurance_expiry_date >= now.date() and vehicle.insurance_expiry_date <= thirty_days_later %}
-                                {{ expiring_total.append(vehicle) or "" }}
-                            {% endif %}
-                            {% if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date >= now.date() and vehicle.inspection_expiry_date <= thirty_days_later %}
-                                {{ expiring_total.append(vehicle) or "" }}
-                            {% endif %}
-                            {% if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date >= now.date() and vehicle.authorization_expiry_date <= thirty_days_later %}
-                                {{ expiring_total.append(vehicle) or "" }}
-                            {% endif %}
-                        {% endfor %}
-                        {{ expiring_total | length }}
-                    </div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 500;">ستنتهي قريباً</div>
-                </div>
+                <hr style="margin: 2rem 0; border: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent);">
 
-                <!-- إجمالي المركبات -->
-                <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1rem; text-align: center; backdrop-filter: blur(10px); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="width: 60px; height: 60px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
-                        <i class="fas fa-car" style="color: white; font-size: 1.5rem;"></i>
+                <!-- الوثائق التي ستنتهي قريباً -->
+                <div class="row">
+                    <div class="col-12">
+                        <h6 class="text-warning mb-4" style="font-weight: 600; font-size: 1.1rem;"><i class="fas fa-clock me-2"></i> الوثائق التي ستنتهي خلال 30 يوم</h6>
                     </div>
-                    <div style="color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem;">
-                        {{ vehicles | length }}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #f59e0b; margin-bottom: 1rem;">
+                                <i class="fas fa-id-card"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #f59e0b; margin: 0 0 0.5rem 0;">
+                                {% set thirty_days_later = (now + timedelta(days=30)).date() %}
+                                {% set expiring_reg = [] %}
+                                {% for vehicle in vehicles %}
+                                    {% if vehicle.registration_expiry_date and vehicle.registration_expiry_date >= now.date() and vehicle.registration_expiry_date <= thirty_days_later %}
+                                        {{ expiring_reg.append(vehicle) or "" }}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ expiring_reg | length }}
+                            </h3>
+                            <p style="color: #d97706; font-weight: 600; margin: 0; font-size: 0.9rem;">استمارات قريبة الانتهاء</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);"></div>
+                        </div>
                     </div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 500;">إجمالي المركبات</div>
-                </div>
-
-                <!-- المركبات المتاحة -->
-                <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1rem; text-align: center; backdrop-filter: blur(10px); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="width: 60px; height: 60px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(59,130,246,0.3);">
-                        <i class="fas fa-check-circle" style="color: white; font-size: 1.5rem;"></i>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); border: 1px solid #f97316; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #f97316; margin-bottom: 1rem;">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #f97316; margin: 0 0 0.5rem 0;">
+                                {% set expiring_ins = [] %}
+                                {% for vehicle in vehicles %}
+                                    {% if vehicle.insurance_expiry_date and vehicle.insurance_expiry_date >= now.date() and vehicle.insurance_expiry_date <= thirty_days_later %}
+                                        {{ expiring_ins.append(vehicle) or "" }}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ expiring_ins | length }}
+                            </h3>
+                            <p style="color: #ea580c; font-weight: 600; margin: 0; font-size: 0.9rem;">تأمين قريب الانتهاء</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);"></div>
+                        </div>
                     </div>
-                    <div style="color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem;">
-                        {{ vehicles | selectattr("status", "equalto", "available") | list | length }}
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%); border: 1px solid #eab308; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #eab308; margin-bottom: 1rem;">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #eab308; margin: 0 0 0.5rem 0;">
+                                {% set expiring_insp = [] %}
+                                {% for vehicle in vehicles %}
+                                    {% if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date >= now.date() and vehicle.inspection_expiry_date <= thirty_days_later %}
+                                        {{ expiring_insp.append(vehicle) or "" }}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ expiring_insp | length }}
+                            </h3>
+                            <p style="color: #ca8a04; font-weight: 600; margin: 0; font-size: 0.9rem;">فحص دوري قريب الانتهاء</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);"></div>
+                        </div>
                     </div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 500;">متاحة للاستخدام</div>
-                </div>
-
-                <!-- المركبات في المشاريع -->
-                <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1rem; text-align: center; backdrop-filter: blur(10px); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="width: 60px; height: 60px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(139,92,246,0.3);">
-                        <i class="fas fa-project-diagram" style="color: white; font-size: 1.5rem;"></i>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border: 1px solid #9ca3af; border-radius: 12px; padding: 1.5rem; text-align: center; height: 100%; transition: transform 0.3s ease, box-shadow 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 15px 25px rgba(0,0,0,0.1)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'">
+                            <div style="font-size: 2.5rem; color: #6b7280; margin-bottom: 1rem;">
+                                <i class="fas fa-file-contract"></i>
+                            </div>
+                            <h3 style="font-size: 2.5rem; font-weight: 700; color: #6b7280; margin: 0 0 0.5rem 0;">
+                                {% set expiring_auth = [] %}
+                                {% for vehicle in vehicles %}
+                                    {% if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date >= now.date() and vehicle.authorization_expiry_date <= thirty_days_later %}
+                                        {{ expiring_auth.append(vehicle) or "" }}
+                                    {% endif %}
+                                {% endfor %}
+                                {{ expiring_auth | length }}
+                            </h3>
+                            <p style="color: #4b5563; font-weight: 600; margin: 0; font-size: 0.9rem;">تفويض قريب الانتهاء</p>
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);"></div>
+                        </div>
                     </div>
-                    <div style="color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem;">
-                        {{ vehicles | selectattr("status", "equalto", "in_project") | list | length }}
-                    </div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 500;">في المشاريع</div>
-                </div>
-
-                <!-- المركبات في الورشة -->
-                <div style="background: rgba(255,255,255,0.15); border-radius: 16px; padding: 1rem; text-align: center; backdrop-filter: blur(10px); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                    <div style="width: 60px; height: 60px; margin: 0 auto 0.5rem; background: linear-gradient(135deg, #f97316, #ea580c); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(249,115,22,0.3);">
-                        <i class="fas fa-tools" style="color: white; font-size: 1.5rem;"></i>
-                    </div>
-                    <div style="color: white; font-size: 1.8rem; font-weight: 700; margin-bottom: 0.2rem;">
-                        {{ vehicles | selectattr("status", "equalto", "in_workshop") | list | length }}
-                    </div>
-                    <div style="color: rgba(255,255,255,0.9); font-size: 0.75rem; font-weight: 500;">في الورشة</div>
                 </div>
             </div>
         </div>
