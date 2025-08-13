@@ -418,11 +418,15 @@ def assign_to_employee(sim_id):
     return redirect(url_for('sim_management.index'))
 
 @sim_management_bp.route('/unassign/<int:sim_id>', methods=['POST'])
+@sim_management_bp.route('/unassign-from-employee/<int:sim_id>', methods=['POST'])
 @login_required
 def unassign_from_employee(sim_id):
     """فك ربط رقم من موظف"""
     try:
-        sim_card = SimCard.query.get_or_404(sim_id)
+        sim_card = SimCard.query.get(sim_id)
+        if not sim_card:
+            flash(f'لم يتم العثور على بطاقة SIM برقم المعرف {sim_id}', 'danger')
+            return redirect(url_for('sim_management.index'))
         
         if not sim_card.employee_id:
             flash('هذا الرقم غير مربوط بأي موظف', 'danger')
