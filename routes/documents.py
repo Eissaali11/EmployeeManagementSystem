@@ -674,17 +674,26 @@ def index():
     # إضافة البحث بالاسم والرقم الوظيفي ورقم الهوية
     if search_query:
         # نضمن أن هناك join مع Employee للبحث
-        if not sponsorship_status and not department_id:
+        if not sponsorship_status:
             query = query.join(Employee)
             
-        # البحث في اسم الموظف أو رقم الموظف أو رقم الهوية الوطنية
-        query = query.filter(
-            or_(
-                Employee.name.ilike(f'%{search_query}%'),
-                Employee.employee_id.ilike(f'%{search_query}%'),
-                Employee.national_id.ilike(f'%{search_query}%')
-            )
+        # البحث في اسم الموظف أو رقم الموظف أو رقم الهوية الوطنية مع معالجة القيم الفارغة
+        search_conditions = []
+        
+        # البحث في الاسم
+        search_conditions.append(Employee.name.ilike(f'%{search_query}%'))
+        
+        # البحث في رقم الموظف (مع التعامل مع القيم الفارغة)
+        search_conditions.append(
+            func.coalesce(Employee.employee_id, '').ilike(f'%{search_query}%')
         )
+        
+        # البحث في رقم الهوية (مع التعامل مع القيم الفارغة)
+        search_conditions.append(
+            func.coalesce(Employee.national_id, '').ilike(f'%{search_query}%')
+        )
+        
+        query = query.filter(or_(*search_conditions))
     
     # تطبيق فلتر حالة الصلاحية
     today = datetime.now().date()
