@@ -908,7 +908,9 @@ def index():
                 makes=makes,
                 projects=projects,
                 statuses=VEHICLE_STATUS_CHOICES,
-                expiring_documents=expiring_documents
+                expiring_documents=expiring_documents,
+                now=datetime.now(),
+                timedelta=timedelta
         )
 
 @vehicles_bp.route('/create', methods=['GET', 'POST'])
