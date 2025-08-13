@@ -14,8 +14,7 @@
                             <div>
                                 <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">تفويضات منتهية</div>
                                 <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
-                                    {% set expired_auth = vehicles | selectattr("authorization_expiry_date") | selectattr("authorization_expiry_date", "lt", now.date()) | list | length %}
-                                    {{ expired_auth }}
+                                    {{ expired_authorization_vehicles | length }}
                                 </div>
                             </div>
                         </div>
@@ -30,8 +29,13 @@
                             <div>
                                 <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">تفويضات ستنتهي</div>
                                 <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">
-                                    {% set thirty_days_later = (now + timedelta(days=30)).date() %}
-                                    {% set expiring_auth = vehicles | selectattr("authorization_expiry_date") | selectattr("authorization_expiry_date", "ge", now.date()) | selectattr("authorization_expiry_date", "le", thirty_days_later) | list | length %}
+                                    {% set thirty_days_later = (today + timedelta(days=30)) %}
+                                    {% set expiring_auth = 0 %}
+                                    {% for vehicle in vehicles %}
+                                        {% if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date >= today and vehicle.authorization_expiry_date <= thirty_days_later %}
+                                            {% set expiring_auth = expiring_auth + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
                                     {{ expiring_auth }}
                                 </div>
                             </div>
@@ -47,8 +51,7 @@
                             <div>
                                 <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">فحص دوري منتهي</div>
                                 <div style="font-size: 1.1rem; font-weight: 700; color: #ef4444;">
-                                    {% set expired_inspection = vehicles | selectattr("inspection_expiry_date") | selectattr("inspection_expiry_date", "lt", now.date()) | list | length %}
-                                    {{ expired_inspection }}
+                                    {{ expired_inspection_vehicles | length }}
                                 </div>
                             </div>
                         </div>
@@ -63,7 +66,12 @@
                             <div>
                                 <div style="font-size: 0.75rem; opacity: 0.8; margin-bottom: 2px;">فحص سينتهي</div>
                                 <div style="font-size: 1.1rem; font-weight: 700; color: #f59e0b;">
-                                    {% set expiring_inspection = vehicles | selectattr("inspection_expiry_date") | selectattr("inspection_expiry_date", "ge", now.date()) | selectattr("inspection_expiry_date", "le", thirty_days_later) | list | length %}
+                                    {% set expiring_inspection = 0 %}
+                                    {% for vehicle in vehicles %}
+                                        {% if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date >= today and vehicle.inspection_expiry_date <= thirty_days_later %}
+                                            {% set expiring_inspection = expiring_inspection + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
                                     {{ expiring_inspection }}
                                 </div>
                             </div>

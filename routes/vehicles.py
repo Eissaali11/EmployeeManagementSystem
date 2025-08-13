@@ -909,8 +909,17 @@ def index():
                 projects=projects,
                 statuses=VEHICLE_STATUS_CHOICES,
                 expiring_documents=expiring_documents,
+                expired_authorization_vehicles=Vehicle.query.filter(
+                    Vehicle.authorization_expiry_date.isnot(None),
+                    Vehicle.authorization_expiry_date < today
+                ).all(),
+                expired_inspection_vehicles=Vehicle.query.filter(
+                    Vehicle.inspection_expiry_date.isnot(None),
+                    Vehicle.inspection_expiry_date < today
+                ).all(),
                 now=datetime.now(),
-                timedelta=timedelta
+                timedelta=timedelta,
+                today=today
         )
 
 @vehicles_bp.route('/create', methods=['GET', 'POST'])
