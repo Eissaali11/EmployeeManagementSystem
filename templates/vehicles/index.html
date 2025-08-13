@@ -472,10 +472,6 @@
                     <i class="fas fa-exclamation-triangle"></i>
                     الوثائق المنتهية
                 </a>
-                <a href="{{ url_for('external_safety.share_links') }}" class="action-btn btn-warning-enhanced">
-                    <i class="fas fa-share-alt"></i>
-                    مشاركة روابط الفحص
-                </a>
             </div>
         </div>
     </div>
@@ -612,57 +608,6 @@
         </div>
     </div>
 
-    <!-- Enhanced Alerts Card -->
-    {% if expiring_documents %}
-    <div class="alerts-card card mb-4">
-        <div class="card-header">
-            <h5><i class="fas fa-exclamation-triangle ms-2"></i>تنبيهات الوثائق</h5>
-            <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-danger-enhanced btn-sm action-btn">
-                <i class="fas fa-exclamation-circle"></i>
-                عرض جميع الوثائق المنتهية
-            </a>
-        </div>
-        <div class="card-body">
-            <p class="mb-3">يوجد {{ expiring_documents|length }} وثيقة قريبة من انتهاء الصلاحية أو منتهية الصلاحية. يرجى مراجعتها وتحديثها.</p>
-            
-            <div class="row">
-                {% for doc in expiring_documents %}
-                <div class="col-md-4 mb-3">
-                    <div class="document-card card document-card-{% if doc.days_remaining <= 0 %}danger{% elif doc.days_remaining <= 15 %}warning{% else %}info{% endif %}">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0">{{ doc.document_name }}</h6>
-                            <span class="badge bg-light text-dark">{{ doc.plate_number }}</span>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">
-                                <i class="fas fa-calendar-alt ms-1"></i>
-                                تاريخ الانتهاء: {{ doc.expiry_date.strftime('%Y-%m-%d') }}
-                            </p>
-                            
-                            {% if doc.days_remaining < 0 %}
-                            <p class="text-danger">
-                                <i class="fas fa-times-circle ms-1"></i>
-                                <strong>منتهية منذ {{ doc.days_remaining|abs }} يوم</strong>
-                            </p>
-                            {% else %}
-                            <p class="{% if doc.days_remaining <= 15 %}text-warning{% else %}text-info{% endif %}">
-                                <i class="fas fa-hourglass-half ms-1"></i>
-                                <strong>متبقي {{ doc.days_remaining }} يوم</strong>
-                            </p>
-                            {% endif %}
-                            
-                            <a href="{{ url_for('vehicles.view_documents', id=doc.vehicle_id) }}" class="btn btn-outline-secondary mt-2 w-100">
-                                <i class="fas fa-eye ms-1"></i>
-                                عرض التفاصيل
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
 
     <!-- Enhanced Vehicles Table -->
     <div class="vehicles-table-container card">
