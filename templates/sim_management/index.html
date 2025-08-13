@@ -573,13 +573,9 @@
                                         {% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if sim.employee_id and sim.employee and sim.employee.status == 'نشط' %}
+                                        {% if sim.employee_id %}
                                             <span class="status-badge status-assigned">
-                                                <i class="fas fa-user"></i> مربوط بموظف نشط
-                                            </span>
-                                        {% elif sim.employee_id and sim.employee and sim.employee.status != 'نشط' %}
-                                            <span class="status-badge status-available">
-                                                <i class="fas fa-user-times text-warning"></i> متاح (موظف غير نشط)
+                                                <i class="fas fa-user"></i> مربوط بموظف
                                             </span>
                                         {% elif sim.is_device_assigned %}
                                             <span class="status-badge status-device-assigned">
@@ -596,20 +592,11 @@
                                             <!-- مربوط بموظف مباشرة -->
                                             <div class="employee-info">
                                                 <div class="employee-name">
-                                                    {% if sim.employee.status == 'نشط' %}
-                                                        <i class="fas fa-user text-success me-1"></i>
-                                                    {% else %}
-                                                        <i class="fas fa-user-times text-warning me-1"></i>
-                                                    {% endif %}
+                                                    <i class="fas fa-user text-success me-1"></i>
                                                     {{ sim.employee.name }}
                                                 </div>
                                                 <div class="employee-id">{{ sim.employee.employee_id }}</div>
-                                                <small class="text-muted">
-                                                    مربوط مباشرة 
-                                                    {% if sim.employee.status != 'نشط' %}
-                                                        <span class="badge bg-warning text-dark">{{ sim.employee.status }}</span>
-                                                    {% endif %}
-                                                </small>
+                                                <small class="text-muted">مربوط مباشرة</small>
                                             </div>
                                         {% elif sim.device_employee_name %}
                                             <!-- مربوط بجهاز موظف -->
