@@ -198,6 +198,63 @@
                     </div>
 
                 </div>
+                
+                <!-- قسم التحليل بالذكاء الاصطناعي -->
+                <div class="col-12">
+                    <div class="card shadow-lg border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="card-header text-white border-0">
+                            <h4 class="card-title mb-0">
+                                <i class="fas fa-brain me-2"></i>التحليل المالي بالذكاء الاصطناعي
+                            </h4>
+                            <p class="card-text mb-0 opacity-75">تحليلات وتنبؤات ذكية مدعومة بـ OpenAI GPT-4o</p>
+                        </div>
+                        <div class="card-body">
+                            <!-- أزرار التحليل -->
+                            <div class="row mb-4">
+                                <div class="col-md-4">
+                                    <button class="btn btn-light btn-lg w-100 mb-3" onclick="loadAIPredictions()" id="predictionsBtn">
+                                        <i class="fas fa-chart-line text-primary me-2"></i>
+                                        <div>تنبؤات مالية</div>
+                                        <small class="text-muted">توقعات الإيرادات والمصروفات</small>
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-light btn-lg w-100 mb-3" onclick="loadPatternAnalysis()" id="patternsBtn">
+                                        <i class="fas fa-search text-warning me-2"></i>
+                                        <div>تحليل الأنماط</div>
+                                        <small class="text-muted">اكتشاف الشذوذ والمخاطر</small>
+                                    </button>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-light btn-lg w-100 mb-3" onclick="loadBudgetRecommendations()" id="budgetBtn">
+                                        <i class="fas fa-piggy-bank text-success me-2"></i>
+                                        <div>توصيات الميزانية</div>
+                                        <small class="text-muted">اقتراحات لتحسين الأداء</small>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- منطقة عرض النتائج -->
+                            <div id="aiResults" class="bg-white rounded p-4" style="min-height: 200px; display: none;">
+                                <div id="aiContent">
+                                    <!-- سيتم تحميل المحتوى هنا -->
+                                </div>
+                            </div>
+                            
+                            <!-- حالة التحميل -->
+                            <div id="aiLoading" class="text-center text-white" style="display: none;">
+                                <div class="spinner-border text-light mb-3" role="status">
+                                    <span class="visually-hidden">جاري التحليل...</span>
+                                </div>
+                                <p class="mb-0">
+                                    <i class="fas fa-robot me-2"></i>
+                                    الذكاء الاصطناعي يحلل البيانات المالية...
+                                </p>
+                                <small class="opacity-75">قد يستغرق التحليل بضعة ثوانٍ</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -235,5 +292,138 @@ new Chart(ctx, {
         }
     }
 });
+
+// وظائف الذكاء الاصطناعي
+function showLoading() {
+    document.getElementById('aiResults').style.display = 'none';
+    document.getElementById('aiLoading').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('aiLoading').style.display = 'none';
+    document.getElementById('aiResults').style.display = 'block';
+}
+
+function showError(message) {
+    hideLoading();
+    document.getElementById('aiContent').innerHTML = `
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>خطأ:</strong> ${message}
+        </div>
+    `;
+}
+
+// تنبؤات مالية
+function loadAIPredictions() {
+    showLoading();
+    
+    fetch('/accounting/analytics/api/ai-predictions')
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            displayPredictions(data);
+        })
+        .catch(error => {
+            console.error('خطأ:', error);
+            showError('فشل في الاتصال بالخدمة');
+        });
+}
+
+// تحليل الأنماط
+function loadPatternAnalysis() {
+    showLoading();
+    
+    fetch('/accounting/analytics/api/pattern-analysis')
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            displayPatternAnalysis(data);
+        })
+        .catch(error => {
+            console.error('خطأ:', error);
+            showError('فشل في الاتصال بالخدمة');
+        });
+}
+
+// توصيات الميزانية
+function loadBudgetRecommendations() {
+    showLoading();
+    
+    fetch('/accounting/analytics/api/budget-recommendations')
+        .then(response => response.json())
+        .then(data => {
+            hideLoading();
+            
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+            
+            displayBudgetRecommendations(data);
+        })
+        .catch(error => {
+            console.error('خطأ:', error);
+            showError('فشل في الاتصال بالخدمة');
+        });
+}
+
+// عرض التنبؤات
+function displayPredictions(data) {
+    const predictions = data.predictions;
+    let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i>التنبؤات المالية</h5>
+            <small class="text-muted">تم التحليل بـ ${data.model_used}</small>
+        </div>
+    `;
+    
+    // عرض النتائج بناءً على استجابة الذكاء الاصطناعي
+    if (predictions) {
+        html += `<div class="alert alert-info"><pre>${JSON.stringify(predictions, null, 2)}</pre></div>`;
+    }
+    
+    document.getElementById('aiContent').innerHTML = html;
+}
+
+// عرض تحليل الأنماط
+function displayPatternAnalysis(data) {
+    let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-search text-warning me-2"></i>تحليل أنماط المعاملات</h5>
+            <small class="text-muted">تحليل ذكي للكشف عن الشذوذ</small>
+        </div>
+    `;
+    
+    html += `<div class="alert alert-warning"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+    
+    document.getElementById('aiContent').innerHTML = html;
+}
+
+// عرض توصيات الميزانية
+function displayBudgetRecommendations(data) {
+    let html = `
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0"><i class="fas fa-piggy-bank text-success me-2"></i>توصيات الميزانية</h5>
+            <small class="text-muted">اقتراحات لتحسين الأداء المالي</small>
+        </div>
+    `;
+    
+    html += `<div class="alert alert-success"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+    
+    document.getElementById('aiContent').innerHTML = html;
+}
 </script>
 {% endblock %}

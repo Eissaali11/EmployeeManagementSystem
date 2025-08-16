@@ -121,3 +121,46 @@ def get_fallback_data():
         'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'message': 'لا توجد بيانات متاحة حالياً'
     }
+
+# API للذكاء الاصطناعي
+@analytics_simple_bp.route('/api/ai-predictions')
+@login_required
+def api_ai_predictions():
+    """API للحصول على تنبؤات الذكاء الاصطناعي"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        return jsonify({'error': 'غير مسموح'}), 403
+    
+    try:
+        from services.ai_analytics import ai_analytics
+        predictions = ai_analytics.generate_financial_predictions()
+        return jsonify(predictions)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@analytics_simple_bp.route('/api/pattern-analysis')
+@login_required 
+def api_pattern_analysis():
+    """API لتحليل أنماط المعاملات"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        return jsonify({'error': 'غير مسموح'}), 403
+    
+    try:
+        from services.ai_analytics import ai_analytics
+        patterns = ai_analytics.analyze_transaction_patterns()
+        return jsonify(patterns)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@analytics_simple_bp.route('/api/budget-recommendations')
+@login_required
+def api_budget_recommendations():
+    """API لتوصيات الميزانية"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        return jsonify({'error': 'غير مسموح'}), 403
+    
+    try:
+        from services.ai_analytics import ai_analytics
+        recommendations = ai_analytics.generate_budget_recommendations()
+        return jsonify(recommendations)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
