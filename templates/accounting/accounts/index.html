@@ -115,34 +115,96 @@
 function deleteAccount(accountId, accountName) {
     console.log('Delete function called:', accountId, accountName);
     
+    // إخفاء أي نوافذ منبثقة أخرى
+    const existingModals = document.querySelectorAll('.modal.show');
+    existingModals.forEach(modal => {
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) {
+            modalInstance.hide();
+        }
+    });
+    
+    // تحديث محتوى النافذة
     document.getElementById('accountName').textContent = accountName;
     document.getElementById('deleteForm').action = '/accounting/accounts/' + accountId + '/delete';
     
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {
+    // إظهار النافذة مع إعدادات محسنة
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {
         backdrop: 'static',
-        keyboard: false
+        keyboard: false,
+        focus: true
     });
+    
+    // التأكد من أن النافذة في المقدمة
+    setTimeout(() => {
+        const modalElement = document.getElementById('deleteModal');
+        modalElement.style.zIndex = '10050';
+        const backdrop = document.querySelector('.modal-backdrop');
+        if (backdrop) {
+            backdrop.style.zIndex = '10040';
+        }
+    }, 100);
+    
     deleteModal.show();
 }
 
 // تأكد من تحميل Bootstrap بالكامل
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Page loaded, Bootstrap available:', typeof bootstrap !== 'undefined');
+    
+    // إصلاح أي مشاكل في z-index عند تحميل الصفحة
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('show.bs.modal', function() {
+            this.style.zIndex = '10050';
+            setTimeout(() => {
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.style.zIndex = '10040';
+                }
+            }, 50);
+        });
+    });
 });
 </script>
 
 <style>
+/* إصلاح مشكلة z-index للنافذة المنبثقة */
+.modal {
+    z-index: 9999 !important;
+}
+
+.modal-backdrop {
+    z-index: 9998 !important;
+}
+
+.modal-dialog {
+    z-index: 10000 !important;
+}
+
+.modal-content {
+    z-index: 10001 !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* تحسين النافذة المنبثقة */
 .modal-footer {
     padding: 1.5rem;
     border-top: 1px solid #dee2e6;
+    background-color: #f8f9fa;
 }
 
 .modal-footer .btn {
     min-width: 120px;
+    font-weight: 600;
 }
 
 .modal-body .alert {
     border-radius: 8px;
+}
+
+.modal-header {
+    border-bottom: 2px solid rgba(255,255,255,0.2);
 }
 
 /* تحسين ظهور الأزرار */
@@ -151,10 +213,12 @@ document.addEventListener('DOMContentLoaded', function() {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    font-weight: 500;
 }
 
 .table td {
     vertical-align: middle;
+    position: relative;
 }
 
 /* تأكد من أن الأزرار ظاهرة */
@@ -164,6 +228,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .d-flex.gap-1 .btn {
     flex-shrink: 0;
+    z-index: 1;
+}
+
+/* إزالة أي تداخل مع العناصر الأخرى */
+.card {
+    z-index: 1;
+}
+
+.table-responsive {
+    z-index: 1;
+}
+
+/* التأكد من أن النافذة المنبثقة في المقدمة */
+#deleteModal {
+    z-index: 10050 !important;
+}
+
+#deleteModal .modal-backdrop {
+    z-index: 10040 !important;
+}
+
+/* تحسين الرسوم المتحركة */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+    transform: none !important;
 }
 </style>
 {% endblock %}
