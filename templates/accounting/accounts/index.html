@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block title %}دليل الحسابات{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        دليل الحسابات
+                    </h5>
+                    <a href="{{ url_for('accounting.add_account') }}" class="btn btn-light btn-sm">
+                        <i class="fas fa-plus me-1"></i>حساب جديد
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>رمز الحساب</th>
+                                    <th>اسم الحساب</th>
+                                    <th>نوع الحساب</th>
+                                    <th>الرصيد</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for account in accounts %}
+                                <tr>
+                                    <td>{{ account.code }}</td>
+                                    <td>{{ account.name }}</td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {% if account.account_type.value == 'assets' %}أصول
+                                            {% elif account.account_type.value == 'liabilities' %}خصوم
+                                            {% elif account.account_type.value == 'equity' %}حقوق الملكية
+                                            {% elif account.account_type.value == 'revenue' %}إيرادات
+                                            {% elif account.account_type.value == 'expenses' %}مصروفات
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td class="text-end">{{ "{:,.2f}".format(account.balance or 0) }}</td>
+                                    <td>
+                                        {% if account.is_active %}
+                                            <span class="badge bg-success">نشط</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">غير نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('accounting.edit_account', id=account.id) }}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

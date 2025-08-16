@@ -265,6 +265,8 @@ class VehicleExpenseForm(FlaskForm):
     amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
     description = TextAreaField('الوصف', validators=[DataRequired()], widget=TextArea())
     expense_date = DateField('تاريخ المصروف', validators=[DataRequired()])
+    vendor_id = SelectField('المورد', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+    receipt_number = StringField('رقم الإيصال', validators=[Optional(), Length(max=100)])
 
 
 class SalaryProcessingForm(FlaskForm):

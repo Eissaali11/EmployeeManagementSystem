@@ -158,7 +158,7 @@ def salary_processing():
             
             if existing_processing:
                 flash(f'تم معالجة رواتب شهر {form.salary_month.data}/{form.salary_year.data} مسبقاً', 'warning')
-                return render_template('accounting/salary/processing.html', form=form)
+                return render_template('accounting/salary_processing.html', form=form)
             
             # تحديد الموظفين المشمولين
             employees_query = Employee.query.filter_by(status='نشط')
@@ -172,7 +172,7 @@ def salary_processing():
             
             if not employees:
                 flash('لا يوجد موظفين للمعالجة', 'warning')
-                return render_template('accounting/salary/processing.html', form=form)
+                return render_template('accounting/salary_processing.html', form=form)
             
             # الحصول على الحسابات المحاسبية
             salary_expense_account = Account.query.filter_by(code='5001').first()  # مصروف رواتب
@@ -180,7 +180,7 @@ def salary_processing():
             
             if not salary_expense_account or not cash_account:
                 flash('الحسابات المحاسبية للرواتب غير موجودة. يرجى إنشاؤها أولاً', 'danger')
-                return render_template('accounting/salary/processing.html', form=form)
+                return render_template('accounting/salary_processing.html', form=form)
             
             # إعدادات النظام
             settings = AccountingSettings.query.first()
@@ -266,7 +266,7 @@ def salary_processing():
             db.session.rollback()
             flash(f'خطأ في معالجة الرواتب: {str(e)}', 'danger')
     
-    return render_template('accounting/salary/processing.html', form=form)
+    return render_template('accounting/salary_processing.html', form=form)
 
 
 # ==================== مصروفات المركبات ====================
@@ -320,7 +320,7 @@ def vehicle_expenses():
                 transaction_number=transaction_number,
                 transaction_date=form.expense_date.data,
                 transaction_type=TransactionType.VEHICLE_EXPENSE,
-                reference_number=form.receipt_number.data,
+                reference_number=form.receipt_number.data if hasattr(form, 'receipt_number') else '',
                 description=form.description.data,
                 total_amount=form.amount.data,
                 fiscal_year_id=fiscal_year.id,
