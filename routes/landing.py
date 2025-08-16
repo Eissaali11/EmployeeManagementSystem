@@ -25,10 +25,10 @@ def index():
                 'location': 'الرياض، المملكة العربية السعودية'
             },
             'stats': {
-                'companies': 250,
-                'employees': 15000,
-                'vehicles': 3200,
-                'satisfaction': 98
+                'companies': 5,
+                'employees': 8,
+                'vehicles': 3,
+                'satisfaction': 9
             }
         }
         
