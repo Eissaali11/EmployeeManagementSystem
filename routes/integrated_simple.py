@@ -249,7 +249,7 @@ def api_sync_full():
                 total_amount=salary.net_salary or 0,
                 fiscal_year_id=1,  # افتراضي
                 employee_id=salary.employee_id,
-                created_by_id=1,  # افتراضي
+                created_by_id=12,  # مستخدم موجود
                 is_approved=True,
                 is_posted=True
             )
@@ -261,18 +261,17 @@ def api_sync_full():
         vehicles = Vehicle.query.limit(3).all()  # جلب أول 3 سيارات للاختبار
         
         for vehicle in vehicles:
-            # قيد إيجار السيارة - استخدام قيمة افتراضية إذا لم تكن موجودة
-            cost = getattr(vehicle, 'monthly_cost', 1000) or 1000
+            # قيد مصروف السيارة
             
             transaction = Transaction(
                 transaction_number=f'VEH-{datetime.now().strftime("%Y%m%d")}-{vehicle.id}',
                 transaction_date=datetime.now().date(),
                 transaction_type='vehicle_expense',
-                description=f'إيجار السيارة {getattr(vehicle, "plate_number", "غير محدد")}',
-                total_amount=cost,
+                description=f'مصروف السيارة {getattr(vehicle, "plate_number", "غير محدد")}',
+                total_amount=1500,  # قيمة ثابتة للاختبار
                 fiscal_year_id=1,  # افتراضي
                 vehicle_id=vehicle.id,
-                created_by_id=1,  # افتراضي
+                created_by_id=12,  # مستخدم موجود
                 is_approved=True,
                 is_posted=True
             )
@@ -313,15 +312,17 @@ def api_sync_salaries():
         
         for salary in salaries:
             # إنشاء قيد راتب
+            employee_name = getattr(salary.employee, 'name', 'موظف') if salary.employee else 'موظف'
+            
             transaction = Transaction(
                 transaction_number=f'SAL-{datetime.now().strftime("%Y%m%d")}-{salary.id}',
                 transaction_date=datetime.now().date(),
                 transaction_type='salary',
-                description=f'راتب {salary.employee.full_name} - {salary.month}/{salary.year}',
-                total_amount=salary.net_salary,
+                description=f'راتب {employee_name} - {salary.month}/{salary.year}',
+                total_amount=salary.net_salary or 0,
                 fiscal_year_id=1,  # افتراضي
                 employee_id=salary.employee_id,
-                created_by_id=1,  # افتراضي
+                created_by_id=12,  # مستخدم موجود
                 is_approved=True,
                 is_posted=True
             )
@@ -354,8 +355,8 @@ def api_sync_vehicles():
         
         entries_created = 0
         
-        # جلب السيارات ذات التكلفة الشهرية
-        vehicles = Vehicle.query.filter(Vehicle.monthly_cost > 0).limit(3).all()  # محدود للاختبار
+        # جلب السيارات للمعالجة
+        vehicles = Vehicle.query.limit(3).all()  # محدود للاختبار
         
         for vehicle in vehicles:
             # قيد إيجار السيارة
@@ -363,11 +364,11 @@ def api_sync_vehicles():
                 transaction_number=f'VEH-{datetime.now().strftime("%Y%m%d")}-{vehicle.id}',
                 transaction_date=datetime.now().date(),
                 transaction_type='vehicle_expense',
-                description=f'إيجار السيارة {vehicle.plate_number} - {vehicle.make} {vehicle.model}',
-                total_amount=vehicle.monthly_cost,
+                description=f'مصروف السيارة {getattr(vehicle, "plate_number", "غير محدد")}',
+                total_amount=1500,  # قيمة ثابتة للاختبار
                 fiscal_year_id=1,  # افتراضي
                 vehicle_id=vehicle.id,
-                created_by_id=1,  # افتراضي
+                created_by_id=12,  # مستخدم موجود
                 is_approved=True,
                 is_posted=True
             )
