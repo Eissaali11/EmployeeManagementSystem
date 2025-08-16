@@ -3,27 +3,30 @@
 {% block title %}لوحة التحكم المتكاملة{% endblock %}
 
 {% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
     /* تحسين التصميم العام */
     body {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #f8f9fa;
         font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         min-height: 100vh;
+        color: #2c3e50;
     }
     
     .container-fluid {
-        padding: 20px;
+        padding: 30px;
+        max-width: 1400px;
+        margin: 0 auto;
     }
     
     /* بطاقات الإحصائيات */
     .stats-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 30px;
-        margin-bottom: 25px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e9ecef;
         transition: all 0.3s ease;
         text-align: center;
         position: relative;
@@ -37,43 +40,55 @@
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        background: linear-gradient(90deg, #4f46e5, #7c3aed);
     }
     
     .stats-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+        border-color: #4f46e5;
     }
     
     .stats-number {
-        font-size: 2.5rem;
+        font-size: 2.75rem;
         font-weight: 700;
-        color: #2c3e50;
-        margin-bottom: 10px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
         display: block;
+        line-height: 1.2;
     }
     
     .stats-label {
-        font-size: 1.1rem;
-        color: #7f8c8d;
+        font-size: 1rem;
+        color: #64748b;
         font-weight: 500;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     
     .stats-label i {
         margin-left: 8px;
-        color: #667eea;
-        font-size: 1.3rem;
+        color: #4f46e5;
+        font-size: 1.25rem;
     }
     
     /* بطاقات الرسوم البيانية */
     .chart-container {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+    
+    .chart-container:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
     
     /* القائمة الجانبية */
@@ -83,121 +98,223 @@
     }
     
     .page-header {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 30px;
-        margin-bottom: 30px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border-radius: 16px;
+        padding: 40px;
+        margin-bottom: 32px;
         text-align: center;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(79, 70, 229, 0.2);
+        color: white;
     }
     
     .page-header h1 {
-        color: #2c3e50;
+        color: white;
         font-weight: 700;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+        font-size: 2.5rem;
     }
     
     .page-header p {
-        color: #7f8c8d;
+        color: rgba(255, 255, 255, 0.9);
         font-size: 1.1rem;
         margin: 0;
+        opacity: 0.95;
     }
     
     .page-header i {
-        color: #667eea;
+        color: rgba(255, 255, 255, 0.9);
         margin-left: 15px;
         font-size: 2.5rem;
     }
     
     /* الإجراءات السريعة */
     .quick-actions {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e9ecef;
+    }
+    
+    .quick-actions h5 {
+        color: #1e293b;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
     }
     
     .action-btn {
         display: block;
         width: 100%;
-        padding: 15px;
-        margin-bottom: 10px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 16px 20px;
+        margin-bottom: 12px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         color: white;
         text-decoration: none;
-        border-radius: 15px;
+        border-radius: 12px;
         text-align: center;
         font-weight: 600;
         transition: all 0.3s ease;
         border: none;
+        font-size: 0.95rem;
     }
     
     .action-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
         color: white;
         text-decoration: none;
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     }
     
     .action-btn i {
-        margin-left: 10px;
-        font-size: 1.2rem;
+        margin-left: 8px;
+        font-size: 1.1rem;
     }
     
     /* المهام العاجلة */
     .urgent-tasks {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 25px;
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 28px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e9ecef;
+    }
+    
+    .urgent-tasks h5 {
+        color: #1e293b;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
     }
     
     .urgent-task {
-        padding: 15px;
-        border-right: 4px solid #e74c3c;
-        background: rgba(231, 76, 60, 0.1);
-        border-radius: 10px;
-        margin-bottom: 15px;
+        padding: 16px 20px;
+        border-right: 4px solid #ef4444;
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02));
+        border-radius: 12px;
+        margin-bottom: 12px;
+        transition: all 0.3s ease;
     }
     
     .urgent-task:last-child {
         margin-bottom: 0;
     }
     
+    .urgent-task:hover {
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.04));
+        transform: translateX(4px);
+    }
+    
     .urgent-task a {
-        color: #e74c3c;
+        color: #dc2626;
         text-decoration: none;
         font-weight: 600;
+        font-size: 0.95rem;
     }
     
     .urgent-task a:hover {
-        text-decoration: underline;
+        color: #b91c1c;
+        text-decoration: none;
+    }
+    
+    /* إحصائيات فرعية */
+    .stat-item {
+        padding: 12px;
+        background: rgba(248, 250, 252, 0.8);
+        border-radius: 8px;
+        margin: 4px;
+        transition: all 0.3s ease;
+    }
+    
+    .stat-item:hover {
+        background: rgba(248, 250, 252, 1);
+        transform: translateY(-1px);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+    
+    /* تحسين العناوين */
+    h4 {
+        color: #1e293b;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+    }
+    
+    h4 i {
+        margin-left: 10px;
+        font-size: 1.2rem;
     }
     
     /* استجابة للهواتف */
     @media (max-width: 768px) {
         .container-fluid {
-            padding: 15px;
+            padding: 20px 15px;
         }
         
         .stats-card {
             padding: 20px;
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
         
         .stats-number {
-            font-size: 2rem;
+            font-size: 2.2rem;
         }
         
         .page-header {
-            padding: 20px;
+            padding: 30px 20px;
         }
         
         .page-header h1 {
+            font-size: 2rem;
+        }
+        
+        .action-btn {
+            margin-bottom: 8px;
+            padding: 14px 16px;
+        }
+        
+        .chart-container {
+            padding: 20px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .stats-number {
             font-size: 1.8rem;
+        }
+        
+        .page-header h1 {
+            font-size: 1.7rem;
+        }
+        
+        .stat-item {
+            margin: 2px;
+            padding: 8px;
+        }
+        
+        .stat-number {
+            font-size: 1.2rem;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
         }
     }
 </style>
@@ -267,29 +384,29 @@
                 </h4>
                 <canvas id="vehicleStatusChart" width="400" height="300"></canvas>
                 
-                <div class="row mt-3 text-center">
+                <div class="row mt-4">
                     <div class="col-3">
-                        <div class="text-success">
-                            <strong>{{ vehicles_available }}</strong><br>
-                            <small>متاحة</small>
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-success">{{ vehicles_available }}</div>
+                            <div class="stat-label">متاحة</div>
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="text-warning">
-                            <strong>{{ vehicles_rented }}</strong><br>
-                            <small>مؤجرة</small>
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-warning">{{ vehicles_rented }}</div>
+                            <div class="stat-label">مؤجرة</div>
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="text-danger">
-                            <strong>{{ vehicles_in_workshop }}</strong><br>
-                            <small>في الورشة</small>
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-danger">{{ vehicles_in_workshop }}</div>
+                            <div class="stat-label">في الورشة</div>
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="text-muted">
-                            <strong>{{ total_vehicles - vehicles_available - vehicles_rented - vehicles_in_workshop }}</strong><br>
-                            <small>أخرى</small>
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-muted">{{ total_vehicles - vehicles_available - vehicles_rented - vehicles_in_workshop }}</div>
+                            <div class="stat-label">أخرى</div>
                         </div>
                     </div>
                 </div>
