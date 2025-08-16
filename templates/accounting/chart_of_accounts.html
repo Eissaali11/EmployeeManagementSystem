@@ -1,0 +1,423 @@
+{% extends "layout.html" %}
+
+{% block title %}شجرة الحسابات - نظام نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-0">شجرة الحسابات</h1>
+            <p class="text-muted mb-0">دليل الحسابات الرئيسية والفرعية</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('accounting.accounts') }}" class="btn btn-outline-primary">
+                <i class="fas fa-list me-2"></i>إدارة الحسابات
+            </a>
+            {% if current_user.role.value == 'admin' and total_accounts == 0 %}
+            <form method="POST" action="{{ url_for('accounting.create_default_accounts') }}" style="display: inline;">
+                <button type="submit" class="btn btn-success" onclick="return confirm('هل تريد إنشاء شجرة الحسابات الافتراضية؟')">
+                    <i class="fas fa-plus me-2"></i>إنشاء الحسابات الافتراضية
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- إحصائيات سريعة -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                إجمالي الحسابات
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calculator fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                الحسابات الرئيسية
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ main_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-sitemap fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                الحسابات الفرعية
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ sub_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-project-diagram fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                الحسابات التفصيلية
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ detail_accounts }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-list-ul fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if total_accounts == 0 %}
+    <!-- رسالة عدم وجود حسابات -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-tree fa-4x text-muted mb-3"></i>
+                <h4>لا توجد حسابات في النظام</h4>
+                <p class="text-muted">قم بإنشاء شجرة الحسابات الافتراضية للبدء</p>
+            </div>
+            {% if current_user.role.value == 'admin' %}
+            <form method="POST" action="{{ url_for('accounting.create_default_accounts') }}" style="display: inline;">
+                <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('هل تريد إنشاء شجرة الحسابات الافتراضية؟')">
+                    <i class="fas fa-plus me-2"></i>إنشاء الحسابات الافتراضية
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <!-- شجرة الحسابات -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0">
+                <i class="fas fa-sitemap me-2 text-primary"></i>هيكل الحسابات
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="accounts-tree">
+                {% for main_id, main_data in accounts_tree.items() %}
+                <div class="account-node level-1 mb-4">
+                    <!-- الحساب الرئيسي -->
+                    <div class="account-header d-flex align-items-center justify-content-between p-3 bg-primary bg-opacity-10 rounded cursor-pointer" 
+                         onclick="toggleNode('main-{{ main_id }}')">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-folder me-3 text-primary"></i>
+                            <div>
+                                <strong class="text-dark">{{ main_data.account.code }} - {{ main_data.account.name }}</strong>
+                                {% if main_data.account.name_en %}
+                                <br><small class="text-muted">{{ main_data.account.name_en }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-2">{{ main_data.account.account_type.value }}</span>
+                            <button class="btn btn-sm btn-outline-info me-2" onclick="event.stopPropagation(); showAccountBalance({{ main_id }})">
+                                <i class="fas fa-calculator"></i> الرصيد
+                            </button>
+                            <i class="fas fa-chevron-down toggle-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <!-- الحسابات الفرعية -->
+                    <div class="account-children collapse show" id="main-{{ main_id }}">
+                        {% for sub_id, sub_data in main_data.children.items() %}
+                        <div class="account-node level-2 ms-4 mt-3">
+                            <div class="account-header d-flex align-items-center justify-content-between p-2 bg-success bg-opacity-5 rounded cursor-pointer"
+                                 onclick="toggleNode('sub-{{ sub_id }}')">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-folder-open me-3 text-success"></i>
+                                    <div>
+                                        <strong class="text-dark">{{ sub_data.account.code }} - {{ sub_data.account.name }}</strong>
+                                        {% if sub_data.account.name_en %}
+                                        <br><small class="text-muted">{{ sub_data.account.name_en }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-sm btn-outline-info me-2" onclick="event.stopPropagation(); showAccountBalance({{ sub_id }})">
+                                        <i class="fas fa-calculator"></i>
+                                    </button>
+                                    {% if sub_data.children %}
+                                    <i class="fas fa-chevron-down toggle-icon"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- الحسابات التفصيلية -->
+                            {% if sub_data.children %}
+                            <div class="account-children collapse show" id="sub-{{ sub_id }}">
+                                {% for detail_id, detail_data in sub_data.children.items() %}
+                                <div class="account-node level-3 ms-4 mt-2">
+                                    <div class="account-item d-flex align-items-center justify-content-between p-2 border rounded hover-bg-light">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-alt me-3 text-info"></i>
+                                            <div>
+                                                <span class="text-dark">{{ detail_data.account.code }} - {{ detail_data.account.name }}</span>
+                                                {% if detail_data.account.name_en %}
+                                                <br><small class="text-muted">{{ detail_data.account.name_en }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-muted me-3">{{ "%.2f"|format(detail_data.account.balance) }} ر.س</span>
+                                            <button class="btn btn-sm btn-outline-info" onclick="showAccountBalance({{ detail_id }})">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- نافذة تفاصيل الحساب -->
+<div class="modal fade" id="accountBalanceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تفاصيل الحساب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="accountDetails">
+                    <!-- سيتم تحميل التفاصيل هنا -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.accounts-tree {
+    font-size: 0.95rem;
+}
+
+.account-node {
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.account-header {
+    border: 1px solid rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.account-header:hover {
+    background-color: rgba(0,0,0,0.05) !important;
+    transform: translateX(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa !important;
+}
+
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.account-children {
+    border-right: 2px solid rgba(0,123,255,0.2);
+    margin-right: 10px;
+}
+
+.level-2 .account-children {
+    border-right-color: rgba(40,167,69,0.2);
+}
+
+.level-3 .account-item {
+    background-color: rgba(0,0,0,0.02);
+}
+
+@media (max-width: 768px) {
+    .accounts-tree {
+        font-size: 0.85rem;
+    }
+    
+    .account-node {
+        margin-bottom: 1rem !important;
+    }
+    
+    .ms-4 {
+        margin-right: 1rem !important;
+    }
+}
+</style>
+
+<script>
+function toggleNode(nodeId) {
+    const element = document.getElementById(nodeId);
+    const icon = element.previousElementSibling.querySelector('.toggle-icon');
+    
+    if (element.classList.contains('show')) {
+        element.classList.remove('show');
+        element.classList.add('collapse');
+        icon.style.transform = 'rotate(-90deg)';
+    } else {
+        element.classList.remove('collapse');
+        element.classList.add('show');
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+
+function showAccountBalance(accountId) {
+    // عرض مؤشر التحميل
+    document.getElementById('accountDetails').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">جاري التحميل...</span>
+            </div>
+            <p class="mt-2">جاري تحميل تفاصيل الحساب...</p>
+        </div>
+    `;
+    
+    // عرض النافذة
+    const modal = new bootstrap.Modal(document.getElementById('accountBalanceModal'));
+    modal.show();
+    
+    // جلب التفاصيل
+    fetch(`/accounting/account/${accountId}/balance`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('accountDetails').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            let hierarchyHtml = '';
+            if (data.hierarchy && data.hierarchy.length > 1) {
+                hierarchyHtml = `
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">التسلسل الهرمي:</h6>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb">
+                                ${data.hierarchy.map(acc => `<li class="breadcrumb-item">${acc.code} - ${acc.name}</li>`).join('')}
+                            </ol>
+                        </nav>
+                    </div>
+                `;
+            }
+            
+            let childrenHtml = '';
+            if (data.children && data.children.length > 0) {
+                childrenHtml = `
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">الحسابات الفرعية:</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>الكود</th>
+                                        <th>اسم الحساب</th>
+                                        <th class="text-end">الرصيد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.children.map(child => `
+                                        <tr>
+                                            <td>${child.code}</td>
+                                            <td>${child.name}</td>
+                                            <td class="text-end">${child.balance.toFixed(2)} ر.س</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            document.getElementById('accountDetails').innerHTML = `
+                <div class="mb-4">
+                    <h5 class="mb-3">${data.account.code} - ${data.account.name}</h5>
+                    ${data.account.name_en ? `<p class="text-muted mb-3">${data.account.name_en}</p>` : ''}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-1">رصيد الحساب</h6>
+                                    <h4 class="text-primary mb-0">${data.balances.account_only.toFixed(2)} ر.س</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h6 class="text-muted mb-1">الرصيد الإجمالي</h6>
+                                    <h4 class="text-success mb-0">${data.balances.with_children.toFixed(2)} ر.س</h4>
+                                    <small class="text-muted">(مع الفرعية)</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                ${hierarchyHtml}
+                ${childrenHtml}
+            `;
+        })
+        .catch(error => {
+            document.getElementById('accountDetails').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    خطأ في جلب التفاصيل: ${error.message}
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}

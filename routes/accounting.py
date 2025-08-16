@@ -14,6 +14,7 @@ from models import UserRole, Module, Permission
 from models_accounting import *
 from forms.accounting import *
 from utils.helpers import log_activity
+from utils.chart_of_accounts import create_default_chart_of_accounts, get_accounts_tree, get_account_hierarchy, calculate_account_balance
 
 # إنشاء البلوبرينت
 accounting_bp = Blueprint('accounting', __name__, url_prefix='/accounting')
@@ -498,4 +499,90 @@ def add_transaction():
     return render_template('accounting/transactions/form.html', form=form, title='إضافة قيد جديد')
 
 
-# سأكمل باقي الطرق في ملف منفصل لتجنب كون الملف كبير جداً
+# ==================== شجرة الحسابات ====================
+
+@accounting_bp.route('/chart-of-accounts')
+@login_required
+def chart_of_accounts():
+    """شجرة الحسابات"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    # جلب شجرة الحسابات
+    accounts_tree = get_accounts_tree()
+    
+    # إحصائيات سريعة
+    total_accounts = Account.query.filter_by(is_active=True).count()
+    main_accounts = Account.query.filter_by(level=1, is_active=True).count()
+    sub_accounts = Account.query.filter_by(level=2, is_active=True).count()
+    detail_accounts = Account.query.filter_by(level=3, is_active=True).count()
+    
+    return render_template('accounting/chart_of_accounts.html',
+                         accounts_tree=accounts_tree,
+                         total_accounts=total_accounts,
+                         main_accounts=main_accounts,
+                         sub_accounts=sub_accounts,
+                         detail_accounts=detail_accounts)
+
+
+@accounting_bp.route('/create-default-accounts', methods=['POST'])
+@login_required
+def create_default_accounts():
+    """إنشاء الحسابات الافتراضية"""
+    if not current_user.role == UserRole.ADMIN:
+        flash('غير مسموح لك بتنفيذ هذا الإجراء', 'danger')
+        return redirect(url_for('accounting.chart_of_accounts'))
+    
+    try:
+        success, message = create_default_chart_of_accounts()
+        if success:
+            log_activity("إنشاء شجرة الحسابات الافتراضية")
+            flash(message, 'success')
+        else:
+            flash(message, 'warning')
+    except Exception as e:
+        flash(f'خطأ في إنشاء الحسابات: {str(e)}', 'danger')
+    
+    return redirect(url_for('accounting.chart_of_accounts'))
+
+
+@accounting_bp.route('/account/<int:account_id>/balance')
+@login_required
+def account_balance(account_id):
+    """عرض رصيد حساب مع التفاصيل"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        return jsonify({'error': 'غير مسموح'}), 403
+    
+    try:
+        account = Account.query.get_or_404(account_id)
+        
+        # حساب الرصيد مع الحسابات الفرعية
+        total_balance = calculate_account_balance(account_id, True)
+        account_balance_only = account.balance
+        
+        # التسلسل الهرمي
+        hierarchy = get_account_hierarchy(account_id)
+        
+        # الحسابات الفرعية
+        children = Account.query.filter_by(parent_id=account_id, is_active=True).all()
+        
+        return jsonify({
+            'account': {
+                'id': account.id,
+                'code': account.code,
+                'name': account.name,
+                'name_en': account.name_en,
+                'type': account.account_type.value,
+                'level': account.level
+            },
+            'balances': {
+                'account_only': float(account_balance_only),
+                'with_children': float(total_balance)
+            },
+            'hierarchy': [{'code': acc.code, 'name': acc.name} for acc in hierarchy],
+            'children': [{'id': child.id, 'code': child.code, 'name': child.name, 'balance': float(child.balance)} for child in children]
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
