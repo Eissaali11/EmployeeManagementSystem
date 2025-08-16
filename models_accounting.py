@@ -233,7 +233,7 @@ class TransactionEntry(db.Model):
     description = db.Column(db.Text)  # وصف إضافي للقيد
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # العلاقات
+    # العلاقة مع مركز التكلفة
     cost_center = db.relationship('CostCenter', backref='transaction_entries')
 
 

@@ -715,7 +715,7 @@ def create_journal_entry():
         transaction.transaction_date = datetime.strptime(request.form.get('transaction_date'), '%Y-%m-%d').date()
         transaction.description = request.form.get('description')
         transaction.reference_number = request.form.get('reference_number', '')
-        transaction.notes = request.form.get('notes', '')
+        # transaction.notes = request.form.get('notes', '')  # مؤقت حتى يتم إضافة الحقل
         transaction.transaction_type = TransactionType.JOURNAL
         transaction.created_by = current_user.id
         
@@ -724,7 +724,7 @@ def create_journal_entry():
         transaction.is_approved = (action == 'approve')
         if transaction.is_approved:
             transaction.approved_by = current_user.id
-            transaction.approved_at = datetime.utcnow()
+            # transaction.approved_at = datetime.utcnow()  # مؤقت حتى يتم إضافة الحقل
         
         db.session.add(transaction)
         db.session.flush()  # للحصول على ID المعاملة
@@ -792,7 +792,7 @@ def create_journal_entry():
                             account.balance += (debit_amount - credit_amount)
         
         # إضافة المبلغ الإجمالي للمعاملة
-        transaction.amount = max(total_debit, total_credit)
+        # transaction.amount = max(total_debit, total_credit)  # مؤقت حتى يتم إضافة الحقل
         
         db.session.commit()
         
