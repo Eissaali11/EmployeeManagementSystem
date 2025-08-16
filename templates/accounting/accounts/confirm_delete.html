@@ -1,0 +1,104 @@
+{% extends "layout.html" %}
+
+{% block title %}تأكيد حذف الحساب{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-danger">
+                <div class="card-header bg-danger text-white text-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        تأكيد حذف الحساب
+                    </h4>
+                </div>
+                <div class="card-body text-center p-4">
+                    <div class="mb-4">
+                        <i class="fas fa-trash-alt text-danger" style="font-size: 5rem; opacity: 0.7;"></i>
+                    </div>
+                    
+                    <h5 class="text-danger mb-3">هل أنت متأكد من حذف هذا الحساب؟</h5>
+                    
+                    <div class="account-info bg-light p-3 rounded mb-4">
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>رمز الحساب:</strong>
+                                <br><span class="text-primary">{{ account.code }}</span>
+                            </div>
+                            <div class="col-6">
+                                <strong>اسم الحساب:</strong>
+                                <br><span class="text-primary">{{ account.name }}</span>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-6">
+                                <strong>نوع الحساب:</strong>
+                                <br>
+                                <span class="badge bg-info">
+                                    {% if account.account_type.value == 'assets' %}أصول
+                                    {% elif account.account_type.value == 'liabilities' %}خصوم
+                                    {% elif account.account_type.value == 'equity' %}حقوق الملكية
+                                    {% elif account.account_type.value == 'revenue' %}إيرادات
+                                    {% elif account.account_type.value == 'expenses' %}مصروفات
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="col-6">
+                                <strong>الرصيد الحالي:</strong>
+                                <br><span class="text-success">{{ "{:,.2f}".format(account.balance or 0) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه!
+                        <br><small>سيتم حذف الحساب نهائياً من النظام</small>
+                    </div>
+
+                    {% if has_transactions %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-ban me-2"></i>
+                        <strong>لا يمكن الحذف:</strong> يحتوي هذا الحساب على معاملات مرتبطة به
+                    </div>
+                    {% endif %}
+
+                    {% if has_children %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-ban me-2"></i>
+                        <strong>لا يمكن الحذف:</strong> يحتوي هذا الحساب على حسابات فرعية
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="card-footer bg-light text-center p-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <a href="{{ url_for('accounting.accounts') }}" class="btn btn-secondary btn-lg w-100">
+                                <i class="fas fa-arrow-right me-2"></i>إلغاء والعودة
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            {% if not has_transactions and not has_children %}
+                            <form method="POST" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-danger btn-lg w-100" 
+                                        onclick="return confirm('هل أنت متأكد 100% من حذف هذا الحساب؟')">
+                                    <i class="fas fa-trash me-2"></i>تأكيد الحذف
+                                </button>
+                            </form>
+                            {% else %}
+                            <button class="btn btn-danger btn-lg w-100" disabled>
+                                <i class="fas fa-ban me-2"></i>لا يمكن الحذف
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

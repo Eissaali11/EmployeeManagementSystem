@@ -58,10 +58,10 @@
                                                class="btn btn-sm btn-primary" title="تعديل">
                                                 <i class="fas fa-edit me-1"></i>تعديل
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-danger" 
-                                                    title="حذف" onclick="deleteAccount({{ account.id }}, '{{ account.name }}')">
+                                            <a href="{{ url_for('accounting.confirm_delete_account', account_id=account.id) }}" 
+                                               class="btn btn-sm btn-danger" title="حذف">
                                                 <i class="fas fa-trash me-1"></i>حذف
-                                            </button>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -75,98 +75,7 @@
     </div>
 </div>
 
-<!-- Modal للتأكيد على الحذف -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i>تأكيد الحذف
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <div class="mb-3">
-                    <i class="fas fa-trash-alt text-danger" style="font-size: 3rem;"></i>
-                </div>
-                <h6>هل أنت متأكد من حذف الحساب؟</h6>
-                <p class="mb-2"><strong id="accountName"></strong></p>
-                <div class="alert alert-warning mb-0">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>تحذير:</strong> لا يمكن التراجع عن هذا الإجراء
-                </div>
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-secondary btn-lg me-3" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i>إلغاء
-                </button>
-                <form id="deleteForm" method="POST" style="display: inline-block;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger btn-lg">
-                        <i class="fas fa-trash me-2"></i>تأكيد الحذف
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
 
-<script>
-function deleteAccount(accountId, accountName) {
-    console.log('Delete function called:', accountId, accountName);
-    
-    // إخفاء أي نوافذ منبثقة أخرى
-    const existingModals = document.querySelectorAll('.modal.show');
-    existingModals.forEach(modal => {
-        const modalInstance = bootstrap.Modal.getInstance(modal);
-        if (modalInstance) {
-            modalInstance.hide();
-        }
-    });
-    
-    // تحديث محتوى النافذة
-    document.getElementById('accountName').textContent = accountName;
-    document.getElementById('deleteForm').action = '/accounting/accounts/' + accountId + '/delete';
-    
-    // إظهار النافذة مع إعدادات محسنة
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {
-        backdrop: 'static',
-        keyboard: false,
-        focus: true
-    });
-    
-    // التأكد من أن النافذة في المقدمة
-    setTimeout(() => {
-        const modalElement = document.getElementById('deleteModal');
-        modalElement.style.zIndex = '10050';
-        const backdrop = document.querySelector('.modal-backdrop');
-        if (backdrop) {
-            backdrop.style.zIndex = '10040';
-        }
-    }, 100);
-    
-    deleteModal.show();
-}
-
-// تأكد من تحميل Bootstrap بالكامل
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Page loaded, Bootstrap available:', typeof bootstrap !== 'undefined');
-    
-    // إصلاح أي مشاكل في z-index عند تحميل الصفحة
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('show.bs.modal', function() {
-            this.style.zIndex = '10050';
-            setTimeout(() => {
-                const backdrop = document.querySelector('.modal-backdrop');
-                if (backdrop) {
-                    backdrop.style.zIndex = '10040';
-                }
-            }, 50);
-        });
-    });
-});
-</script>
 
 <style>
 /* إصلاح مشكلة z-index للنافذة المنبثقة */

@@ -248,46 +248,52 @@ def edit_account(account_id):
     return render_template('accounting/accounts/form.html', form=form, title='تعديل حساب', account=account)
 
 
-@accounting_bp.route('/accounts/<int:account_id>/delete', methods=['POST'])
+@accounting_bp.route('/accounts/<int:account_id>/confirm-delete', methods=['GET', 'POST'])
 @login_required
-def delete_account(account_id):
-    """حذف حساب"""
+def confirm_delete_account(account_id):
+    """صفحة تأكيد حذف الحساب"""
     if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
     account = Account.query.get_or_404(account_id)
     
-    try:
-        # التحقق من وجود معاملات مرتبطة بالحساب
-        from models_accounting import TransactionEntry
-        has_transactions = TransactionEntry.query.filter_by(account_id=account.id).count() > 0
-        
+    # التحقق من وجود معاملات مرتبطة بالحساب
+    from models_accounting import TransactionEntry
+    has_transactions = TransactionEntry.query.filter_by(account_id=account.id).count() > 0
+    
+    # التحقق من وجود حسابات فرعية
+    has_children = Account.query.filter_by(parent_id=account.id).count() > 0
+    
+    if request.method == 'POST':
         if has_transactions:
             flash('لا يمكن حذف الحساب لوجود معاملات مرتبطة به', 'danger')
             return redirect(url_for('accounting.accounts'))
-        
-        # التحقق من وجود حسابات فرعية
-        has_children = Account.query.filter_by(parent_id=account.id).count() > 0
         
         if has_children:
             flash('لا يمكن حذف الحساب لوجود حسابات فرعية تابعة له', 'danger')
             return redirect(url_for('accounting.accounts'))
         
-        account_name = account.name
-        account_code = account.code
-        
-        db.session.delete(account)
-        db.session.commit()
-        
-        log_activity(f"حذف حساب: {account_name} ({account_code})")
-        flash('تم حذف الحساب بنجاح', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        flash(f'خطأ في حذف الحساب: {str(e)}', 'danger')
+        try:
+            account_name = account.name
+            account_code = account.code
+            
+            db.session.delete(account)
+            db.session.commit()
+            
+            log_activity(f"حذف حساب: {account_name} ({account_code})")
+            flash('تم حذف الحساب بنجاح', 'success')
+            
+            return redirect(url_for('accounting.accounts'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'خطأ في حذف الحساب: {str(e)}', 'danger')
     
-    return redirect(url_for('accounting.accounts'))
+    return render_template('accounting/accounts/confirm_delete.html', 
+                         account=account,
+                         has_transactions=has_transactions,
+                         has_children=has_children)
 
 
 @accounting_bp.route('/accounts/<int:account_id>/view')
