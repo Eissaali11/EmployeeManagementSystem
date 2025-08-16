@@ -28,43 +28,48 @@
     <!-- أزرار الوصول السريع -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card bg-light border-0">
-                <div class="card-body py-3">
-                    <div class="row text-center">
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center">
-                                <i class="fas fa-building fa-2x mb-2"></i>
-                                <span class="small">مراكز التكلفة</span>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>الوصول السريع
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-outline-primary w-100 py-3 quick-access-btn">
+                                <i class="fas fa-building fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">مراكز التكلفة</span>
                             </a>
                         </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{{ url_for('accounting.create_journal_entry') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center">
-                                <i class="fas fa-file-invoice fa-2x mb-2"></i>
-                                <span class="small">قيد يومية</span>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <a href="{{ url_for('accounting.create_journal_entry') }}" class="btn btn-outline-success w-100 py-3 quick-access-btn">
+                                <i class="fas fa-file-invoice fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">قيد يومية</span>
                             </a>
                         </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{{ url_for('accounting.chart_of_accounts') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center">
-                                <i class="fas fa-sitemap fa-2x mb-2"></i>
-                                <span class="small">شجرة الحسابات</span>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <a href="{{ url_for('accounting.chart_of_accounts') }}" class="btn btn-outline-info w-100 py-3 quick-access-btn">
+                                <i class="fas fa-sitemap fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">شجرة الحسابات</span>
                             </a>
                         </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{{ url_for('accounting.analytics') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center">
-                                <i class="fas fa-chart-line fa-2x mb-2"></i>
-                                <span class="small">التحليلات المالية</span>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <a href="{{ url_for('accounting.analytics') }}" class="btn btn-outline-warning w-100 py-3 quick-access-btn">
+                                <i class="fas fa-chart-line fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">التحليلات المالية</span>
                             </a>
                         </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="{{ url_for('accounting.create_cost_center') }}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center">
-                                <i class="fas fa-plus-circle fa-2x mb-2"></i>
-                                <span class="small">مركز جديد</span>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <a href="{{ url_for('accounting.create_cost_center') }}" class="btn btn-outline-secondary w-100 py-3 quick-access-btn">
+                                <i class="fas fa-plus-circle fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">مركز جديد</span>
                             </a>
                         </div>
-                        <div class="col-md-2 col-6 mb-2">
-                            <a href="/reports/" class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center">
-                                <i class="fas fa-file-pdf fa-2x mb-2"></i>
-                                <span class="small">التقارير</span>
+                        <div class="col-lg-2 col-md-4 col-6">
+                            <a href="/reports/" class="btn btn-outline-dark w-100 py-3 quick-access-btn">
+                                <i class="fas fa-file-pdf fa-2x d-block mb-2"></i>
+                                <span class="fw-bold">التقارير</span>
                             </a>
                         </div>
                     </div>
@@ -335,6 +340,31 @@
 .btn-outline-info:hover {
     transform: translateY(-2px);
     transition: all 0.3s ease;
+}
+
+.quick-access-btn {
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-width: 2px;
+    transition: all 0.3s ease;
+}
+
+.quick-access-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.quick-access-btn i {
+    color: inherit;
+}
+
+.quick-access-btn span {
+    font-size: 0.85rem;
+    text-align: center;
 }
 </style>
 {% endblock %}
