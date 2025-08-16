@@ -1,0 +1,348 @@
+{% extends "layout.html" %}
+
+{% block title %}التحليل المالي الذكي{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        التحليل المالي الذكي
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <!-- إجمالي الإيرادات -->
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body text-center">
+                                    <h5>إجمالي الإيرادات</h5>
+                                    <h2 id="total-revenue">{{ "{:,.2f}".format(total_revenue) }}</h2>
+                                    <small>ريال سعودي</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- إجمالي المصروفات -->
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body text-center">
+                                    <h5>إجمالي المصروفات</h5>
+                                    <h2 id="total-expenses">{{ "{:,.2f}".format(total_expenses) }}</h2>
+                                    <small>ريال سعودي</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- صافي الربح -->
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body text-center">
+                                    <h5>صافي الربح</h5>
+                                    <h2 id="net-profit">{{ "{:,.2f}".format(net_profit) }}</h2>
+                                    <small>ريال سعودي</small>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- معدل الربحية -->
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body text-center">
+                                    <h5>معدل الربحية</h5>
+                                    <h2 id="profit-margin">{{ "{:.1f}".format(profit_margin) }}%</h2>
+                                    <small>من إجمالي الإيرادات</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الرسوم البيانية -->
+                    <div class="row">
+                        <!-- الإيرادات والمصروفات الشهرية -->
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">الإيرادات والمصروفات الشهرية</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="revenueExpenseChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- توزيع المصروفات -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">توزيع المصروفات</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="expenseDistributionChart" width="200" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تحليل الأقسام -->
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">أداء الأقسام</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="departmentPerformanceChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- تحليل المركبات -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">تكاليف المركبات</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="vehicleCostsChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- التنبؤات المالية -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-brain me-2"></i>
+                                        التنبؤات المالية بالذكاء الاصطناعي
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="alert alert-info">
+                                                <h6>التنبؤ للشهر القادم</h6>
+                                                <p><strong>الإيرادات المتوقعة:</strong> {{ "{:,.0f}".format(predicted_revenue) }} ريال</p>
+                                                <p><strong>المصروفات المتوقعة:</strong> {{ "{:,.0f}".format(predicted_expenses) }} ريال</p>
+                                                <p><strong>الربح المتوقع:</strong> {{ "{:,.0f}".format(predicted_profit) }} ريال</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <canvas id="predictionChart" width="600" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- جدول التحليل التفصيلي -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">التحليل التفصيلي</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>البند</th>
+                                                    <th>الشهر الحالي</th>
+                                                    <th>الشهر السابق</th>
+                                                    <th>التغيير</th>
+                                                    <th>النسبة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>مصروفات الرواتب</td>
+                                                    <td>{{ "{:,.0f}".format(salary_expenses) }}</td>
+                                                    <td>{{ "{:,.0f}".format(prev_salary_expenses) }}</td>
+                                                    <td class="{{ 'text-danger' if salary_change < 0 else 'text-success' }}">
+                                                        {{ "{:+.1f}".format(salary_change) }}%
+                                                    </td>
+                                                    <td>{{ "{:.1f}".format(salary_percentage) }}%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>مصروفات المركبات</td>
+                                                    <td>{{ "{:,.0f}".format(vehicle_expenses) }}</td>
+                                                    <td>{{ "{:,.0f}".format(prev_vehicle_expenses) }}</td>
+                                                    <td class="{{ 'text-danger' if vehicle_change < 0 else 'text-success' }}">
+                                                        {{ "{:+.1f}".format(vehicle_change) }}%
+                                                    </td>
+                                                    <td>{{ "{:.1f}".format(vehicle_percentage) }}%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>مصروفات التشغيل</td>
+                                                    <td>{{ "{:,.0f}".format(operation_expenses) }}</td>
+                                                    <td>{{ "{:,.0f}".format(prev_operation_expenses) }}</td>
+                                                    <td class="{{ 'text-danger' if operation_change < 0 else 'text-success' }}">
+                                                        {{ "{:+.1f}".format(operation_change) }}%
+                                                    </td>
+                                                    <td>{{ "{:.1f}".format(operation_percentage) }}%</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- مكتبات الرسوم البيانية -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// الإيرادات والمصروفات الشهرية
+const revenueExpenseCtx = document.getElementById('revenueExpenseChart').getContext('2d');
+new Chart(revenueExpenseCtx, {
+    type: 'line',
+    data: {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+        datasets: [{
+            label: 'الإيرادات',
+            data: {{ revenue_data | tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'المصروفات',
+            data: {{ expense_data | tojson }},
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'الأداء المالي الشهري'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// توزيع المصروفات
+const expenseDistCtx = document.getElementById('expenseDistributionChart').getContext('2d');
+new Chart(expenseDistCtx, {
+    type: 'pie',
+    data: {
+        labels: ['رواتب', 'مركبات', 'تشغيل', 'أخرى'],
+        datasets: [{
+            data: {{ expense_distribution | tojson }},
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.8)',
+                'rgba(54, 162, 235, 0.8)',
+                'rgba(255, 205, 86, 0.8)',
+                'rgba(75, 192, 192, 0.8)'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// أداء الأقسام
+const deptPerfCtx = document.getElementById('departmentPerformanceChart').getContext('2d');
+new Chart(deptPerfCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ department_names | tojson }},
+        datasets: [{
+            label: 'الإيرادات',
+            data: {{ department_revenues | tojson }},
+            backgroundColor: 'rgba(75, 192, 192, 0.8)'
+        }, {
+            label: 'المصروفات',
+            data: {{ department_expenses | tojson }},
+            backgroundColor: 'rgba(255, 99, 132, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// تكاليف المركبات
+const vehicleCostsCtx = document.getElementById('vehicleCostsChart').getContext('2d');
+new Chart(vehicleCostsCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ vehicle_names | tojson }},
+        datasets: [{
+            label: 'تكلفة الوقود',
+            data: {{ fuel_costs | tojson }},
+            backgroundColor: 'rgba(255, 205, 86, 0.8)'
+        }, {
+            label: 'تكلفة الصيانة',
+            data: {{ maintenance_costs | tojson }},
+            backgroundColor: 'rgba(54, 162, 235, 0.8)'
+        }]
+    },
+    options: {
+        responsive: true,
+        indexAxis: 'y',
+        scales: {
+            x: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+// التنبؤات المالية
+const predictionCtx = document.getElementById('predictionChart').getContext('2d');
+new Chart(predictionCtx, {
+    type: 'line',
+    data: {
+        labels: {{ prediction_months | tojson }},
+        datasets: [{
+            label: 'البيانات الفعلية',
+            data: {{ actual_data | tojson }},
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)'
+        }, {
+            label: 'التنبؤات',
+            data: {{ prediction_data | tojson }},
+            borderColor: 'rgb(255, 159, 64)',
+            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            borderDash: [5, 5]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'التنبؤات المالية للأشهر القادمة'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
