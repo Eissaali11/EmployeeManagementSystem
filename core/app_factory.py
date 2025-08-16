@@ -59,7 +59,7 @@ def register_blueprints(app):
     from routes.fees_costs import fees_costs_bp
     from routes.accounting import accounting_bp
     from routes.accounting_extended import accounting_ext_bp
-    from routes.accounting_analytics import analytics_bp
+    from routes.simple_analytics import simple_analytics_bp
     
     # تسجيل المسارات
     app.register_blueprint(auth_bp)
@@ -74,7 +74,7 @@ def register_blueprints(app):
     app.register_blueprint(fees_costs_bp)
     app.register_blueprint(accounting_bp)
     app.register_blueprint(accounting_ext_bp)
-    app.register_blueprint(analytics_bp)
+    app.register_blueprint(simple_analytics_bp)
 
 def register_error_handlers(app):
     """تسجيل معالجات الأخطاء"""
