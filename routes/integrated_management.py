@@ -175,7 +175,7 @@ def dashboard():
             'type': 'info'
         })
     
-    return render_template('integrated/dashboard.html',
+    return render_template('integrated/dashboard_improved.html',
         # إحصائيات عامة
         total_employees=total_employees,
         total_departments=total_departments,
@@ -219,44 +219,55 @@ def dashboard():
 def auto_accounting():
     """صفحة إعداد الربط المحاسبي التلقائي"""
     
-    # الحصول على السنة المالية النشطة
-    active_fiscal_year = FiscalYear.query.filter_by(is_active=True).first()
+    # متغيرات افتراضية
+    active_fiscal_year = None
+    cost_centers = []
+    salary_accounts = []
+    vehicle_accounts = []
+    bank_accounts = []
     
-    # الحصول على مراكز التكلفة
-    cost_centers = CostCenter.query.filter_by(is_active=True).all()
+    # محاولة الحصول على البيانات المحاسبية إذا كانت متاحة
+    if FiscalYear:
+        active_fiscal_year = FiscalYear.query.filter_by(is_active=True).first()
     
-    # الحصول على الحسابات المحاسبية المهمة
-    salary_accounts = Account.query.filter_by(
-        account_type=AccountType.EXPENSES
-    ).filter(
-        Account.name.contains('راتب')
-    ).all()
+    if CostCenter:
+        cost_centers = CostCenter.query.filter_by(is_active=True).all()
     
-    vehicle_accounts = Account.query.filter_by(
-        account_type=AccountType.EXPENSES
-    ).filter(
-        or_(
-            Account.name.contains('سيارة'),
-            Account.name.contains('مركبة'),
-            Account.name.contains('صيانة')
-        )
-    ).all()
-    
-    bank_accounts = Account.query.filter_by(
-        account_type=AccountType.ASSETS
-    ).filter(
-        or_(
-            Account.name.contains('بنك'),
-            Account.name.contains('نقدية')
-        )
-    ).all()
+    if Account and AccountType:
+        # الحصول على الحسابات المحاسبية المهمة
+        salary_accounts = Account.query.filter_by(
+            account_type=AccountType.EXPENSES
+        ).filter(
+            Account.name.contains('راتب')
+        ).all()
+        
+        vehicle_accounts = Account.query.filter_by(
+            account_type=AccountType.EXPENSES
+        ).filter(
+            or_(
+                Account.name.contains('سيارة'),
+                Account.name.contains('مركبة'),
+                Account.name.contains('صيانة')
+            )
+        ).all()
+        
+        bank_accounts = Account.query.filter_by(
+            account_type=AccountType.ASSETS
+        ).filter(
+            or_(
+                Account.name.contains('بنك'),
+                Account.name.contains('نقدية')
+            )
+        ).all()
     
     return render_template('integrated/auto_accounting.html',
         active_fiscal_year=active_fiscal_year,
-        cost_centers=cost_centers,
-        salary_accounts=salary_accounts,
-        vehicle_accounts=vehicle_accounts,
-        bank_accounts=bank_accounts
+        cost_centers=cost_centers or [],
+        salary_accounts=salary_accounts or [],
+        vehicle_accounts=vehicle_accounts or [],
+        bank_accounts=bank_accounts or [],
+        current_month=datetime.now().month,
+        current_year=datetime.now().year
     )
 
 @integrated_bp.route('/process-monthly-accounting', methods=['POST'])

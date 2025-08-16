@@ -224,7 +224,7 @@
                             <label for="month" class="form-label">الشهر</label>
                             <select class="form-select" id="month" name="month" required>
                                 {% for i in range(1, 13) %}
-                                <option value="{{ i }}" {% if i == moment().month %}selected{% endif %}>
+                                <option value="{{ i }}" {% if i == current_month %}selected{% endif %}>
                                     {{ i }} - 
                                     {% if i == 1 %}يناير{% elif i == 2 %}فبراير{% elif i == 3 %}مارس{% elif i == 4 %}أبريل{% elif i == 5 %}مايو{% elif i == 6 %}يونيو{% elif i == 7 %}يوليو{% elif i == 8 %}أغسطس{% elif i == 9 %}سبتمبر{% elif i == 10 %}أكتوبر{% elif i == 11 %}نوفمبر{% elif i == 12 %}ديسمبر{% endif %}
                                 </option>
@@ -236,7 +236,7 @@
                             <label for="year" class="form-label">السنة</label>
                             <select class="form-select" id="year" name="year" required>
                                 {% for year in range(2020, 2030) %}
-                                <option value="{{ year }}" {% if year == moment().year %}selected{% endif %}>{{ year }}</option>
+                                <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
                                 {% endfor %}
                             </select>
                         </div>

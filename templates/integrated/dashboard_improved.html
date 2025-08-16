@@ -1,0 +1,468 @@
+{% extends "layout.html" %}
+
+{% block title %}لوحة التحكم المتكاملة{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* تحسين التصميم العام */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+    }
+    
+    .container-fluid {
+        padding: 20px;
+    }
+    
+    /* بطاقات الإحصائيات */
+    .stats-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .stats-label {
+        font-size: 1.1rem;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+    
+    .stats-label i {
+        margin-left: 8px;
+        color: #667eea;
+        font-size: 1.3rem;
+    }
+    
+    /* بطاقات الرسوم البيانية */
+    .chart-container {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* القائمة الجانبية */
+    .main-content {
+        margin-right: 0;
+        transition: margin-right 0.3s ease;
+    }
+    
+    .page-header {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        text-align: center;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    
+    .page-header h1 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .page-header p {
+        color: #7f8c8d;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+    
+    .page-header i {
+        color: #667eea;
+        margin-left: 15px;
+        font-size: 2.5rem;
+    }
+    
+    /* الإجراءات السريعة */
+    .quick-actions {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+    
+    .action-btn {
+        display: block;
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 15px;
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .action-btn i {
+        margin-left: 10px;
+        font-size: 1.2rem;
+    }
+    
+    /* المهام العاجلة */
+    .urgent-tasks {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+    
+    .urgent-task {
+        padding: 15px;
+        border-right: 4px solid #e74c3c;
+        background: rgba(231, 76, 60, 0.1);
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
+    
+    .urgent-task:last-child {
+        margin-bottom: 0;
+    }
+    
+    .urgent-task a {
+        color: #e74c3c;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    
+    .urgent-task a:hover {
+        text-decoration: underline;
+    }
+    
+    /* استجابة للهواتف */
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 15px;
+        }
+        
+        .stats-card {
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+        }
+        
+        .page-header {
+            padding: 20px;
+        }
+        
+        .page-header h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- تضمين القائمة الجانبية -->
+{% include 'includes/sidebar_integrated.html' %}
+
+<div class="main-content" id="main-content">
+    <!-- العنوان الرئيسي -->
+    <div class="page-header">
+        <h1>
+            <i class="fas fa-tachometer-alt"></i>
+            لوحة التحكم المتكاملة
+        </h1>
+        <p>نظرة شاملة على الموظفين والسيارات والمحاسبة</p>
+    </div>
+
+    <!-- الإحصائيات الرئيسية -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number counter" data-target="{{ total_employees }}">0</div>
+                <div class="stats-label">
+                    <i class="fas fa-users"></i> إجمالي الموظفين
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number counter" data-target="{{ total_vehicles }}">0</div>
+                <div class="stats-label">
+                    <i class="fas fa-car"></i> إجمالي السيارات
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ "{:,.0f}".format(total_payroll) }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-money-bill-wave"></i> كشف الرواتب (ريال)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ "{:,.0f}".format(total_rental_cost) }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-file-invoice-dollar"></i> إيجارات السيارات (ريال)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="row">
+        <!-- رسم بياني لحالة السيارات -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h4 class="text-center mb-3">
+                    <i class="fas fa-chart-pie text-primary"></i>
+                    حالة السيارات
+                </h4>
+                <canvas id="vehicleStatusChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+        
+        <!-- رسم بياني للحضور -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h4 class="text-center mb-3">
+                    <i class="fas fa-chart-line text-success"></i>
+                    الحضور خلال آخر 7 أيام
+                </h4>
+                <canvas id="attendanceChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإجراءات السريعة والمهام العاجلة -->
+    <div class="row">
+        <!-- الإجراءات السريعة -->
+        <div class="col-lg-8">
+            <div class="quick-actions">
+                <h5 class="mb-3"><i class="fas fa-bolt text-warning"></i> الإجراءات السريعة</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('integrated.auto_accounting') }}" class="action-btn">
+                            <i class="fas fa-calculator"></i>
+                            الربط المحاسبي التلقائي
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('integrated.comprehensive_report') }}" class="action-btn">
+                            <i class="fas fa-file-alt"></i>
+                            التقرير الشامل
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('employees.index') }}" class="action-btn">
+                            <i class="fas fa-user-plus"></i>
+                            إضافة موظف جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- المهام العاجلة -->
+        <div class="col-lg-4">
+            <div class="urgent-tasks">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-danger"></i> المهام العاجلة</h5>
+                {% if urgent_tasks %}
+                    {% for task in urgent_tasks %}
+                    <div class="urgent-task">
+                        <a href="{{ task.url }}">{{ task.title }}</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">لا توجد مهام عاجلة حالياً</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تضمين مكتبة Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// دالة تحريك العدادات
+function animateCounters() {
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target')) || parseInt(counter.innerText);
+        let count = 0;
+        const increment = target / 100;
+        
+        const timer = setInterval(() => {
+            count += increment;
+            if (count >= target) {
+                counter.innerText = target;
+                clearInterval(timer);
+            } else {
+                counter.innerText = Math.ceil(count);
+            }
+        }, 20);
+    });
+}
+
+// دالة تهيئة الرسوم البيانية للأقسام
+function initializeDepartmentCharts() {
+    // رسم بياني لحالة السيارات
+    const vehicleCtx = document.getElementById('vehicleStatusChart').getContext('2d');
+    new Chart(vehicleCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['متاحة', 'مؤجرة', 'في الورشة', 'أخرى'],
+            datasets: [{
+                data: [{{ vehicles_available }}, {{ vehicles_rented }}, {{ vehicles_in_workshop }}, 0],
+                backgroundColor: [
+                    '#28a745',
+                    '#ffc107', 
+                    '#dc3545',
+                    '#6c757d'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+
+    // رسم بياني للحضور
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: {{ last_7_days | safe }},
+            datasets: [{
+                label: 'عدد الحاضرين',
+                data: {{ attendance_7_days | safe }},
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#007bff',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(0,0,0,0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// تشغيل الدوال عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    animateCounters();
+    initializeDepartmentCharts();
+});
+
+// وظيفة تبديل القائمة الجانبية
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    
+    if (sidebar) {
+        sidebar.classList.toggle('show');
+        if (sidebar.classList.contains('show')) {
+            mainContent.style.marginRight = '280px';
+        } else {
+            mainContent.style.marginRight = '0';
+        }
+    }
+}
+
+// إغلاق القائمة الجانبية عند النقر خارجها
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = event.target.closest('button');
+    
+    if (sidebar && sidebar.classList.contains('show') && 
+        !sidebar.contains(event.target) && 
+        !toggleBtn) {
+        sidebar.classList.remove('show');
+        document.getElementById('main-content').style.marginRight = '0';
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+
+{% block title %}التقرير الشامل{% endblock %}
+
+{% block content %}
+<!-- تضمين القائمة الجانبية -->
+{% include 'includes/sidebar_integrated.html' %}
+
+<div class="main-content" id="main-content">
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-file-alt"></i>
+                            التقرير الشامل
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- فلاتر التقرير -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label for="start_date" class="form-label">من تاريخ</label>
+                                <input type="date" class="form-control" id="start_date" value="{{ start_date }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="end_date" class="form-label">إلى تاريخ</label>
+                                <input type="date" class="form-control" id="end_date" value="{{ end_date }}">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="department" class="form-label">القسم</label>
+                                <select class="form-select" id="department">
+                                    <option value="">جميع الأقسام</option>
+                                    {% for dept in departments %}
+                                    <option value="{{ dept.id }}">{{ dept.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-primary" onclick="updateReport()">
+                                    <i class="fas fa-search"></i>
+                                    تحديث التقرير
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- الإحصائيات الموجزة -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card bg-primary text-white">
+                                    <div class="card-body text-center">
+                                        <h3>{{ summary_stats.total_employees }}</h3>
+                                        <p class="mb-0">إجمالي الموظفين</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-success text-white">
+                                    <div class="card-body text-center">
+                                        <h3>{{ summary_stats.total_vehicles }}</h3>
+                                        <p class="mb-0">إجمالي السيارات</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h3>{{ summary_stats.total_attendance_records }}</h3>
+                                        <p class="mb-0">سجلات الحضور</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h3>{{ "{:,.0f}".format(summary_stats.total_payroll) }}</h3>
+                                        <p class="mb-0">إجمالي الرواتب (ريال)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- تفاصيل البيانات -->
+                        <div class="row">
+                            <!-- الموظفين -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-users"></i> الموظفين ({{ employees|length }})</h6>
+                                    </div>
+                                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                        {% if employees %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>الاسم</th>
+                                                        <th>القسم</th>
+                                                        <th>الحالة</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for employee in employees[:10] %}
+                                                    <tr>
+                                                        <td>{{ employee.name }}</td>
+                                                        <td>{{ employee.department.name if employee.department else 'غير محدد' }}</td>
+                                                        <td>
+                                                            <span class="badge bg-success">نشط</span>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% else %}
+                                        <p class="text-muted text-center">لا توجد بيانات موظفين</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- السيارات -->
+                            <div class="col-lg-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="fas fa-car"></i> السيارات ({{ vehicles|length }})</h6>
+                                    </div>
+                                    <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                        {% if vehicles %}
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>رقم اللوحة</th>
+                                                        <th>النوع</th>
+                                                        <th>الحالة</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for vehicle in vehicles[:10] %}
+                                                    <tr>
+                                                        <td>{{ vehicle.plate_number }}</td>
+                                                        <td>{{ vehicle.make }} {{ vehicle.model }}</td>
+                                                        <td>
+                                                            {% if vehicle.status == 'available' %}
+                                                            <span class="badge bg-success">متاحة</span>
+                                                            {% elif vehicle.status == 'rented' %}
+                                                            <span class="badge bg-warning">مؤجرة</span>
+                                                            {% elif vehicle.status == 'in_workshop' %}
+                                                            <span class="badge bg-danger">في الورشة</span>
+                                                            {% else %}
+                                                            <span class="badge bg-secondary">{{ vehicle.status }}</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        {% else %}
+                                        <p class="text-muted text-center">لا توجد بيانات سيارات</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- أزرار التصدير -->
+                        <div class="row">
+                            <div class="col-12 text-center">
+                                <hr>
+                                <h5>تصدير التقرير</h5>
+                                <button class="btn btn-success me-2" onclick="exportToExcel()">
+                                    <i class="fas fa-file-excel"></i>
+                                    تصدير إلى Excel
+                                </button>
+                                <button class="btn btn-danger me-2" onclick="exportToPDF()">
+                                    <i class="fas fa-file-pdf"></i>
+                                    تصدير إلى PDF
+                                </button>
+                                <button class="btn btn-info" onclick="window.print()">
+                                    <i class="fas fa-print"></i>
+                                    طباعة
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateReport() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    const department = document.getElementById('department').value;
+    
+    let url = window.location.pathname + '?';
+    if (startDate) url += 'start_date=' + startDate + '&';
+    if (endDate) url += 'end_date=' + endDate + '&';
+    if (department) url += 'department=' + department + '&';
+    
+    window.location.href = url;
+}
+
+function exportToExcel() {
+    alert('سيتم تطوير ميزة التصدير إلى Excel قريباً');
+}
+
+function exportToPDF() {
+    alert('سيتم تطوير ميزة التصدير إلى PDF قريباً');
+}
+
+// وظيفة تبديل القائمة الجانبية
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    
+    if (sidebar) {
+        sidebar.classList.toggle('show');
+        if (sidebar.classList.contains('show')) {
+            mainContent.style.marginRight = '280px';
+        } else {
+            mainContent.style.marginRight = '0';
+        }
+    }
+}
+</script>
+{% endblock %}

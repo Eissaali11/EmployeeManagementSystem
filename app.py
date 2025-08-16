@@ -373,7 +373,7 @@ with app.app_context():
     from routes.accounting_extended import accounting_ext_bp
     from routes.analytics_simple import analytics_simple_bp
     from routes.vehicle_operations import vehicle_operations_bp
-    from routes.integrated_management import integrated_bp
+    from routes.integrated_simple import integrated_bp
 
     # تعطيل حماية CSRF لطرق معينة
     csrf.exempt(auth_bp)
