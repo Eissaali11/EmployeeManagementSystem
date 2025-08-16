@@ -371,6 +371,7 @@ with app.app_context():
     from routes.device_assignment import device_assignment_bp
     from routes.accounting import accounting_bp
     from routes.accounting_extended import accounting_ext_bp
+    from routes.analytics_direct import analytics_direct_bp
     from routes.vehicle_operations import vehicle_operations_bp
 
     # تعطيل حماية CSRF لطرق معينة
@@ -404,6 +405,7 @@ with app.app_context():
     app.register_blueprint(vehicle_operations_bp, url_prefix='/vehicle-operations')
     app.register_blueprint(accounting_bp, url_prefix="/accounting")
     app.register_blueprint(accounting_ext_bp, url_prefix="/accounting")
+    app.register_blueprint(analytics_direct_bp)
     
     # استيراد وتسجيل مسار صفحة الهبوط - مسار منفصل عن النظام
     from routes.landing import landing_bp

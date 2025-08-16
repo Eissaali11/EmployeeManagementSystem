@@ -59,7 +59,14 @@ def register_blueprints(app):
     from routes.fees_costs import fees_costs_bp
     from routes.accounting import accounting_bp
     from routes.accounting_extended import accounting_ext_bp
-    from routes.simple_analytics import simple_analytics_bp
+    
+    # استيراد blueprint التحليل المالي
+    try:
+        from routes.analytics_direct import analytics_direct_bp
+        analytics_available = True
+    except ImportError as e:
+        print(f"خطأ في استيراد التحليل المالي: {e}")
+        analytics_available = False
     
     # تسجيل المسارات
     app.register_blueprint(auth_bp)
@@ -74,7 +81,13 @@ def register_blueprints(app):
     app.register_blueprint(fees_costs_bp)
     app.register_blueprint(accounting_bp)
     app.register_blueprint(accounting_ext_bp)
-    app.register_blueprint(simple_analytics_bp)
+    
+    # تسجيل blueprint التحليل المالي إذا كان متاحاً
+    if analytics_available:
+        app.register_blueprint(analytics_direct_bp)
+        print("تم تسجيل blueprint التحليل المالي بنجاح")
+    else:
+        print("لم يتم تسجيل blueprint التحليل المالي")
 
 def register_error_handlers(app):
     """تسجيل معالجات الأخطاء"""
