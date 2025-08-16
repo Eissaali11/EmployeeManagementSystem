@@ -1052,13 +1052,17 @@ def export_operation_excel(operation_id):
             
             # ملء البيانات - أولوية للموظف المسجل في النظام
             if employee:
+                # الحصول على بيانات الجوال للموظف
+                from models import MobileDevice
+                emp_mobile_device = MobileDevice.query.filter_by(employee_id=employee.id).first()
+                
                 driver_values = [
                     employee.name or '',
                     getattr(employee, 'employee_id', '') or '',
                     employee.national_id or '',
                     employee.mobile or '',
-                    getattr(employee, 'mobilePersonal', '') or '',
-                    getattr(employee, 'mobile_imei', '') or '',
+                    emp_mobile_device.phone_number if emp_mobile_device else '',
+                    emp_mobile_device.imei if emp_mobile_device else '',
                     employee.departments[0].name if employee.departments else '',
                     employee.job_title or '',
                     employee.join_date.strftime('%Y-%m-%d') if employee.join_date else '',
@@ -1069,14 +1073,24 @@ def export_operation_excel(operation_id):
                     employee.nationality or ''
                 ]
             elif current_driver_info:
+                # البحث عن بيانات الجوال للسائق الحالي إذا كان موجود في النظام
+                from models import MobileDevice
+                driver_mobile = None
+                if current_driver_info.get('residency_number'):
+                    driver_employee = Employee.query.filter_by(
+                        national_id=current_driver_info.get('residency_number')
+                    ).first()
+                    if driver_employee:
+                        driver_mobile = MobileDevice.query.filter_by(employee_id=driver_employee.id).first()
+                
                 # استخدام بيانات السائق من نموذج التسليم مع القيم الافتراضية
                 driver_values = [
                     current_driver_info.get('name', '') or operation.requester.username or '',
                     '', # الرقم الوظيفي - غير متوفر
                     current_driver_info.get('residency_number', '') or '',
                     current_driver_info.get('phone', '') or '',
-                    '', # رقم جوال العمل
-                    '', # رقم IMEI
+                    driver_mobile.phone_number if driver_mobile else '', # رقم جوال العمل
+                    driver_mobile.imei if driver_mobile else '', # رقم IMEI
                     '', # القسم - غير متوفر
                     '', # المنصب - غير متوفر
                     '', # تاريخ التوظيف - غير متوفر
@@ -1087,14 +1101,18 @@ def export_operation_excel(operation_id):
                     ''  # الجنسية - غير متوفر
                 ]
             else:
+                # البحث عن بيانات الجوال للمستخدم الطالب
+                from models import MobileDevice
+                requester_mobile = MobileDevice.query.filter_by(employee_id=operation.requester.id).first()
+                
                 # لا توجد بيانات سائق - استخدام بيانات المستخدم الطالب
                 driver_values = [
                     operation.requester.username or '',
                     '', # الرقم الوظيفي - غير متوفر
                     '', # رقم الهوية
                     operation.requester.phone or '',
-                    '', # رقم جوال العمل
-                    '', # رقم IMEI
+                    requester_mobile.phone_number if requester_mobile else '', # رقم جوال العمل
+                    requester_mobile.imei if requester_mobile else '', # رقم IMEI
                     '', # القسم - غير متوفر
                     '', # المنصب - غير متوفر
                     '', # تاريخ التوظيف - غير متوفر
