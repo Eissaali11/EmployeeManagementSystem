@@ -625,3 +625,50 @@ def account_balance_page(account_id):
     except Exception as e:
         flash(f'خطأ في جلب تفاصيل الحساب: {str(e)}', 'danger')
         return redirect(url_for('accounting.chart_of_accounts'))
+
+
+@accounting_bp.route('/account/<int:account_id>/delete', methods=['POST'])
+@login_required
+def delete_account(account_id):
+    """حذف حساب"""
+    if not current_user.role == UserRole.ADMIN:
+        flash('غير مسموح لك بتنفيذ هذا الإجراء', 'danger')
+        return redirect(url_for('accounting.chart_of_accounts'))
+    
+    try:
+        account = Account.query.get_or_404(account_id)
+        
+        # التحقق من الشروط قبل الحذف
+        
+        # 1. التحقق من وجود حسابات فرعية
+        children_count = Account.query.filter_by(parent_id=account_id, is_active=True).count()
+        if children_count > 0:
+            flash(f'لا يمكن حذف الحساب لأنه يحتوي على {children_count} حساب فرعي', 'danger')
+            return redirect(url_for('accounting.account_balance_page', account_id=account_id))
+        
+        # 2. التحقق من وجود معاملات
+        transactions_count = TransactionEntry.query.filter_by(account_id=account_id).count()
+        if transactions_count > 0:
+            flash(f'لا يمكن حذف الحساب لأنه يحتوي على {transactions_count} معاملة مسجلة', 'danger')
+            return redirect(url_for('accounting.account_balance_page', account_id=account_id))
+        
+        # 3. التحقق من أن الرصيد صفر
+        if account.balance != 0:
+            flash(f'لا يمكن حذف الحساب لأن رصيده غير صفر ({account.balance} ريال)', 'danger')
+            return redirect(url_for('accounting.account_balance_page', account_id=account_id))
+        
+        # حفظ معلومات الحساب للسجل
+        account_info = f"{account.code} - {account.name}"
+        
+        # حذف الحساب
+        db.session.delete(account)
+        db.session.commit()
+        
+        log_activity(f"حذف الحساب: {account_info}")
+        flash(f'تم حذف الحساب {account_info} بنجاح', 'success')
+        return redirect(url_for('accounting.chart_of_accounts'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'خطأ في حذف الحساب: {str(e)}', 'danger')
+        return redirect(url_for('accounting.account_balance_page', account_id=account_id))

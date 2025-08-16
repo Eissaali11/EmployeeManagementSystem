@@ -24,6 +24,14 @@
             <a href="{{ url_for('accounting.chart_of_accounts') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-right me-2"></i>العودة للشجرة
             </a>
+            {% if current_user.role.value == 'admin' %}
+            <a href="{{ url_for('accounting.edit_account', account_id=account.id) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>تعديل الحساب
+            </a>
+            <button type="button" class="btn btn-danger" onclick="confirmDelete()">
+                <i class="fas fa-trash me-2"></i>حذف الحساب
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -359,4 +367,57 @@
     }
 }
 </style>
+
+<!-- نافذة تأكيد الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">تأكيد حذف الحساب</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>تحذير:</strong> هذا الإجراء لا يمكن التراجع عنه!
+                </div>
+                <p>هل أنت متأكد من رغبتك في حذف الحساب <strong>{{ account.code }} - {{ account.name }}</strong>؟</p>
+                
+                {% if children %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    <strong>لا يمكن الحذف:</strong> يحتوي هذا الحساب على {{ children|length }} حساب فرعي. يجب حذف أو نقل الحسابات الفرعية أولاً.
+                </div>
+                {% elif recent_transactions %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    <strong>لا يمكن الحذف:</strong> يحتوي هذا الحساب على معاملات مسجلة. يجب إلغاء المعاملات أولاً.
+                </div>
+                {% elif account.balance != 0 %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    <strong>لا يمكن الحذف:</strong> رصيد الحساب غير صفر ({{ "{:,.2f}".format(account.balance) }} ريال).
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                {% if not children and not recent_transactions and account.balance == 0 %}
+                <form method="POST" action="{{ url_for('accounting.delete_account', account_id=account.id) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>تأكيد الحذف
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
 {% endblock %}
