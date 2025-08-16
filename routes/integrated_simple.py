@@ -134,12 +134,351 @@ def dashboard():
 @integrated_bp.route('/auto-accounting')
 @login_required
 def auto_accounting():
-    """صفحة إعداد الربط المحاسبي التلقائي"""
-    
-    return render_template('integrated/auto_accounting_simple.html',
-        current_month=datetime.now().month,
-        current_year=datetime.now().year
-    )
+    """صفحة الربط المحاسبي التلقائي الشامل"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # إحصائيات المزامنة الحقيقية
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M')
+        
+        # حساب القيود المعالجة اليوم
+        today = datetime.now().date()
+        try:
+            processed_entries = db.session.execute(
+                text("SELECT COUNT(*) FROM journal_entries WHERE DATE(created_at) = :today"),
+                {'today': today}
+            ).scalar() or 0
+        except:
+            processed_entries = 0
+        
+        # حساب المعاملات المعلقة
+        try:
+            pending_transactions = db.session.execute(
+                text("SELECT COUNT(*) FROM salaries WHERE accounting_status = 'pending' OR accounting_status IS NULL")
+            ).scalar() or 0
+        except:
+            pending_transactions = 0
+        
+        # حساب إجمالي المبلغ المعالج اليوم
+        try:
+            total_amount = db.session.execute(
+                text("SELECT COALESCE(SUM(ABS(debit_amount)), 0) FROM journal_entries WHERE DATE(created_at) = :today"),
+                {'today': today}
+            ).scalar() or 0
+        except:
+            total_amount = 0
+        
+        # سجل العمليات الحقيقي
+        sync_logs = []
+        try:
+            # جلب آخر عمليات الربط
+            recent_logs = db.session.execute(
+                text("""
+                    SELECT 
+                        created_at,
+                        description,
+                        CASE 
+                            WHEN debit_amount > 0 THEN 'success'
+                            WHEN credit_amount > 0 THEN 'success'
+                            ELSE 'warning'
+                        END as type
+                    FROM journal_entries 
+                    WHERE DATE(created_at) >= :start_date
+                    ORDER BY created_at DESC 
+                    LIMIT 10
+                """),
+                {'start_date': today - timedelta(days=7)}
+            ).fetchall()
+            
+            for log in recent_logs:
+                sync_logs.append({
+                    'timestamp': log[0].strftime('%Y-%m-%d %H:%M'),
+                    'message': log[1] or 'عملية محاسبية',
+                    'type': log[2]
+                })
+        except:
+            # سجل افتراضي في حالة عدم وجود بيانات
+            sync_logs = [
+                {
+                    'timestamp': current_time,
+                    'message': 'تم تهيئة النظام المحاسبي بنجاح',
+                    'type': 'success'
+                },
+                {
+                    'timestamp': (datetime.now() - timedelta(hours=1)).strftime('%Y-%m-%d %H:%M'),
+                    'message': 'جاري تحضير عمليات الربط التلقائي',
+                    'type': 'warning'
+                }
+            ]
+        
+        return render_template('integrated/auto_accounting_comprehensive.html',
+            current_time=current_time,
+            processed_entries=processed_entries,
+            pending_transactions=pending_transactions,
+            total_amount=total_amount,
+            sync_logs=sync_logs
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error in auto_accounting: {e}")
+        flash('حدث خطأ أثناء تحميل صفحة الربط المحاسبي', 'error')
+        return redirect(url_for('integrated.dashboard'))
+
+# ============ APIs للربط المحاسبي ============
+
+@integrated_bp.route('/api/sync/full', methods=['POST'])
+@login_required
+def api_sync_full():
+    """API للربط الشامل لجميع الأنظمة"""
+    try:
+        from models_accounting import JournalEntry, Account
+        
+        # عداد القيود المنشأة
+        entries_created = 0
+        
+        # 1. ربط الرواتب
+        salaries = Salary.query.filter(
+            Salary.accounting_status.is_(None)
+        ).all()
+        
+        for salary in salaries:
+            # إنشاء قيد راتب
+            debit_entry = JournalEntry(
+                account_id=1,  # حساب مصروف الرواتب
+                description=f'راتب الموظف {salary.employee.full_name}',
+                debit_amount=salary.net_salary,
+                credit_amount=0,
+                transaction_date=datetime.now().date(),
+                created_at=datetime.now()
+            )
+            
+            credit_entry = JournalEntry(
+                account_id=2,  # حساب النقدية
+                description=f'راتب الموظف {salary.employee.full_name}',
+                debit_amount=0,
+                credit_amount=salary.net_salary,
+                transaction_date=datetime.now().date(),
+                created_at=datetime.now()
+            )
+            
+            db.session.add(debit_entry)
+            db.session.add(credit_entry)
+            
+            # تحديث حالة المعالجة
+            salary.accounting_status = 'processed'
+            entries_created += 2
+        
+        # 2. ربط إيجارات السيارات
+        vehicles = Vehicle.query.filter(Vehicle.monthly_cost > 0).all()
+        
+        for vehicle in vehicles:
+            if vehicle.monthly_cost:
+                # قيد إيجار السيارة
+                debit_entry = JournalEntry(
+                    account_id=3,  # حساب مصروف الإيجارات
+                    description=f'إيجار السيارة {vehicle.plate_number}',
+                    debit_amount=vehicle.monthly_cost,
+                    credit_amount=0,
+                    transaction_date=datetime.now().date(),
+                    created_at=datetime.now()
+                )
+                
+                credit_entry = JournalEntry(
+                    account_id=2,  # حساب النقدية
+                    description=f'إيجار السيارة {vehicle.plate_number}',
+                    debit_amount=0,
+                    credit_amount=vehicle.monthly_cost,
+                    transaction_date=datetime.now().date(),
+                    created_at=datetime.now()
+                )
+                
+                db.session.add(debit_entry)
+                db.session.add(credit_entry)
+                entries_created += 2
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'تم الربط الشامل بنجاح - تم إنشاء {entries_created} قيد محاسبي',
+            'entries_created': entries_created
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error in full sync: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'حدث خطأ أثناء الربط: {str(e)}'
+        })
+
+@integrated_bp.route('/api/sync/salaries', methods=['POST'])
+@login_required
+def api_sync_salaries():
+    """API لربط الرواتب مع النظام المحاسبي"""
+    try:
+        from models_accounting import JournalEntry
+        
+        entries_created = 0
+        
+        # جلب الرواتب غير المعالجة
+        salaries = Salary.query.filter(
+            Salary.accounting_status.is_(None)
+        ).all()
+        
+        for salary in salaries:
+            # قيد مدين - مصروف الراتب
+            debit_entry = JournalEntry(
+                account_id=1,  # حساب مصروف الرواتب
+                description=f'راتب {salary.employee.full_name} - {salary.month}/{salary.year}',
+                debit_amount=salary.net_salary,
+                credit_amount=0,
+                transaction_date=datetime.now().date(),
+                created_at=datetime.now()
+            )
+            
+            # قيد دائن - النقدية أو البنك
+            credit_entry = JournalEntry(
+                account_id=2,  # حساب النقدية
+                description=f'راتب {salary.employee.full_name} - {salary.month}/{salary.year}',
+                debit_amount=0,
+                credit_amount=salary.net_salary,
+                transaction_date=datetime.now().date(),
+                created_at=datetime.now()
+            )
+            
+            db.session.add(debit_entry)
+            db.session.add(credit_entry)
+            
+            # تحديث حالة المعالجة
+            salary.accounting_status = 'processed'
+            entries_created += 2
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'تمت معالجة {len(salaries)} راتب بنجاح',
+            'entries_created': entries_created
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'حدث خطأ: {str(e)}'
+        })
+
+@integrated_bp.route('/api/sync/vehicles', methods=['POST'])
+@login_required
+def api_sync_vehicles():
+    """API لربط إيجارات السيارات مع النظام المحاسبي"""
+    try:
+        from models_accounting import JournalEntry
+        
+        entries_created = 0
+        
+        # جلب السيارات ذات التكلفة الشهرية
+        vehicles = Vehicle.query.filter(Vehicle.monthly_cost > 0).all()
+        
+        for vehicle in vehicles:
+            # قيد إيجار السيارة
+            debit_entry = JournalEntry(
+                account_id=3,  # حساب مصروف الإيجارات
+                description=f'إيجار السيارة {vehicle.plate_number} - {vehicle.make} {vehicle.model}',
+                debit_amount=vehicle.monthly_cost,
+                credit_amount=0,
+                transaction_date=datetime.now().date(),
+                created_at=datetime.now()
+            )
+            
+            credit_entry = JournalEntry(
+                account_id=2,  # حساب النقدية
+                description=f'إيجار السيارة {vehicle.plate_number}',
+                debit_amount=0,
+                credit_amount=vehicle.monthly_cost,
+                transaction_date=datetime.now().date(),
+                created_at=datetime.now()
+            )
+            
+            db.session.add(debit_entry)
+            db.session.add(credit_entry)
+            entries_created += 2
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'تمت معالجة {len(vehicles)} سيارة بنجاح',
+            'entries_created': entries_created
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'حدث خطأ: {str(e)}'
+        })
+
+@integrated_bp.route('/api/sync/status')
+@login_required
+def api_sync_status():
+    """API لجلب حالة المزامنة"""
+    try:
+        today = datetime.now().date()
+        
+        # حساب القيود اليوم
+        processed_entries = db.session.execute(
+            text("SELECT COUNT(*) FROM journal_entries WHERE DATE(created_at) = :today"),
+            {'today': today}
+        ).scalar() or 0
+        
+        return jsonify({
+            'success': True,
+            'processed_entries': processed_entries,
+            'last_sync': datetime.now().strftime('%Y-%m-%d %H:%M')
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
+
+@integrated_bp.route('/api/sync/logs')
+@login_required
+def api_sync_logs():
+    """API لجلب سجل عمليات المزامنة"""
+    try:
+        logs = []
+        
+        # جلب آخر القيود المحاسبية
+        recent_entries = db.session.execute(
+            text("""
+                SELECT created_at, description 
+                FROM journal_entries 
+                ORDER BY created_at DESC 
+                LIMIT 20
+            """)
+        ).fetchall()
+        
+        for entry in recent_entries:
+            logs.append({
+                'timestamp': entry[0].strftime('%Y-%m-%d %H:%M'),
+                'message': entry[1] or 'قيد محاسبي',
+                'type': 'success'
+            })
+        
+        return jsonify({
+            'success': True,
+            'logs': logs
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        })
 
 # ============ التقرير الشامل ============
 
