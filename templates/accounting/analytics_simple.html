@@ -1,0 +1,239 @@
+{% extends "layout.html" %}
+
+{% block title %}التحليل المالي المبسط{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        التحليل المالي المبسط - البيانات الحقيقية
+                    </h4>
+                    <small>آخر تحديث: {{ data.last_updated }}</small>
+                </div>
+                <div class="card-body">
+                    
+                    {% if error %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        تم عرض البيانات الأساسية بسبب: {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <!-- الإحصائيات الأساسية -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-primary text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-users me-2"></i>الموظفين</h5>
+                                    <h2>{{ data.basic_stats.total_employees }}</h2>
+                                    <small>إجمالي الموظفين</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-success text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-building me-2"></i>الأقسام</h5>
+                                    <h2>{{ data.basic_stats.total_departments }}</h2>
+                                    <small>عدد الأقسام</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-info text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-exchange-alt me-2"></i>المعاملات</h5>
+                                    <h2>{{ data.basic_stats.total_transactions }}</h2>
+                                    <small>إجمالي المعاملات</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-warning text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-list me-2"></i>الحسابات</h5>
+                                    <h2>{{ data.basic_stats.total_accounts }}</h2>
+                                    <small>دليل الحسابات</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الملخص المالي -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-dollar-sign me-2"></i>الملخص المالي</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-center p-3">
+                                                <h5>إجمالي المبالغ</h5>
+                                                <h4 class="text-primary">{{ "{:,.0f}".format(data.financial_summary.total_amount) }} ريال</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3">
+                                                <h5>مجموع الرواتب</h5>
+                                                <h4 class="text-success">{{ "{:,.0f}".format(data.financial_summary.total_salaries) }} ريال</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="text-center p-3">
+                                                <h5>مصاريف المركبات</h5>
+                                                <h4 class="text-warning">{{ "{:,.0f}".format(data.financial_summary.total_vehicle_expenses) }} ريال</h4>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="text-center p-3">
+                                                <h5>معاملات الشهر</h5>
+                                                <h4 class="text-info">{{ "{:,.0f}".format(data.financial_summary.monthly_total) }} ريال</h4>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>توزيع الحسابات</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="accountsChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- آخر المعاملات -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-history me-2"></i>آخر المعاملات</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if data.recent_activity %}
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>رقم المعاملة</th>
+                                                    <th>النوع</th>
+                                                    <th>المبلغ</th>
+                                                    <th>التاريخ</th>
+                                                    <th>الوصف</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for transaction in data.recent_activity %}
+                                                <tr>
+                                                    <td><strong>#{{ transaction.id }}</strong></td>
+                                                    <td>
+                                                        <span class="badge bg-secondary">{{ transaction.type }}</span>
+                                                    </td>
+                                                    <td>{{ "{:,.0f}".format(transaction.amount) }} ريال</td>
+                                                    <td>{{ transaction.date }}</td>
+                                                    <td>{{ transaction.description[:50] }}...</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center p-4">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <h5>لا توجد معاملات مسجلة</h5>
+                                        <p class="text-muted">ابدأ بإضافة المعاملات المحاسبية لعرض التحليل المالي</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- روابط سريعة -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-link me-2"></i>روابط سريعة</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('accounting.dashboard') }}" class="btn btn-primary w-100 mb-2">
+                                                <i class="fas fa-tachometer-alt me-2"></i>لوحة المحاسبة
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('accounting.accounts') }}" class="btn btn-success w-100 mb-2">
+                                                <i class="fas fa-list me-2"></i>دليل الحسابات
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('accounting.transactions') }}" class="btn btn-info w-100 mb-2">
+                                                <i class="fas fa-exchange-alt me-2"></i>المعاملات
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <a href="{{ url_for('accounting_extended.salary_processing') }}" class="btn btn-warning w-100 mb-2">
+                                                <i class="fas fa-money-check-alt me-2"></i>معالجة الرواتب
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient-primary { background: linear-gradient(45deg, #4e73df, #224abe); }
+.bg-gradient-success { background: linear-gradient(45deg, #1cc88a, #13855c); }
+.bg-gradient-danger { background: linear-gradient(45deg, #e74a3b, #be2617); }
+.bg-gradient-info { background: linear-gradient(45deg, #36b9cc, #258391); }
+.bg-gradient-warning { background: linear-gradient(45deg, #f6c23e, #d4a72c); }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// رسم توزيع الحسابات
+const ctx = document.getElementById('accountsChart').getContext('2d');
+new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['حسابات الإيرادات', 'حسابات المصروفات', 'حسابات أخرى'],
+        datasets: [{
+            data: [
+                {{ data.account_breakdown.revenue_accounts }},
+                {{ data.account_breakdown.expense_accounts }},
+                {{ data.account_breakdown.total_accounts - data.account_breakdown.revenue_accounts - data.account_breakdown.expense_accounts }}
+            ],
+            backgroundColor: ['#1cc88a', '#e74a3b', '#36b9cc']
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+});
+</script>
+{% endblock %}
