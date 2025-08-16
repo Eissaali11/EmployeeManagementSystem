@@ -14,6 +14,8 @@ from app import db
 from models import Employee, Department, Vehicle, Attendance, Salary, User
 from models_accounting import Transaction, Account, FiscalYear
 import os
+import json
+from flask import current_app
 from openai import OpenAI
 
 integrated_bp = Blueprint('integrated', __name__)

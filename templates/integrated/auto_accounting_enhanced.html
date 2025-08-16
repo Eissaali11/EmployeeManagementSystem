@@ -907,6 +907,7 @@ function enableAI() {
 // وظائف الذكاء الاصطناعي الجديدة
 function startAIAnalysis() {
     showAlert('جاري تشغيل نظام التحليل المالي الذكي...', 'info');
+    console.log('Starting AI Analysis...');
     
     fetch('/integrated/api/ai/analysis', {
         method: 'POST',
@@ -915,8 +916,12 @@ function startAIAnalysis() {
         },
         body: JSON.stringify({})
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('AI Analysis Response Status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('AI Analysis Data:', data);
         if (data.success) {
             showAlert('تم إنجاز التحليل المالي الذكي بنجاح!', 'success');
             
@@ -970,6 +975,7 @@ function startAIAnalysis() {
     .catch(error => {
         showAlert('خطأ في الاتصال بنظام الذكاء الاصطناعي', 'error');
         console.error('AI Analysis Error:', error);
+        addLogEntry('خطأ في نظام الذكاء الاصطناعي: ' + error.message, 'error');
     });
 }
 
