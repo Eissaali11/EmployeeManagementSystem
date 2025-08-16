@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الربط المحاسبي التلقائي - نُظم</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body style="padding-right: 0; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh;">
+    
+    <!-- شريط علوي مع زر القائمة الجانبية -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <button class="btn btn-outline-light me-3" type="button" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-calculator me-2"></i>
+                نُظم - الربط المحاسبي التلقائي
+            </a>
+        </div>
+    </nav>
+    
+    <!-- تضمين القائمة الجانبية -->
+    {% include 'includes/sidebar_integrated.html' %}
+    
+    <!-- المحتوى الأساسي مع padding-top لتجنب تداخل الشريط العلوي -->
+    <div style="padding-top: 70px; margin-right: 0; transition: margin-right 0.3s ease;" id="main-content">
+
+
+
+<style>
+    .accounting-section {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-left: 5px solid #007bff;
+    }
+    
+    .process-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: transform 0.3s ease;
+    }
+    
+    .process-card:hover {
+        transform: translateY(-3px);
+    }
+    
+    .account-mapping {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .status-inactive {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .integration-flow {
+        background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .flow-step {
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+<div class="container-fluid mt-4">
+    <!-- العنوان الرئيسي -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="text-center mb-3">
+                <i class="fas fa-link text-primary"></i>
+                نظام الربط المحاسبي التلقائي
+            </h1>
+            <p class="text-center text-muted">ربط أنظمة الموظفين والسيارات والحضور مع النظام المحاسبي تلقائياً</p>
+        </div>
+    </div>
+
+    <!-- حالة النظام -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="accounting-section">
+                <h3 class="mb-3">
+                    <i class="fas fa-cogs text-primary"></i>
+                    حالة النظام
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-success">
+                            <i class="fas fa-check-circle"></i>
+                        </h4>
+                        <p>السنة المالية</p>
+                        {% if active_fiscal_year %}
+                        <span class="status-badge status-active">{{ active_fiscal_year.name }}</span>
+                        {% else %}
+                        <span class="status-badge status-inactive">غير محددة</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-info">
+                            <i class="fas fa-sitemap"></i>
+                        </h4>
+                        <p>مراكز التكلفة</p>
+                        <span class="status-badge status-active">{{ cost_centers|length }} مركز</span>
+                    </div>
+                    
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-warning">
+                            <i class="fas fa-list-alt"></i>
+                        </h4>
+                        <p>حسابات الرواتب</p>
+                        <span class="status-badge status-active">{{ salary_accounts|length }} حساب</span>
+                    </div>
+                    
+                    <div class="col-md-3 text-center">
+                        <h4 class="text-success">
+                            <i class="fas fa-car"></i>
+                        </h4>
+                        <p>حسابات السيارات</p>
+                        <span class="status-badge status-active">{{ vehicle_accounts|length }} حساب</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- سير العمل التكاملي -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="integration-flow">
+                <h3 class="text-center mb-4">
+                    <i class="fas fa-project-diagram"></i>
+                    سير العمل التكاملي
+                </h3>
+                
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="flow-step text-center">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <h6>الحضور والرواتب</h6>
+                            <small>تسجيل الحضور → حساب الرواتب → قيود محاسبية</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="flow-step text-center">
+                            <i class="fas fa-car fa-2x mb-2"></i>
+                            <h6>إيجارات السيارات</h6>
+                            <small>عقود الإيجار → قيود شهرية → خصومات الورش</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="flow-step text-center">
+                            <i class="fas fa-tools fa-2x mb-2"></i>
+                            <h6>مصروفات الصيانة</h6>
+                            <small>دخول الورشة → تكاليف الإصلاح → قيود المصروفات</small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="flow-step text-center">
+                            <i class="fas fa-chart-line fa-2x mb-2"></i>
+                            <h6>التقارير المالية</h6>
+                            <small>تجميع البيانات → تقارير شاملة → تحليل الأداء</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معالجة القيود الشهرية -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="accounting-section">
+                <h4 class="mb-3">
+                    <i class="fas fa-calendar-alt text-primary"></i>
+                    معالجة القيود الشهرية
+                </h4>
+                
+                <form method="POST" action="{{ url_for('integrated.process_monthly_accounting') }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="month" class="form-label">الشهر</label>
+                            <select class="form-select" id="month" name="month" required>
+                                {% for i in range(1, 13) %}
+                                <option value="{{ i }}" {% if i == moment().month %}selected{% endif %}>
+                                    {{ i }} - 
+                                    {% if i == 1 %}يناير{% elif i == 2 %}فبراير{% elif i == 3 %}مارس{% elif i == 4 %}أبريل{% elif i == 5 %}مايو{% elif i == 6 %}يونيو{% elif i == 7 %}يوليو{% elif i == 8 %}أغسطس{% elif i == 9 %}سبتمبر{% elif i == 10 %}أكتوبر{% elif i == 11 %}نوفمبر{% elif i == 12 %}ديسمبر{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="year" class="form-label">السنة</label>
+                            <select class="form-select" id="year" name="year" required>
+                                {% for year in range(2020, 2030) %}
+                                <option value="{{ year }}" {% if year == moment().year %}selected{% endif %}>{{ year }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>ملاحظة:</strong> ستتم معالجة القيود التالية:
+                        <ul class="mb-0 mt-2">
+                            <li>قيود رواتب الموظفين المدفوعة</li>
+                            <li>مصروفات صيانة السيارات</li>
+                            <li>خصومات إيجار أيام الورش</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="fas fa-play"></i>
+                        بدء المعالجة التلقائية
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="col-lg-6">
+            <div class="accounting-section">
+                <h4 class="mb-3">
+                    <i class="fas fa-map text-primary"></i>
+                    ربط الحسابات
+                </h4>
+                
+                <!-- حسابات الرواتب -->
+                <div class="account-mapping">
+                    <h6 class="text-primary">
+                        <i class="fas fa-money-bill-wave"></i>
+                        حسابات الرواتب
+                    </h6>
+                    {% for account in salary_accounts %}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>{{ account.name }}</span>
+                        <span class="badge bg-secondary">{{ account.code }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- حسابات السيارات -->
+                <div class="account-mapping">
+                    <h6 class="text-success">
+                        <i class="fas fa-car"></i>
+                        حسابات السيارات
+                    </h6>
+                    {% for account in vehicle_accounts %}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>{{ account.name }}</span>
+                        <span class="badge bg-secondary">{{ account.code }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- الحسابات البنكية -->
+                <div class="account-mapping">
+                    <h6 class="text-info">
+                        <i class="fas fa-university"></i>
+                        الحسابات البنكية
+                    </h6>
+                    {% for account in bank_accounts %}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span>{{ account.name }}</span>
+                        <span class="badge bg-secondary">{{ account.code }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- العمليات المتاحة -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i class="fas fa-tasks text-primary"></i>
+                العمليات المتاحة
+            </h4>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="process-card text-center">
+                <i class="fas fa-file-invoice-dollar fa-3x mb-3"></i>
+                <h5>قيود الرواتب التلقائية</h5>
+                <p class="mb-3">إنشاء قيود محاسبية للرواتب المدفوعة تلقائياً</p>
+                <small>مدين: مصروف الرواتب | دائن: البنك</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="process-card text-center">
+                <i class="fas fa-wrench fa-3x mb-3"></i>
+                <h5>مصروفات الصيانة</h5>
+                <p class="mb-3">تسجيل تكاليف صيانة السيارات محاسبياً</p>
+                <small>مدين: مصروف الصيانة | دائن: البنك</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6">
+            <div class="process-card text-center">
+                <i class="fas fa-percentage fa-3x mb-3"></i>
+                <h5>خصومات الإيجار</h5>
+                <p class="mb-3">حساب وتطبيق خصومات أيام الورشة</p>
+                <small>مدين: خصومات إيجار | دائن: مصروف الإيجار</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- إرشادات الاستخدام -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="accounting-section">
+                <h4 class="mb-3">
+                    <i class="fas fa-lightbulb text-warning"></i>
+                    إرشادات الاستخدام
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">خطوات المعالجة:</h6>
+                        <ol>
+                            <li>تأكد من إعداد السنة المالية النشطة</li>
+                            <li>تحقق من ربط الحسابات المحاسبية</li>
+                            <li>اختر الشهر والسنة المطلوبة</li>
+                            <li>اضغط "بدء المعالجة التلقائية"</li>
+                            <li>راجع التقارير المحاسبية</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h6 class="text-success">مميزات النظام:</h6>
+                        <ul>
+                            <li>معالجة تلقائية للقيود المحاسبية</li>
+                            <li>ربط مراكز التكلفة بالأقسام</li>
+                            <li>حساب خصومات الإيجار تلقائياً</li>
+                            <li>منع التكرار في القيود</li>
+                            <li>تقارير شاملة ومتكاملة</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- روابط سريعة -->
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center">
+                <a href="{{ url_for('integrated.comprehensive_report') }}" class="btn btn-outline-primary btn-lg me-3">
+                    <i class="fas fa-chart-bar"></i>
+                    التقرير الشامل
+                </a>
+                <a href="{{ url_for('accounting.chart_of_accounts') }}" class="btn btn-outline-success btn-lg me-3">
+                    <i class="fas fa-list-alt"></i>
+                    دليل الحسابات
+                </a>
+                <a href="{{ url_for('accounting.journal_entries') }}" class="btn btn-outline-info btn-lg">
+                    <i class="fas fa-book"></i>
+                    القيود اليومية
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// تأكيد المعالجة
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (!confirm('هل أنت متأكد من بدء المعالجة التلقائية للقيود المحاسبية؟')) {
+        e.preventDefault();
+    }
+});
+
+// تحديث حالة النظام
+function updateSystemStatus() {
+    // يمكن إضافة استدعاء AJAX هنا لتحديث حالة النظام
+    console.log('تحديث حالة النظام...');
+}
+
+// تحديث كل دقيقة
+setInterval(updateSystemStatus, 60000);
+
+// وظيفة تبديل القائمة الجانبية
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    
+    if (sidebar) {
+        sidebar.classList.toggle('show');
+        if (sidebar.classList.contains('show')) {
+            mainContent.style.marginRight = '280px';
+        } else {
+            mainContent.style.marginRight = '0';
+        }
+    }
+}
+
+// إغلاق القائمة الجانبية عند النقر خارجها
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = event.target.closest('button');
+    
+    if (sidebar && sidebar.classList.contains('show') && 
+        !sidebar.contains(event.target) && 
+        !toggleBtn) {
+        sidebar.classList.remove('show');
+        document.getElementById('main-content').style.marginRight = '0';
+    }
+});
+</script>
+</body>
+</html>

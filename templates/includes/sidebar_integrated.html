@@ -1,0 +1,159 @@
+<!-- قائمة جانبية للنظام المتكامل -->
+<div class="sidebar bg-dark" id="sidebar">
+    <div class="sidebar-header p-3">
+        <h5 class="text-white">
+            <i class="fas fa-link"></i>
+            النظام المتكامل
+        </h5>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <ul class="nav nav-pills flex-column">
+            <!-- لوحة التحكم المتكاملة -->
+            <li class="nav-item">
+                <a class="nav-link text-light" href="{{ url_for('integrated.dashboard') }}">
+                    <i class="fas fa-tachometer-alt"></i>
+                    لوحة التحكم الشاملة
+                </a>
+            </li>
+            
+            <!-- الربط المحاسبي التلقائي -->
+            <li class="nav-item">
+                <a class="nav-link text-light" href="{{ url_for('integrated.auto_accounting') }}">
+                    <i class="fas fa-calculator"></i>
+                    الربط المحاسبي التلقائي
+                </a>
+            </li>
+            
+            <!-- التقرير الشامل -->
+            <li class="nav-item">
+                <a class="nav-link text-light" href="{{ url_for('integrated.comprehensive_report') }}">
+                    <i class="fas fa-chart-line"></i>
+                    التقرير الشامل
+                </a>
+            </li>
+            
+            <hr class="sidebar-divider">
+            
+            <!-- روابط الأنظمة الفرعية -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-users"></i>
+                    إدارة الموظفين
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('employees.index') }}">قائمة الموظفين</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('attendance.index') }}">الحضور والانصراف</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('salaries.index') }}">إدارة الرواتب</a></li>
+                </ul>
+            </li>
+            
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-car"></i>
+                    إدارة السيارات
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.index') }}">قائمة السيارات</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.rentals') }}">الإيجارات</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('vehicles.workshop') }}">الورش والصيانة</a></li>
+                </ul>
+            </li>
+            
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-calculator"></i>
+                    النظام المحاسبي
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.chart_of_accounts') }}">دليل الحسابات</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.journal_entries') }}">القيود اليومية</a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('accounting.analytics') }}">التحليلات المالية</a></li>
+                </ul>
+            </li>
+            
+            <hr class="sidebar-divider">
+            
+            <!-- إعدادات النظام -->
+            <li class="nav-item">
+                <a class="nav-link text-light" href="{{ url_for('dashboard.index') }}">
+                    <i class="fas fa-home"></i>
+                    العودة للصفحة الرئيسية
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<style>
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    overflow-y: auto;
+    background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+    z-index: 1000;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.sidebar.show {
+    transform: translateX(0);
+}
+
+.sidebar-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-nav .nav-link {
+    padding: 12px 20px;
+    border-radius: 0;
+    margin: 2px 10px;
+    transition: all 0.3s ease;
+}
+
+.sidebar-nav .nav-link:hover {
+    background: rgba(255,255,255,0.1);
+    transform: translateX(5px);
+}
+
+.sidebar-nav .nav-link.active {
+    background: rgba(255,255,255,0.2);
+    color: #fff !important;
+}
+
+.sidebar-nav .nav-link i {
+    width: 20px;
+    text-align: center;
+    margin-left: 10px;
+}
+
+.sidebar-divider {
+    border-color: rgba(255,255,255,0.1);
+    margin: 10px 20px;
+}
+
+.dropdown-menu {
+    background: rgba(0,0,0,0.8);
+    border: none;
+    border-radius: 8px;
+}
+
+.dropdown-item {
+    color: #fff;
+    padding: 8px 15px;
+}
+
+.dropdown-item:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 250px;
+    }
+}
+</style>
