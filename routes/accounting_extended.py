@@ -152,12 +152,12 @@ def salary_processing():
             # التحقق من وجود معالجة سابقة لنفس الشهر
             existing_processing = Transaction.query.filter(
                 Transaction.transaction_type == TransactionType.SALARY,
-                extract('month', Transaction.transaction_date) == form.salary_month.data,
-                extract('year', Transaction.transaction_date) == form.salary_year.data
+                extract('month', Transaction.transaction_date) == int(form.month.data),
+                extract('year', Transaction.transaction_date) == form.year.data
             ).first()
             
             if existing_processing:
-                flash(f'تم معالجة رواتب شهر {form.salary_month.data}/{form.salary_year.data} مسبقاً', 'warning')
+                flash(f'تم معالجة رواتب شهر {form.month.data}/{form.year.data} مسبقاً', 'warning')
                 return render_template('accounting/salary_processing.html', form=form)
             
             # تحديد الموظفين المشمولين
@@ -213,9 +213,9 @@ def salary_processing():
                 
                 transaction = Transaction(
                     transaction_number=transaction_number,
-                    transaction_date=date(form.salary_year.data, form.salary_month.data, 1),
+                    transaction_date=date(form.year.data, int(form.month.data), 1),
                     transaction_type=TransactionType.SALARY,
-                    description=f"راتب شهر {form.salary_month.data}/{form.salary_year.data} - {employee.name}",
+                    description=f"راتب شهر {form.month.data}/{form.year.data} - {employee.name}",
                     total_amount=net_salary,
                     fiscal_year_id=fiscal_year.id,
                     employee_id=employee.id,

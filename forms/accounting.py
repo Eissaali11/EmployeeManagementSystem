@@ -82,8 +82,10 @@ class SalaryProcessingForm(FlaskForm):
                        ],
                        validators=[DataRequired()])
     year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
+    department_id = SelectField('القسم', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     salary_account_id = SelectField('حساب الرواتب', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
     payable_account_id = SelectField('حساب المستحقات', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    process_all = BooleanField('معالجة جميع الموظفين', default=True)
     submit = SubmitField('معالجة الرواتب')
 
 
