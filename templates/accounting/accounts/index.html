@@ -77,21 +77,34 @@
 
 <!-- Modal للتأكيد على الحذف -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>تأكيد الحذف
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                هل أنت متأكد من حذف الحساب "<span id="accountName"></span>"؟
-                <br><small class="text-danger">تحذير: لا يمكن التراجع عن هذا الإجراء</small>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-trash-alt text-danger" style="font-size: 3rem;"></i>
+                </div>
+                <h6>هل أنت متأكد من حذف الحساب؟</h6>
+                <p class="mb-2"><strong id="accountName"></strong></p>
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>تحذير:</strong> لا يمكن التراجع عن هذا الإجراء
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary btn-lg me-3" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>إلغاء
+                </button>
+                <form id="deleteForm" method="POST" style="display: inline-block;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="btn btn-danger">حذف</button>
+                    <button type="submit" class="btn btn-danger btn-lg">
+                        <i class="fas fa-trash me-2"></i>تأكيد الحذف
+                    </button>
                 </form>
             </div>
         </div>
@@ -100,11 +113,57 @@
 
 <script>
 function deleteAccount(accountId, accountName) {
+    console.log('Delete function called:', accountId, accountName);
+    
     document.getElementById('accountName').textContent = accountName;
     document.getElementById('deleteForm').action = '/accounting/accounts/' + accountId + '/delete';
     
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'), {
+        backdrop: 'static',
+        keyboard: false
+    });
     deleteModal.show();
 }
+
+// تأكد من تحميل Bootstrap بالكامل
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, Bootstrap available:', typeof bootstrap !== 'undefined');
+});
 </script>
+
+<style>
+.modal-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.modal-footer .btn {
+    min-width: 120px;
+}
+
+.modal-body .alert {
+    border-radius: 8px;
+}
+
+/* تحسين ظهور الأزرار */
+.btn-group .btn, .d-flex .btn {
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+/* تأكد من أن الأزرار ظاهرة */
+.d-flex.gap-1 {
+    gap: 0.25rem !important;
+}
+
+.d-flex.gap-1 .btn {
+    flex-shrink: 0;
+}
+</style>
 {% endblock %}
