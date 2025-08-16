@@ -12,6 +12,9 @@ from decimal import Decimal
 
 from app import db
 from models import Employee, Department, Vehicle, Attendance, Salary, User
+from models_accounting import Transaction, Account, FiscalYear
+import os
+from openai import OpenAI
 
 integrated_bp = Blueprint('integrated', __name__)
 
@@ -144,6 +147,7 @@ def auto_accounting():
         # حساب القيود المعالجة اليوم
         today = datetime.now().date()
         try:
+            from sqlalchemy import text
             processed_entries = db.session.execute(
                 text("SELECT COUNT(*) FROM transactions WHERE DATE(created_at) = :today"),
                 {'today': today}
@@ -569,3 +573,48 @@ def dashboard_stats_api():
     }
     
     return jsonify(stats)
+# ============ نظام الذكاء الاصطناعي للتحليل المالي ============
+
+@integrated_bp.route('/api/ai/analysis', methods=['POST'])
+@login_required
+def ai_financial_analysis():
+    """API للذكاء الاصطناعي لتحليل البيانات المالية"""
+    try:
+        from services.ai_financial_analyzer import AIFinancialAnalyzer
+        
+        analyzer = AIFinancialAnalyzer()
+        result = analyzer.analyze_company_finances(
+            db, Employee, Salary, Vehicle, Transaction
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        current_app.logger.error(f'AI Analysis Error: {e}')
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في تشغيل الذكاء الاصطناعي: {str(e)}'
+        })
+
+@integrated_bp.route('/api/ai/recommendations', methods=['POST'])
+@login_required  
+def ai_recommendations():
+    """توصيات ذكية لتحسين الأداء المالي"""
+    try:
+        from services.ai_financial_analyzer import AIFinancialAnalyzer
+        
+        data = request.get_json() or {}
+        focus_area = data.get('focus_area', 'general')
+        
+        analyzer = AIFinancialAnalyzer()
+        result = analyzer.get_smart_recommendations(focus_area)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        current_app.logger.error(f'AI Recommendations Error: {e}')
+        return jsonify({
+            'success': False,
+            'message': f'خطأ في الحصول على التوصيات: {str(e)}'
+        })
+

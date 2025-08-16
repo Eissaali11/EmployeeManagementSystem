@@ -552,6 +552,14 @@
                 <i class="fas fa-calendar-alt"></i>
                 جدولة تلقائية
             </button>
+            <button class="action-btn" onclick="startAIAnalysis()" style="background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);">
+                <i class="fas fa-brain"></i>
+                تحليل ذكي بالـ AI
+            </button>
+            <button class="action-btn" onclick="getAIRecommendations()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="fas fa-lightbulb"></i>
+                توصيات ذكية
+            </button>
         </div>
     </div>
 
@@ -894,6 +902,159 @@ function enableAttendanceSync() {
 
 function enableAI() {
     showAlert('ميزة الذكاء الاصطناعي قيد التطوير - متوفرة قريباً', 'info');
+}
+
+// وظائف الذكاء الاصطناعي الجديدة
+function startAIAnalysis() {
+    showAlert('جاري تشغيل نظام التحليل المالي الذكي...', 'info');
+    
+    fetch('/integrated/api/ai/analysis', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('تم إنجاز التحليل المالي الذكي بنجاح!', 'success');
+            
+            // عرض نتائج التحليل في modal
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.id = 'aiAnalysisModal';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-brain me-2"></i>تحليل مالي ذكي بالـ AI
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="ai-analysis-content">
+                                <div class="data-summary mb-4">
+                                    <h6><i class="fas fa-chart-bar me-2"></i>ملخص البيانات:</h6>
+                                    <pre class="bg-light p-3 rounded">${JSON.stringify(data.data_summary, null, 2)}</pre>
+                                </div>
+                                <div class="ai-analysis">
+                                    <h6><i class="fas fa-robot me-2"></i>التحليل الذكي:</h6>
+                                    <div class="analysis-text p-3 border rounded" style="white-space: pre-wrap;">${data.analysis}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                            <button type="button" class="btn btn-primary" onclick="exportAnalysis()">تصدير التحليل</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            const modalInstance = new bootstrap.Modal(modal);
+            modalInstance.show();
+            
+            // إزالة Modal عند الإغلاق
+            modal.addEventListener('hidden.bs.modal', function () {
+                document.body.removeChild(modal);
+            });
+            
+            addLogEntry('تم إنجاز التحليل المالي الذكي بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ في التحليل الذكي: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('خطأ في الاتصال بنظام الذكاء الاصطناعي', 'error');
+        console.error('AI Analysis Error:', error);
+    });
+}
+
+function getAIRecommendations() {
+    showAlert('جاري الحصول على التوصيات الذكية...', 'info');
+    
+    const focusAreas = ['general', 'salaries', 'vehicles', 'efficiency'];
+    let currentArea = 0;
+    
+    function getNextRecommendation() {
+        if (currentArea >= focusAreas.length) {
+            showAlert('تم الحصول على جميع التوصيات الذكية!', 'success');
+            return;
+        }
+        
+        const area = focusAreas[currentArea];
+        
+        fetch('/integrated/api/ai/recommendations', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ focus_area: area })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // عرض التوصيات في modal
+                const modal = document.createElement('div');
+                modal.className = 'modal fade';
+                modal.id = 'aiRecommendationsModal';
+                modal.innerHTML = `
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-lightbulb me-2"></i>توصيات ذكية - ${area}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="recommendations-content">
+                                    <div class="recommendations-text p-3 border rounded" style="white-space: pre-wrap;">${data.recommendations}</div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                <button type="button" class="btn btn-success" onclick="getNextAreaRecommendations()">التوصية التالية</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                const modalInstance = new bootstrap.Modal(modal);
+                modalInstance.show();
+                
+                // إزالة Modal عند الإغلاق
+                modal.addEventListener('hidden.bs.modal', function () {
+                    document.body.removeChild(modal);
+                });
+                
+                addLogEntry(`تم الحصول على توصيات ${area}`, 'success');
+            } else {
+                showAlert('حدث خطأ في الحصول على التوصيات: ' + data.message, 'error');
+            }
+            
+            currentArea++;
+        })
+        .catch(error => {
+            showAlert('خطأ في الاتصال بنظام التوصيات الذكية', 'error');
+            console.error('AI Recommendations Error:', error);
+            currentArea++;
+        });
+    }
+    
+    getNextRecommendation();
+}
+
+function exportAnalysis() {
+    showAlert('سيتم تصدير التحليل قريباً', 'info');
+}
+
+function getNextAreaRecommendations() {
+    showAlert('سيتم عرض المجال التالي', 'info');
 }
 
 // تحديث تلقائي للصفحة
