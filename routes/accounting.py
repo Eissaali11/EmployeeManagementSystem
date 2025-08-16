@@ -909,26 +909,32 @@ def edit_cost_center(center_id):
     
     center = CostCenter.query.get_or_404(center_id)
     
-    if request.method == 'POST':
+    # إنشاء النموذج وملء الخيارات
+    form = CostCenterForm(obj=center)
+    
+    # تحديد خيارات المركز الأب (باستثناء المركز الحالي)
+    parent_centers = CostCenter.query.filter(
+        CostCenter.id != center.id, 
+        CostCenter.is_active == True
+    ).order_by(CostCenter.code).all()
+    
+    form.parent_id.choices = [('', 'لا يوجد')] + [(c.id, f"{c.code} - {c.name}") for c in parent_centers]
+    
+    if form.validate_on_submit():
         try:
-            center.code = request.form.get('code')
-            center.name = request.form.get('name')
-            center.name_en = request.form.get('name_en', '')
-            center.description = request.form.get('description', '')
+            # التحقق من عدم اختيار المركز نفسه كأب
+            if form.parent_id.data and form.parent_id.data == center.id:
+                flash('لا يمكن اختيار المركز نفسه كمركز أب', 'danger')
+                return render_template('accounting/edit_cost_center.html', form=form, center=center)
             
-            parent_id = request.form.get('parent_id')
-            if parent_id and parent_id != '':
-                if int(parent_id) == center.id:
-                    flash('لا يمكن اختيار المركز نفسه كمركز أب', 'danger')
-                    return redirect(request.url)
-                center.parent_id = int(parent_id)
-            else:
-                center.parent_id = None
-            
-            budget_amount = request.form.get('budget_amount', '0')
-            center.budget_amount = float(budget_amount) if budget_amount else 0
-            
-            center.is_active = request.form.get('is_active') == 'on'
+            # تحديث بيانات المركز
+            center.code = form.code.data
+            center.name = form.name.data
+            center.name_en = form.name_en.data or ''
+            center.description = form.description.data or ''
+            center.parent_id = form.parent_id.data
+            center.budget_amount = form.budget_amount.data or 0
+            center.is_active = form.is_active.data
             center.updated_at = datetime.utcnow()
             
             db.session.commit()
@@ -941,16 +947,8 @@ def edit_cost_center(center_id):
         except Exception as e:
             db.session.rollback()
             flash(f'خطأ في تعديل مركز التكلفة: {str(e)}', 'danger')
-            return redirect(request.url)
     
-    parent_centers = CostCenter.query.filter(
-        CostCenter.id != center.id, 
-        CostCenter.is_active == True
-    ).order_by(CostCenter.code).all()
-    
-    return render_template('accounting/edit_cost_center.html',
-                         center=center,
-                         parent_centers=parent_centers)
+    return render_template('accounting/edit_cost_center.html', form=form, center=center)
 
 
 @accounting_bp.route('/cost-centers/<int:center_id>/delete', methods=['POST'])
