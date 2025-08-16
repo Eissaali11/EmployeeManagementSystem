@@ -131,8 +131,9 @@ def api_ai_predictions():
         return jsonify({'error': 'غير مسموح'}), 403
     
     try:
-        from services.ai_analytics import ai_analytics
-        predictions = ai_analytics.generate_financial_predictions()
+        from services.ai_analytics import get_ai_analytics
+        ai_service = get_ai_analytics()
+        predictions = ai_service.generate_financial_predictions()
         return jsonify(predictions)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -145,8 +146,9 @@ def api_pattern_analysis():
         return jsonify({'error': 'غير مسموح'}), 403
     
     try:
-        from services.ai_analytics import ai_analytics
-        patterns = ai_analytics.analyze_transaction_patterns()
+        from services.ai_analytics import get_ai_analytics
+        ai_service = get_ai_analytics()
+        patterns = ai_service.analyze_transaction_patterns()
         return jsonify(patterns)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -159,8 +161,9 @@ def api_budget_recommendations():
         return jsonify({'error': 'غير مسموح'}), 403
     
     try:
-        from services.ai_analytics import ai_analytics
-        recommendations = ai_analytics.generate_budget_recommendations()
+        from services.ai_analytics import get_ai_analytics
+        ai_service = get_ai_analytics()
+        recommendations = ai_service.generate_budget_recommendations()
         return jsonify(recommendations)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

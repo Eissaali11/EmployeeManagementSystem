@@ -8,8 +8,6 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from openai import OpenAI
 from sqlalchemy import text
-from models_accounting import Account, Transaction, TransactionEntry, FiscalYear
-from app import db
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +28,8 @@ class AIFinancialAnalytics:
     def get_financial_data_summary(self) -> Dict[str, Any]:
         """جمع ملخص البيانات المالية"""
         try:
+            # استيراد محلي لتجنب circular import
+            from app import db
             # إحصائيات الحسابات
             accounts_query = """
                 SELECT account_type, COUNT(*) as count, 
@@ -162,6 +162,8 @@ class AIFinancialAnalytics:
     def analyze_transaction_patterns(self) -> Dict[str, Any]:
         """تحليل أنماط المعاملات لاكتشاف الشذوذ"""
         try:
+            # استيراد محلي لتجنب circular import
+            from app import db
             # جمع بيانات المعاملات
             patterns_query = """
                 SELECT 
@@ -228,6 +230,8 @@ class AIFinancialAnalytics:
     def generate_budget_recommendations(self) -> Dict[str, Any]:
         """توليد توصيات الميزانية"""
         try:
+            # استيراد محلي لتجنب circular import
+            from app import db
             # جمع بيانات المصروفات حسب النوع
             expenses_query = """
                 SELECT a.account_type, a.name,
@@ -290,5 +294,15 @@ class AIFinancialAnalytics:
             logger.error(f"خطأ في توصيات الميزانية: {str(e)}")
             return {"error": f"خطأ في توصيات الميزانية: {str(e)}"}
 
-# إنشاء مثيل مشترك
-ai_analytics = AIFinancialAnalytics()
+# إنشاء مثيل مشترك - lazy initialization لتجنب circular import
+_ai_analytics_instance = None
+
+def get_ai_analytics():
+    """الحصول على مثيل AIFinancialAnalytics مع lazy initialization"""
+    global _ai_analytics_instance
+    if _ai_analytics_instance is None:
+        _ai_analytics_instance = AIFinancialAnalytics()
+    return _ai_analytics_instance
+
+# backward compatibility
+ai_analytics = property(get_ai_analytics)
