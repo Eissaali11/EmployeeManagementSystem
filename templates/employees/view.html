@@ -935,12 +935,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">تاريخ الميلاد</p>
                             <p class="fs-5">
-                                {% set birth_date = employee.birth_date %}
-                                {% if birth_date %}
-                                <span class="gregorian-date text-success fw-bold">
-                                    <i class="fas fa-birthday-cake me-1"></i>{{ birth_date.strftime('%d/%m/%Y') }}
+                                {% if employee.birth_date %}
+                                <span class="text-success fw-bold">
+                                    <i class="fas fa-birthday-cake me-1"></i>{{ employee.birth_date.strftime('%d/%m/%Y') }}
                                 </span>
-                                <span class="hijri-date" style="display: none;"></span>
                                 {% else %}
                                 <span class="text-warning">
                                     <i class="fas fa-calendar-times me-1"></i>غير محدد
