@@ -94,7 +94,7 @@ class CostCenter(db.Model):
     name_en = db.Column(db.String(200))  # الاسم بالإنجليزية
     description = db.Column(db.Text)  # وصف المركز
     parent_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'))  # مركز التكلفة الأب
-    manager_id = db.Column(db.Integer, db.ForeignKey('employees.id'))  # مسؤول المركز
+    # manager_id = db.Column(db.Integer, db.ForeignKey('employees.id'))  # مسؤول المركز - سيتم إضافته لاحقاً
     budget_amount = db.Column(db.Numeric(15, 2), default=0)  # الميزانية المخصصة
     is_active = db.Column(db.Boolean, default=True)  # نشط
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
