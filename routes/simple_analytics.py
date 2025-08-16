@@ -9,7 +9,6 @@ import random
 simple_analytics_bp = Blueprint('simple_analytics', __name__, url_prefix='/accounting/analytics')
 
 @simple_analytics_bp.route('/')
-@login_required
 def dashboard():
     """لوحة التحليل المالي المبسطة"""
     
