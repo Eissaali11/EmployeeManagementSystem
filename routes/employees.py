@@ -490,7 +490,13 @@ def edit(id):
             # 7. حفظ كل التغييرات للموظف والمستخدم دفعة واحدة
             db.session.commit()
             
-            log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
+            # تسجيل عملية التحديث
+            try:
+                from utils.audit_logger import log_activity
+                log_activity('update', 'Employee', employee.id, f'تم تحديث بيانات الموظف: {employee.name}')
+            except Exception as audit_e:
+                print(f"Failed to log employee update audit: {str(audit_e)}")
+                
             flash('تم تحديث بيانات الموظف وأقسامه بنجاح.', 'success')
             
             # التحقق من مصدر الطلب للعودة إلى الصفحة المناسبة
