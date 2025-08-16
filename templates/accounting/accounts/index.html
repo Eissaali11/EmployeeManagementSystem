@@ -21,12 +21,12 @@
                         <table class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>رمز الحساب</th>
-                                    <th>اسم الحساب</th>
-                                    <th>نوع الحساب</th>
-                                    <th>الرصيد</th>
-                                    <th>الحالة</th>
-                                    <th>الإجراءات</th>
+                                    <th width="15%">رمز الحساب</th>
+                                    <th width="25%">اسم الحساب</th>
+                                    <th width="15%">نوع الحساب</th>
+                                    <th width="15%">الرصيد</th>
+                                    <th width="10%">الحالة</th>
+                                    <th width="20%">الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -53,14 +53,14 @@
                                         {% endif %}
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
+                                        <div class="d-flex gap-1">
                                             <a href="{{ url_for('accounting.edit_account', account_id=account.id) }}" 
-                                               class="btn btn-sm btn-outline-primary" title="تعديل">
-                                                <i class="fas fa-edit"></i>
+                                               class="btn btn-sm btn-primary" title="تعديل">
+                                                <i class="fas fa-edit me-1"></i>تعديل
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                            <button type="button" class="btn btn-sm btn-danger" 
                                                     title="حذف" onclick="deleteAccount({{ account.id }}, '{{ account.name }}')">
-                                                <i class="fas fa-trash"></i>
+                                                <i class="fas fa-trash me-1"></i>حذف
                                             </button>
                                         </div>
                                     </td>
