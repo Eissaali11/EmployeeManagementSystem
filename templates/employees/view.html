@@ -950,7 +950,17 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                      <div class="col-md-6">
                         <p class="mb-1 text-muted">الجنسية</p>
-                        <p class="fs-5">{{ employee.nationality }}</p>
+                        <p class="fs-5">
+                            {% if employee.nationality_rel %}
+                                <span class="text-primary fw-bold">
+                                    <i class="fas fa-flag me-1"></i>{{ employee.nationality_rel.name_ar }}
+                                </span>
+                            {% else %}
+                                <span class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>غير محدد
+                                </span>
+                            {% endif %}
+                        </p>
                     </div>
                         <div class="col-md-6">
                             <p class="mb-1 text-muted">رقم الجوال</p>
