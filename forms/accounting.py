@@ -2,7 +2,7 @@
 نماذج النظام المحاسبي
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, DecimalField, DateField, BooleanField, IntegerField, FieldList, FormField
+from wtforms import StringField, TextAreaField, SelectField, DecimalField, DateField, BooleanField, IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, Length, NumberRange, Email, Optional
 from wtforms.widgets import TextArea
 from models_accounting import AccountType, TransactionType, PaymentMethod, EntryType
@@ -249,29 +249,10 @@ class QuickEntryForm(FlaskForm):
     cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
 
 
-class VehicleExpenseForm(FlaskForm):
-    """نموذج مصاريف المركبات"""
-    vehicle_id = SelectField('المركبة', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
-    expense_type = SelectField('نوع المصروف',
-                              choices=[
-                                  ('fuel', 'وقود'),
-                                  ('maintenance', 'صيانة'),
-                                  ('insurance', 'تأمين'),
-                                  ('registration', 'تسجيل'),
-                                  ('violation', 'مخالفة'),
-                                  ('other', 'أخرى')
-                              ],
-                              validators=[DataRequired()])
-    amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
-    description = TextAreaField('الوصف', validators=[DataRequired()], widget=TextArea())
-    expense_date = DateField('تاريخ المصروف', validators=[DataRequired()])
-    vendor_id = SelectField('المورد', coerce=lambda x: int(x) if x else None, validators=[Optional()])
-    receipt_number = StringField('رقم الإيصال', validators=[Optional(), Length(max=100)])
-
-
 class SalaryProcessingForm(FlaskForm):
     """نموذج معالجة الرواتب"""
-    month = SelectField('الشهر',
+    department_id = SelectField('القسم', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+    salary_month = SelectField('الشهر',
                        choices=[
                            ('1', 'يناير'),
                            ('2', 'فبراير'),
@@ -286,7 +267,8 @@ class SalaryProcessingForm(FlaskForm):
                            ('11', 'نوفمبر'),
                            ('12', 'ديسمبر')
                        ],
+                       coerce=lambda x: int(x) if x else None,
                        validators=[DataRequired()])
-    year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
-    salary_account_id = SelectField('حساب المرتبات', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
-    payable_account_id = SelectField('حساب المرتبات المستحقة', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    salary_year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
+    process_all = BooleanField('معالجة جميع الموظفين', default=True)
+    submit = SubmitField('معالجة الرواتب')
