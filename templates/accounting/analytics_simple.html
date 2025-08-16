@@ -384,15 +384,124 @@ function loadBudgetRecommendations() {
 function displayPredictions(data) {
     const predictions = data.predictions;
     let html = `
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-chart-line text-primary me-2"></i>التنبؤات المالية</h5>
-            <small class="text-muted">تم التحليل بـ ${data.model_used}</small>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-line text-primary me-2"></i>
+                التنبؤات المالية الذكية
+            </h5>
+            <span class="badge bg-primary">${data.model_used || 'الذكاء الاصطناعي'}</span>
         </div>
     `;
     
-    // عرض النتائج بناءً على استجابة الذكاء الاصطناعي
     if (predictions) {
-        html += `<div class="alert alert-info"><pre>${JSON.stringify(predictions, null, 2)}</pre></div>`;
+        // تحليل الاتجاهات
+        if (predictions.تحليل_الاتجاهات) {
+            html += `
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">📈 تحليل الاتجاهات المالية</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-success mb-2"><strong>الاتجاه العام:</strong> ${predictions.تحليل_الاتجاهات.الاتجاه_العام}</p>
+                        <p class="mb-2"><strong>هيكل المصروفات:</strong></p>
+                        <ul class="list-unstyled ms-3">
+                            ${predictions.تحليل_الاتجاهات.المصروفات_الرئيسية.map(item => 
+                                `<li><span class="badge bg-info me-2">•</span>${item}</li>`
+                            ).join('')}
+                        </ul>
+                        <div class="alert alert-light border-start border-warning border-4">
+                            <small><strong>تطور ملحوظ:</strong> ${predictions.تحليل_الاتجاهات.التغيرات_الملحوظة}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // التنبؤات القادمة
+        if (predictions.التنبؤات_القادمة) {
+            html += `
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">🔮 توقعات الأشهر القادمة</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+            `;
+            
+            Object.entries(predictions.التنبؤات_القادمة).forEach(([period, forecast]) => {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <div class="border rounded p-3 bg-light">
+                            <h6 class="text-primary">${period.replace('_', ' ')}</h6>
+                            <div class="d-flex justify-content-between">
+                                <span>المصروفات:</span>
+                                <strong class="text-danger">${forecast.المصروفات_المتوقعة}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>الإيرادات:</span>
+                                <strong class="text-success">${forecast.الإيرادات_المتوقعة}</strong>
+                            </div>
+                            <hr class="my-2">
+                            <div class="d-flex justify-content-between">
+                                <span><strong>الربح المتوقع:</strong></span>
+                                <strong class="text-primary">${forecast.الربح_المتوقع}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // المخاطر والتوصيات
+        if (predictions.المخاطر_المحتملة || predictions.التوصيات) {
+            html += `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-warning bg-opacity-10">
+                                <h6 class="mb-0 text-warning">⚠️ المخاطر المحتملة</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    ${predictions.المخاطر_المحتملة ? predictions.المخاطر_المحتملة.map(risk => 
+                                        `<li class="mb-2"><span class="text-warning">▲</span> ${risk}</li>`
+                                    ).join('') : '<li>لا توجد مخاطر محددة</li>'}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-header bg-success bg-opacity-10">
+                                <h6 class="mb-0 text-success">💡 التوصيات</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled">
+                                    ${predictions.التوصيات ? predictions.التوصيات.map(rec => 
+                                        `<li class="mb-2"><span class="text-success">✓</span> ${rec}</li>`
+                                    ).join('') : '<li>لا توجد توصيات حالية</li>'}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // إضافة ملاحظة في النهاية
+    if (data.note) {
+        html += `
+            <div class="alert alert-info border-start border-info border-4 mt-3">
+                <small><i class="fas fa-info-circle me-1"></i> ${data.note}</small>
+            </div>
+        `;
     }
     
     document.getElementById('aiContent').innerHTML = html;
@@ -401,13 +510,135 @@ function displayPredictions(data) {
 // عرض تحليل الأنماط
 function displayPatternAnalysis(data) {
     let html = `
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-search text-warning me-2"></i>تحليل أنماط المعاملات</h5>
-            <small class="text-muted">تحليل ذكي للكشف عن الشذوذ</small>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">
+                <i class="fas fa-search text-warning me-2"></i>
+                تحليل أنماط المعاملات
+            </h5>
+            <span class="badge bg-warning">تحليل الأنماط</span>
         </div>
     `;
     
-    html += `<div class="alert alert-warning"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+    // الأنماط الطبيعية
+    if (data.الأنماط_الطبيعية) {
+        html += `
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-success bg-opacity-10">
+                    <h6 class="mb-0 text-success">✅ الأنماط الطبيعية</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>أيام النشاط العالي:</strong></p>
+                            <p class="text-muted ms-3">${data.الأنماط_الطبيعية.أيام_النشاط_العالي.join(', ')}</p>
+                            
+                            <p class="mb-2"><strong>متوسط المعاملات اليومية:</strong></p>
+                            <p class="text-primary ms-3">${data.الأنماط_الطبيعية.متوسط_المعاملات_اليومية}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>أوقات الذروة:</strong></p>
+                            <ul class="list-unstyled ms-3">
+                                ${data.الأنماط_الطبيعية.أوقات_الذروة.map(time => 
+                                    `<li><span class="badge bg-light text-dark me-2">⏰</span>${time}</li>`
+                                ).join('')}
+                            </ul>
+                            
+                            <p class="mb-2"><strong>متوسط قيمة المعاملة:</strong></p>
+                            <p class="text-success ms-3 fs-5"><strong>${data.الأنماط_الطبيعية.متوسط_قيمة_المعاملة}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // المعاملات غير الطبيعية
+    if (data.المعاملات_غير_الطبيعية) {
+        html += `
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h6 class="mb-0 text-warning">⚠️ المعاملات غير الطبيعية</h6>
+                </div>
+                <div class="card-body">
+        `;
+        
+        Object.entries(data.المعاملات_غير_الطبيعية).forEach(([key, value]) => {
+            const title = key.replace(/_/g, ' ');
+            const icon = key.includes('كبيرة') ? '💰' : key.includes('أوقات') ? '🕒' : '🔍';
+            html += `
+                <div class="alert alert-warning border-start border-warning border-4 mb-2">
+                    <strong>${icon} ${title}:</strong><br>
+                    <small>${value}</small>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // اتجاهات الإنفاق
+    if (data.اتجاهات_الإنفاق) {
+        html += `
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-info bg-opacity-10">
+                    <h6 class="mb-0 text-info">📊 اتجاهات الإنفاق اليومية</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+        `;
+        
+        Object.entries(data.اتجاهات_الإنفاق).forEach(([day, pattern]) => {
+            html += `
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6 class="text-primary">${day}</h6>
+                        <p class="text-muted small mb-0">${pattern}</p>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // توصيات الرقابة
+    if (data.توصيات_الرقابة) {
+        html += `
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-primary bg-opacity-10">
+                    <h6 class="mb-0 text-primary">🛡️ توصيات تحسين الرقابة المالية</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        ${data.توصيات_الرقابة.map((recommendation, index) => `
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-start">
+                                    <span class="badge bg-primary rounded-pill me-3">${index + 1}</span>
+                                    <p class="mb-0">${recommendation}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // ملاحظة
+    if (data.note) {
+        html += `
+            <div class="alert alert-info border-start border-info border-4">
+                <small><i class="fas fa-info-circle me-1"></i> ${data.note}</small>
+            </div>
+        `;
+    }
     
     document.getElementById('aiContent').innerHTML = html;
 }
@@ -415,13 +646,184 @@ function displayPatternAnalysis(data) {
 // عرض توصيات الميزانية
 function displayBudgetRecommendations(data) {
     let html = `
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-piggy-bank text-success me-2"></i>توصيات الميزانية</h5>
-            <small class="text-muted">اقتراحات لتحسين الأداء المالي</small>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="mb-0">
+                <i class="fas fa-piggy-bank text-success me-2"></i>
+                توصيات الميزانية الذكية
+            </h5>
+            <span class="badge bg-success">تحسين الأداء</span>
         </div>
     `;
     
-    html += `<div class="alert alert-success"><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+    // تحليل هيكل المصروفات
+    if (data.تحليل_هيكل_المصروفات) {
+        html += `
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary bg-opacity-10">
+                    <h6 class="mb-0 text-primary">📊 تحليل هيكل المصروفات</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+        `;
+        
+        Object.entries(data.تحليل_هيكل_المصروفات).forEach(([category, details]) => {
+            const title = category.replace(/_/g, ' ');
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="border rounded p-3 h-100">
+                        <h6 class="text-dark">${title}</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>النسبة:</span>
+                            <span class="badge bg-info">${details.النسبة}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>المبلغ الشهري:</span>
+                            <strong class="text-primary">${details.المبلغ_الشهري}</strong>
+                        </div>
+                        <div class="alert alert-light border-0 mb-0">
+                            <small><strong>التقييم:</strong> ${details.التقييم}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += `
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // فرص التوفير
+    if (data.فرص_التوفير) {
+        html += `
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-success bg-opacity-10">
+                    <h6 class="mb-0 text-success">💰 فرص التوفير المحددة</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        ${data.فرص_التوفير.map((opportunity, index) => `
+                            <div class="col-md-4 mb-3">
+                                <div class="card border-success h-100">
+                                    <div class="card-body text-center">
+                                        <h6 class="card-title text-success">${opportunity.المجال}</h6>
+                                        <div class="display-6 text-success mb-2">
+                                            ${opportunity.التوفير_المتوقع}
+                                        </div>
+                                        <p class="card-text small text-muted">${opportunity.الطريقة}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // اقتراح الميزانية
+    if (data.اقتراح_الميزانية) {
+        html += `
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-warning bg-opacity-10">
+                    <h6 class="mb-0 text-warning">📋 اقتراح الميزانية المحسنة</h6>
+                </div>
+                <div class="card-body">
+        `;
+        
+        Object.entries(data.اقتراح_الميزانية).forEach(([period, budget]) => {
+            html += `
+                <h6 class="text-primary mb-3">${period.replace(/_/g, ' ')}</h6>
+                <div class="row">
+            `;
+            
+            Object.entries(budget).forEach(([item, amount]) => {
+                const isTotal = item === 'الإجمالي';
+                const isSaving = item === 'التوفير_الكلي';
+                const itemName = item.replace(/_/g, ' ');
+                const colorClass = isTotal ? 'text-primary' : isSaving ? 'text-success' : 'text-dark';
+                
+                html += `
+                    <div class="col-md-3 mb-2">
+                        <div class="d-flex justify-content-between ${isTotal || isSaving ? 'border-top pt-2' : ''}">
+                            <span class="${colorClass}">${itemName}:</span>
+                            <strong class="${colorClass}">${amount}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // آلية المراقبة والمؤشرات
+    html += `
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h6 class="mb-0 text-info">🔍 آلية المراقبة</h6>
+                    </div>
+                    <div class="card-body">
+    `;
+    
+    if (data.آلية_المراقبة) {
+        Object.entries(data.آلية_المراقبة).forEach(([method, description]) => {
+            const methodName = method.replace(/_/g, ' ');
+            html += `
+                <div class="mb-3">
+                    <strong class="text-info">${methodName}:</strong>
+                    <br><small class="text-muted">${description}</small>
+                </div>
+            `;
+        });
+    }
+    
+    html += `
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-danger bg-opacity-10">
+                        <h6 class="mb-0 text-danger">⚠️ المؤشرات التحذيرية</h6>
+                    </div>
+                    <div class="card-body">
+    `;
+    
+    if (data.المؤشرات_التحذيرية) {
+        data.المؤشرات_التحذيرية.forEach((indicator, index) => {
+            html += `
+                <div class="alert alert-danger border-start border-danger border-4 mb-2">
+                    <small><strong>${index + 1}.</strong> ${indicator}</small>
+                </div>
+            `;
+        });
+    }
+    
+    html += `
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // ملاحظة
+    if (data.note) {
+        html += `
+            <div class="alert alert-info border-start border-info border-4 mt-3">
+                <small><i class="fas fa-info-circle me-1"></i> ${data.note}</small>
+            </div>
+        `;
+    }
     
     document.getElementById('aiContent').innerHTML = html;
 }
