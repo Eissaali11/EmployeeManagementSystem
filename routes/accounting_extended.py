@@ -258,7 +258,7 @@ def salary_processing():
             
             db.session.commit()
             
-            log_activity(f"معالجة رواتب شهر {form.salary_month.data}/{form.salary_year.data}: {processed_count} موظف بإجمالي {total_salaries} ريال")
+            log_activity(f"معالجة رواتب شهر {form.month.data}/{form.year.data}: {processed_count} موظف بإجمالي {total_salaries} ريال")
             flash(f'تم معالجة رواتب {processed_count} موظف بإجمالي {total_salaries:,.2f} ريال', 'success')
             return redirect(url_for('accounting.transactions'))
             

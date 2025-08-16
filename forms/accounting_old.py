@@ -1,5 +1,5 @@
 """
-نماذج النظام المحاسبي - نسخة منظفة
+نماذج النظام المحاسبي
 """
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, DecimalField, DateField, BooleanField, IntegerField, FieldList, FormField, SubmitField
@@ -219,6 +219,32 @@ class ReportFiltersForm(FlaskForm):
                                   validators=[Optional()])
 
 
+class SalaryProcessingForm(FlaskForm):
+    """نموذج معالجة الرواتب"""
+    month = SelectField('الشهر', 
+                       choices=[
+                           ('1', 'يناير'),
+                           ('2', 'فبراير'),
+                           ('3', 'مارس'),
+                           ('4', 'أبريل'),
+                           ('5', 'مايو'),
+                           ('6', 'يونيو'),
+                           ('7', 'يوليو'),
+                           ('8', 'أغسطس'),
+                           ('9', 'سبتمبر'),
+                           ('10', 'أكتوبر'),
+                           ('11', 'نوفمبر'),
+                           ('12', 'ديسمبر')
+                       ],
+                       validators=[DataRequired()])
+    year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
+    salary_account_id = SelectField('حساب الرواتب', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    payable_account_id = SelectField('حساب المستحقات', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    submit = SubmitField('معالجة الرواتب')
+
+
+# إزالة النماذج المكررة والاحتفاط بالنموذج الصحيح فقط
+
 class VehicleExpenseForm(FlaskForm):
     """نموذج مصروفات المركبات"""
     vehicle_id = SelectField('المركبة', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
@@ -245,3 +271,23 @@ class VehicleExpenseForm(FlaskForm):
                                     ('credit_card', 'بطاقة ائتمان')
                                 ],
                                 validators=[DataRequired()])
+
+class QuickEntryForm(FlaskForm):
+    """نموذج القيد السريع"""
+    debit_account_id = SelectField('الحساب المدين', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    credit_account_id = SelectField('الحساب الدائن', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
+    description = TextAreaField('البيان', validators=[DataRequired()], widget=TextArea())
+    transaction_date = DateField('التاريخ', validators=[DataRequired()])
+    reference_number = StringField('رقم المرجع', validators=[Optional(), Length(max=100)])
+    cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+
+
+# تم تنظيف النماذج والاحتفاط بالنموذج الأساسي فقط
+                           ('12', 'ديسمبر')
+                       ],
+                       coerce=lambda x: int(x) if x else None,
+                       validators=[DataRequired()])
+    salary_year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
+    process_all = BooleanField('معالجة جميع الموظفين', default=True)
+    submit = SubmitField('معالجة الرواتب')
