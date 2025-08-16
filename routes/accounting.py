@@ -25,7 +25,7 @@ accounting_bp = Blueprint('accounting', __name__, url_prefix='/accounting')
 @login_required
 def dashboard():
     """لوحة تحكم المحاسبة"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -108,7 +108,7 @@ def dashboard():
 @login_required
 def accounts():
     """قائمة الحسابات"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -141,7 +141,7 @@ def accounts():
 @login_required
 def add_account():
     """إضافة حساب جديد"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -194,7 +194,7 @@ def add_account():
 @login_required
 def edit_account(account_id):
     """تعديل حساب"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -252,7 +252,7 @@ def edit_account(account_id):
 @login_required
 def view_account(account_id):
     """عرض تفاصيل حساب"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -306,7 +306,7 @@ def view_account(account_id):
 @login_required
 def transactions():
     """قائمة القيود المحاسبية"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -357,7 +357,7 @@ def transactions():
 @login_required
 def add_transaction():
     """إضافة قيد محاسبي جديد"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     

@@ -28,7 +28,7 @@ accounting_ext_bp = Blueprint('accounting_ext', __name__, url_prefix='/accountin
 @login_required
 def quick_entry():
     """القيد السريع"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -137,7 +137,7 @@ def quick_entry():
 @login_required
 def salary_processing():
     """معالجة رواتب الموظفين"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -275,7 +275,7 @@ def salary_processing():
 @login_required
 def vehicle_expenses():
     """إدخال مصروفات المركبات"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -390,7 +390,7 @@ def vehicle_expenses():
 @login_required
 def trial_balance():
     """تقرير ميزان المراجعة"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
@@ -485,7 +485,7 @@ def trial_balance():
 @login_required
 def balance_sheet():
     """تقرير الميزانية العمومية"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.ACCOUNTANT]:
+    if current_user.role not in [UserRole.ADMIN, UserRole.FINANCE]:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
     
