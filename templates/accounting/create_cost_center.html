@@ -72,42 +72,44 @@
                             </div>
                         </div>
                         
-                        <div class="mb-3">
-                            <label for="description" class="form-label">وصف المركز</label>
-                            <textarea class="form-control" id="description" name="description" rows="3"
-                                      placeholder="وصف مختصر عن دور ومسؤوليات مركز التكلفة"></textarea>
-                        </div>
-                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="budget_amount" class="form-label">الميزانية المخصصة</label>
                                 <div class="input-group">
                                     <input type="number" class="form-control" id="budget_amount" name="budget_amount" 
-                                           step="0.01" min="0" value="0" placeholder="100000">
-                                    <span class="input-group-text">ريال</span>
+                                           placeholder="0" min="0" step="0.01">
+                                    <span class="input-group-text">ريال سعودي</span>
                                 </div>
                                 <div class="form-text">الميزانية السنوية المخصصة للمركز</div>
                             </div>
                             
-                            <div class="col-md-6 mb-3 d-flex align-items-center">
-                                <div class="form-check">
+                            <div class="col-md-6 mb-3">
+                                <label for="is_active" class="form-label">حالة المركز</label>
+                                <div class="form-check form-switch mt-2">
                                     <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
                                     <label class="form-check-label" for="is_active">
-                                        مركز نشط
+                                        <span class="badge bg-success">نشط</span>
                                     </label>
-                                    <div class="form-text">يمكن استخدامه في المعاملات</div>
                                 </div>
+                                <div class="form-text">يمكن استخدام المركز في المعاملات</div>
                             </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف المركز ومهامه</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="وصف مختصر عن دور ومسؤوليات مركز التكلفة (مثال: إدارة شؤون الموظفين والتوظيف والتدريب)"></textarea>
+                            <div class="form-text">وصف تفصيلي عن طبيعة عمل المركز</div>
                         </div>
                         
                         <hr class="my-4">
                         
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-secondary">
-                                <i class="fas fa-times me-2"></i>إلغاء
+                            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-right me-2"></i>إلغاء والعودة
                             </a>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-plus me-2"></i>إنشاء مركز التكلفة
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>حفظ مركز التكلفة
                             </button>
                         </div>
                     </form>
@@ -117,9 +119,109 @@
         
         <!-- معلومات إضافية -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-sm">
+            <!-- دليل الإرشادات -->
+            <div class="card border-0 shadow-sm mb-3">
                 <div class="card-header bg-info text-white">
                     <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>دليل الاستخدام
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>رمز المركز:</strong>
+                        <p class="small text-muted mb-2">استخدم رموز واضحة مثل:</p>
+                        <ul class="small">
+                            <li>HR001 - الموارد البشرية</li>
+                            <li>IT001 - تقنية المعلومات</li>
+                            <li>FIN001 - المالية</li>
+                            <li>MKT001 - التسويق</li>
+                            <li>OPS001 - العمليات</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>الميزانية:</strong>
+                        <p class="small text-muted">حدد الميزانية السنوية المتوقعة للمركز بالريال السعودي</p>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <strong>المركز الرئيسي:</strong>
+                        <p class="small text-muted">اختر المركز الأب إذا كان هذا مركز فرعي</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- أمثلة سريعة -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>أمثلة مراكز التكلفة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong class="text-success">إدارية:</strong>
+                        <p class="small mb-1">• إدارة عامة (ADM001)</p>
+                        <p class="small mb-1">• موارد بشرية (HR001)</p>
+                        <p class="small mb-3">• شؤون مالية (FIN001)</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <strong class="text-primary">تشغيلية:</strong>
+                        <p class="small mb-1">• مبيعات (SAL001)</p>
+                        <p class="small mb-1">• إنتاج (PRD001)</p>
+                        <p class="small mb-3">• خدمة عملاء (CUS001)</p>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <strong class="text-warning">دعم:</strong>
+                        <p class="small mb-1">• تقنية معلومات (IT001)</p>
+                        <p class="small mb-1">• صيانة (MNT001)</p>
+                        <p class="small">• أمن وسلامة (SEC001)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    transition: all 0.2s ease-in-out;
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-color: #ced4da;
+    font-weight: 500;
+}
+
+.form-text {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+</style>
+{% endblock %}
                         <i class="fas fa-info-circle me-2"></i>نصائح مهمة
                     </h6>
                 </div>
