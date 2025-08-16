@@ -351,6 +351,21 @@ def view_account(account_id):
 
 # ==================== القيود المحاسبية ====================
 
+@accounting_bp.route('/transaction/<int:transaction_id>')
+@login_required
+def view_transaction(transaction_id):
+    """عرض تفاصيل معاملة مالية"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    transaction = Transaction.query.get_or_404(transaction_id)
+    entries = TransactionEntry.query.filter_by(transaction_id=transaction_id).all()
+    
+    return render_template('accounting/view_transaction.html',
+                         transaction=transaction,
+                         entries=entries)
+
 @accounting_bp.route('/transactions')
 @login_required
 def transactions():
