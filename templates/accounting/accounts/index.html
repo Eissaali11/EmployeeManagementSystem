@@ -12,7 +12,7 @@
                         <i class="fas fa-list me-2"></i>
                         دليل الحسابات
                     </h5>
-                    <a href="{{ url_for('accounting.add_account') }}" class="btn btn-light btn-sm">
+                    <a href="{{ url_for('accounting.create_account') }}" class="btn btn-light btn-sm">
                         <i class="fas fa-plus me-1"></i>حساب جديد
                     </a>
                 </div>
@@ -55,9 +55,13 @@
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ url_for('accounting.edit_account', account_id=account.id) }}" 
-                                               class="btn btn-sm btn-outline-primary">
+                                               class="btn btn-sm btn-outline-primary" title="تعديل">
                                                 <i class="fas fa-edit"></i>
                                             </a>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    title="حذف" onclick="deleteAccount({{ account.id }}, '{{ account.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -70,4 +74,37 @@
         </div>
     </div>
 </div>
+
+<!-- Modal للتأكيد على الحذف -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                هل أنت متأكد من حذف الحساب "<span id="accountName"></span>"؟
+                <br><small class="text-danger">تحذير: لا يمكن التراجع عن هذا الإجراء</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-danger">حذف</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteAccount(accountId, accountName) {
+    document.getElementById('accountName').textContent = accountName;
+    document.getElementById('deleteForm').action = '/accounting/accounts/' + accountId + '/delete';
+    
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    deleteModal.show();
+}
+</script>
 {% endblock %}
