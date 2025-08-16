@@ -16,14 +16,26 @@ except ImportError:
     pd = None
 
 from app import db
+# استيراد النماذج الأساسية
 from models import (
-    Employee, Department, Vehicle, VehicleRental, VehicleWorkshop, 
+    Employee, Department, Vehicle, 
     Attendance, Salary, User
 )
-from models_accounting import (
-    Account, Transaction, TransactionEntry, CostCenter, FiscalYear,
-    AccountType, TransactionType, EntryType
-)
+
+# استيراد آمن للنماذج المحاسبية والمتقدمة
+try:
+    from models_accounting import (
+        Account, Transaction, TransactionEntry, CostCenter, FiscalYear,
+        AccountType, TransactionType, EntryType
+    )
+except ImportError:
+    Account = Transaction = TransactionEntry = CostCenter = FiscalYear = None
+    AccountType = TransactionType = EntryType = None
+
+try:
+    from models import VehicleRental, VehicleWorkshop
+except ImportError:
+    VehicleRental = VehicleWorkshop = None
 from utils.audit_logger import log_audit
 
 integrated_bp = Blueprint('integrated', __name__)
@@ -72,25 +84,33 @@ def dashboard():
     unpaid_salaries = len([s for s in salaries_this_month if not s.is_paid])
     
     # === إحصائيات السيارات المالية ===
-    active_rentals = VehicleRental.query.filter_by(is_active=True).all()
-    total_rental_cost = sum(rental.monthly_cost for rental in active_rentals)
+    total_rental_cost = 0
+    workshop_expenses = 0
+    total_expenses = 0
+    total_revenue = 0
     
-    # مصروفات الورش لهذا الشهر
-    workshop_expenses = db.session.query(
-        func.sum(VehicleWorkshop.cost).label('total')
-    ).filter(
-        extract('month', VehicleWorkshop.entry_date) == current_month,
-        extract('year', VehicleWorkshop.entry_date) == current_year
-    ).scalar() or 0
+    if VehicleRental:
+        active_rentals = VehicleRental.query.filter_by(is_active=True).all()
+        total_rental_cost = sum(rental.monthly_cost for rental in active_rentals)
     
-    # === احصائيات محاسبية سريعة ===
-    # إجمالي المصروفات لهذا الشهر
-    expense_accounts = Account.query.filter_by(account_type=AccountType.EXPENSES).all()
-    total_expenses = sum(account.balance or 0 for account in expense_accounts)
+    if VehicleWorkshop:
+        # مصروفات الورش لهذا الشهر
+        workshop_expenses = db.session.query(
+            func.sum(VehicleWorkshop.cost).label('total')
+        ).filter(
+            extract('month', VehicleWorkshop.entry_date) == current_month,
+            extract('year', VehicleWorkshop.entry_date) == current_year
+        ).scalar() or 0
     
-    # إجمالي الإيرادات لهذا الشهر
-    revenue_accounts = Account.query.filter_by(account_type=AccountType.REVENUE).all()
-    total_revenue = sum(account.balance or 0 for account in revenue_accounts)
+    if Account and AccountType:
+        # === احصائيات محاسبية سريعة ===
+        # إجمالي المصروفات لهذا الشهر
+        expense_accounts = Account.query.filter_by(account_type=AccountType.EXPENSES).all()
+        total_expenses = sum(account.balance or 0 for account in expense_accounts)
+        
+        # إجمالي الإيرادات لهذا الشهر
+        revenue_accounts = Account.query.filter_by(account_type=AccountType.REVENUE).all()
+        total_revenue = sum(account.balance or 0 for account in revenue_accounts)
     
     # === بيانات الرسوم البيانية ===
     # رسم بياني لحالة السيارات
@@ -130,7 +150,7 @@ def dashboard():
     if expired_vehicles > 0:
         urgent_tasks.append({
             'title': f'{expired_vehicles} سيارة لديها وثائق منتهية',
-            'url': url_for('vehicles.expired_documents'),
+            'url': url_for('vehicles.index'),
             'type': 'danger'
         })
     
