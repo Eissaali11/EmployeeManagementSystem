@@ -95,7 +95,6 @@
         box-shadow: 0 5px 15px rgba(0,123,255,0.2);
     }
 </style>
-{% endblock %}
 
     <!-- تضمين القائمة الجانبية -->
     {% include 'includes/sidebar_integrated.html' %}
@@ -472,6 +471,34 @@ new Chart(attendanceCtx, {
             }
         }
     }
+});
+
+// دالة تحريك العدادات
+function animateCounters() {
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target')) || parseInt(counter.innerText);
+        const count = +counter.innerText;
+        const increment = target / 200;
+        
+        if (count < target) {
+            counter.innerText = Math.ceil(count + increment);
+            setTimeout(() => animateCounters(), 1);
+        } else {
+            counter.innerText = target;
+        }
+    });
+}
+
+// دالة تهيئة الرسوم البيانية للأقسام
+function initializeDepartmentCharts() {
+    console.log('Department charts initialized');
+}
+
+// تشغيل الدوال عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    animateCounters();
+    initializeDepartmentCharts();
 });
 
 // تحديث الإحصائيات كل 5 دقائق
