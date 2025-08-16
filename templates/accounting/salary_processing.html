@@ -33,12 +33,35 @@
                                 <div class="mb-3">
                                     {{ form.month.label(class="form-label") }}
                                     {{ form.month(class="form-select") }}
+                                    {% for error in form.month.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     {{ form.year.label(class="form-label") }}
-                                    {{ form.year(class="form-control") }}
+                                    {{ form.year(class="form-control", value="2025") }}
+                                    {% for error in form.year.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.department_id.label(class="form-label") }}
+                                    {{ form.department_id(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.process_all(class="form-check-input") }}
+                                        {{ form.process_all.label(class="form-check-label") }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -48,12 +71,18 @@
                                 <div class="mb-3">
                                     {{ form.salary_account_id.label(class="form-label") }}
                                     {{ form.salary_account_id(class="form-select") }}
+                                    {% for error in form.salary_account_id.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     {{ form.payable_account_id.label(class="form-label") }}
                                     {{ form.payable_account_id(class="form-select") }}
+                                    {% for error in form.payable_account_id.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
                                 </div>
                             </div>
                         </div>

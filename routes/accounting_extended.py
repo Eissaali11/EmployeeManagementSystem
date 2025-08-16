@@ -143,9 +143,13 @@ def salary_processing():
     
     form = SalaryProcessingForm()
     
-    # تحميل الأقسام
+    # تحميل الأقسام والحسابات
     departments = Department.query.all()
+    accounts = Account.query.filter_by(is_active=True).all()
+    
     form.department_id.choices = [('', 'جميع الأقسام')] + [(d.id, d.name) for d in departments]
+    form.salary_account_id.choices = [('', 'اختر حساب الرواتب')] + [(a.id, f"{a.code} - {a.name}") for a in accounts if 'راتب' in a.name or a.code.startswith('5')]
+    form.payable_account_id.choices = [('', 'اختر حساب المستحقات')] + [(a.id, f"{a.code} - {a.name}") for a in accounts if 'دائن' in a.name or 'مستحق' in a.name or a.code.startswith('2')]
     
     if form.validate_on_submit():
         try:
