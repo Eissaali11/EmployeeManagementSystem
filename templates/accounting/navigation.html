@@ -1,0 +1,175 @@
+<!-- شريط التنقل الجانبي للمحاسبة -->
+<div class="col-md-3 col-lg-2 sidebar bg-gradient-dark text-white p-0">
+    <div class="sidebar-header p-3">
+        <h5 class="text-center">🏛️ نظام المحاسبة</h5>
+    </div>
+    
+    <!-- القائمة الرئيسية -->
+    <nav class="nav flex-column p-2">
+        <!-- لوحة التحكم -->
+        <a class="nav-link text-white {% if request.endpoint == 'accounting.dashboard' %}active bg-primary{% endif %}" 
+           href="{{ url_for('accounting.dashboard') }}">
+            <i class="fas fa-tachometer-alt me-2"></i> لوحة التحكم
+        </a>
+        
+        <!-- دليل الحسابات -->
+        <div class="nav-group">
+            <h6 class="nav-header text-muted px-2 mt-3 mb-1">📊 الحسابات</h6>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.accounts' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.accounts') }}">
+                <i class="fas fa-list me-2"></i> دليل الحسابات
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.chart_of_accounts' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.chart_of_accounts') }}">
+                <i class="fas fa-sitemap me-2"></i> شجرة الحسابات
+            </a>
+        </div>
+        
+        <!-- المعاملات المالية -->
+        <div class="nav-group">
+            <h6 class="nav-header text-muted px-2 mt-3 mb-1">💰 المعاملات</h6>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.transactions' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.transactions') }}">
+                <i class="fas fa-exchange-alt me-2"></i> سجل المعاملات
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.journal_entries' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.journal_entries') }}">
+                <i class="fas fa-book me-2"></i> القيود اليومية
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.pending_transactions' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.pending_transactions') }}">
+                <i class="fas fa-hourglass-half me-2"></i> معاملات في الانتظار
+            </a>
+        </div>
+        
+        <!-- التقارير المالية -->
+        <div class="nav-group">
+            <h6 class="nav-header text-muted px-2 mt-3 mb-1">📈 التقارير</h6>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.trial_balance' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.trial_balance') }}">
+                <i class="fas fa-balance-scale me-2"></i> ميزان المراجعة
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.income_statement' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.income_statement') }}">
+                <i class="fas fa-chart-line me-2"></i> قائمة الدخل
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.balance_sheet' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.balance_sheet') }}">
+                <i class="fas fa-chart-area me-2"></i> الميزانية العمومية
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.analytics' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.analytics') }}">
+                <i class="fas fa-chart-pie me-2"></i> التحليلات المالية
+            </a>
+        </div>
+        
+        <!-- الإعدادات -->
+        <div class="nav-group">
+            <h6 class="nav-header text-muted px-2 mt-3 mb-1">⚙️ الإعدادات</h6>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.fiscal_years' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.fiscal_years') }}">
+                <i class="fas fa-calendar-alt me-2"></i> السنوات المالية
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.cost_centers' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.cost_centers') }}">
+                <i class="fas fa-building me-2"></i> مراكز التكلفة
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.vendors' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.vendors') }}">
+                <i class="fas fa-truck me-2"></i> الموردين
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.customers' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.customers') }}">
+                <i class="fas fa-users me-2"></i> العملاء
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'accounting.settings' %}active bg-primary{% endif %}" 
+               href="{{ url_for('accounting.settings') }}">
+                <i class="fas fa-cog me-2"></i> إعدادات النظام
+            </a>
+        </div>
+    </nav>
+    
+    <!-- إحصائيات سريعة -->
+    <div class="sidebar-footer p-3 mt-auto">
+        <div class="quick-stats">
+            <div class="stat-item mb-2">
+                <small class="text-muted">معاملات اليوم</small>
+                <div class="text-info">{{ today_transactions_count or 0 }}</div>
+            </div>
+            <div class="stat-item">
+                <small class="text-muted">في الانتظار</small>
+                <div class="text-warning">{{ pending_transactions_count or 0 }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sidebar {
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    right: 0;
+    overflow-y: auto;
+    z-index: 1000;
+    background: linear-gradient(135deg, #1e3a5c 0%, #2c3e50 100%);
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+}
+
+.sidebar-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.nav-link {
+    padding: 0.7rem 1rem;
+    margin: 0.1rem 0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.1) !important;
+    transform: translateX(-2px);
+}
+
+.nav-link.active {
+    background: linear-gradient(45deg, #007bff, #0056b3) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+}
+
+.nav-header {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quick-stats {
+    background: rgba(0,0,0,0.2);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item div {
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+/* للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.show {
+        transform: translateX(0);
+    }
+}
+</style>

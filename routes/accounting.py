@@ -86,7 +86,7 @@ def dashboard():
             Transaction.transaction_date >= current_month_start,
             Transaction.transaction_date <= current_month_end,
             Transaction.is_approved == True,
-            Transaction.transaction_type.in_(['expenses', 'vehicle_expense', 'salary'])
+            Transaction.transaction_type.in_([TransactionType.VEHICLE_EXPENSE, TransactionType.SALARY])
         ).group_by(CostCenter.id).order_by(desc('total_spent')).limit(5).all()
         
         return render_template('accounting/dashboard.html',

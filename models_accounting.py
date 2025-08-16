@@ -18,13 +18,14 @@ class AccountType(PyEnum):
 
 class TransactionType(PyEnum):
     """أنواع المعاملات المحاسبية"""
-    JOURNAL = "journal"  # قيد يومية
-    MANUAL = "manual"  # قيد يدوي
-    SALARY = "salary"  # راتب
-    VEHICLE_EXPENSE = "vehicle_expense"  # مصروف مركبة
-    DEPRECIATION = "depreciation"  # استهلاك
-    PAYMENT = "payment"  # دفع
-    RECEIPT = "receipt"  # قبض
+    JOURNAL = "JOURNAL"  # قيد يومية
+    MANUAL = "MANUAL"  # قيد يدوي
+    SALARY = "SALARY"  # راتب
+    VEHICLE_EXPENSE = "VEHICLE_EXPENSE"  # مصروف مركبة
+    DEPRECIATION = "DEPRECIATION"  # استهلاك
+    PAYMENT = "PAYMENT"  # دفع
+    RECEIPT = "RECEIPT"  # قبض
+
 
 
 class PaymentMethod(PyEnum):
