@@ -1,8 +1,11 @@
-{% extends "layout.html" %}
-
-{% block title %}لوحة التحكم المتكاملة{% endblock %}
-
-{% block extra_head %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم المتكاملة - نظم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
     /* تحسين التصميم العام */
@@ -318,11 +321,64 @@
         }
     }
 </style>
-{% endblock %}
-
-{% block content %}
-<!-- تضمين القائمة الجانبية -->
-{% include 'includes/sidebar_integrated.html' %}
+</head>
+<body>
+<!-- شريط التنقل العلوي -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="fas fa-cube me-2"></i>
+            نُظم - النظام المتكامل
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ url_for('integrated.dashboard') }}">
+                        <i class="fas fa-tachometer-alt me-1"></i>
+                        لوحة التحكم
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('integrated.auto_accounting') }}">
+                        <i class="fas fa-calculator me-1"></i>
+                        الربط المحاسبي
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('integrated.comprehensive_report') }}">
+                        <i class="fas fa-file-alt me-1"></i>
+                        التقرير الشامل
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-1"></i>
+                        الأنظمة
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('employees.index') }}">إدارة الموظفين</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('vehicles.index') }}">إدارة السيارات</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('attendance.index') }}">نظام الحضور</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('salaries.index') }}">نظام الرواتب</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('accounting.dashboard') }}">النظام المحاسبي</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('auth.logout') }}">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        تسجيل الخروج
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
 <div class="main-content" id="main-content">
     <!-- العنوان الرئيسي -->
@@ -619,4 +675,120 @@ setInterval(function() {
         .catch(error => console.error('Error updating stats:', error));
 }, 300000); // 5 دقائق
 </script>
-{% endblock %}
+<!-- تضمين مكتبة Chart.js وBootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// دالة تحريك العدادات
+function animateCounters() {
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target')) || parseInt(counter.innerText);
+        let count = 0;
+        const increment = target / 100;
+        
+        const timer = setInterval(() => {
+            count += increment;
+            if (count >= target) {
+                counter.innerText = target;
+                clearInterval(timer);
+            } else {
+                counter.innerText = Math.ceil(count);
+            }
+        }, 20);
+    });
+}
+
+// دالة تهيئة الرسوم البيانية
+function initializeCharts() {
+    // رسم بياني لحالة السيارات
+    const vehicleCtx = document.getElementById('vehicleStatusChart');
+    if (vehicleCtx) {
+        new Chart(vehicleCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['متاحة', 'مؤجرة', 'في الورشة', 'أخرى'],
+                datasets: [{
+                    data: [{{ vehicles_available }}, {{ vehicles_rented }}, {{ vehicles_in_workshop }}, {{ total_vehicles - vehicles_available - vehicles_rented - vehicles_in_workshop }}],
+                    backgroundColor: [
+                        '#28a745',
+                        '#ffc107', 
+                        '#dc3545',
+                        '#6c757d'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // رسم بياني للحضور
+    const attendanceCtx = document.getElementById('attendanceChart');
+    if (attendanceCtx) {
+        new Chart(attendanceCtx, {
+            type: 'line',
+            data: {
+                labels: {{ last_7_days | safe }},
+                datasets: [{
+                    label: 'عدد الحاضرين',
+                    data: {{ attendance_7_days | safe }},
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#007bff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// تشغيل الدوال عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    animateCounters();
+    initializeCharts();
+});
+</script>
+
+</body>
+</html>

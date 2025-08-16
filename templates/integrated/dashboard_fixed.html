@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم المتكاملة - نظم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            color: #2c3e50;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .container-fluid {
+            padding: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .stats-card {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stats-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+            border-color: #4f46e5;
+        }
+        
+        .stats-number {
+            font-size: 2.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            display: block;
+            line-height: 1.2;
+        }
+        
+        .stats-label {
+            font-size: 1rem;
+            color: #64748b;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stats-label i {
+            margin-left: 8px;
+            color: #4f46e5;
+            font-size: 1.25rem;
+        }
+        
+        .chart-container {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-container:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border-radius: 16px;
+            padding: 40px;
+            margin-bottom: 32px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(79, 70, 229, 0.2);
+            color: white;
+        }
+        
+        .page-header h1 {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-size: 2.5rem;
+        }
+        
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            margin: 0;
+            opacity: 0.95;
+        }
+        
+        .page-header i {
+            color: rgba(255, 255, 255, 0.9);
+            margin-left: 15px;
+            font-size: 2.5rem;
+        }
+        
+        .quick-actions {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+        
+        .quick-actions h5 {
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .action-btn {
+            display: block;
+            width: 100%;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.95rem;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
+            color: white;
+            text-decoration: none;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+        
+        .action-btn i {
+            margin-left: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .urgent-tasks {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e9ecef;
+        }
+        
+        .urgent-tasks h5 {
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .urgent-task {
+            padding: 16px 20px;
+            border-right: 4px solid #ef4444;
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.08), rgba(239, 68, 68, 0.02));
+            border-radius: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .urgent-task:last-child {
+            margin-bottom: 0;
+        }
+        
+        .urgent-task:hover {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.12), rgba(239, 68, 68, 0.04));
+            transform: translateX(4px);
+        }
+        
+        .urgent-task a {
+            color: #dc2626;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .urgent-task a:hover {
+            color: #b91c1c;
+            text-decoration: none;
+        }
+        
+        .stat-item {
+            padding: 12px;
+            background: rgba(248, 250, 252, 0.8);
+            border-radius: 8px;
+            margin: 4px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            background: rgba(248, 250, 252, 1);
+            transform: translateY(-1px);
+        }
+        
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        
+        h4 {
+            color: #1e293b;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        h4 i {
+            margin-left: 10px;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 20px 15px;
+            }
+            
+            .stats-card {
+                padding: 20px;
+                margin-bottom: 16px;
+            }
+            
+            .stats-number {
+                font-size: 2.2rem;
+            }
+            
+            .page-header {
+                padding: 30px 20px;
+            }
+            
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- شريط التنقل العلوي -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="#">
+            <i class="fas fa-cube me-2"></i>
+            نُظم - النظام المتكامل
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/integrated/dashboard">
+                        <i class="fas fa-tachometer-alt me-1"></i>
+                        لوحة التحكم
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/integrated/auto-accounting">
+                        <i class="fas fa-calculator me-1"></i>
+                        الربط المحاسبي
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/integrated/comprehensive-report">
+                        <i class="fas fa-file-alt me-1"></i>
+                        التقرير الشامل
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-1"></i>
+                        الأنظمة
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/employees">إدارة الموظفين</a></li>
+                        <li><a class="dropdown-item" href="/vehicles">إدارة السيارات</a></li>
+                        <li><a class="dropdown-item" href="/attendance">نظام الحضور</a></li>
+                        <li><a class="dropdown-item" href="/salaries">نظام الرواتب</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/accounting">النظام المحاسبي</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/logout">
+                        <i class="fas fa-sign-out-alt me-1"></i>
+                        تسجيل الخروج
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <!-- العنوان الرئيسي -->
+    <div class="page-header">
+        <h1>
+            <i class="fas fa-tachometer-alt"></i>
+            لوحة التحكم المتكاملة
+        </h1>
+        <p>نظرة شاملة على الموظفين والسيارات والمحاسبة</p>
+    </div>
+
+    <!-- الإحصائيات الرئيسية -->
+    <div class="row">
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number counter" data-target="{{ total_employees }}">{{ total_employees }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-users"></i> إجمالي الموظفين
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number counter" data-target="{{ total_vehicles }}">{{ total_vehicles }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-car"></i> إجمالي السيارات
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ "{:,.0f}".format(total_payroll) }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-money-bill-wave"></i> كشف الرواتب (ريال)
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stats-card">
+                <div class="stats-number">{{ "{:,.0f}".format(total_rental_cost) }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-file-invoice-dollar"></i> إيجارات السيارات (ريال)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية -->
+    <div class="row">
+        <!-- رسم بياني لحالة السيارات -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h4 class="text-center mb-3">
+                    <i class="fas fa-chart-pie text-primary"></i>
+                    حالة السيارات
+                </h4>
+                <canvas id="vehicleStatusChart" width="400" height="300"></canvas>
+                
+                <div class="row mt-4">
+                    <div class="col-3">
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-success">{{ vehicles_available }}</div>
+                            <div class="stat-label">متاحة</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-warning">{{ vehicles_rented }}</div>
+                            <div class="stat-label">مؤجرة</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-danger">{{ vehicles_in_workshop }}</div>
+                            <div class="stat-label">في الورشة</div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="stat-item text-center">
+                            <div class="stat-number text-muted">{{ total_vehicles - vehicles_available - vehicles_rented - vehicles_in_workshop }}</div>
+                            <div class="stat-label">أخرى</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- رسم بياني للحضور -->
+        <div class="col-lg-6">
+            <div class="chart-container">
+                <h4 class="text-center mb-3">
+                    <i class="fas fa-chart-line text-success"></i>
+                    الحضور خلال آخر 7 أيام
+                </h4>
+                <canvas id="attendanceChart" width="400" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- الإجراءات السريعة والمهام العاجلة -->
+    <div class="row">
+        <!-- الإجراءات السريعة -->
+        <div class="col-lg-8">
+            <div class="quick-actions">
+                <h5 class="mb-3"><i class="fas fa-bolt text-warning"></i> الإجراءات السريعة</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="/integrated/auto-accounting" class="action-btn">
+                            <i class="fas fa-calculator"></i>
+                            الربط المحاسبي التلقائي
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/integrated/comprehensive-report" class="action-btn">
+                            <i class="fas fa-file-alt"></i>
+                            التقرير الشامل
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/employees" class="action-btn">
+                            <i class="fas fa-user-plus"></i>
+                            إضافة موظف جديد
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- المهام العاجلة -->
+        <div class="col-lg-4">
+            <div class="urgent-tasks">
+                <h5 class="mb-3"><i class="fas fa-exclamation-triangle text-danger"></i> المهام العاجلة</h5>
+                {% if urgent_tasks %}
+                    {% for task in urgent_tasks %}
+                    <div class="urgent-task">
+                        <a href="{{ task.url }}">{{ task.title }}</a>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="urgent-task">
+                        <span style="color: #28a745;">جميع الأنظمة تعمل بشكل طبيعي</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- تضمين مكتبة Chart.js وBootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// دالة تحريك العدادات
+function animateCounters() {
+    const counters = document.querySelectorAll('.counter');
+    counters.forEach(counter => {
+        const target = parseInt(counter.getAttribute('data-target')) || parseInt(counter.innerText);
+        let count = 0;
+        const increment = target / 100;
+        
+        const timer = setInterval(() => {
+            count += increment;
+            if (count >= target) {
+                counter.innerText = target;
+                clearInterval(timer);
+            } else {
+                counter.innerText = Math.ceil(count);
+            }
+        }, 20);
+    });
+}
+
+// دالة تهيئة الرسوم البيانية
+function initializeCharts() {
+    // رسم بياني لحالة السيارات
+    const vehicleCtx = document.getElementById('vehicleStatusChart');
+    if (vehicleCtx) {
+        new Chart(vehicleCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['متاحة', 'مؤجرة', 'في الورشة', 'أخرى'],
+                datasets: [{
+                    data: [{{ vehicles_available }}, {{ vehicles_rented }}, {{ vehicles_in_workshop }}, {{ total_vehicles - vehicles_available - vehicles_rented - vehicles_in_workshop }}],
+                    backgroundColor: [
+                        '#28a745',
+                        '#ffc107', 
+                        '#dc3545',
+                        '#6c757d'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // رسم بياني للحضور
+    const attendanceCtx = document.getElementById('attendanceChart');
+    if (attendanceCtx) {
+        new Chart(attendanceCtx, {
+            type: 'line',
+            data: {
+                labels: {{ last_7_days | safe }},
+                datasets: [{
+                    label: 'عدد الحاضرين',
+                    data: {{ attendance_7_days | safe }},
+                    borderColor: '#007bff',
+                    backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#007bff',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(0,0,0,0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// تشغيل الدوال عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    animateCounters();
+    initializeCharts();
+});
+</script>
+
+</body>
+</html>

@@ -100,7 +100,7 @@ def dashboard():
             'type': 'warning'
         })
     
-    return render_template('integrated/dashboard_simple.html',
+    return render_template('integrated/dashboard_fixed.html',
         # إحصائيات عامة
         total_employees=total_employees,
         total_departments=total_departments,
