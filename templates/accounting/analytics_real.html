@@ -1,0 +1,394 @@
+{% extends "layout.html" %}
+
+{% block title %}التحليل المالي الذكي{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        التحليل المالي الذكي - بيانات حقيقية
+                    </h4>
+                    <small>آخر تحديث: {{ data.last_updated }}</small>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- المؤشرات الرئيسية -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-success text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-chart-line me-2"></i>إجمالي الإيرادات</h5>
+                                    <h2 id="total-revenue">{{ "{:,.0f}".format(data.financial_kpis.total_revenue) }} ريال</h2>
+                                    <small>حسابات الإيرادات</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-danger text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-chart-bar me-2"></i>إجمالي المصروفات</h5>
+                                    <h2 id="total-expenses">{{ "{:,.0f}".format(data.financial_kpis.total_expenses) }} ريال</h2>
+                                    <small>جميع المصروفات</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-info text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-dollar-sign me-2"></i>صافي الربح</h5>
+                                    <h2 id="net-profit" class="{{ 'text-success' if data.financial_kpis.net_profit > 0 else 'text-warning' }}">
+                                        {{ "{:,.0f}".format(data.financial_kpis.net_profit) }} ريال
+                                    </h2>
+                                    <small>الربح/الخسارة الصافية</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-gradient-primary text-white">
+                                <div class="card-body text-center">
+                                    <h5><i class="fas fa-percentage me-2"></i>معدل الربحية</h5>
+                                    <h2 id="profit-margin">{{ data.financial_kpis.profit_margin }}%</h2>
+                                    <small>من إجمالي الإيرادات</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- مؤشرات إضافية -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="card border-left-warning">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                النقدية المتاحة
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ "{:,.0f}".format(data.financial_kpis.cash_flow) }} ريال
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-left-info">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                عائد على الاستثمار
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ data.financial_kpis.roi }}%
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-chart-pie fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-left-success">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                نمو المصروفات
+                                            </div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                {{ data.financial_kpis.expense_growth }}%
+                                            </div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-arrow-up fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- الرسوم البيانية -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-chart-area me-2"></i>الاتجاهات الشهرية</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="monthlyTrendsChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>توزيع المصروفات</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="expenseDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تحليل الأداء -->
+                    {% if data.department_performance %}
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-building me-2"></i>أداء الأقسام</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead class="table-dark">
+                                                <tr>
+                                                    <th>القسم</th>
+                                                    <th>عدد الموظفين</th>
+                                                    <th>إجمالي الرواتب</th>
+                                                    <th>المعاملات المالية</th>
+                                                    <th>مؤشر الكفاءة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for dept in data.department_performance %}
+                                                <tr>
+                                                    <td><strong>{{ dept.name }}</strong></td>
+                                                    <td>{{ dept.employees_count }}</td>
+                                                    <td>{{ "{:,.0f}".format(dept.expenses) }} ريال</td>
+                                                    <td>{{ "{:,.0f}".format(dept.transactions) }} ريال</td>
+                                                    <td>
+                                                        <span class="badge {{ 'bg-success' if dept.efficiency > 1 else 'bg-warning' }}">
+                                                            {{ dept.efficiency }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- التنبؤات المالية -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">
+                                        <i class="fas fa-brain me-2"></i>
+                                        التنبؤات المالية الذكية
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="predictionsChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- تحليل الموازنة -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0"><i class="fas fa-balance-scale me-2"></i>مقارنة الموازنة بالفعلي</h6>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="budgetAnalysisChart" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-left-warning { border-left: 4px solid #f6c23e !important; }
+.border-left-info { border-left: 4px solid #36b9cc !important; }
+.border-left-success { border-left: 4px solid #1cc88a !important; }
+.bg-gradient-primary { background: linear-gradient(45deg, #4e73df, #224abe); }
+.bg-gradient-success { background: linear-gradient(45deg, #1cc88a, #13855c); }
+.bg-gradient-danger { background: linear-gradient(45deg, #e74a3b, #be2617); }
+.bg-gradient-info { background: linear-gradient(45deg, #36b9cc, #258391); }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// بيانات للرسوم البيانية
+const analyticsData = {{ data | tojson }};
+
+// رسم الاتجاهات الشهرية
+const ctx1 = document.getElementById('monthlyTrendsChart').getContext('2d');
+new Chart(ctx1, {
+    type: 'line',
+    data: {
+        labels: analyticsData.monthly_trends.months,
+        datasets: [{
+            label: 'الإيرادات',
+            data: analyticsData.monthly_trends.revenue,
+            borderColor: '#1cc88a',
+            backgroundColor: 'rgba(28, 200, 138, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'المصروفات',
+            data: analyticsData.monthly_trends.expenses,
+            borderColor: '#e74a3b',
+            backgroundColor: 'rgba(231, 74, 59, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return new Intl.NumberFormat('ar-SA').format(value) + ' ريال';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// رسم توزيع المصروفات
+const ctx2 = document.getElementById('expenseDistributionChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: analyticsData.expense_distribution.categories,
+        datasets: [{
+            data: analyticsData.expense_distribution.amounts,
+            backgroundColor: analyticsData.expense_distribution.colors || [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+            ]
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+});
+
+// رسم التنبؤات
+const ctx3 = document.getElementById('predictionsChart').getContext('2d');
+new Chart(ctx3, {
+    type: 'bar',
+    data: {
+        labels: analyticsData.predictions.next_months,
+        datasets: [{
+            label: 'الإيرادات المتوقعة',
+            data: analyticsData.predictions.predicted_revenue,
+            backgroundColor: 'rgba(28, 200, 138, 0.8)',
+            borderColor: '#1cc88a',
+            borderWidth: 1
+        }, {
+            label: 'المصروفات المتوقعة',
+            data: analyticsData.predictions.predicted_expenses,
+            backgroundColor: 'rgba(231, 74, 59, 0.8)',
+            borderColor: '#e74a3b',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return new Intl.NumberFormat('ar-SA').format(value) + ' ريال';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// رسم تحليل الموازنة
+const ctx4 = document.getElementById('budgetAnalysisChart').getContext('2d');
+new Chart(ctx4, {
+    type: 'bar',
+    data: {
+        labels: analyticsData.budget_analysis.accounts,
+        datasets: [{
+            label: 'المخطط',
+            data: analyticsData.budget_analysis.budgeted,
+            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+            borderColor: '#36A2EB',
+            borderWidth: 1
+        }, {
+            label: 'الفعلي',
+            data: analyticsData.budget_analysis.actual,
+            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+            borderColor: '#FF6384',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return new Intl.NumberFormat('ar-SA').format(value) + ' ريال';
+                    }
+                }
+            }
+        }
+    }
+});
+
+// تحديث البيانات كل 5 دقائق
+setInterval(function() {
+    fetch('/accounting/analytics/api/data')
+        .then(response => response.json())
+        .then(data => {
+            // تحديث المؤشرات
+            document.getElementById('total-revenue').textContent = 
+                new Intl.NumberFormat('ar-SA').format(data.financial_kpis.total_revenue) + ' ريال';
+            document.getElementById('total-expenses').textContent = 
+                new Intl.NumberFormat('ar-SA').format(data.financial_kpis.total_expenses) + ' ريال';
+            document.getElementById('net-profit').textContent = 
+                new Intl.NumberFormat('ar-SA').format(data.financial_kpis.net_profit) + ' ريال';
+            document.getElementById('profit-margin').textContent = 
+                data.financial_kpis.profit_margin + '%';
+        })
+        .catch(console.error);
+}, 300000); // كل 5 دقائق
+</script>
+{% endblock %}
