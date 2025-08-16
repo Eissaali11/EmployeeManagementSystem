@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+
+{% block title %}تعديل مركز التكلفة{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- رأس الصفحة -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="text-primary mb-1">
+                <i class="fas fa-edit me-2"></i>تعديل مركز التكلفة
+            </h2>
+            <p class="text-muted mb-0">تعديل بيانات مركز التكلفة: {{ cost_center.name }}</p>
+        </div>
+        <div>
+            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>عودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <!-- نموذج التعديل -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>بيانات مركز التكلفة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.code.label(class="form-label fw-bold") }}
+                                {{ form.code(class="form-control") }}
+                                {% if form.code.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.code.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.name.label(class="form-label fw-bold") }}
+                                {{ form.name(class="form-control") }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.name.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.name_en.label(class="form-label fw-bold") }}
+                                {{ form.name_en(class="form-control") }}
+                                {% if form.name_en.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.name_en.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.parent_id.label(class="form-label fw-bold") }}
+                                {{ form.parent_id(class="form-select") }}
+                                {% if form.parent_id.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.parent_id.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.budget_amount.label(class="form-label fw-bold") }}
+                                <div class="input-group">
+                                    {{ form.budget_amount(class="form-control") }}
+                                    <span class="input-group-text">ريال سعودي</span>
+                                </div>
+                                {% if form.budget_amount.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.budget_amount.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                {{ form.is_active.label(class="form-label fw-bold") }}
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    <label class="form-check-label" for="{{ form.is_active.id }}">
+                                        نشط
+                                    </label>
+                                </div>
+                                {% if form.is_active.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.is_active.errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label fw-bold") }}
+                            {{ form.description(class="form-control", rows="3") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">
+                                    {% for error in form.description.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>إلغاء
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات إضافية -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>معلومات المركز
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">تاريخ الإنشاء</small>
+                        <div class="fw-bold">{{ cost_center.created_at.strftime('%Y-%m-%d %H:%M') if cost_center.created_at else 'غير محدد' }}</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">آخر تحديث</small>
+                        <div class="fw-bold">{{ cost_center.updated_at.strftime('%Y-%m-%d %H:%M') if cost_center.updated_at else 'غير محدد' }}</div>
+                    </div>
+                    
+                    {% if cost_center.parent %}
+                    <div class="mb-3">
+                        <small class="text-muted">المركز الأب</small>
+                        <div class="fw-bold">{{ cost_center.parent.name }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if cost_center.children %}
+                    <div class="mb-3">
+                        <small class="text-muted">المراكز الفرعية</small>
+                        <div class="fw-bold">{{ cost_center.children|length }} مركز</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-warning text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>إحصائيات سريعة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-2">
+                            <div class="text-muted small">الميزانية المحددة</div>
+                            <div class="h5 text-success">
+                                {{ "{:,.0f}".format(cost_center.budget_amount or 0) }} ريال
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.5rem 0.5rem 0 0 !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn {
+    border-radius: 0.375rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+</style>
+{% endblock %}
