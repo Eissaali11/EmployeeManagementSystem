@@ -363,6 +363,18 @@
                                     <span>تكاليف الرسوم</span>
                                 </a>
                             </li>
+                            {% endif %} {# التحقق من صلاحيات النظام المحاسبي #} {% if
+                            current_user.role == UserRole.ADMIN or
+                            current_user|check_module_access(Module.ACCOUNTING) %}
+                            <li class="nav-item mb-1">
+                                <a
+                                    href="{{ url_for('accounting.dashboard') }}"
+                                    class="nav-link nav-link-custom {% if '/accounting' in request.path %}active{% endif %}"
+                                >
+                                    <i class="fas fa-calculator me-2"></i>
+                                    <span>المحاسبة</span>
+                                </a>
+                            </li>
                             {% endif %} {# التحقق من صلاحيات المركبات #} {% if
                             current_user.role == UserRole.ADMIN or
                             current_user|check_module_access(Module.VEHICLES) %}

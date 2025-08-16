@@ -1,0 +1,254 @@
+{% extends "layout.html" %}
+
+{% block title %}قيد محاسبي سريع{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>قيد محاسبي سريع
+                    </h4>
+                    <small class="opacity-75">إدخال سريع للقيود المحاسبية البسيطة</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('accounting_ext.quick_entry') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.transaction_date.id }}" class="form-label">
+                                    <i class="fas fa-calendar me-1"></i>تاريخ القيد *
+                                </label>
+                                {{ form.transaction_date(class="form-control") }}
+                                {% if form.transaction_date.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.transaction_date.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.amount.id }}" class="form-label">
+                                    <i class="fas fa-money-bill me-1"></i>المبلغ *
+                                </label>
+                                <div class="input-group">
+                                    {{ form.amount(class="form-control") }}
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                                {% if form.amount.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.amount.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.description.id }}" class="form-label">
+                                <i class="fas fa-align-left me-1"></i>وصف القيد *
+                            </label>
+                            {{ form.description(class="form-control", placeholder="اكتب وصفاً واضحاً للمعاملة") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.debit_account_id.id }}" class="form-label">
+                                    <i class="fas fa-plus-circle text-success me-1"></i>الحساب المدين *
+                                </label>
+                                {{ form.debit_account_id(class="form-select") }}
+                                {% if form.debit_account_id.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.debit_account_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.credit_account_id.id }}" class="form-label">
+                                    <i class="fas fa-minus-circle text-danger me-1"></i>الحساب الدائن *
+                                </label>
+                                {{ form.credit_account_id(class="form-select") }}
+                                {% if form.credit_account_id.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.credit_account_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.reference_number.id }}" class="form-label">
+                                    <i class="fas fa-hashtag me-1"></i>رقم المرجع
+                                </label>
+                                {{ form.reference_number(class="form-control", placeholder="رقم الفاتورة أو السند") }}
+                                {% if form.reference_number.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.reference_number.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.cost_center_id.id }}" class="form-label">
+                                    <i class="fas fa-building me-1"></i>مركز التكلفة
+                                </label>
+                                {{ form.cost_center_id(class="form-select") }}
+                                {% if form.cost_center_id.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.cost_center_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- معاينة القيد -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-eye me-1"></i>معاينة القيد</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>الحساب</th>
+                                                <th>مدين</th>
+                                                <th>دائن</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="preview-body">
+                                            <tr>
+                                                <td id="preview-debit-account">-</td>
+                                                <td id="preview-debit-amount" class="text-success fw-bold">-</td>
+                                                <td>-</td>
+                                            </tr>
+                                            <tr>
+                                                <td id="preview-credit-account">-</td>
+                                                <td>-</td>
+                                                <td id="preview-credit-amount" class="text-danger fw-bold">-</td>
+                                            </tr>
+                                            <tr class="table-primary">
+                                                <th>المجموع</th>
+                                                <th id="preview-total-debit">0.00</th>
+                                                <th id="preview-total-credit">0.00</th>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="balance-check" class="mt-2"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('accounting.dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success" id="submit-btn">
+                                <i class="fas fa-save me-1"></i>حفظ القيد
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const debitSelect = document.getElementById('{{ form.debit_account_id.id }}');
+    const creditSelect = document.getElementById('{{ form.credit_account_id.id }}');
+    const amountInput = document.getElementById('{{ form.amount.id }}');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    function updatePreview() {
+        const debitAccount = debitSelect.options[debitSelect.selectedIndex];
+        const creditAccount = creditSelect.options[creditSelect.selectedIndex];
+        const amount = parseFloat(amountInput.value) || 0;
+        
+        // تحديث أسماء الحسابات
+        document.getElementById('preview-debit-account').textContent = 
+            debitAccount.value ? debitAccount.text : '-';
+        document.getElementById('preview-credit-account').textContent = 
+            creditAccount.value ? creditAccount.text : '-';
+        
+        // تحديث المبالغ
+        const formattedAmount = amount.toLocaleString('ar-SA', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        
+        document.getElementById('preview-debit-amount').textContent = 
+            amount > 0 ? formattedAmount : '-';
+        document.getElementById('preview-credit-amount').textContent = 
+            amount > 0 ? formattedAmount : '-';
+        
+        document.getElementById('preview-total-debit').textContent = formattedAmount;
+        document.getElementById('preview-total-credit').textContent = formattedAmount;
+        
+        // فحص التوازن
+        const balanceCheck = document.getElementById('balance-check');
+        if (amount > 0 && debitAccount.value && creditAccount.value) {
+            if (debitAccount.value === creditAccount.value) {
+                balanceCheck.innerHTML = '<div class="alert alert-warning small">تحذير: لا يمكن أن يكون الحساب المدين والدائن نفس الحساب</div>';
+                submitBtn.disabled = true;
+            } else {
+                balanceCheck.innerHTML = '<div class="alert alert-success small"><i class="fas fa-check me-1"></i>القيد متوازن</div>';
+                submitBtn.disabled = false;
+            }
+        } else {
+            balanceCheck.innerHTML = '';
+            submitBtn.disabled = true;
+        }
+    }
+    
+    // ربط الأحداث
+    debitSelect.addEventListener('change', updatePreview);
+    creditSelect.addEventListener('change', updatePreview);
+    amountInput.addEventListener('input', updatePreview);
+    
+    // تحديث أولي
+    updatePreview();
+    
+    // تعيين التاريخ الحالي كافتراضي
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('{{ form.transaction_date.id }}').value = today;
+});
+</script>
+
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.alert {
+    border-radius: 0.375rem;
+    border: none;
+}
+
+#preview-body tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+</style>
+{% endblock %}

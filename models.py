@@ -251,6 +251,7 @@ class Module(enum.Enum):
     USERS = 'users'
     REPORTS = 'reports'
     FEES = 'fees'
+    ACCOUNTING = 'accounting'  # النظام المحاسبي
 
 class User(UserMixin, db.Model):
     """User model for authentication"""

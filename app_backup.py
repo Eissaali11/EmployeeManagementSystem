@@ -337,7 +337,6 @@ WEASYPRINT_ENABLED = False
 with app.app_context():
     # Import models before creating tables
     import models  # noqa: F401
-    import models_accounting  # noqa: F401
 
     # Import and register route blueprints
     from routes.dashboard import dashboard_bp
@@ -369,8 +368,6 @@ with app.app_context():
     from routes.sim_management import sim_management_bp
     from routes.device_management import device_management_bp
     from routes.device_assignment import device_assignment_bp
-    from routes.accounting import accounting_bp
-    from routes.accounting_extended import accounting_ext_bp
     from routes.vehicle_operations import vehicle_operations_bp
 
     # تعطيل حماية CSRF لطرق معينة
@@ -402,8 +399,6 @@ with app.app_context():
     app.register_blueprint(device_management_bp, url_prefix='/device-management')
     app.register_blueprint(device_assignment_bp, url_prefix='/device-assignment')
     app.register_blueprint(vehicle_operations_bp, url_prefix='/vehicle-operations')
-    app.register_blueprint(accounting_bp, url_prefix="/accounting")
-    app.register_blueprint(accounting_ext_bp, url_prefix="/accounting")
     
     # استيراد وتسجيل مسار صفحة الهبوط - مسار منفصل عن النظام
     from routes.landing import landing_bp
