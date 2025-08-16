@@ -18,6 +18,7 @@ class AccountType(PyEnum):
 
 class TransactionType(PyEnum):
     """أنواع المعاملات المحاسبية"""
+    JOURNAL = "journal"  # قيد يومية
     MANUAL = "manual"  # قيد يدوي
     SALARY = "salary"  # راتب
     VEHICLE_EXPENSE = "vehicle_expense"  # مصروف مركبة
@@ -88,15 +89,49 @@ class CostCenter(db.Model):
     __tablename__ = 'cost_centers'
     
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), unique=True, nullable=False)
-    name = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text)
-    is_active = db.Column(db.Boolean, default=True)
-    manager_id = db.Column(db.Integer, db.ForeignKey('employee.id'))  # مدير مركز التكلفة
+    code = db.Column(db.String(20), unique=True, nullable=False)  # رمز المركز
+    name = db.Column(db.String(200), nullable=False)  # اسم المركز
+    name_en = db.Column(db.String(200))  # الاسم بالإنجليزية
+    description = db.Column(db.Text)  # وصف المركز
+    parent_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'))  # مركز التكلفة الأب
+    manager_id = db.Column(db.Integer, db.ForeignKey('employees.id'))  # مسؤول المركز
+    budget_amount = db.Column(db.Numeric(15, 2), default=0)  # الميزانية المخصصة
+    is_active = db.Column(db.Boolean, default=True)  # نشط
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # العلاقات
-    manager = db.relationship('Employee', backref='managed_cost_centers')
+    parent = db.relationship('CostCenter', remote_side=[id], backref='children')
+    # manager = db.relationship('Employee', backref='managed_cost_centers')  # commented until Employee model is available
+    
+    def __repr__(self):
+        return f'<CostCenter {self.code}: {self.name}>'
+    
+    @property 
+    def full_name(self):
+        """الاسم الكامل مع اسم المركز الأب"""
+        if self.parent:
+            return f"{self.parent.name} - {self.name}"
+        return self.name
+    
+    @property
+    def level(self):
+        """مستوى المركز في الهيكل الهرمي"""
+        if self.parent:
+            return self.parent.level + 1
+        return 0
+    
+    def get_total_budget(self):
+        """إجمالي الميزانية شاملة المراكز الفرعية"""
+        total = self.budget_amount or 0
+        for child in self.children:
+            total += child.get_total_budget()
+        return total
+    
+    def get_actual_expenses(self):
+        """إجمالي المصروفات الفعلية لهذا المركز"""
+        entries = TransactionEntry.query.filter_by(cost_center_id=self.id).all()
+        return sum(entry.amount for entry in entries if entry.entry_type == EntryType.DEBIT)
     transactions = db.relationship('Transaction', backref='cost_center', lazy=True)
     budgets = db.relationship('Budget', backref='cost_center', lazy=True)
 
@@ -192,10 +227,14 @@ class TransactionEntry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     transaction_id = db.Column(db.Integer, db.ForeignKey('transactions.id'), nullable=False)
     account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
+    cost_center_id = db.Column(db.Integer, db.ForeignKey('cost_centers.id'))  # مركز التكلفة اختياري
     entry_type = db.Column(Enum(EntryType), nullable=False)  # مدين أو دائن
     amount = db.Column(db.Numeric(15, 2), nullable=False)
     description = db.Column(db.Text)  # وصف إضافي للقيد
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقات
+    cost_center = db.relationship('CostCenter', backref='transaction_entries')
 
 
 class Budget(db.Model):

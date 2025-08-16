@@ -1,0 +1,200 @@
+{% extends "layout.html" %}
+
+{% block title %}إنشاء مركز تكلفة - نظام نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('accounting.dashboard') }}">المحاسبة</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('accounting.cost_centers') }}">مراكز التكلفة</a></li>
+                    <li class="breadcrumb-item active">إنشاء مركز جديد</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">إنشاء مركز تكلفة جديد</h1>
+            <p class="text-muted mb-0">إضافة مركز تكلفة لتتبع المصروفات والميزانيات</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-2"></i>العودة للقائمة
+            </a>
+        </div>
+    </div>
+
+    <!-- نموذج الإنشاء -->
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-building me-2"></i>معلومات مركز التكلفة
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="code" class="form-label">رمز المركز <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="code" name="code" required
+                                       placeholder="CC001" maxlength="20">
+                                <div class="form-text">رمز فريد لمركز التكلفة</div>
+                            </div>
+                            
+                            <div class="col-md-8 mb-3">
+                                <label for="name" class="form-label">اسم المركز <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" name="name" required
+                                       placeholder="إدارة الموارد البشرية" maxlength="200">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name_en" class="form-label">الاسم بالإنجليزية</label>
+                                <input type="text" class="form-control" id="name_en" name="name_en"
+                                       placeholder="Human Resources Department" maxlength="200">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="parent_id" class="form-label">المركز الأب</label>
+                                <select class="form-select" id="parent_id" name="parent_id">
+                                    <option value="">لا يوجد (مركز رئيسي)</option>
+                                    {% for center in parent_centers %}
+                                    <option value="{{ center.id }}">{{ center.code }} - {{ center.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">اختياري - للمراكز الفرعية</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف المركز</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"
+                                      placeholder="وصف مختصر عن دور ومسؤوليات مركز التكلفة"></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="budget_amount" class="form-label">الميزانية المخصصة</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="budget_amount" name="budget_amount" 
+                                           step="0.01" min="0" value="0" placeholder="100000">
+                                    <span class="input-group-text">ريال</span>
+                                </div>
+                                <div class="form-text">الميزانية السنوية المخصصة للمركز</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3 d-flex align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
+                                    <label class="form-check-label" for="is_active">
+                                        مركز نشط
+                                    </label>
+                                    <div class="form-text">يمكن استخدامه في المعاملات</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('accounting.cost_centers') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>إلغاء
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus me-2"></i>إنشاء مركز التكلفة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- معلومات إضافية -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>نصائح مهمة
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">
+                            <i class="fas fa-lightbulb me-1"></i>رمز المركز
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            استخدم رموزاً مفهومة ومنطقية مثل:
+                            <br>• HR001 للموارد البشرية
+                            <br>• IT001 لتقنية المعلومات
+                            <br>• FIN001 للشؤون المالية
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-success">
+                            <i class="fas fa-sitemap me-1"></i>الهيكل الهرمي
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            يمكنك إنشاء مراكز فرعية تحت المراكز الرئيسية لتنظيم أفضل للمصروفات والتقارير.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-warning">
+                            <i class="fas fa-dollar-sign me-1"></i>الميزانية
+                        </h6>
+                        <p class="small text-muted mb-0">
+                            حدد ميزانية واقعية لتتمكن من مراقبة المصروفات بفعالية وتلقي تنبيهات عند تجاوز الحدود.
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-light">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            يمكنك تعديل جميع هذه المعلومات لاحقاً في أي وقت.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // تحسين تجربة المستخدم
+    const codeInput = document.getElementById('code');
+    const nameInput = document.getElementById('name');
+    
+    // تحويل الرمز إلى أحرف كبيرة تلقائياً
+    codeInput.addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+    
+    // اقتراح رمز تلقائي بناء على الاسم
+    nameInput.addEventListener('blur', function() {
+        if (this.value && !codeInput.value) {
+            let suggested = '';
+            const words = this.value.trim().split(' ');
+            
+            if (words.length >= 2) {
+                // أخذ أول حرفين من أول كلمتين
+                suggested = (words[0].substring(0, 2) + words[1].substring(0, 2)).toUpperCase();
+            } else if (words.length === 1) {
+                // أخذ أول 3 أحرف
+                suggested = words[0].substring(0, 3).toUpperCase();
+            }
+            
+            if (suggested) {
+                suggested += '001'; // إضافة ترقيم
+                codeInput.value = suggested;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
