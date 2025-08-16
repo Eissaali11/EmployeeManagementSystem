@@ -40,14 +40,15 @@
                             <div class="col-md-4 mb-3">
                                 <label for="code" class="form-label">رمز المركز <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="code" name="code" required
-                                       placeholder="CC001" maxlength="20">
-                                <div class="form-text">رمز فريد لمركز التكلفة</div>
+                                       placeholder="مثال: HR001" maxlength="20">
+                                <div class="form-text">رمز مختصر للمركز (مثل: HR001، IT001، FIN001)</div>
                             </div>
                             
                             <div class="col-md-8 mb-3">
                                 <label for="name" class="form-label">اسم المركز <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="name" name="name" required
-                                       placeholder="إدارة الموارد البشرية" maxlength="200">
+                                       placeholder="مثال: إدارة الموارد البشرية" maxlength="200">
+                                <div class="form-text">الاسم الكامل لمركز التكلفة</div>
                             </div>
                         </div>
                         
@@ -55,18 +56,19 @@
                             <div class="col-md-6 mb-3">
                                 <label for="name_en" class="form-label">الاسم بالإنجليزية</label>
                                 <input type="text" class="form-control" id="name_en" name="name_en"
-                                       placeholder="Human Resources Department" maxlength="200">
+                                       placeholder="مثال: Human Resources Department" maxlength="200">
+                                <div class="form-text">اختياري - للتقارير الإنجليزية</div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="parent_id" class="form-label">المركز الأب</label>
+                                <label for="parent_id" class="form-label">المركز الرئيسي</label>
                                 <select class="form-select" id="parent_id" name="parent_id">
-                                    <option value="">لا يوجد (مركز رئيسي)</option>
+                                    <option value="">لا يوجد (مركز أساسي)</option>
                                     {% for center in parent_centers %}
                                     <option value="{{ center.id }}">{{ center.code }} - {{ center.name }}</option>
                                     {% endfor %}
                                 </select>
-                                <div class="form-text">اختياري - للمراكز الفرعية</div>
+                                <div class="form-text">إذا كان هذا المركز فرع من مركز أكبر</div>
                             </div>
                         </div>
                         

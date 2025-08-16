@@ -120,14 +120,14 @@ class CustomerForm(FlaskForm):
 
 class CostCenterForm(FlaskForm):
     """نموذج إضافة/تعديل مركز تكلفة"""
-    code = StringField('رمز مركز التكلفة', validators=[DataRequired(), Length(min=2, max=20)])
-    name = StringField('اسم مركز التكلفة', validators=[DataRequired(), Length(min=2, max=200)])
+    code = StringField('رمز المركز', validators=[DataRequired(), Length(min=2, max=20)])
+    name = StringField('اسم المركز', validators=[DataRequired(), Length(min=2, max=200)])
     name_en = StringField('الاسم بالإنجليزية', validators=[Optional(), Length(max=200)])
-    description = TextAreaField('الوصف', validators=[Optional()], widget=TextArea())
-    parent_id = SelectField('المركز الأب', coerce=lambda x: int(x) if x else None, validators=[Optional()])
-    budget_amount = DecimalField('مبلغ الميزانية', validators=[Optional(), NumberRange(min=0)], default=0)
-    is_active = BooleanField('نشط', default=True)
-    submit = SubmitField('حفظ التعديلات')
+    description = TextAreaField('وصف المركز', validators=[Optional()], widget=TextArea())
+    parent_id = SelectField('المركز الرئيسي', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+    budget_amount = DecimalField('الميزانية المخصصة (ريال)', validators=[Optional(), NumberRange(min=0)], default=0)
+    is_active = BooleanField('حالة المركز', default=True)
+    submit = SubmitField('حفظ البيانات')
 
 
 class FiscalYearForm(FlaskForm):
