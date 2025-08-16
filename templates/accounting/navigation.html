@@ -44,7 +44,7 @@
         
         <!-- التقارير المالية -->
         <div class="nav-group">
-            <h6 class="nav-header text-muted px-2 mt-3 mb-1">📈 التقارير</h6>
+            <h6 class="nav-header text-muted px-2 mt-3 mb-1">📈 التقارير والنظم</h6>
             <a class="nav-link text-white {% if request.endpoint == 'accounting.trial_balance' %}active bg-primary{% endif %}" 
                href="{{ url_for('accounting.trial_balance') }}">
                 <i class="fas fa-balance-scale me-2"></i> ميزان المراجعة
@@ -64,6 +64,10 @@
             <a class="nav-link text-white {% if request.endpoint == 'integrated.comprehensive_report' %}active bg-primary{% endif %}" 
                href="/integrated/comprehensive-report?start_date=2025-08-01&end_date=2025-08-16&department=1">
                 <i class="fas fa-chart-bar me-2"></i> التقرير الشامل
+            </a>
+            <a class="nav-link text-white {% if request.endpoint == 'integrated.dashboard' %}active bg-primary{% endif %}" 
+               href="/integrated/dashboard">
+                <i class="fas fa-desktop me-2"></i> النظام المتكامل
             </a>
         </div>
         
