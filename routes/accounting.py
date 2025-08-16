@@ -586,3 +586,42 @@ def account_balance(account_id):
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@accounting_bp.route('/account/<int:account_id>/balance-page')
+@login_required
+def account_balance_page(account_id):
+    """صفحة تفاصيل رصيد الحساب"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    try:
+        account = Account.query.get_or_404(account_id)
+        
+        # حساب الرصيد مع الحسابات الفرعية
+        total_balance = calculate_account_balance(account_id, True)
+        
+        # التسلسل الهرمي
+        hierarchy = get_account_hierarchy(account_id)
+        
+        # الحسابات الفرعية
+        children = Account.query.filter_by(parent_id=account_id, is_active=True).all()
+        
+        # أحدث المعاملات على هذا الحساب
+        recent_transactions = TransactionEntry.query.filter_by(account_id=account_id)\
+            .join(Transaction)\
+            .filter(Transaction.is_approved == True)\
+            .order_by(desc(Transaction.transaction_date))\
+            .limit(10).all()
+        
+        return render_template('accounting/account_balance.html',
+                             account=account,
+                             total_balance=total_balance,
+                             hierarchy=hierarchy,
+                             children=children,
+                             recent_transactions=recent_transactions)
+        
+    except Exception as e:
+        flash(f'خطأ في جلب تفاصيل الحساب: {str(e)}', 'danger')
+        return redirect(url_for('accounting.chart_of_accounts'))

@@ -143,9 +143,10 @@
                         </div>
                         <div class="d-flex align-items-center">
                             <span class="badge bg-primary me-2">{{ main_data.account.account_type.value }}</span>
-                            <button class="btn btn-sm btn-outline-info me-2" onclick="event.stopPropagation(); showAccountBalance({{ main_id }})">
+                            <a href="{{ url_for('accounting.account_balance_page', account_id=main_id) }}" 
+                               class="btn btn-sm btn-outline-info me-2" onclick="event.stopPropagation();">
                                 <i class="fas fa-calculator"></i> الرصيد
-                            </button>
+                            </a>
                             <i class="fas fa-chevron-down toggle-icon"></i>
                         </div>
                     </div>
@@ -166,9 +167,10 @@
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center">
-                                    <button class="btn btn-sm btn-outline-info me-2" onclick="event.stopPropagation(); showAccountBalance({{ sub_id }})">
+                                    <a href="{{ url_for('accounting.account_balance_page', account_id=sub_id) }}" 
+                                       class="btn btn-sm btn-outline-info me-2" onclick="event.stopPropagation();">
                                         <i class="fas fa-calculator"></i>
-                                    </button>
+                                    </a>
                                     {% if sub_data.children %}
                                     <i class="fas fa-chevron-down toggle-icon"></i>
                                     {% endif %}
@@ -192,9 +194,10 @@
                                         </div>
                                         <div class="d-flex align-items-center">
                                             <span class="text-muted me-3">{{ "%.2f"|format(detail_data.account.balance) }} ر.س</span>
-                                            <button class="btn btn-sm btn-outline-info" onclick="showAccountBalance({{ detail_id }})">
+                                            <a href="{{ url_for('accounting.account_balance_page', account_id=detail_id) }}" 
+                                               class="btn btn-sm btn-outline-info">
                                                 <i class="fas fa-info-circle"></i>
-                                            </button>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
