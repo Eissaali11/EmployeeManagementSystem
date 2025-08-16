@@ -70,11 +70,11 @@ def get_financial_kpis():
     """حساب المؤشرات المالية الرئيسية"""
     
     # إجمالي الإيرادات (حسابات الإيرادات)
-    revenue_accounts = Account.query.filter_by(account_type=AccountType.REVENUE, is_active=True).all()
+    revenue_accounts = Account.query.filter_by(account_type=AccountType.REVENUE).filter(Account.is_active != False).all()
     total_revenue = sum([abs(float(acc.balance or 0)) for acc in revenue_accounts])
     
     # إجمالي المصروفات (حسابات المصروفات)
-    expense_accounts = Account.query.filter_by(account_type=AccountType.EXPENSES, is_active=True).all()
+    expense_accounts = Account.query.filter_by(account_type=AccountType.EXPENSES).filter(Account.is_active != False).all()
     total_expenses = sum([abs(float(acc.balance or 0)) for acc in expense_accounts])
     
     # صافي الربح
@@ -84,10 +84,7 @@ def get_financial_kpis():
     profit_margin = (net_profit / total_revenue * 100) if total_revenue > 0 else 0
     
     # النقدية المتاحة
-    cash_accounts = Account.query.filter(
-        Account.code.like('1001%'),
-        Account.is_active == True
-    ).all()
+    cash_accounts = Account.query.filter(Account.code.like('1001%')).all()
     cash_flow = sum([float(acc.balance or 0) for acc in cash_accounts])
     
     # عائد على الاستثمار
@@ -188,8 +185,7 @@ def get_expense_distribution():
     
     # مصروفات حسب نوع الحساب
     expense_accounts = Account.query.filter_by(
-        account_type=AccountType.EXPENSES, 
-        is_active=True
+        account_type=AccountType.EXPENSES
     ).all()
     
     for account in expense_accounts[:3]:  # أكبر 3 حسابات مصروفات
@@ -213,9 +209,8 @@ def get_budget_analysis():
     
     # أهم حسابات المصروفات
     main_expense_accounts = Account.query.filter_by(
-        account_type=AccountType.EXPENSES,
-        is_active=True
-    ).order_by(Account.balance.desc()).limit(5).all()
+        account_type=AccountType.EXPENSES
+    ).filter(Account.balance != None).order_by(Account.balance.desc()).limit(5).all()
     
     accounts = []
     actual = []
@@ -293,7 +288,11 @@ def get_department_performance():
     for dept in departments:
         # حساب رواتب القسم
         dept_salary_total = 0
-        dept_employees = Employee.query.filter_by(department_id=dept.id, is_active=True).all()
+        # جلب الموظفين النشطين في القسم
+        dept_employees = []
+        for emp in Employee.query.all():
+            if emp.departments and any(d.id == dept.id for d in emp.departments) and emp.status in ['active', 'نشط']:
+                dept_employees.append(emp)
         
         for emp in dept_employees:
             if emp.salary:
