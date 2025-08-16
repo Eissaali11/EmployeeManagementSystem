@@ -61,6 +61,10 @@
                href="{{ url_for('accounting.analytics') }}">
                 <i class="fas fa-chart-pie me-2"></i> التحليلات المالية
             </a>
+            <a class="nav-link text-white {% if request.endpoint == 'integrated_simple.comprehensive_report' %}active bg-primary{% endif %}" 
+               href="{{ url_for('integrated_simple.comprehensive_report') }}">
+                <i class="fas fa-chart-bar me-2"></i> التقرير الشامل
+            </a>
         </div>
         
         <!-- الإعدادات -->
