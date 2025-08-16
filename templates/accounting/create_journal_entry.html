@@ -1,0 +1,382 @@
+{% extends "layout.html" %}
+
+{% block title %}إنشاء قيد يومية - نظام نُظم{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('accounting.dashboard') }}">المحاسبة</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('accounting.transactions') }}">القيود</a></li>
+                    <li class="breadcrumb-item active">إنشاء قيد جديد</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-0">إنشاء قيد يومية</h1>
+            <p class="text-muted mb-0">إضافة قيد محاسبي جديد</p>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('accounting.transactions') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-right me-2"></i>العودة للقيود
+            </a>
+        </div>
+    </div>
+
+    <!-- نموذج القيد -->
+    <form id="journalEntryForm" method="POST">
+        <div class="row">
+            <!-- معلومات القيد الأساسية -->
+            <div class="col-lg-4 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>معلومات القيد
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="transaction_number" class="form-label">رقم القيد</label>
+                            <input type="text" class="form-control" id="transaction_number" name="transaction_number" 
+                                   value="{{ next_number }}" readonly>
+                            <div class="form-text">يتم إنشاء الرقم تلقائياً</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="transaction_date" class="form-label">تاريخ القيد <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="transaction_date" name="transaction_date" 
+                                   value="{{ today }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">وصف القيد <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="description" name="description" rows="3" 
+                                      placeholder="وصف مختصر للعملية المحاسبية" required></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="reference_number" class="form-label">رقم المرجع</label>
+                            <input type="text" class="form-control" id="reference_number" name="reference_number" 
+                                   placeholder="رقم الفاتورة أو المستند">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="2" 
+                                      placeholder="ملاحظات إضافية اختيارية"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- تفاصيل القيد -->
+            <div class="col-lg-8 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>تفاصيل القيد
+                        </h5>
+                        <button type="button" class="btn btn-light btn-sm" onclick="addEntry()">
+                            <i class="fas fa-plus me-1"></i>إضافة حساب
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0" id="entriesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="40%">الحساب</th>
+                                        <th width="20%">وصف القيد</th>
+                                        <th width="15%">مدين</th>
+                                        <th width="15%">دائن</th>
+                                        <th width="10%">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entriesBody">
+                                    <!-- سيتم إضافة الصفوف هنا بـ JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-calculator text-primary me-2"></i>
+                                    <span class="fw-bold">إجمالي المدين: </span>
+                                    <span id="totalDebit" class="text-primary fw-bold ms-2">0.00 ريال</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-calculator text-success me-2"></i>
+                                    <span class="fw-bold">إجمالي الدائن: </span>
+                                    <span id="totalCredit" class="text-success fw-bold ms-2">0.00 ريال</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <i class="fas fa-balance-scale me-2" id="balanceIcon"></i>
+                                    <span id="balanceStatus" class="fw-bold">الفرق: 0.00 ريال</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- أزرار الحفظ -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                                <i class="fas fa-eraser me-2"></i>مسح الكل
+                            </button>
+                            <button type="submit" name="action" value="draft" class="btn btn-warning">
+                                <i class="fas fa-save me-2"></i>حفظ كمسودة
+                            </button>
+                            <button type="submit" name="action" value="approve" class="btn btn-success" id="approveBtn" disabled>
+                                <i class="fas fa-check me-2"></i>حفظ واعتماد
+                            </button>
+                        </div>
+                        <div class="form-text mt-2">
+                            يجب أن يكون القيد متوازناً (إجمالي المدين = إجمالي الدائن) للاعتماد
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.table th {
+    border-top: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.entry-row {
+    background-color: #f8f9fa;
+}
+
+.entry-row:hover {
+    background-color: #e9ecef;
+}
+
+.form-select, .form-control {
+    font-size: 0.875rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+#balanceIcon.text-success {
+    color: #28a745 !important;
+}
+
+#balanceIcon.text-danger {
+    color: #dc3545 !important;
+}
+
+#balanceIcon.text-warning {
+    color: #ffc107 !important;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.75rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+}
+</style>
+
+<script>
+let entryCount = 0;
+const accounts = {{ accounts|safe }};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة صفين افتراضيين
+    addEntry();
+    addEntry();
+});
+
+function addEntry() {
+    entryCount++;
+    const tbody = document.getElementById('entriesBody');
+    const row = document.createElement('tr');
+    row.className = 'entry-row';
+    row.id = `entry-${entryCount}`;
+    
+    row.innerHTML = `
+        <td>
+            <select class="form-select form-select-sm" name="account_id[]" required onchange="updateAccountInfo(this, ${entryCount})">
+                <option value="">اختر الحساب</option>
+                ${accounts.map(acc => `<option value="${acc.id}" data-code="${acc.code}" data-type="${acc.account_type}">${acc.code} - ${acc.name}</option>`).join('')}
+            </select>
+        </td>
+        <td>
+            <input type="text" class="form-control form-control-sm" name="description[]" 
+                   placeholder="وصف هذا القيد">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm text-end" name="debit[]" 
+                   step="0.01" min="0" value="0" onchange="updateTotals()" onfocus="this.select()">
+        </td>
+        <td>
+            <input type="number" class="form-control form-control-sm text-end" name="credit[]" 
+                   step="0.01" min="0" value="0" onchange="updateTotals()" onfocus="this.select()">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeEntry(${entryCount})" 
+                    title="حذف هذا الحساب">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+    updateTotals();
+}
+
+function removeEntry(entryId) {
+    const row = document.getElementById(`entry-${entryId}`);
+    if (row && document.querySelectorAll('.entry-row').length > 2) {
+        row.remove();
+        updateTotals();
+    } else {
+        alert('يجب أن يحتوي القيد على حسابين على الأقل');
+    }
+}
+
+function updateAccountInfo(selectElement, entryId) {
+    const selectedOption = selectElement.options[selectElement.selectedIndex];
+    const row = document.getElementById(`entry-${entryId}`);
+    
+    if (selectedOption.value && row) {
+        const accountType = selectedOption.dataset.type;
+        const debitInput = row.querySelector('input[name="debit[]"]');
+        const creditInput = row.querySelector('input[name="credit[]"]');
+        
+        // تنظيف القيم السابقة
+        debitInput.value = '0';
+        creditInput.value = '0';
+        
+        // تلميح بناء على نوع الحساب
+        if (accountType === 'assets' || accountType === 'expenses') {
+            debitInput.style.backgroundColor = '#e8f5e8';
+            creditInput.style.backgroundColor = '';
+        } else if (accountType === 'liabilities' || accountType === 'equity' || accountType === 'revenue') {
+            creditInput.style.backgroundColor = '#e8f5e8';
+            debitInput.style.backgroundColor = '';
+        }
+    }
+    
+    updateTotals();
+}
+
+function updateTotals() {
+    let totalDebit = 0;
+    let totalCredit = 0;
+    
+    // حساب المجاميع
+    document.querySelectorAll('input[name="debit[]"]').forEach(input => {
+        totalDebit += parseFloat(input.value) || 0;
+    });
+    
+    document.querySelectorAll('input[name="credit[]"]').forEach(input => {
+        totalCredit += parseFloat(input.value) || 0;
+    });
+    
+    // تحديث العرض
+    document.getElementById('totalDebit').textContent = totalDebit.toFixed(2) + ' ريال';
+    document.getElementById('totalCredit').textContent = totalCredit.toFixed(2) + ' ريال';
+    
+    // حساب الفرق
+    const difference = totalDebit - totalCredit;
+    const balanceStatus = document.getElementById('balanceStatus');
+    const balanceIcon = document.getElementById('balanceIcon');
+    const approveBtn = document.getElementById('approveBtn');
+    
+    if (Math.abs(difference) < 0.01) { // متوازن
+        balanceStatus.textContent = 'القيد متوازن ✓';
+        balanceStatus.className = 'fw-bold text-success';
+        balanceIcon.className = 'fas fa-check-circle text-success me-2';
+        approveBtn.disabled = false;
+    } else {
+        balanceStatus.textContent = `الفرق: ${Math.abs(difference).toFixed(2)} ريال (${difference > 0 ? 'زيادة في المدين' : 'زيادة في الدائن'})`;
+        balanceStatus.className = 'fw-bold text-danger';
+        balanceIcon.className = 'fas fa-exclamation-triangle text-danger me-2';
+        approveBtn.disabled = true;
+    }
+}
+
+function clearForm() {
+    if (confirm('هل أنت متأكد من مسح جميع البيانات؟')) {
+        document.getElementById('description').value = '';
+        document.getElementById('reference_number').value = '';
+        document.getElementById('notes').value = '';
+        
+        // إعادة تعيين الجدول
+        document.getElementById('entriesBody').innerHTML = '';
+        entryCount = 0;
+        addEntry();
+        addEntry();
+    }
+}
+
+// التحقق قبل الإرسال
+document.getElementById('journalEntryForm').addEventListener('submit', function(e) {
+    const entries = document.querySelectorAll('.entry-row');
+    let hasValidEntries = false;
+    
+    entries.forEach(row => {
+        const accountSelect = row.querySelector('select[name="account_id[]"]');
+        const debitInput = row.querySelector('input[name="debit[]"]');
+        const creditInput = row.querySelector('input[name="credit[]"]');
+        
+        if (accountSelect.value && (parseFloat(debitInput.value) > 0 || parseFloat(creditInput.value) > 0)) {
+            hasValidEntries = true;
+        }
+    });
+    
+    if (!hasValidEntries) {
+        e.preventDefault();
+        alert('يجب إدخال حساب واحد على الأقل مع مبلغ صحيح');
+        return false;
+    }
+    
+    // التحقق من التوازن إذا كان الإجراء اعتماد
+    const action = e.submitter.value;
+    if (action === 'approve') {
+        let totalDebit = 0, totalCredit = 0;
+        
+        document.querySelectorAll('input[name="debit[]"]').forEach(input => {
+            totalDebit += parseFloat(input.value) || 0;
+        });
+        
+        document.querySelectorAll('input[name="credit[]"]').forEach(input => {
+            totalCredit += parseFloat(input.value) || 0;
+        });
+        
+        if (Math.abs(totalDebit - totalCredit) >= 0.01) {
+            e.preventDefault();
+            alert('لا يمكن اعتماد القيد غير المتوازن');
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}

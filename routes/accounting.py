@@ -672,3 +672,137 @@ def delete_account(account_id):
         db.session.rollback()
         flash(f'خطأ في حذف الحساب: {str(e)}', 'danger')
         return redirect(url_for('accounting.account_balance_page', account_id=account_id))
+
+
+@accounting_bp.route('/journal-entry/create', methods=['GET', 'POST'])
+@login_required
+def create_journal_entry():
+    """إنشاء قيد يومية جديد"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    if request.method == 'GET':
+        # جلب جميع الحسابات النشطة
+        accounts = Account.query.filter_by(is_active=True).order_by(Account.code).all()
+        accounts_list = [
+            {
+                'id': acc.id,
+                'code': acc.code,
+                'name': acc.name,
+                'account_type': acc.account_type.value
+            }
+            for acc in accounts
+        ]
+        
+        # إنشاء رقم قيد جديد
+        last_transaction = Transaction.query.order_by(desc(Transaction.id)).first()
+        next_number = f"JE{(last_transaction.id + 1) if last_transaction else 1:06d}"
+        
+        # التاريخ الحالي
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        return render_template('accounting/create_journal_entry.html',
+                             accounts=json.dumps(accounts_list),
+                             next_number=next_number,
+                             today=today)
+    
+    # معالجة POST
+    try:
+        # إنشاء المعاملة الأساسية
+        transaction = Transaction()
+        transaction.transaction_number = request.form.get('transaction_number')
+        transaction.transaction_date = datetime.strptime(request.form.get('transaction_date'), '%Y-%m-%d').date()
+        transaction.description = request.form.get('description')
+        transaction.reference_number = request.form.get('reference_number', '')
+        transaction.notes = request.form.get('notes', '')
+        transaction.transaction_type = TransactionType.JOURNAL
+        transaction.created_by = current_user.id
+        
+        # تحديد حالة الاعتماد
+        action = request.form.get('action', 'draft')
+        transaction.is_approved = (action == 'approve')
+        if transaction.is_approved:
+            transaction.approved_by = current_user.id
+            transaction.approved_at = datetime.utcnow()
+        
+        db.session.add(transaction)
+        db.session.flush()  # للحصول على ID المعاملة
+        
+        # معالجة تفاصيل القيد
+        account_ids = request.form.getlist('account_id[]')
+        descriptions = request.form.getlist('description[]')
+        debits = request.form.getlist('debit[]')
+        credits = request.form.getlist('credit[]')
+        
+        total_debit = 0
+        total_credit = 0
+        entry_count = 0
+        
+        for i in range(len(account_ids)):
+            if account_ids[i] and account_ids[i] != '':
+                debit_amount = float(debits[i]) if debits[i] else 0
+                credit_amount = float(credits[i]) if credits[i] else 0
+                
+                if debit_amount > 0 or credit_amount > 0:
+                    # إنشاء قيد المدين
+                    if debit_amount > 0:
+                        debit_entry = TransactionEntry()
+                        debit_entry.transaction_id = transaction.id
+                        debit_entry.account_id = int(account_ids[i])
+                        debit_entry.entry_type = EntryType.DEBIT
+                        debit_entry.amount = debit_amount
+                        debit_entry.description = descriptions[i] if descriptions[i] else transaction.description
+                        db.session.add(debit_entry)
+                        total_debit += debit_amount
+                        entry_count += 1
+                    
+                    # إنشاء قيد الدائن
+                    if credit_amount > 0:
+                        credit_entry = TransactionEntry()
+                        credit_entry.transaction_id = transaction.id
+                        credit_entry.account_id = int(account_ids[i])
+                        credit_entry.entry_type = EntryType.CREDIT
+                        credit_entry.amount = credit_amount
+                        credit_entry.description = descriptions[i] if descriptions[i] else transaction.description
+                        db.session.add(credit_entry)
+                        total_credit += credit_amount
+                        entry_count += 1
+        
+        # التحقق من وجود قيود
+        if entry_count == 0:
+            flash('يجب إدخال قيد واحد على الأقل', 'danger')
+            return redirect(request.url)
+        
+        # التحقق من التوازن للقيود المعتمدة
+        if action == 'approve' and abs(total_debit - total_credit) >= 0.01:
+            flash('لا يمكن اعتماد القيد غير المتوازن', 'danger')
+            return redirect(request.url)
+        
+        # تحديث أرصدة الحسابات إذا كان القيد معتمداً
+        if transaction.is_approved:
+            for i in range(len(account_ids)):
+                if account_ids[i] and account_ids[i] != '':
+                    debit_amount = float(debits[i]) if debits[i] else 0
+                    credit_amount = float(credits[i]) if credits[i] else 0
+                    
+                    if debit_amount > 0 or credit_amount > 0:
+                        account = Account.query.get(int(account_ids[i]))
+                        if account:
+                            account.balance += (debit_amount - credit_amount)
+        
+        # إضافة المبلغ الإجمالي للمعاملة
+        transaction.amount = max(total_debit, total_credit)
+        
+        db.session.commit()
+        
+        status_text = "واعتُمد" if transaction.is_approved else "كمسودة"
+        log_activity(f"إنشاء قيد يومية: {transaction.transaction_number} {status_text}")
+        flash(f'تم حفظ القيد {transaction.transaction_number} {status_text} بنجاح', 'success')
+        
+        return redirect(url_for('accounting.view_transaction', transaction_id=transaction.id))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'خطأ في حفظ القيد: {str(e)}', 'danger')
+        return redirect(request.url)
