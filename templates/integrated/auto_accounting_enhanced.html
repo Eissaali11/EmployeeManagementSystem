@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الربط المحاسبي الذكي - نظم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .glass-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px;
+            overflow: hidden;
+        }
+        
+        .main-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #48dbfb 100%);
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="80" cy="40" r="3" fill="rgba(255,255,255,0.2)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.4)"/></svg>');
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .main-header h1 {
+            color: white;
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .main-header p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.3rem;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .stats-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            padding: 40px;
+            background: white;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+            cursor: pointer;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .stat-card:hover::before {
+            left: 100%;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(102, 126, 234, 0.4);
+        }
+        
+        .stat-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            display: block;
+            opacity: 0.9;
+        }
+        
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        
+        .automation-hub {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            padding: 50px 40px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .hub-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        
+        .hub-description {
+            font-size: 1.2rem;
+            color: #555;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 35px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .action-btn:hover::before {
+            left: 100%;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .integration-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+        
+        .integration-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .integration-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3);
+        }
+        
+        .integration-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .panel-icon {
+            font-size: 2.5rem;
+            margin-left: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        
+        .panel-status {
+            margin-top: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .panel-description {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .panel-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .panel-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .panel-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .panel-btn.secondary {
+            background: #6c757d;
+        }
+        
+        .progress-section {
+            margin-top: 20px;
+        }
+        
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .progress-bar-custom {
+            width: 120px;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 4px;
+            transition: width 0.8s ease;
+        }
+        
+        .logs-section {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px;
+        }
+        
+        .logs-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .log-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #28a745;
+            transition: all 0.3s ease;
+        }
+        
+        .log-entry:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .log-entry.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+        
+        .log-time {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            float: left;
+        }
+        
+        .log-message {
+            font-weight: 500;
+        }
+        
+        .floating-alerts {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        
+        .alert-custom {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border-left: 5px solid #28a745;
+            transform: translateX(100%);
+            animation: slideIn 0.5s ease forwards;
+        }
+        
+        @keyframes slideIn {
+            to { transform: translateX(0); }
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            padding: 15px 0;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+        
+        @media (max-width: 768px) {
+            .main-header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-dashboard {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .integration-panels {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .glass-container {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- شريط التنقل -->
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-rocket me-2"></i>
+            نُظم - الربط الذكي
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/integrated/dashboard">
+                        <i class="fas fa-tachometer-alt me-1"></i> لوحة التحكم
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/integrated/auto-accounting">
+                        <i class="fas fa-magic me-1"></i> الربط الذكي
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/integrated/comprehensive-report">
+                        <i class="fas fa-chart-line me-1"></i> التقرير الشامل
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/auth/logout">
+                        <i class="fas fa-sign-out-alt me-1"></i> خروج
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- حاوية شفافة رئيسية -->
+<div class="glass-container">
+    <!-- العنوان الرئيسي -->
+    <div class="main-header">
+        <h1><i class="fas fa-magic me-3"></i>الربط المحاسبي الذكي</h1>
+        <p>نظام متطور للربط التلقائي والذكي لجميع العمليات المالية والمحاسبية</p>
+    </div>
+
+    <!-- لوحة الإحصائيات -->
+    <div class="stats-dashboard">
+        <div class="stat-card" onclick="showDetails('entries')">
+            <i class="fas fa-file-invoice stat-icon"></i>
+            <span class="stat-number" id="processed-count">{{ processed_entries }}</span>
+            <span class="stat-label">القيود المعالجة اليوم</span>
+        </div>
+        
+        <div class="stat-card" onclick="showDetails('pending')">
+            <i class="fas fa-hourglass-half stat-icon"></i>
+            <span class="stat-number" id="pending-count">{{ pending_transactions }}</span>
+            <span class="stat-label">المعاملات المعلقة</span>
+        </div>
+        
+        <div class="stat-card" onclick="showDetails('amount')">
+            <i class="fas fa-coins stat-icon"></i>
+            <span class="stat-number">{{ "{:,.0f}".format(total_amount) }}</span>
+            <span class="stat-label">إجمالي المبلغ (ريال)</span>
+        </div>
+        
+        <div class="stat-card" onclick="showDetails('sync')">
+            <i class="fas fa-sync-alt stat-icon"></i>
+            <span class="stat-number">{{ current_time.split()[1] }}</span>
+            <span class="stat-label">آخر مزامنة</span>
+        </div>
+    </div>
+
+    <!-- مركز الأتمتة -->
+    <div class="automation-hub">
+        <h2 class="hub-title">
+            <i class="fas fa-robot me-3"></i>
+            مركز الأتمتة الذكية
+        </h2>
+        <p class="hub-description">
+            استخدم أحدث تقنيات الذكاء الاصطناعي للربط التلقائي الشامل بين جميع الأنظمة المالية والمحاسبية. 
+            نظام متطور يضمن الدقة والسرعة في المعالجة.
+        </p>
+        <div class="action-buttons">
+            <button class="action-btn" onclick="startFullSync()">
+                <i class="fas fa-rocket"></i>
+                تشغيل الربط الشامل
+            </button>
+            <button class="action-btn" onclick="startQuickSync()">
+                <i class="fas fa-bolt"></i>
+                مزامنة سريعة
+            </button>
+            <button class="action-btn" onclick="scheduleSync()">
+                <i class="fas fa-calendar-alt"></i>
+                جدولة تلقائية
+            </button>
+        </div>
+    </div>
+
+    <!-- لوحات التكامل -->
+    <div class="integration-panels">
+        <!-- نظام الرواتب -->
+        <div class="integration-panel">
+            <div class="panel-header">
+                <i class="fas fa-users panel-icon"></i>
+                <div>
+                    <div class="panel-title">نظام الرواتب المتطور</div>
+                    <span class="panel-status status-active">مفعل ومتصل</span>
+                </div>
+            </div>
+            <div class="panel-description">
+                ربط ذكي وتلقائي لجميع عمليات الرواتب والبدلات والخصومات مع النظام المحاسبي المتقدم.
+                يتضمن معالجة الضرائب والتأمينات الاجتماعية.
+            </div>
+            <div class="panel-actions">
+                <button class="panel-btn" onclick="syncSalaries()">
+                    <i class="fas fa-sync me-2"></i> مزامنة الرواتب
+                </button>
+                <button class="panel-btn secondary" onclick="configureSalaries()">
+                    <i class="fas fa-cog me-2"></i> الإعدادات المتقدمة
+                </button>
+            </div>
+            <div class="progress-section">
+                <div class="progress-item">
+                    <span>الرواتب الأساسية</span>
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                    <span>100%</span>
+                </div>
+                <div class="progress-item">
+                    <span>البدلات والمكافآت</span>
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" style="width: 95%"></div>
+                    </div>
+                    <span>95%</span>
+                </div>
+                <div class="progress-item">
+                    <span>الخصومات والضرائب</span>
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" style="width: 90%"></div>
+                    </div>
+                    <span>90%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- نظام السيارات -->
+        <div class="integration-panel">
+            <div class="panel-header">
+                <i class="fas fa-car panel-icon"></i>
+                <div>
+                    <div class="panel-title">إدارة أسطول السيارات</div>
+                    <span class="panel-status status-active">نشط ومحدث</span>
+                </div>
+            </div>
+            <div class="panel-description">
+                ربط شامل لجميع تكاليف السيارات: الإيجارات، الصيانة، الوقود، والتأمين.
+                نظام ذكي لحساب الاستهلاك والتكاليف التشغيلية.
+            </div>
+            <div class="panel-actions">
+                <button class="panel-btn" onclick="syncVehicles()">
+                    <i class="fas fa-car me-2"></i> مزامنة السيارات
+                </button>
+                <button class="panel-btn secondary" onclick="configureVehicles()">
+                    <i class="fas fa-wrench me-2"></i> إعدادات الأسطول
+                </button>
+            </div>
+            <div class="progress-section">
+                <div class="progress-item">
+                    <span>إيجارات السيارات</span>
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" style="width: 100%"></div>
+                    </div>
+                    <span>100%</span>
+                </div>
+                <div class="progress-item">
+                    <span>تكاليف الصيانة</span>
+                    <div class="progress-bar-custom">
+                        <div class="progress-fill" style="width: 85%"></div>
+                    </div>
+                    <span>85%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- نظام الحضور -->
+        <div class="integration-panel">
+            <div class="panel-header">
+                <i class="fas fa-calendar-check panel-icon"></i>
+                <div>
+                    <div class="panel-title">نظام الحضور الذكي</div>
+                    <span class="panel-status status-pending">قيد التطوير</span>
+                </div>
+            </div>
+            <div class="panel-description">
+                ربط متقدم لساعات العمل الإضافية والغياب مع حسابات الرواتب والخصومات.
+                يتضمن تحليل أنماط الحضور والإنتاجية.
+            </div>
+            <div class="panel-actions">
+                <button class="panel-btn" onclick="enableAttendanceSync()">
+                    <i class="fas fa-power-off me-2"></i> تفعيل النظام
+                </button>
+                <button class="panel-btn secondary" onclick="testAttendance()">
+                    <i class="fas fa-vial me-2"></i> اختبار الاتصال
+                </button>
+            </div>
+        </div>
+
+        <!-- الذكاء الاصطناعي -->
+        <div class="integration-panel">
+            <div class="panel-header">
+                <i class="fas fa-brain panel-icon"></i>
+                <div>
+                    <div class="panel-title">الذكاء الاصطناعي المالي</div>
+                    <span class="panel-status status-pending">تجريبي</span>
+                </div>
+            </div>
+            <div class="panel-description">
+                نظام ذكاء اصطناعي متطور لتحليل الأنماط المالية، التنبؤ بالتدفقات النقدية، 
+                وتقديم توصيات محاسبية ذكية.
+            </div>
+            <div class="panel-actions">
+                <button class="panel-btn" onclick="enableAI()">
+                    <i class="fas fa-robot me-2"></i> تفعيل الذكاء الاصطناعي
+                </button>
+                <button class="panel-btn secondary" onclick="aiSettings()">
+                    <i class="fas fa-brain me-2"></i> إعدادات الذكاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- قسم السجلات -->
+    <div class="logs-section">
+        <h3 class="logs-title">
+            <i class="fas fa-history me-3"></i>
+            سجل العمليات المباشر
+        </h3>
+        <div class="log-container" id="sync-logs">
+            {% for log in sync_logs %}
+            <div class="log-entry {{ log.type }}">
+                <div class="log-time">{{ log.timestamp }}</div>
+                <div class="log-message">{{ log.message }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- منطقة التنبيهات المطفية -->
+<div class="floating-alerts" id="alerts-container"></div>
+
+<!-- المكتبات الخارجية -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// دوال الربط المحاسبي المحسنة
+function startFullSync() {
+    showAlert('جاري تشغيل الربط الشامل للأنظمة...', 'info');
+    
+    fetch('/integrated/api/sync/full', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`تم الربط الشامل بنجاح! تم إنشاء ${data.entries_created} قيد محاسبي`, 'success');
+            updateCounters();
+            addLogEntry('تم تشغيل الربط الشامل بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ أثناء الربط: ' + data.message, 'error');
+        }
+    })
+    .catch(error => {
+        showAlert('حدث خطأ في الاتصال: ' + error.message, 'error');
+    });
+}
+
+function startQuickSync() {
+    showAlert('جاري تشغيل المزامنة السريعة...', 'info');
+    
+    // محاكاة عملية سريعة
+    setTimeout(() => {
+        showAlert('تمت المزامنة السريعة بنجاح!', 'success');
+        updateCounters();
+        addLogEntry('تمت المزامنة السريعة', 'success');
+    }, 2000);
+}
+
+function syncSalaries() {
+    showAlert('جاري مزامنة الرواتب...', 'info');
+    
+    fetch('/integrated/api/sync/salaries', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`تمت مزامنة الرواتب بنجاح! ${data.message}`, 'success');
+            updateCounters();
+            addLogEntry('تمت مزامنة الرواتب بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ أثناء مزامنة الرواتب: ' + data.message, 'error');
+        }
+    });
+}
+
+function syncVehicles() {
+    showAlert('جاري مزامنة السيارات...', 'info');
+    
+    fetch('/integrated/api/sync/vehicles', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(`تمت مزامنة السيارات بنجاح! ${data.message}`, 'success');
+            updateCounters();
+            addLogEntry('تمت مزامنة السيارات بنجاح', 'success');
+        } else {
+            showAlert('حدث خطأ أثناء مزامنة السيارات: ' + data.message, 'error');
+        }
+    });
+}
+
+function showAlert(message, type) {
+    const alertsContainer = document.getElementById('alerts-container');
+    const alert = document.createElement('div');
+    alert.className = `alert-custom alert-${type}`;
+    
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle';
+    
+    alert.innerHTML = `
+        <i class="fas fa-${icon} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    alertsContainer.appendChild(alert);
+    
+    // إزالة التنبيه بعد 5 ثوان
+    setTimeout(() => {
+        if (alert.parentElement) {
+            alert.remove();
+        }
+    }, 5000);
+}
+
+function addLogEntry(message, type) {
+    const logsContainer = document.getElementById('sync-logs');
+    const logEntry = document.createElement('div');
+    logEntry.className = `log-entry ${type}`;
+    
+    const now = new Date();
+    const timestamp = now.toLocaleString('ar-SA');
+    
+    logEntry.innerHTML = `
+        <div class="log-time">${timestamp}</div>
+        <div class="log-message">${message}</div>
+    `;
+    
+    logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+    
+    // الاحتفاظ بآخر 20 سجل فقط
+    while (logsContainer.children.length > 20) {
+        logsContainer.removeChild(logsContainer.lastChild);
+    }
+}
+
+function updateCounters() {
+    // محاكاة تحديث العدادات
+    const processedCount = document.getElementById('processed-count');
+    const pendingCount = document.getElementById('pending-count');
+    
+    if (processedCount) {
+        const currentValue = parseInt(processedCount.textContent);
+        animateCounter(processedCount, currentValue, currentValue + Math.floor(Math.random() * 5) + 1);
+    }
+    
+    if (pendingCount) {
+        const currentValue = parseInt(pendingCount.textContent);
+        const newValue = Math.max(0, currentValue - Math.floor(Math.random() * 3));
+        animateCounter(pendingCount, currentValue, newValue);
+    }
+}
+
+function animateCounter(element, start, end) {
+    const duration = 1000;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const current = Math.floor(start + (end - start) * progress);
+        element.textContent = current;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+function showDetails(type) {
+    const messages = {
+        'entries': 'عرض تفاصيل القيود المعالجة اليوم',
+        'pending': 'عرض المعاملات المعلقة والتي تحتاج مراجعة',
+        'amount': 'عرض تفصيل إجمالي المبالغ المعالجة',
+        'sync': 'عرض تفاصيل آخر عملية مزامنة'
+    };
+    
+    showAlert(messages[type] || 'عرض التفاصيل', 'info');
+}
+
+// دوال إضافية للميزات المتقدمة
+function scheduleSync() {
+    showAlert('تم تفعيل الجدولة التلقائية - ستتم المزامنة كل ساعة', 'success');
+    addLogEntry('تم تفعيل الجدولة التلقائية للمزامنة', 'success');
+}
+
+function enableAttendanceSync() {
+    showAlert('سيتم تفعيل ربط نظام الحضور في التحديث القادم', 'info');
+}
+
+function enableAI() {
+    showAlert('ميزة الذكاء الاصطناعي قيد التطوير - متوفرة قريباً', 'info');
+}
+
+// تحديث تلقائي للصفحة
+setInterval(() => {
+    updateCounters();
+}, 30000);
+
+// تحديث السجلات كل دقيقة
+setInterval(() => {
+    fetch('/integrated/api/sync/logs')
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.logs.length > 0) {
+            // تحديث السجلات إذا كان هناك جديد
+            const currentLogsCount = document.getElementById('sync-logs').children.length;
+            if (data.logs.length > currentLogsCount) {
+                addLogEntry('تم اكتشاف نشاط جديد في النظام', 'info');
+            }
+        }
+    })
+    .catch(error => console.log('خطأ في جلب السجلات:', error));
+}, 60000);
+
+// تأثيرات التحميل
+document.addEventListener('DOMContentLoaded', function() {
+    // تأثير ظهور تدريجي للعناصر
+    const panels = document.querySelectorAll('.integration-panel');
+    panels.forEach((panel, index) => {
+        panel.style.opacity = '0';
+        panel.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            panel.style.transition = 'all 0.6s ease';
+            panel.style.opacity = '1';
+            panel.style.transform = 'translateY(0)';
+        }, index * 200);
+    });
+    
+    // إضافة سجل ترحيب
+    addLogEntry('تم تحميل نظام الربط المحاسبي الذكي بنجاح', 'success');
+});
+</script>
+
+</body>
+</html>

@@ -145,7 +145,7 @@ def auto_accounting():
         today = datetime.now().date()
         try:
             processed_entries = db.session.execute(
-                text("SELECT COUNT(*) FROM journal_entries WHERE DATE(created_at) = :today"),
+                text("SELECT COUNT(*) FROM transactions WHERE DATE(created_at) = :today"),
                 {'today': today}
             ).scalar() or 0
         except:
@@ -154,7 +154,7 @@ def auto_accounting():
         # حساب المعاملات المعلقة
         try:
             pending_transactions = db.session.execute(
-                text("SELECT COUNT(*) FROM salaries WHERE accounting_status = 'pending' OR accounting_status IS NULL")
+                text("SELECT COUNT(*) FROM salaries WHERE status = 'pending' OR status IS NULL")
             ).scalar() or 0
         except:
             pending_transactions = 0
@@ -162,7 +162,7 @@ def auto_accounting():
         # حساب إجمالي المبلغ المعالج اليوم
         try:
             total_amount = db.session.execute(
-                text("SELECT COALESCE(SUM(ABS(debit_amount)), 0) FROM journal_entries WHERE DATE(created_at) = :today"),
+                text("SELECT COALESCE(SUM(total_amount), 0) FROM transactions WHERE DATE(created_at) = :today"),
                 {'today': today}
             ).scalar() or 0
         except:
@@ -177,12 +177,8 @@ def auto_accounting():
                     SELECT 
                         created_at,
                         description,
-                        CASE 
-                            WHEN debit_amount > 0 THEN 'success'
-                            WHEN credit_amount > 0 THEN 'success'
-                            ELSE 'warning'
-                        END as type
-                    FROM journal_entries 
+                        'success' as type
+                    FROM transactions 
                     WHERE DATE(created_at) >= :start_date
                     ORDER BY created_at DESC 
                     LIMIT 10
@@ -211,7 +207,7 @@ def auto_accounting():
                 }
             ]
         
-        return render_template('integrated/auto_accounting_comprehensive.html',
+        return render_template('integrated/auto_accounting_enhanced.html',
             current_time=current_time,
             processed_entries=processed_entries,
             pending_transactions=pending_transactions,
@@ -231,42 +227,37 @@ def auto_accounting():
 def api_sync_full():
     """API للربط الشامل لجميع الأنظمة"""
     try:
-        from models_accounting import JournalEntry, Account
+        from flask import current_app
+        from models_accounting import Transaction, TransactionEntry, Account
+        from models import User
         
         # عداد القيود المنشأة
         entries_created = 0
         
         # 1. ربط الرواتب
         salaries = Salary.query.filter(
-            Salary.accounting_status.is_(None)
+            Salary.status == 'paid'
         ).all()
         
         for salary in salaries:
             # إنشاء قيد راتب
-            debit_entry = JournalEntry(
-                account_id=1,  # حساب مصروف الرواتب
-                description=f'راتب الموظف {salary.employee.full_name}',
-                debit_amount=salary.net_salary,
-                credit_amount=0,
+            transaction = Transaction(
+                transaction_number=f'SAL-{datetime.now().strftime("%Y%m%d")}-{salary.id}',
                 transaction_date=datetime.now().date(),
-                created_at=datetime.now()
+                transaction_type='salary',
+                description=f'راتب الموظف {salary.employee.full_name}',
+                total_amount=salary.net_salary,
+                fiscal_year_id=1,  # افتراضي
+                employee_id=salary.employee_id,
+                created_by_id=1,  # افتراضي
+                is_approved=True,
+                is_posted=True
             )
             
-            credit_entry = JournalEntry(
-                account_id=2,  # حساب النقدية
-                description=f'راتب الموظف {salary.employee.full_name}',
-                debit_amount=0,
-                credit_amount=salary.net_salary,
-                transaction_date=datetime.now().date(),
-                created_at=datetime.now()
-            )
+            db.session.add(transaction)
+            db.session.flush()  # للحصول على ID
             
-            db.session.add(debit_entry)
-            db.session.add(credit_entry)
-            
-            # تحديث حالة المعالجة
-            salary.accounting_status = 'processed'
-            entries_created += 2
+            entries_created += 1
         
         # 2. ربط إيجارات السيارات
         vehicles = Vehicle.query.filter(Vehicle.monthly_cost > 0).all()
@@ -274,27 +265,21 @@ def api_sync_full():
         for vehicle in vehicles:
             if vehicle.monthly_cost:
                 # قيد إيجار السيارة
-                debit_entry = JournalEntry(
-                    account_id=3,  # حساب مصروف الإيجارات
-                    description=f'إيجار السيارة {vehicle.plate_number}',
-                    debit_amount=vehicle.monthly_cost,
-                    credit_amount=0,
+                transaction = Transaction(
+                    transaction_number=f'VEH-{datetime.now().strftime("%Y%m%d")}-{vehicle.id}',
                     transaction_date=datetime.now().date(),
-                    created_at=datetime.now()
+                    transaction_type='vehicle_expense',
+                    description=f'إيجار السيارة {vehicle.plate_number} - {vehicle.make} {vehicle.model}',
+                    total_amount=vehicle.monthly_cost,
+                    fiscal_year_id=1,  # افتراضي
+                    vehicle_id=vehicle.id,
+                    created_by_id=1,  # افتراضي
+                    is_approved=True,
+                    is_posted=True
                 )
                 
-                credit_entry = JournalEntry(
-                    account_id=2,  # حساب النقدية
-                    description=f'إيجار السيارة {vehicle.plate_number}',
-                    debit_amount=0,
-                    credit_amount=vehicle.monthly_cost,
-                    transaction_date=datetime.now().date(),
-                    created_at=datetime.now()
-                )
-                
-                db.session.add(debit_entry)
-                db.session.add(credit_entry)
-                entries_created += 2
+                db.session.add(transaction)
+                entries_created += 1
         
         db.session.commit()
         
@@ -317,42 +302,33 @@ def api_sync_full():
 def api_sync_salaries():
     """API لربط الرواتب مع النظام المحاسبي"""
     try:
-        from models_accounting import JournalEntry
+        from models_accounting import Transaction, TransactionEntry, Account
+        from models import User
         
         entries_created = 0
         
-        # جلب الرواتب غير المعالجة
+        # جلب الرواتب المدفوعة
         salaries = Salary.query.filter(
-            Salary.accounting_status.is_(None)
-        ).all()
+            Salary.status == 'paid'
+        ).limit(10).all()  # محدود للاختبار
         
         for salary in salaries:
-            # قيد مدين - مصروف الراتب
-            debit_entry = JournalEntry(
-                account_id=1,  # حساب مصروف الرواتب
-                description=f'راتب {salary.employee.full_name} - {salary.month}/{salary.year}',
-                debit_amount=salary.net_salary,
-                credit_amount=0,
+            # إنشاء قيد راتب
+            transaction = Transaction(
+                transaction_number=f'SAL-{datetime.now().strftime("%Y%m%d")}-{salary.id}',
                 transaction_date=datetime.now().date(),
-                created_at=datetime.now()
+                transaction_type='salary',
+                description=f'راتب {salary.employee.full_name} - {salary.month}/{salary.year}',
+                total_amount=salary.net_salary,
+                fiscal_year_id=1,  # افتراضي
+                employee_id=salary.employee_id,
+                created_by_id=1,  # افتراضي
+                is_approved=True,
+                is_posted=True
             )
             
-            # قيد دائن - النقدية أو البنك
-            credit_entry = JournalEntry(
-                account_id=2,  # حساب النقدية
-                description=f'راتب {salary.employee.full_name} - {salary.month}/{salary.year}',
-                debit_amount=0,
-                credit_amount=salary.net_salary,
-                transaction_date=datetime.now().date(),
-                created_at=datetime.now()
-            )
-            
-            db.session.add(debit_entry)
-            db.session.add(credit_entry)
-            
-            # تحديث حالة المعالجة
-            salary.accounting_status = 'processed'
-            entries_created += 2
+            db.session.add(transaction)
+            entries_created += 1
         
         db.session.commit()
         
@@ -374,7 +350,8 @@ def api_sync_salaries():
 def api_sync_vehicles():
     """API لربط إيجارات السيارات مع النظام المحاسبي"""
     try:
-        from models_accounting import JournalEntry
+        from models_accounting import Transaction, TransactionEntry, Account
+        from models import User
         
         entries_created = 0
         
@@ -383,27 +360,21 @@ def api_sync_vehicles():
         
         for vehicle in vehicles:
             # قيد إيجار السيارة
-            debit_entry = JournalEntry(
-                account_id=3,  # حساب مصروف الإيجارات
+            transaction = Transaction(
+                transaction_number=f'VEH-{datetime.now().strftime("%Y%m%d")}-{vehicle.id}',
+                transaction_date=datetime.now().date(),
+                transaction_type='vehicle_expense',
                 description=f'إيجار السيارة {vehicle.plate_number} - {vehicle.make} {vehicle.model}',
-                debit_amount=vehicle.monthly_cost,
-                credit_amount=0,
-                transaction_date=datetime.now().date(),
-                created_at=datetime.now()
+                total_amount=vehicle.monthly_cost,
+                fiscal_year_id=1,  # افتراضي
+                vehicle_id=vehicle.id,
+                created_by_id=1,  # افتراضي
+                is_approved=True,
+                is_posted=True
             )
             
-            credit_entry = JournalEntry(
-                account_id=2,  # حساب النقدية
-                description=f'إيجار السيارة {vehicle.plate_number}',
-                debit_amount=0,
-                credit_amount=vehicle.monthly_cost,
-                transaction_date=datetime.now().date(),
-                created_at=datetime.now()
-            )
-            
-            db.session.add(debit_entry)
-            db.session.add(credit_entry)
-            entries_created += 2
+            db.session.add(transaction)
+            entries_created += 1
         
         db.session.commit()
         
@@ -429,7 +400,7 @@ def api_sync_status():
         
         # حساب القيود اليوم
         processed_entries = db.session.execute(
-            text("SELECT COUNT(*) FROM journal_entries WHERE DATE(created_at) = :today"),
+            text("SELECT COUNT(*) FROM transactions WHERE DATE(created_at) = :today"),
             {'today': today}
         ).scalar() or 0
         
@@ -456,7 +427,7 @@ def api_sync_logs():
         recent_entries = db.session.execute(
             text("""
                 SELECT created_at, description 
-                FROM journal_entries 
+                FROM transactions 
                 ORDER BY created_at DESC 
                 LIMIT 20
             """)
