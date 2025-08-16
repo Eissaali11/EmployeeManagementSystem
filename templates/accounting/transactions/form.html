@@ -83,7 +83,7 @@
                                             {{ entry.amount(class="form-control", placeholder="المبلغ") }}
                                         </div>
                                         <div class="col-md-2">
-                                            {{ entry.description(class="form-control", placeholder="البيان") }}
+                                            {{ entry.description(class="form-control", placeholder="البيان") if entry.description else "" }}
                                         </div>
                                         <div class="col-md-1">
                                             <button type="button" class="btn btn-sm btn-danger remove-entry">
