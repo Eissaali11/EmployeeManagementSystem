@@ -63,6 +63,30 @@ class TransactionForm(FlaskForm):
     entries = FieldList(FormField(TransactionEntryForm), min_entries=2)
 
 
+class SalaryProcessingForm(FlaskForm):
+    """نموذج معالجة الرواتب"""
+    month = SelectField('الشهر', 
+                       choices=[
+                           ('1', 'يناير'),
+                           ('2', 'فبراير'),
+                           ('3', 'مارس'),
+                           ('4', 'أبريل'),
+                           ('5', 'مايو'),
+                           ('6', 'يونيو'),
+                           ('7', 'يوليو'),
+                           ('8', 'أغسطس'),
+                           ('9', 'سبتمبر'),
+                           ('10', 'أكتوبر'),
+                           ('11', 'نوفمبر'),
+                           ('12', 'ديسمبر')
+                       ],
+                       validators=[DataRequired()])
+    year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
+    salary_account_id = SelectField('حساب الرواتب', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    payable_account_id = SelectField('حساب المستحقات', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    submit = SubmitField('معالجة الرواتب')
+
+
 class VendorForm(FlaskForm):
     """نموذج إضافة/تعديل مورد"""
     code = StringField('رمز المورد', validators=[DataRequired(), Length(min=2, max=20)])
