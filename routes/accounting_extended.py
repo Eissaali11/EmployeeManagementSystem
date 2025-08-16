@@ -60,7 +60,7 @@ def quick_entry():
             fiscal_year = FiscalYear.query.filter_by(is_active=True).first()
             if not fiscal_year:
                 flash('لا توجد سنة مالية نشطة', 'danger')
-                return render_template('accounting/transactions/quick_form.html', form=form)
+                return render_template('accounting/quick_entry.html', form=form)
             
             # إنشاء المعاملة
             transaction = Transaction(
@@ -128,7 +128,7 @@ def quick_entry():
             db.session.rollback()
             flash(f'خطأ في إضافة القيد: {str(e)}', 'danger')
     
-    return render_template('accounting/transactions/quick_form.html', form=form)
+    return render_template('accounting/quick_entry.html', form=form)
 
 
 # ==================== معالجة الرواتب ====================
@@ -409,29 +409,36 @@ def trial_balance():
         to_date = date.today().strftime('%Y-%m-%d')
     
     # استعلام أرصدة الحسابات
+    from sqlalchemy import case
+    
     accounts_balances = db.session.query(
         Account.id,
         Account.code,
         Account.name,
         Account.account_type,
         func.sum(
-            func.case(
+            case(
                 (TransactionEntry.entry_type == EntryType.DEBIT, TransactionEntry.amount),
                 else_=0
             )
         ).label('total_debits'),
         func.sum(
-            func.case(
+            case(
                 (TransactionEntry.entry_type == EntryType.CREDIT, TransactionEntry.amount),
                 else_=0
             )
         ).label('total_credits')
     ).outerjoin(TransactionEntry).outerjoin(Transaction).filter(
-        Transaction.is_approved == True,
-        Transaction.transaction_date >= datetime.strptime(from_date, '%Y-%m-%d').date(),
-        Transaction.transaction_date <= datetime.strptime(to_date, '%Y-%m-%d').date(),
+        or_(Transaction.is_approved == True, Transaction.id.is_(None)),
+        or_(
+            and_(
+                Transaction.transaction_date >= datetime.strptime(from_date, '%Y-%m-%d').date(),
+                Transaction.transaction_date <= datetime.strptime(to_date, '%Y-%m-%d').date()
+            ),
+            Transaction.id.is_(None)
+        ),
         Account.is_active == True
-    ).group_by(Account.id).order_by(Account.code).all()
+    ).group_by(Account.id, Account.code, Account.name, Account.account_type).order_by(Account.code).all()
     
     # حساب الأرصدة النهائية
     trial_balance_data = []

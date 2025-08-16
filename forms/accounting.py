@@ -22,14 +22,14 @@ class AccountForm(FlaskForm):
                                   ('expenses', 'مصروفات')
                               ],
                               validators=[DataRequired()])
-    parent_id = SelectField('الحساب الأب', coerce=int, validators=[Optional()])
+    parent_id = SelectField('الحساب الأب', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     description = TextAreaField('وصف الحساب', validators=[Optional()], widget=TextArea())
     is_active = BooleanField('نشط', default=True)
 
 
 class TransactionEntryForm(FlaskForm):
     """نموذج فرعي لتفاصيل القيد"""
-    account_id = SelectField('الحساب', coerce=int, validators=[DataRequired()])
+    account_id = SelectField('الحساب', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
     entry_type = SelectField('النوع', 
                             choices=[
                                 ('debit', 'مدين'),
@@ -55,9 +55,9 @@ class TransactionForm(FlaskForm):
                                   validators=[DataRequired()])
     reference_number = StringField('رقم المرجع', validators=[Optional(), Length(max=100)])
     description = TextAreaField('وصف المعاملة', validators=[DataRequired()], widget=TextArea())
-    cost_center_id = SelectField('مركز التكلفة', coerce=int, validators=[Optional()])
-    vendor_id = SelectField('المورد', coerce=int, validators=[Optional()])
-    customer_id = SelectField('العميل', coerce=int, validators=[Optional()])
+    cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+    vendor_id = SelectField('المورد', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+    customer_id = SelectField('العميل', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     
     # تفاصيل القيود - سيتم تعبئتها ديناميكياً
     entries = FieldList(FormField(TransactionEntryForm), min_entries=2)
@@ -97,7 +97,7 @@ class CostCenterForm(FlaskForm):
     code = StringField('رمز مركز التكلفة', validators=[DataRequired(), Length(min=2, max=20)])
     name = StringField('اسم مركز التكلفة', validators=[DataRequired(), Length(min=2, max=200)])
     description = TextAreaField('الوصف', validators=[Optional()], widget=TextArea())
-    manager_id = SelectField('المدير المسؤول', coerce=int, validators=[Optional()])
+    manager_id = SelectField('المدير المسؤول', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     is_active = BooleanField('نشط', default=True)
 
 
@@ -111,9 +111,9 @@ class FiscalYearForm(FlaskForm):
 
 class BudgetForm(FlaskForm):
     """نموذج إضافة/تعديل موازنة"""
-    fiscal_year_id = SelectField('السنة المالية', coerce=int, validators=[DataRequired()])
-    account_id = SelectField('الحساب', coerce=int, validators=[DataRequired()])
-    cost_center_id = SelectField('مركز التكلفة', coerce=int, validators=[Optional()])
+    fiscal_year_id = SelectField('السنة المالية', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    account_id = SelectField('الحساب', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     
     # المبالغ الشهرية
     jan_amount = DecimalField('يناير', validators=[Optional(), NumberRange(min=0)], default=0)
@@ -157,7 +157,7 @@ class AccountingSettingsForm(FlaskForm):
                                              (7, 'يوليو'), (8, 'أغسطس'), (9, 'سبتمبر'),
                                              (10, 'أكتوبر'), (11, 'نوفمبر'), (12, 'ديسمبر')
                                          ],
-                                         coerce=int,
+                                         coerce=lambda x: int(x) if x else None,
                                          default=1)
 
 
@@ -167,21 +167,21 @@ class QuickEntryForm(FlaskForm):
     description = StringField('الوصف', validators=[DataRequired(), Length(min=5, max=200)])
     
     # حساب المدين
-    debit_account_id = SelectField('الحساب المدين', coerce=int, validators=[DataRequired()])
+    debit_account_id = SelectField('الحساب المدين', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
     # حساب الدائن  
-    credit_account_id = SelectField('الحساب الدائن', coerce=int, validators=[DataRequired()])
+    credit_account_id = SelectField('الحساب الدائن', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
     
     amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
     reference_number = StringField('رقم المرجع', validators=[Optional(), Length(max=100)])
-    cost_center_id = SelectField('مركز التكلفة', coerce=int, validators=[Optional()])
+    cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
 
 
 class ReportFiltersForm(FlaskForm):
     """نموذج فلاتر التقارير"""
     from_date = DateField('من تاريخ', validators=[DataRequired()])
     to_date = DateField('إلى تاريخ', validators=[DataRequired()])
-    account_id = SelectField('الحساب', coerce=int, validators=[Optional()])
-    cost_center_id = SelectField('مركز التكلفة', coerce=int, validators=[Optional()])
+    account_id = SelectField('الحساب', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+    cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     transaction_type = SelectField('نوع المعاملة',
                                   choices=[
                                       ('', 'جميع الأنواع'),
@@ -204,16 +204,16 @@ class SalaryProcessingForm(FlaskForm):
                                   (7, 'يوليو'), (8, 'أغسطس'), (9, 'سبتمبر'),
                                   (10, 'أكتوبر'), (11, 'نوفمبر'), (12, 'ديسمبر')
                               ],
-                              coerce=int,
+                              coerce=lambda x: int(x) if x else None,
                               validators=[DataRequired()])
     salary_year = IntegerField('سنة الراتب', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
-    department_id = SelectField('القسم', coerce=int, validators=[Optional()])
+    department_id = SelectField('القسم', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     process_all = BooleanField('معالجة جميع الموظفين', default=True)
 
 
 class VehicleExpenseForm(FlaskForm):
     """نموذج مصروفات المركبات"""
-    vehicle_id = SelectField('المركبة', coerce=int, validators=[DataRequired()])
+    vehicle_id = SelectField('المركبة', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
     expense_date = DateField('تاريخ المصروف', validators=[DataRequired()])
     expense_type = SelectField('نوع المصروف',
                               choices=[
@@ -226,7 +226,7 @@ class VehicleExpenseForm(FlaskForm):
                               ],
                               validators=[DataRequired()])
     amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
-    vendor_id = SelectField('المورد/المحطة', coerce=int, validators=[Optional()])
+    vendor_id = SelectField('المورد/المحطة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     description = TextAreaField('الوصف', validators=[DataRequired()], widget=TextArea())
     receipt_number = StringField('رقم الإيصال', validators=[Optional(), Length(max=100)])
     payment_method = SelectField('طريقة الدفع',
@@ -237,3 +237,54 @@ class VehicleExpenseForm(FlaskForm):
                                     ('credit_card', 'بطاقة ائتمان')
                                 ],
                                 validators=[DataRequired()])
+
+class QuickEntryForm(FlaskForm):
+    """نموذج القيد السريع"""
+    debit_account_id = SelectField('الحساب المدين', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    credit_account_id = SelectField('الحساب الدائن', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
+    description = TextAreaField('البيان', validators=[DataRequired()], widget=TextArea())
+    transaction_date = DateField('التاريخ', validators=[DataRequired()])
+    reference_number = StringField('رقم المرجع', validators=[Optional(), Length(max=100)])
+    cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
+
+
+class VehicleExpenseForm(FlaskForm):
+    """نموذج مصاريف المركبات"""
+    vehicle_id = SelectField('المركبة', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    expense_type = SelectField('نوع المصروف',
+                              choices=[
+                                  ('fuel', 'وقود'),
+                                  ('maintenance', 'صيانة'),
+                                  ('insurance', 'تأمين'),
+                                  ('registration', 'تسجيل'),
+                                  ('violation', 'مخالفة'),
+                                  ('other', 'أخرى')
+                              ],
+                              validators=[DataRequired()])
+    amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
+    description = TextAreaField('الوصف', validators=[DataRequired()], widget=TextArea())
+    expense_date = DateField('تاريخ المصروف', validators=[DataRequired()])
+
+
+class SalaryProcessingForm(FlaskForm):
+    """نموذج معالجة الرواتب"""
+    month = SelectField('الشهر',
+                       choices=[
+                           ('1', 'يناير'),
+                           ('2', 'فبراير'),
+                           ('3', 'مارس'),
+                           ('4', 'أبريل'),
+                           ('5', 'مايو'),
+                           ('6', 'يونيو'),
+                           ('7', 'يوليو'),
+                           ('8', 'أغسطس'),
+                           ('9', 'سبتمبر'),
+                           ('10', 'أكتوبر'),
+                           ('11', 'نوفمبر'),
+                           ('12', 'ديسمبر')
+                       ],
+                       validators=[DataRequired()])
+    year = IntegerField('السنة', validators=[DataRequired(), NumberRange(min=2020, max=2030)])
+    salary_account_id = SelectField('حساب المرتبات', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
+    payable_account_id = SelectField('حساب المرتبات المستحقة', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
