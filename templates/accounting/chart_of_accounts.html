@@ -11,9 +11,9 @@
         </div>
         
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+            <a href="{{ url_for('accounting.create_account') }}" class="btn btn-primary">
                 <i class="fas fa-plus me-2"></i>إضافة حساب جديد
-            </button>
+            </a>
             <a href="{{ url_for('accounting.accounts') }}" class="btn btn-outline-primary">
                 <i class="fas fa-list me-2"></i>إدارة الحسابات
             </a>
@@ -427,93 +427,6 @@ function showAccountBalance(accountId) {
 }
 </script>
 
-<!-- Modal إضافة حساب جديد -->
-<div class="modal fade" id="addAccountModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">إضافة حساب جديد</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ url_for('accounting.add_account') }}">
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="account_code" class="form-label">رمز الحساب <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="account_code" name="code" required>
-                                <div class="form-text">مثال: 1001، 4101، 2001</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="account_type" class="form-label">نوع الحساب <span class="text-danger">*</span></label>
-                                <select class="form-select" id="account_type" name="account_type" required>
-                                    <option value="">اختر نوع الحساب</option>
-                                    <option value="ASSETS">أصول (Assets)</option>
-                                    <option value="LIABILITIES">خصوم (Liabilities)</option>
-                                    <option value="EQUITY">حقوق الملكية (Equity)</option>
-                                    <option value="REVENUE">إيرادات (Revenue)</option>
-                                    <option value="EXPENSES">مصروفات (Expenses)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="account_name" class="form-label">اسم الحساب (العربي) <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="account_name" name="name" required>
-                                <div class="form-text">مثال: النقدية، مصروف رواتب</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="account_name_en" class="form-label">اسم الحساب (الإنجليزي)</label>
-                                <input type="text" class="form-control" id="account_name_en" name="name_en">
-                                <div class="form-text">مثال: Cash، Salary Expense</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="parent_account" class="form-label">الحساب الأب</label>
-                                <select class="form-select" id="parent_account" name="parent_id">
-                                    <option value="">لا يوجد (حساب رئيسي)</option>
-                                    {% for account in accounts %}
-                                    <option value="{{ account.id }}">{{ account.code }} - {{ account.name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="account_balance" class="form-label">الرصيد الافتتاحي</label>
-                                <input type="number" step="0.01" class="form-control" id="account_balance" name="balance" value="0">
-                                <div class="form-text">الرصيد الافتتاحي للحساب</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="is_active" name="is_active" checked>
-                        <label class="form-check-label" for="is_active">
-                            الحساب نشط
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>حفظ الحساب
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 {% endblock %}

@@ -182,7 +182,7 @@ def add_account():
         flash(f'خطأ في إضافة الحساب: {str(e)}', 'danger')
         return redirect(url_for('accounting.chart_of_accounts'))
 
-@accounting_bp.route('/accounts/new', methods=['GET', 'POST'])
+@accounting_bp.route('/accounts/create', methods=['GET', 'POST'])
 @login_required
 def create_account():
     """إضافة حساب جديد"""
