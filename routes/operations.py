@@ -489,7 +489,12 @@ def approve_operation(operation_id):
 
         db.session.commit()
 
-        log_audit('approve', 'operation_request', operation.id, f'تمت الموافقة على العملية: {operation.title}')
+        log_activity(
+            action='approve',
+            entity_type='operation_request',
+            entity_id=operation.id,
+            details=f'تمت الموافقة على العملية: {operation.title}'
+        )
         flash('تمت الموافقة على العملية وتحديث حالة المركبة بنجاح', 'success')
         return jsonify({'success': True, 'message': 'تمت الموافقة بنجاح'})
 
