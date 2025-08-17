@@ -472,46 +472,84 @@
                 const supervisorNameInput = document.getElementById('supervisor_name');
                 const departmentFilter = document.getElementById('department_filter');
 
-                // دالة محدثة لإظهار وإخفاء الخيارات بدلاً من تعطيلها
+                // دالة محدثة لفلترة الموظفين باستخدام Select2
                 const filterSelectOptions = () => {
                     const selectedDeptId = departmentFilter.value;
+                    console.log('Selected department ID:', selectedDeptId);
 
-                    // دالة الفلترة المعاد كتابتها
+                    // دالة الفلترة المعاد كتابتها للعمل مع Select2
                     const applyFilter = ($selectElement) => {
                         if (!$selectElement.length) return;
 
+                        // احفظ القيمة المحددة حالياً
                         let currentSelection = $selectElement.val();
 
+                        // أعد تهيئة Select2 مع خيارات مفلترة
+                        const allOptions = [];
                         $selectElement.find('option').each(function() {
                             const $option = $(this);
                             const optionValue = $option.val();
+                            const optionText = $option.text();
+                            const departments = String($option.data('departments') || '').split(',');
 
-                            // لا تخفي الخيار الافتراضي الفارغ
+                            // احتفظ بالخيار الافتراضي دائماً
                             if (!optionValue) {
-                                $option.show();
+                                allOptions.push({
+                                    id: optionValue,
+                                    text: optionText,
+                                    element: this
+                                });
                                 return;
                             }
 
+                            // تطبيق الفلتر
                             if (selectedDeptId === 'all') {
                                 // أظهر كل الموظفين
-                                $option.show();
+                                allOptions.push({
+                                    id: optionValue,
+                                    text: optionText,
+                                    element: this
+                                });
                             } else {
-                                const departments = String($option.data('departments') || '').split(',');
-                                // إذا كان الموظف ينتمي للقسم المحدد، أظهره، وإلا أخفه
+                                // أظهر فقط الموظفين من القسم المحدد
                                 if (departments.includes(selectedDeptId)) {
-                                    $option.show();
-                                } else {
-                                    $option.hide();
+                                    allOptions.push({
+                                        id: optionValue,
+                                        text: optionText,
+                                        element: this
+                                    });
                                 }
                             }
                         });
 
-                        // تحديث مهم: بعد إخفاء الخيارات، تأكد من أن الخيار المحدد حالياً
-                        // لا يزال ظاهراً. إذا تم إخفاؤه، قم بإلغاء التحديد.
-                        const selectedOptionIsHidden = $selectElement.find('option:selected').is(':hidden');
-                        if (selectedOptionIsHidden) {
+                        // تدمير Select2 الحالي وإعادة إنشاؤه
+                        $selectElement.select2('destroy');
+                        
+                        // مسح جميع الخيارات باستثناء الخيار الافتراضي
+                        $selectElement.find('option:not([value=""])').remove();
+                        
+                        // إضافة الخيارات المفلترة
+                        allOptions.forEach(option => {
+                            if (option.id !== '') {
+                                $selectElement.append(new Option(option.text, option.id, false, false));
+                            }
+                        });
+
+                        // إعادة تهيئة Select2
+                        $selectElement.select2({
+                            theme: 'bootstrap-5',
+                            placeholder: 'اختر أو ابحث...',
+                            width: '100%',
+                            tags: true
+                        });
+
+                        // إعادة تحديد القيمة إذا كانت لا تزال متاحة
+                        const availableValues = allOptions.map(opt => opt.id);
+                        if (currentSelection && availableValues.includes(currentSelection)) {
+                            $selectElement.val(currentSelection).trigger('change');
+                        } else {
                             $selectElement.val('').trigger('change');
-                         }
+                        }
                     };
 
                     applyFilter($employeeSelect);
