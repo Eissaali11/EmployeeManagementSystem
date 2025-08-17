@@ -103,7 +103,7 @@ def assign_departments(user_id):
     return redirect(url_for('users.index'))
 @users_bp.route('/assign_department/<int:user_id>', methods=['POST'])
 @login_required
-@admin_required
+@admin_requir ed
 def assign_department(user_id):
     """تحديد قسم للمستخدم"""
     user = User.query.get_or_404(user_id)
