@@ -573,10 +573,14 @@
                             $selectElement.val('').trigger('change');
                         }
                         
+                        console.log('Select element ID:', $selectElement.attr('id'));
                         console.log('Filtered options count:', allOptions.length - 1); // -1 for empty option
+                        console.log('All options:', allOptions.map(opt => opt.text));
                     };
 
+                    console.log('Applying filter to employee select...');
                     applyFilter($employeeSelect);
+                    console.log('Applying filter to supervisor select...');
                     applyFilter($supervisorSelect);
                 };
 
