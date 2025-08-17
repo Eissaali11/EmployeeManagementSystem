@@ -165,7 +165,7 @@ def salary_processing():
                 return render_template('accounting/salary_processing.html', form=form)
             
             # تحديد الموظفين المشمولين
-            employees_query = Employee.query.filter_by(status='نشط')
+            employees_query = Employee.query.filter_by(status='active')
             
             if not form.process_all.data and form.department_id.data:
                 employees_query = employees_query.join(Employee.departments).filter(

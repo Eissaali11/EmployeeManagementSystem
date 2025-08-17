@@ -893,65 +893,6 @@ if (mainForm) {
 
 </script>
 
-<!-- <script>
-
-    // =============================================================
-// ===== بداية كود توقيع مسؤول الحركة (منفصل وجديد) =====
-// =============================================================
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. تحديد العناصر الخاصة بمسؤول الحركة فقط
-    const officerCanvasElement = document.getElementById('movement-officer-signature-canvas');
-    const officerClearButton = document.querySelector('.clear-signature[data-canvas-id="movement-officer-signature-canvas"]');
-    const officerHiddenInput = document.getElementById('movement_officer_signature_data');
-    const formToSubmit = document.querySelector('form[method="post"]');
-
-    // التأكد من وجود اللوحة على الصفحة قبل المتابعة
-    if (!officerCanvasElement) {
-        return; // لا تفعل شيئاً إذا لم يكن قسم مسؤول الحركة موجوداً
-    }
-
-    // 2. تهيئة لوحة الرسم (Canvas) الخاصة بمسؤول الحركة
-    const officerContainer = officerCanvasElement.parentElement;
-    officerCanvasElement.width = officerContainer.offsetWidth > 0 ? officerContainer.offsetWidth - 2 : 250;
-    officerCanvasElement.height = officerContainer.offsetHeight > 0 ? officerContainer.offsetHeight - 2 : 150;
-
-    const officerSignaturePad = new fabric.Canvas('movement-officer-signature-canvas', {
-        isDrawingMode: true,
-        backgroundColor: 'rgba(255, 255, 255, 0)', // خلفية شفافة
-    });
-    officerSignaturePad.freeDrawingBrush.color = "#000000"; // قلم أسود
-    officerSignaturePad.freeDrawingBrush.width = 2; // حجم القلم
-
-    // 3. إضافة وظيفة لزر "مسح"
-    if (officerClearButton) {
-        officerClearButton.addEventListener('click', function() {
-            officerSignaturePad.clear();
-        });
-    }
-
-    // 4. حفظ بيانات التوقيع عند إرسال النموذج
-    if (formToSubmit) {
-        formToSubmit.addEventListener('submit', function(event) {
-            // التحقق مما إذا كان المستخدم قد رسم شيئًا
-            if (officerSignaturePad && !officerSignaturePad.isEmpty()) {
-                // إذا كان هناك رسم، قم بتحويله إلى صورة Base64 وضعه في الحقل المخفي
-                if (officerHiddenInput) {
-                    officerHiddenInput.value = officerSignaturePad.toDataURL({ format: 'png' });
-                }
-            } else {
-                // إذا لم يكن هناك رسم، تأكد من أن قيمة الحقل المخفي فارغة
-                if (officerHiddenInput) {
-                    officerHiddenInput.value = '';
-                }
-            }
-        });
-    }
-
-});
-// ===== نهاية كود توقيع مسؤول الحركة =====
-// =============================================================
-</script> -->
-    
 <script>
 // وظيفة البحث عن الموظفين في الجدول
 // كود مبسط للبحث عن الموظفين وتصفيتهم
