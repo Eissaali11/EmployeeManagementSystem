@@ -250,7 +250,7 @@ def api_sync_full():
             transaction = Transaction(
                 transaction_number=f'SAL-{datetime.now().strftime("%Y%m%d")}-{salary.id}',
                 transaction_date=datetime.now().date(),
-                transaction_type='salary',
+                transaction_type='SALARY',
                 description=f'راتب الموظف {employee_name}',
                 total_amount=salary.net_salary or 0,
                 fiscal_year_id=1,  # افتراضي
@@ -272,7 +272,7 @@ def api_sync_full():
             transaction = Transaction(
                 transaction_number=f'VEH-{datetime.now().strftime("%Y%m%d")}-{vehicle.id}',
                 transaction_date=datetime.now().date(),
-                transaction_type='vehicle_expense',
+                transaction_type='VEHICLE_EXPENSE',
                 description=f'مصروف السيارة {getattr(vehicle, "plate_number", "غير محدد")}',
                 total_amount=1500,  # قيمة ثابتة للاختبار
                 fiscal_year_id=1,  # افتراضي
@@ -323,7 +323,7 @@ def api_sync_salaries():
             transaction = Transaction(
                 transaction_number=f'SAL-{datetime.now().strftime("%Y%m%d")}-{salary.id}',
                 transaction_date=datetime.now().date(),
-                transaction_type='salary',
+                transaction_type='SALARY',
                 description=f'راتب {employee_name} - {salary.month}/{salary.year}',
                 total_amount=salary.net_salary or 0,
                 fiscal_year_id=1,  # افتراضي
@@ -369,7 +369,7 @@ def api_sync_vehicles():
             transaction = Transaction(
                 transaction_number=f'VEH-{datetime.now().strftime("%Y%m%d")}-{vehicle.id}',
                 transaction_date=datetime.now().date(),
-                transaction_type='vehicle_expense',
+                transaction_type='VEHICLE_EXPENSE',
                 description=f'مصروف السيارة {getattr(vehicle, "plate_number", "غير محدد")}',
                 total_amount=1500,  # قيمة ثابتة للاختبار
                 fiscal_year_id=1,  # افتراضي
