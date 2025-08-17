@@ -182,8 +182,16 @@ def salary_processing():
             salary_expense_account = Account.query.filter_by(code='4101').first()  # مصروف رواتب
             cash_account = Account.query.filter_by(code='1001').first()  # النقدية
             
+            print(f"DEBUG: salary_expense_account found: {salary_expense_account}")
+            print(f"DEBUG: cash_account found: {cash_account}")
+            
             if not salary_expense_account or not cash_account:
-                flash('الحسابات المحاسبية للرواتب غير موجودة. يرجى إنشاؤها أولاً', 'danger')
+                missing_accounts = []
+                if not salary_expense_account:
+                    missing_accounts.append('مصروف رواتب (4101)')
+                if not cash_account:
+                    missing_accounts.append('النقدية (1001)')
+                flash(f'الحسابات المحاسبية المفقودة: {", ".join(missing_accounts)}', 'danger')
                 return render_template('accounting/salary_processing.html', form=form)
             
             # إعدادات النظام
