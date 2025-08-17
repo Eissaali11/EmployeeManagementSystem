@@ -472,64 +472,61 @@
                 const supervisorNameInput = document.getElementById('supervisor_name');
                 const departmentFilter = document.getElementById('department_filter');
 
+                // حفظ الخيارات الأصلية مرة واحدة عند التحميل
+                const originalEmployeeOptions = [];
+                const originalSupervisorOptions = [];
+                
+                // حفظ خيارات السائق
+                $employeeSelect.find('option').each(function() {
+                    originalEmployeeOptions.push({
+                        value: $(this).val(),
+                        text: $(this).text(),
+                        departments: $(this).data('departments')
+                    });
+                });
+                
+                // حفظ خيارات المشرف
+                $supervisorSelect.find('option').each(function() {
+                    originalSupervisorOptions.push({
+                        value: $(this).val(),
+                        text: $(this).text(),
+                        departments: $(this).data('departments')
+                    });
+                });
+
                 // دالة محدثة لفلترة الموظفين باستخدام Select2
                 const filterSelectOptions = () => {
                     const selectedDeptId = departmentFilter.value;
                     console.log('Selected department ID:', selectedDeptId);
 
-                    // دالة الفلترة المعاد كتابتها للعمل مع Select2
-                    const applyFilter = ($selectElement) => {
+                    // دالة الفلترة المحسنة
+                    const applyFilter = ($selectElement, originalOptions, defaultText) => {
                         if (!$selectElement.length) return;
 
                         // احفظ القيمة المحددة حالياً
                         let currentSelection = $selectElement.val();
-
-                        // أعد تهيئة Select2 مع خيارات مفلترة
-                        const allOptions = [];
-                        $selectElement.find('option').each(function() {
-                            const $option = $(this);
-                            const optionValue = $option.val();
-                            const optionText = $option.text();
-                            const departments = String($option.data('departments') || '').split(',');
-
+                        
+                        // فلترة الخيارات حسب القسم المحدد
+                        const filteredOptions = [];
+                        
+                        originalOptions.forEach(option => {
                             // احتفظ بالخيار الافتراضي دائماً
-                            if (!optionValue) {
-                                allOptions.push({
-                                    id: optionValue,
-                                    text: optionText,
-                                    element: this
-                                });
+                            if (!option.value) {
+                                filteredOptions.push(option);
                                 return;
                             }
 
                             // تطبيق الفلتر
                             if (selectedDeptId === 'all') {
                                 // أظهر كل الموظفين
-                                allOptions.push({
-                                    id: optionValue,
-                                    text: optionText,
-                                    element: this
-                                });
+                                filteredOptions.push(option);
                             } else {
                                 // أظهر فقط الموظفين من القسم المحدد
+                                const departments = String(option.departments || '').split(',');
                                 if (departments.includes(selectedDeptId)) {
-                                    allOptions.push({
-                                        id: optionValue,
-                                        text: optionText,
-                                        element: this
-                                    });
+                                    filteredOptions.push(option);
                                 }
                             }
-                        });
-
-                        // حفظ بيانات data attributes من الخيارات الأصلية
-                        const originalOptions = [];
-                        $selectElement.find('option').each(function() {
-                            originalOptions.push({
-                                value: $(this).val(),
-                                text: $(this).text(),
-                                departments: $(this).data('departments')
-                            });
                         });
 
                         // تدمير Select2 الحالي
@@ -538,23 +535,17 @@
                         // مسح جميع الخيارات
                         $selectElement.empty();
                         
-                        // إضافة الخيار الافتراضي
-                        $selectElement.append('<option value="">-- سائق غير مسجل --</option>');
-                        
-                        // إضافة الخيارات المفلترة مع data attributes
-                        allOptions.forEach(option => {
-                            if (option.id !== '') {
-                                const originalOption = originalOptions.find(orig => orig.value == option.id);
-                                const $newOption = $('<option></option>')
-                                    .attr('value', option.id)
-                                    .text(option.text);
-                                
-                                if (originalOption && originalOption.departments) {
-                                    $newOption.attr('data-departments', originalOption.departments);
-                                }
-                                
-                                $selectElement.append($newOption);
+                        // إعادة بناء الخيارات
+                        filteredOptions.forEach(option => {
+                            const $newOption = $('<option></option>')
+                                .attr('value', option.value)
+                                .text(option.text);
+                            
+                            if (option.departments) {
+                                $newOption.attr('data-departments', option.departments);
                             }
+                            
+                            $selectElement.append($newOption);
                         });
 
                         // إعادة تهيئة Select2
@@ -566,7 +557,7 @@
                         });
 
                         // إعادة تحديد القيمة إذا كانت لا تزال متاحة
-                        const availableValues = allOptions.map(opt => opt.id);
+                        const availableValues = filteredOptions.map(opt => opt.value);
                         if (currentSelection && availableValues.includes(currentSelection)) {
                             $selectElement.val(currentSelection).trigger('change');
                         } else {
@@ -574,8 +565,8 @@
                         }
                         
                         console.log('Select element ID:', $selectElement.attr('id'));
-                        console.log('Filtered options count:', allOptions.length - 1); // -1 for empty option
-                        console.log('All options:', allOptions.map(opt => opt.text));
+                        console.log('Filtered options count:', filteredOptions.length - 1); // -1 for empty option
+                        console.log('Available options:', filteredOptions.map(opt => opt.text));
                     };
 
                     console.log('Applying filter to employee select...');
