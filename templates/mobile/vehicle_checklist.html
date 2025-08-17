@@ -522,16 +522,38 @@
                             }
                         });
 
-                        // تدمير Select2 الحالي وإعادة إنشاؤه
+                        // حفظ بيانات data attributes من الخيارات الأصلية
+                        const originalOptions = [];
+                        $selectElement.find('option').each(function() {
+                            originalOptions.push({
+                                value: $(this).val(),
+                                text: $(this).text(),
+                                departments: $(this).data('departments')
+                            });
+                        });
+
+                        // تدمير Select2 الحالي
                         $selectElement.select2('destroy');
                         
-                        // مسح جميع الخيارات باستثناء الخيار الافتراضي
-                        $selectElement.find('option:not([value=""])').remove();
+                        // مسح جميع الخيارات
+                        $selectElement.empty();
                         
-                        // إضافة الخيارات المفلترة
+                        // إضافة الخيار الافتراضي
+                        $selectElement.append('<option value="">-- سائق غير مسجل --</option>');
+                        
+                        // إضافة الخيارات المفلترة مع data attributes
                         allOptions.forEach(option => {
                             if (option.id !== '') {
-                                $selectElement.append(new Option(option.text, option.id, false, false));
+                                const originalOption = originalOptions.find(orig => orig.value == option.id);
+                                const $newOption = $('<option></option>')
+                                    .attr('value', option.id)
+                                    .text(option.text);
+                                
+                                if (originalOption && originalOption.departments) {
+                                    $newOption.attr('data-departments', originalOption.departments);
+                                }
+                                
+                                $selectElement.append($newOption);
                             }
                         });
 
@@ -550,6 +572,8 @@
                         } else {
                             $selectElement.val('').trigger('change');
                         }
+                        
+                        console.log('Filtered options count:', allOptions.length - 1); // -1 for empty option
                     };
 
                     applyFilter($employeeSelect);
