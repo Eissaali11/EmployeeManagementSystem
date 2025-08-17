@@ -182,7 +182,10 @@
         <!-- في ملف: templates/mobile/vehicle_checklist.html -->
 
         <!-- ... -->
-        <!-- بطاقة بيانات الأشخاص (بمنطق مُحسّن) -->
+        <!-- في ملف: templates/mobile/vehicle_checklist.html -->
+
+        <!-- ... -->
+        <!-- بطاقة بيانات الأشخاص (بالهيكل الصحيح والمفصول) -->
         <div class="card">
             <div class="card-body p-3">
                 <h5 class="card-title mb-3">بيانات الأشخاص</h5>
@@ -191,15 +194,18 @@
                     <label for="department_filter" class="form-label">تصفية حسب القسم</label>
                     <select id="department_filter" class="form-select form-select-sm">
                        <option value="all">جميع الأقسام</option>
-                       {% for dept in departments %} <option value="{{ dept.id }}">{{ dept.name }}</option> {% endfor %}
+                       {% for dept in departments %}
+                           <option value="{{ dept.id }}">{{ dept.name }}</option>
+                       {% endfor %}
                     </select>
                 </div>
                 <hr>
 
-                <!-- =========== قسم السائق =========== -->
-                <h6>السائق / المستلم</h6>
+                <!-- ======================= قسم السائق (منطقه منفصل) ======================= -->
+                <h6 class="text-muted">السائق / المستلم</h6>
+
                 {% if not is_editing and force_mode == 'return' %}
-                    {# في وضع الاستلام، السائق ثابت وغير قابل للتغيير #}
+                    {# في وضع الاستلام، السائق ثابت ومعطل #}
                     <div class="mb-3">
                         <label class="form-label">اسم السائق الحالي</label>
                         <input type="text" class="form-control" value="{{ current_driver_info.person_name }}" readonly>
@@ -213,8 +219,11 @@
                         <select class="form-select select2-bs5" id="employee_id" name="employee_id">
                             <option value="">-- سائق غير مسجل --</option>
                             {% for employee in employees %}
-                                <option value="{{ employee.id }}" {% if is_editing and existing_handover.employee_id == employee.id %}selected{% endif %}
-                                    data-departments="{{ employee.departments|map(attribute='id')|join(',') }}">{{ employee.name }}</option>
+                                <option value="{{ employee.id }}" 
+                                    {% if is_editing and existing_handover.employee_id == employee.id %}selected{% endif %}
+                                    data-departments="{{ employee.departments|map(attribute='id')|join(',') }}">
+                                    {{ employee.name }}
+                                </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -226,25 +235,32 @@
 
                 <hr>
 
-                <!-- =========== قسم المشرف (دائماً فعال) =========== -->
-                <h6>المشرف / المسلّم</h6>
+                <!-- ======================= قسم المشرف (يعرض دائمًا وبشكل مستقل) ======================= -->
+                <h6 class="text-muted">المشرف / المسلّم</h6>
+
                 <div class="mb-3">
                     <label for="supervisor_employee_id" class="form-label">المشرف (من القائمة)</label>
                     <select class="form-select select2-bs5" id="supervisor_employee_id" name="supervisor_employee_id">
                         <option value="">-- مشرف غير مسجل --</option>
                         {% for employee in employees %}
-                             <option value="{{ employee.id }}" {% if is_editing and existing_handover.supervisor_employee_id == employee.id %}selected{% endif %}
-                                data-departments="{{ employee.departments|map(attribute='id')|join(',') }}">{{ employee.name }}</option>
+                             <option value="{{ employee.id }}" 
+                                {% if is_editing and existing_handover.supervisor_employee_id == employee.id %}selected{% endif %}
+                                data-departments="{{ employee.departments|map(attribute='id')|join(',') }}">
+                                {{ employee.name }}
+                            </option>
                         {% endfor %}
                     </select>
                 </div>
                  <div class="mb-3">
                     <label for="supervisor_name" class="form-label">أو أدخل اسم المشرف يدوياً</label>
-                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" value="{% if is_editing %}{{ existing_handover.supervisor_name or '' }}{% endif %}" placeholder="اسم المشرف">
+                    <input type="text" class="form-control" id="supervisor_name" name="supervisor_name" 
+                           value="{% if is_editing %}{{ existing_handover.supervisor_name or '' }}{% endif %}" 
+                           placeholder="اسم المشرف">
                 </div>
             </div>
         </div>
         <!-- ... -->
+
 
         <!-- بطاقة قائمة الفحص الكاملة (داخل Accordion) -->
         <div class="card">

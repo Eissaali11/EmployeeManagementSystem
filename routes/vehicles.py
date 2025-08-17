@@ -2743,6 +2743,8 @@ def create_handover(id):
                                 file_description = request.form.get(f'description_{file.filename}', '')
                                 file_record = VehicleHandoverImage(
                                     handover_record_id=handover.id, 
+                                    image_path=file_path,  # للحفاظ على التوافق مع النموذج القديم
+                                    image_description=file_description,  # للحفاظ على التوافق
                                     file_path=file_path, 
                                     file_type=file_type, 
                                     file_description=file_description
