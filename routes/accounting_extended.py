@@ -179,7 +179,7 @@ def salary_processing():
                 return render_template('accounting/salary_processing.html', form=form)
             
             # الحصول على الحسابات المحاسبية
-            salary_expense_account = Account.query.filter_by(code='5001').first()  # مصروف رواتب
+            salary_expense_account = Account.query.filter_by(code='4101').first()  # مصروف رواتب
             cash_account = Account.query.filter_by(code='1001').first()  # النقدية
             
             if not salary_expense_account or not cash_account:
