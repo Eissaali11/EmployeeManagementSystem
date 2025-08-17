@@ -138,6 +138,50 @@ def accounts():
                          account_type_filter=account_type_filter)
 
 
+@accounting_bp.route('/accounts/add', methods=['POST'])
+@login_required
+def add_account():
+    """إضافة حساب جديد من شجرة الحسابات"""
+    if not (current_user.role == UserRole.ADMIN or current_user.has_module_access(Module.ACCOUNTING)):
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('dashboard.index'))
+    
+    try:
+        # التحقق من عدم وجود رمز مكرر
+        existing = Account.query.filter_by(code=request.form.get('code')).first()
+        if existing:
+            flash('رمز الحساب موجود مسبقاً', 'danger')
+            return redirect(url_for('accounting.chart_of_accounts'))
+        
+        account = Account(
+            code=request.form.get('code'),
+            name=request.form.get('name'),
+            name_en=request.form.get('name_en', ''),
+            account_type=AccountType(request.form.get('account_type')),
+            parent_id=request.form.get('parent_id') if request.form.get('parent_id') else None,
+            balance=float(request.form.get('balance', 0)),
+            is_active=request.form.get('is_active') == 'on'
+        )
+        
+        # حساب المستوى
+        if account.parent_id:
+            parent = Account.query.get(account.parent_id)
+            account.level = parent.level + 1 if parent else 0
+        else:
+            account.level = 0
+        
+        db.session.add(account)
+        db.session.commit()
+        
+        log_activity(f"إضافة حساب جديد: {account.name} ({account.code})")
+        flash('تم إضافة الحساب بنجاح', 'success')
+        return redirect(url_for('accounting.chart_of_accounts'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'خطأ في إضافة الحساب: {str(e)}', 'danger')
+        return redirect(url_for('accounting.chart_of_accounts'))
+
 @accounting_bp.route('/accounts/new', methods=['GET', 'POST'])
 @login_required
 def create_account():

@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
-from sqlalchemy import true
 from app import db
 from models import User, Department, UserRole, Module, Permission, AuditLog, UserPermission
 from functools import wraps
@@ -12,8 +11,7 @@ def admin_required(f):
     """Decorator to require admin access"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not true :
-        # current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+        if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
             flash('ليس لديك صلاحية للوصول إلى هذه الصفحة', 'error')
             return redirect(url_for('attendance.dashboard'))
         return f(*args, **kwargs)
