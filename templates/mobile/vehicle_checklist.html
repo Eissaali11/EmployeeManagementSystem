@@ -570,9 +570,9 @@
                     };
 
                     console.log('Applying filter to employee select...');
-                    applyFilter($employeeSelect);
+                    applyFilter($employeeSelect, originalEmployeeOptions, '-- سائق غير مسجل --');
                     console.log('Applying filter to supervisor select...');
-                    applyFilter($supervisorSelect);
+                    applyFilter($supervisorSelect, originalSupervisorOptions, '-- مشرف غير مسجل --');
                 };
 
                 $(departmentFilter).on('change', filterSelectOptions);
