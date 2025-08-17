@@ -15,11 +15,11 @@ class AccountForm(FlaskForm):
     name_en = StringField('الاسم بالإنجليزية', validators=[Optional(), Length(max=200)])
     account_type = SelectField('نوع الحساب', 
                               choices=[
-                                  ('assets', 'أصول'),
-                                  ('liabilities', 'خصوم'),
-                                  ('equity', 'حقوق الملكية'),
-                                  ('revenue', 'إيرادات'),
-                                  ('expenses', 'مصروفات')
+                                  ('ASSETS', 'أصول'),
+                                  ('LIABILITIES', 'خصوم'),
+                                  ('EQUITY', 'حقوق الملكية'),
+                                  ('REVENUE', 'إيرادات'),
+                                  ('EXPENSES', 'مصروفات')
                               ],
                               validators=[DataRequired()])
     parent_id = SelectField('الحساب الأب', coerce=lambda x: int(x) if x else None, validators=[Optional()])
@@ -32,8 +32,8 @@ class TransactionEntryForm(FlaskForm):
     account_id = SelectField('الحساب', coerce=lambda x: int(x) if x else None, validators=[DataRequired()])
     entry_type = SelectField('النوع', 
                             choices=[
-                                ('debit', 'مدين'),
-                                ('credit', 'دائن')
+                                ('DEBIT', 'مدين'),
+                                ('CREDIT', 'دائن')
                             ],
                             validators=[DataRequired()])
     amount = DecimalField('المبلغ', validators=[DataRequired(), NumberRange(min=0.01)])
@@ -45,12 +45,12 @@ class TransactionForm(FlaskForm):
     transaction_date = DateField('تاريخ القيد', validators=[DataRequired()])
     transaction_type = SelectField('نوع القيد',
                                   choices=[
-                                      ('manual', 'قيد يدوي'),
-                                      ('salary', 'راتب'),
-                                      ('vehicle_expense', 'مصروف مركبة'),
-                                      ('depreciation', 'استهلاك'),
-                                      ('payment', 'دفع'),
-                                      ('receipt', 'قبض')
+                                      ('MANUAL', 'قيد يدوي'),
+                                      ('SALARY', 'راتب'),
+                                      ('VEHICLE_EXPENSE', 'مصروف مركبة'),
+                                      ('DEPRECIATION', 'استهلاك'),
+                                      ('PAYMENT', 'دفع'),
+                                      ('RECEIPT', 'قبض')
                                   ],
                                   validators=[DataRequired()])
     reference_number = StringField('رقم المرجع', validators=[Optional(), Length(max=100)])
