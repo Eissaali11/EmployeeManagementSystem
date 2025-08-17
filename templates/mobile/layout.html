@@ -219,7 +219,10 @@
             </a>
           </li>
           <li class="sidebar-menu-item">
-            <a href="{{ url_for('mobile.vehicle_checklist_list') }}" class="sidebar-menu-link {{ 'active' if 'vehicle_checklist' in request.endpoint }}">
+            <a href="{{ url_for('mobile.vehicles') }}" class="sidebar-menu-link {% if request.endpoint.startswith('mobile.create_handover') or request.endpoint.startswith('mobile.edit_handover') or request.endpoint == 'mobile.vehicles' %}active{% endif %}">
+                <i class="fas fa-tasks sidebar-menu-icon"></i>
+                <span>فحص المركبات</span>
+            </a>
               <span class="sidebar-menu-icon"><i class="fas fa-clipboard-check"></i></span>
               <span class="sidebar-menu-text">تشيك لست السيارات</span>
             </a>

@@ -2741,7 +2741,12 @@ def create_handover(id):
                         file_path, file_type = save_file(file, 'handover')
                         if file_path:
                                 file_description = request.form.get(f'description_{file.filename}', '')
-                                file_record = VehicleHandoverImage( handover_record_id=handover.id, file_path=file_path, file_type=file_type, file_description=file_description, image_path=file_path,mage_description=file_description)
+                                file_record = VehicleHandoverImage(
+                                    handover_record_id=handover.id, 
+                                    file_path=file_path, 
+                                    file_type=file_type, 
+                                    file_description=file_description
+                                )
                                 db.session.add(file_record)
                                 db.session.commit()
 

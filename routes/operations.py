@@ -243,46 +243,50 @@ def update_vehicle_state(vehicle_id):
 
 
 
+# في ملف operations_bp.py
+
 @operations_bp.route('/')
 @login_required
 def operations_dashboard():
-    """لوحة إدارة العمليات الرئيسية"""
-    
-    # فحص صلاحية المدير
+    """لوحة إدارة العمليات الرئيسية مع إمكانية البحث"""
+
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
         return redirect(url_for('dashboard.index'))
-    
-    # إحصائيات العمليات
-    pending_operations = OperationRequest.query.filter_by(status='pending').count()
-    under_review_operations = OperationRequest.query.filter_by(status='under_review').count()
-    approved_operations = OperationRequest.query.filter_by(status='approved').count()
-    rejected_operations = OperationRequest.query.filter_by(status='rejected').count()
-    
-    # العمليات المعلقة مرتبة بالأولوية والتاريخ
-    pending_requests = OperationRequest.query.filter_by(status='pending').order_by(
+
+    # === بداية التعديلات ===
+
+    # 1. استلام قيمة البحث من رابط URL
+    search_plate = request.args.get('search_plate', '').strip()
+
+    # 2. بناء استعلام العمليات المعلقة
+    pending_query = OperationRequest.query.filter_by(status='pending')
+
+    # 3. تطبيق فلتر البحث (إذا تم إدخال قيمة)
+    if search_plate:
+        # للانضمام مع جدول المركبات والبحث في حقل رقم اللوحة
+        pending_query = pending_query.join(Vehicle).filter(Vehicle.plate_number.ilike(f"%{search_plate}%"))
+
+    # 4. تنفيذ الاستعلام النهائي
+    pending_requests = pending_query.order_by(
         OperationRequest.priority.desc(),
         OperationRequest.requested_at.desc()
     ).limit(10).all()
-    
-    # الإشعارات غير المقروءة
-    unread_notifications = OperationNotification.query.filter_by(
-        user_id=current_user.id, 
-        is_read=False
-    ).count()
-    
+
+    # === نهاية التعديلات ===
+
+    # إحصائيات العمليات (تبقى كما هي)
     stats = {
-        'pending': pending_operations,
-        'under_review': under_review_operations,
-        'approved': approved_operations,
-        'rejected': rejected_operations,
-        'unread_notifications': unread_notifications
+        'pending': OperationRequest.query.filter_by(status='pending').count(),
+        'under_review': OperationRequest.query.filter_by(status='under_review').count(),
+        'approved': OperationRequest.query.filter_by(status='approved').count(),
+        'rejected': OperationRequest.query.filter_by(status='rejected').count(),
+        'unread_notifications': OperationNotification.query.filter_by(user_id=current_user.id, is_read=False).count()
     }
-    
+
     return render_template('operations/dashboard.html', 
                          stats=stats, 
                          pending_requests=pending_requests)
-
 @operations_bp.route('/list')
 @login_required
 def operations_list():

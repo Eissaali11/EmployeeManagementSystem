@@ -1,0 +1,2074 @@
+{% extends 'mobile/layout.html' %} {% block title %}نموذج تسليم/استلام{%
+endblock %} {% block header_title %}نموذج تسليم/استلام{% endblock %} {% block
+styles %} {{ super() }}
+<!-- ستايلات خاصة بلوحات الرسم والتواقيع -->
+<style>
+    .signature-pad-container {
+        border: 1px dashed #ced4da;
+        cursor: crosshair;
+        background-color: #f8f9fa;
+        height: 150px;
+        width: 100%;
+        border-radius: 0.25rem;
+    }
+    .form-switch {
+        /* إصلاح محاذاة أزرار الفحص */
+        padding-right: 2.5em;
+        padding-left: 0;
+    }
+    .form-switch .form-check-input {
+        float: right;
+        margin-right: -2.5em;
+        margin-left: 0;
+    }
+
+    /* Expand button styling */
+    #expand-canvas-btn {
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+    }
+    #expand-canvas-btn:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    /* Modal canvas styling */
+    #modal-damage-canvas {
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid py-3" style="background-color: #f0f2f5">
+    <form
+        method="post"
+        action="{{ url_for('mobile.create_handover_mobile', handover_id=existing_handover.id if existing_handover else None) }}"
+        enctype="multipart/form-data"
+        id="main-handover-form"
+    >
+        <!-- البطاقة الأولى: اختيار السيارة -->
+        <div class="card shadow-sm mb-3">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-car me-2"></i>الخطوة 1: اختر المركبة
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <label for="vehicle_id" class="form-label required"
+                        >ابحث عن مركبة:</label
+                    >
+                    <select
+                        class="form-select"
+                        id="vehicle_id"
+                        name="vehicle_id"
+                        required
+                    >
+                        <option value="" disabled selected>
+                            --- يرجى اختيار مركبة ---
+                        </option>
+                        {% for vehicle in vehicles %}
+
+                            <option value="{{ vehicle.id }}" 
+                                    data-plate="{{ vehicle.plate_number }}"
+                                    data-project="{{ vehicle.project or '' }}"
+                                    data-location="{{ vehicle.location or '' }}"
+                                    data-status="{{ vehicle.status }}"
+                                    {% if vehicle.status == 'out_of_service' %}style="color: #dc3545; font-weight: bold;"{% endif %}
+                                    {% if vehicle.status != 'available' %}style="color: #dc3545; font-weight: bold;"{% endif %}>
+                                {{ vehicle.plate_number }} - ({{ vehicle.make }} {{ vehicle.model }})
+                                {% if vehicle.status == 'out_of_service' %} ⚠️ [خارج الخدمة]{% endif %}
+
+                                                         </option>
+
+                        {% endfor %}
+                    </select>
+                    <div id="vehicle-status-alert" class="alert alert-danger mt-2 d-none">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> السيارة المختارة خارج الخدمة ولا يمكن تنفيذ عمليات تسليم أو استلام عليها.
+                    </div>
+                    <div id="vehicle-status-alert-avaliable" class="alert alert-primary mt-2 d-none">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تحذير:</strong> السيارة المختارة ليست متاحة حالياً. يجب استلامها أولاً من السائق الحالي.
+                        <div class="mt-3">
+                            <button type="button" class="btn btn-success btn-sm me-2" id="quick-return-btn" onclick="handleQuickReturn()">
+                                <i class="fas fa-undo me-2"></i> استلام سريع - تحميل بيانات السائق
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="show-return-checklist-btn" onclick="handleManualReturn()">
+                                <i class="fas fa-edit me-2"></i> استلام يدوي - إدخال البيانات يدوياً
+                            </button>
+                        </div>
+                        
+                        <script>
+                        async function handleQuickReturn() {
+                            console.log('تم الضغط على الاستلام السريع');
+                            
+                            const vehicleSelect = document.getElementById('vehicle_id');
+                            const selectedVehicleId = vehicleSelect.value;
+                            
+                            if (!selectedVehicleId) {
+                                alert('يرجى اختيار سيارة أولاً');
+                                return;
+                            }
+                            
+                            // تعطيل الزر أثناء التحميل
+                            const button = document.getElementById('quick-return-btn');
+                            button.disabled = true;
+                            button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري تحميل بيانات السائق...';
+                            
+                            try {
+                                // جلب بيانات السائق الحالي
+                                const response = await fetch(`/mobile/get_vehicle_driver_info/${selectedVehicleId}`);
+                                
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    console.log('بيانات السائق:', data);
+                                    
+                                    if (data.success && data.driver_info) {
+                                        // تعبئة بيانات السائق تلقائياً
+                                        fillDriverData(data.driver_info);
+                                        
+                                        // تغيير نوع العملية إلى استلام
+                                        setOperationType('return');
+                                        
+                                        // إظهار النموذج
+                                        showForm();
+                                        
+                                        alert('✅ تم تحميل بيانات السائق الحالي بنجاح: ' + data.driver_info.name);
+                                        
+                                    } else {
+                                        // لا توجد بيانات سائق، عرض النموذج فارغ
+                                        setOperationType('return');
+                                        showForm();
+                                        alert('⚠️ لم يتم العثور على بيانات السائق الحالي. يرجى تعبئة البيانات يدوياً.');
+                                    }
+                                } else {
+                                    throw new Error('فشل في الاتصال بالخادم');
+                                }
+                                
+                            } catch (error) {
+                                console.error('خطأ في تحميل بيانات السائق:', error);
+                                
+                                // عرض النموذج حتى في حالة الخطأ
+                                setOperationType('return');
+                                showForm();
+                                alert('حدث خطأ في تحميل البيانات. يرجى تعبئة البيانات يدوياً.');
+                                
+                            } finally {
+                                // إعادة تفعيل الزر
+                                button.disabled = false;
+                                button.innerHTML = '<i class="fas fa-undo me-2"></i> استلام سريع - تحميل بيانات السائق';
+                            }
+                        }
+                        
+                        function fillDriverData(driverInfo) {
+                            console.log('تعبئة بيانات السائق:', driverInfo);
+                            
+                            // تعبئة الحقول الأساسية
+                            const fields = [
+                                { id: 'person_name', value: driverInfo.name || '' },
+                                { id: 'employee_id', value: driverInfo.employee_id || '' },
+                                { name: 'person_phone', value: driverInfo.phone || driverInfo.mobile || '' },
+                                { name: 'person_national_id', value: driverInfo.national_id || '' }
+                            ];
+                            
+                            fields.forEach(field => {
+                                let element = null;
+                                
+                                if (field.id) {
+                                    element = document.getElementById(field.id);
+                                } else if (field.name) {
+                                    element = document.querySelector(`[name="${field.name}"]`);
+                                }
+                                
+                                if (element && field.value) {
+                                    element.value = field.value;
+                                    // تمييز الحقول المعبأة تلقائياً
+                                    element.style.backgroundColor = '#d4edda';
+                                    element.style.border = '2px solid #28a745';
+                                    
+                                    console.log(`تم تعبئة ${field.id || field.name}: ${field.value}`);
+                                }
+                            });
+                        }
+                        
+                        function setOperationType(type) {
+                            const handoverType = document.getElementById('handover_type');
+                            if (handoverType) {
+                                handoverType.value = type;
+                                handoverType.style.backgroundColor = '#cce5ff';
+                                handoverType.style.border = '2px solid #007bff';
+                                console.log('تم تحديد نوع العملية:', type);
+                            }
+                        }
+                        
+                        function showForm() {
+                            const formContainer = document.getElementById('handover-form-container');
+                            if (formContainer) {
+                                formContainer.classList.remove('d-none');
+                                
+                                // تفعيل زر الحفظ عند إظهار النموذج
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    console.log('🔧 تم تفعيل زر الحفظ عند إظهار النموذج');
+                                }
+                                
+                                setTimeout(() => {
+                                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                                }, 300);
+                            }
+                        }
+                        
+                        function handleManualReturn() {
+                            console.log('تم الضغط على الاستلام اليدوي');
+                            
+                            // تغيير نوع العملية إلى استلام
+                            const handoverType = document.getElementById('handover_type');
+                            if (handoverType) {
+                                handoverType.value = 'return';
+                                handoverType.style.backgroundColor = '#cce5ff';
+                                handoverType.style.border = '2px solid #007bff';
+                            }
+                            
+                            // إظهار النموذج
+                            const formContainer = document.getElementById('handover-form-container');
+                            if (formContainer) {
+                                formContainer.classList.remove('d-none');
+                                
+                                // تفعيل زر الحفظ للاستلام اليدوي
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    console.log('🔧 تم تفعيل زر الحفظ للاستلام اليدوي');
+                                }
+                                
+                                setTimeout(() => {
+                                    formContainer.scrollIntoView({ behavior: 'smooth' });
+                                }, 200);
+                            }
+                            
+                            alert('✅ يرجى تعبئة بيانات الاستلام يدوياً في النموذج أدناه');
+                        }
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- حاوية النموذج المخفية -->
+        <div id="handover-form-container" class="d-none">
+            <!-- البطاقة 2: المعلومات الأساسية -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold">2. المعلومات الأساسية</h6>
+                </div>
+                <div class="card-body row g-3">
+                    <div class="col-12">
+                        <label for="handover_type" class="form-label required"
+                            >نوع العملية</label
+                        >
+                        <select
+                            class="form-select"
+                            id="handover_type"
+                            name="handover_type"
+                            required
+                        >
+                            {% for type in handover_types %}
+                            <option value="{{ type }}">
+                                {% if type == 'delivery' %}تسليم السيارة {% elif
+                                type == 'return' or type == 'receive' %}استلام
+                                السيارة {% elif type == 'inspection' %}تفتيش {%
+                                elif type == 'weekly_inspection' %}تفتيش أسبوعي
+                                {% elif type == 'monthly_inspection' %}تفتيش
+                                شهري {% else %}{{ type|title }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- ... باقي حقول المعلومات الأساسية (لا تغيير) ... -->
+                    <!-- Date and time fields are hidden and set automatically -->
+                    <input
+                        type="hidden"
+                        id="handover_date"
+                        name="handover_date"
+                        required
+                    />
+                    <input
+                        type="hidden"
+                        id="handover_time"
+                        name="handover_time"
+                    />
+                    <div class="col-md-6">
+                        <label for="project_name" class="form-label"
+                            >المشروع</label
+                        >
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="project_name"
+                            name="project_name"
+                            placeholder="المشروع المرتبط"
+                        />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="city" class="form-label">المدينة</label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="city"
+                            name="city"
+                            placeholder="المدينة الحالية"
+                        />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="mileage" class="form-label required"
+                            >قراءة العداد (كم)</label
+                        >
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="mileage"
+                            name="mileage"
+                            min="0"
+                            required
+                        />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="fuel_level" class="form-label required"
+                            >مستوى الوقود</label
+                        >
+                        <select
+                            class="form-select"
+                            id="fuel_level"
+                            name="fuel_level"
+                            required
+                        >
+                            <option value="ممتلئ">ممتلئ</option>
+                            <option value="3/4">3/4</option>
+                            <option value="1/2">نصف</option>
+                            <option value="1/4">ربع</option>
+                            <option value="منخفض">فارغ</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label for="reason_for_change" class="form-label"
+                            >سبب تغيير المركبة / الغرض</label
+                        >
+                        <textarea
+                            class="form-control"
+                            id="reason_for_change"
+                            name="reason_for_change"
+                            rows="2"
+                            placeholder="مثال: تسليم للموظف لبدء العمل..."
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- البطاقة 3: السائق -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold">3. السائق</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="person_name" class="form-label required"
+                            >اسم السائق</label
+                        >
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="person_name"
+                            name="person_name"
+                            required
+                            autocomplete="off"
+                            placeholder="اكتب الاسم أو ابحث"
+                        />
+                        <input
+                            type="hidden"
+                            id="employee_id"
+                            name="employee_id"
+                        />
+                    </div>
+                    <div class="accordion" id="employeeSearchAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button
+                                    class="accordion-button collapsed py-2"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#collapseEmployeeSearch"
+                                >
+                                    بحث عن سائق
+                                </button>
+                            </h2>
+                            <div
+                                id="collapseEmployeeSearch"
+                                class="accordion-collapse collapse"
+                                data-bs-parent="#employeeSearchAccordion"
+                            >
+                                <div
+                                    class="accordion-body"
+                                    id="driver_search_body"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- البطاقة 4: المشرف (مخفية - تأتي من بيانات المستخدم) -->
+            <input
+                type="hidden"
+                id="supervisor_name"
+                name="supervisor_name"
+                value="{{ current_user.name if current_user else '' }}"
+            />
+            <input
+                type="hidden"
+                id="supervisor_employee_id"
+                name="supervisor_employee_id"
+                value="{{ current_user.id if current_user else '' }}"
+            />
+
+            <!-- قوالب البحث المخفية -->
+            <div id="search-template" class="d-none">
+                <div class="row g-2 mb-2">
+                    <div class="col-sm-5">
+                        <select
+                            class="form-select form-select-sm department-select"
+                        >
+                            <option value="">كل الأقسام</option>
+                            {% for d in departments %}
+                            <option value="{{ d.id }}">{{ d.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-7">
+                        <input
+                            type="text"
+                            class="form-control form-control-sm search-input"
+                            placeholder="بحث بالاسم أو الرقم.."
+                        />
+                    </div>
+                </div>
+                <div
+                    class="list-group list-container"
+                    style="max-height: 200px; overflow-y: auto"
+                ></div>
+                <div
+                    class="alert alert-secondary p-2 text-center mt-2 d-none no-results-alert"
+                >
+                    لا توجد نتائج.
+                </div>
+            </div>
+
+            <!-- البطاقة 5: فحص السيارة -->
+            <div class="card shadow-sm mb-3">
+                <!-- ... محتوى بطاقة الفحص (لا تغيير) ... -->
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold">5. فحص السيارة</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>التجهيزات المتوفرة</h5>
+                        <div class="row row-cols-1 row-cols-sm-2 g-2">
+                            <div class="col">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="has_spare_tire"
+                                        id="has_spare_tire"
+                                        checked
+                                    /><label
+                                        for="has_spare_tire"
+                                        class="form-check-label"
+                                        >إطار احتياطي</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="has_fire_extinguisher"
+                                        id="has_fire_extinguisher"
+                                        checked
+                                    /><label
+                                        for="has_fire_extinguisher"
+                                        class="form-check-label"
+                                        >طفاية حريق</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="has_first_aid_kit"
+                                        id="has_first_aid_kit"
+                                        checked
+                                    /><label
+                                        for="has_first_aid_kit"
+                                        class="form-check-label"
+                                        >إسعافات أولية</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="has_warning_triangle"
+                                        id="has_warning_triangle"
+                                        checked
+                                    /><label
+                                        for="has_warning_triangle"
+                                        class="form-check-label"
+                                        >مثلث تحذيري</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="has_tools"
+                                        id="has_tools"
+                                        checked
+                                    /><label
+                                        for="has_tools"
+                                        class="form-check-label"
+                                        >أدوات</label
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-3" />
+                    <div>
+                        <h5>
+                            المشاكل الموجودة
+                            <small class="text-muted">(حدد إن وجدت)</small>
+                        </h5>
+                        <div class="row row-cols-1 row-cols-sm-2 g-3">
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_oil_leaks"
+                                        id="has_oil_leaks"
+                                    /><label
+                                        for="has_oil_leaks"
+                                        class="form-check-label"
+                                        >تهريب زيوت</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_gear_issue"
+                                        id="has_gear_issue"
+                                    /><label
+                                        for="has_gear_issue"
+                                        class="form-check-label"
+                                        >مشكلة في الجير</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_clutch_issue"
+                                        id="has_clutch_issue"
+                                    /><label
+                                        for="has_clutch_issue"
+                                        class="form-check-label"
+                                        >مشكلة كلتش</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_engine_issue"
+                                        id="has_engine_issue"
+                                    /><label
+                                        for="has_engine_issue"
+                                        class="form-check-label"
+                                        >مشكلة ماكينة</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_ac_issue"
+                                        id="has_ac_issue"
+                                    /><label
+                                        for="has_ac_issue"
+                                        class="form-check-label"
+                                        >مشكلة مكيف</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_windows_issue"
+                                        id="has_windows_issue"
+                                    /><label
+                                        for="has_windows_issue"
+                                        class="form-check-label"
+                                        >مشكلة زجاج</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_tires_issue"
+                                        id="has_tires_issue"
+                                    /><label
+                                        for="has_tires_issue"
+                                        class="form-check-label"
+                                        >مشكلة كفرات</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_body_issue"
+                                        id="has_body_issue"
+                                    /><label
+                                        for="has_body_issue"
+                                        class="form-check-label"
+                                        >مشكلة هيكل</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_electricity_issue"
+                                        id="has_electricity_issue"
+                                    /><label
+                                        for="has_electricity_issue"
+                                        class="form-check-label"
+                                        >مشكلة كهرباء</label
+                                    >
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-check form-switch">
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        role="switch"
+                                        name="has_lights_issue"
+                                        id="has_lights_issue"
+                                    /><label
+                                        for="has_lights_issue"
+                                        class="form-check-label"
+                                        >مشكلة أنوار</label
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- البطاقة 6: مخطط الضرر -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold">6. تحديد الضرر على الهيكل</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div
+                        class="mb-3 mx-auto position-relative"
+                        style="
+                            border: 1px solid #ddd;
+                            background-color: #fff;
+                            max-width: 400px;
+                        "
+                    >
+                        <canvas id="damage-canvas"></canvas>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-outline-primary position-absolute"
+                            style="top: 5px; right: 5px; z-index: 10"
+                            id="expand-canvas-btn"
+                            title="عرض بحجم أكبر"
+                        >
+                            <i class="fas fa-expand-alt"></i>
+                        </button>
+                    </div>
+                    <div
+                        class="btn-toolbar justify-content-center"
+                        role="toolbar"
+                    >
+                        <div class="btn-group me-2 mb-2" role="group">
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary btn-sm active"
+                                id="draw-mode-btn"
+                            >
+                                <i class="fas fa-pencil-alt"></i></button
+                            ><button
+                                type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                id="select-mode-btn"
+                            >
+                                <i class="fas fa-mouse-pointer"></i>
+                            </button>
+                        </div>
+                        <div
+                            class="input-group input-group-sm me-2 mb-2"
+                            style="width: auto"
+                        >
+                            <span class="input-group-text">اللون</span
+                            ><input
+                                type="color"
+                                class="form-control-color"
+                                id="draw-color-picker"
+                                value="#E53935"
+                                title="اختر لون الخط"
+                            />
+                        </div>
+                        <div
+                            class="input-group input-group-sm mb-2"
+                            style="width: auto"
+                        >
+                            <input
+                                type="range"
+                                class="form-range"
+                                min="2"
+                                max="20"
+                                value="4"
+                                id="draw-line-width"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            class="btn btn-outline-danger btn-sm ms-auto mb-2"
+                            id="clear-canvas-btn"
+                        >
+                            <i class="fas fa-trash-alt"></i> مسح
+                        </button>
+                    </div>
+                    <input
+                        type="hidden"
+                        name="damage_diagram_data"
+                        id="damage-diagram-data"
+                    />
+                </div>
+            </div>
+
+            <!-- **البطاقة 7: التوثيق (مُصحّحة ومُحدّثة)** -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold">7. التوثيق والملاحظات</h6>
+                </div>
+                <div class="card-body">
+                    <!-- **** الحقل الجديد والمهم **** -->
+                    <div class="mb-3">
+                        <label
+                            for="vehicle_condition"
+                            class="form-label required"
+                            >حالة السيارة عند التسليم/الاستلام</label
+                        >
+                        <textarea
+                            class="form-control"
+                            id="vehicle_condition"
+                            name="vehicle_condition"
+                            rows="3"
+                            required
+                            placeholder="وصف تفصيلي لحالة السيارة الخارجية والداخلية..."
+                        ></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="vehicle_status_summary" class="form-label"
+                            >ملخص حالة المركبة</label
+                        >
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="vehicle_status_summary"
+                            name="vehicle_status_summary"
+                            placeholder="مثال: يوجد ملاحظات، أو: لا يوجد ملاحظات"
+                        />
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label"
+                            >ملاحظات إضافية</label
+                        >
+                        <textarea
+                            class="form-control"
+                            id="notes"
+                            name="notes"
+                            rows="2"
+                            placeholder="أي تفاصيل أخرى..."
+                        ></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="form_link" class="form-label"
+                            >رابط خارجي (اختياري)</label
+                        >
+                        <input
+                            type="url"
+                            class="form-control"
+                            id="form_link"
+                            name="form_link"
+                            placeholder="https://..."
+                        />
+                    </div>
+                    <hr />
+                    <!-- نظام رفع الملفات الجديد -->
+                    <label for="files" class="form-label"
+                        >ملفات توثيقية (صور/PDF)</label
+                    >
+                    <div class="alert alert-info py-2 mb-2">
+                        <small
+                            ><i class="fas fa-info-circle me-1"></i>الحد الأقصى:
+                            20 ميجابايت. الصور الكبيرة (أكبر من 500KB) سيتم
+                            ضغطها تلقائياً.</small
+                        >
+                    </div>
+                    <input
+                        type="file"
+                        id="files"
+                        name="files"
+                        multiple
+                        class="d-none"
+                    />
+                    <button
+                        class="btn btn-outline-secondary w-100"
+                        type="button"
+                        id="trigger-file-select"
+                    >
+                        <i class="fas fa-file-upload me-2"></i>اختر ملفات...
+                    </button>
+                    <div id="file-previews" class="row g-2 mt-2"></div>
+                </div>
+            </div>
+            <!-- قوالب المعاينة -->
+            <div class="d-none">
+                <div id="image-preview-template">
+                    <div class="col-6 col-sm-4 preview-item">
+                        <div class="card h-100 position-relative">
+                            <img
+                                src=""
+                                class="card-img-top"
+                                style="height: 80px; object-fit: cover"
+                            />
+                            <div class="card-body p-1">
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm file-description"
+                                    placeholder="وصف.."
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                class="btn-close remove-file"
+                                style="
+                                    position: absolute;
+                                    top: 2px;
+                                    right: 2px;
+                                    background-color: rgba(255, 255, 255, 0.7);
+                                    border-radius: 50%;
+                                    padding: 0.25rem 0.5rem;
+                                "
+                            ></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="pdf-preview-template">
+                    <div class="col-6 col-sm-4 preview-item">
+                        <div class="card h-100 position-relative">
+                            <div
+                                class="card-body d-flex flex-column justify-content-center p-2"
+                            >
+                                <i class="fas fa-file-pdf fa-2x text-danger"></i
+                                ><small
+                                    class="pdf-filename text-truncate mt-1"
+                                ></small>
+                            </div>
+                            <div class="card-footer p-1">
+                                <input
+                                    type="text"
+                                    class="form-control form-control-sm file-description"
+                                    placeholder="وصف.."
+                                />
+                            </div>
+                            <button
+                                type="button"
+                                class="btn-close remove-file"
+                                style="
+                                    position: absolute;
+                                    top: 2px;
+                                    right: 2px;
+                                    background-color: rgba(255, 255, 255, 0.7);
+                                    border-radius: 50%;
+                                    padding: 0.25rem 0.5rem;
+                                "
+                            ></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- البطاقة 8: التواقيع -->
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0 fw-bold">8. التواقيع</h6>
+                </div>
+                <div class="card-body">
+                    <!-- توقيع المشرف -->
+                    <div class="mb-4">
+                        <h5 class="mb-0">توقيع المشرف</h5>
+                        <small class="text-muted" id="supervisor-name-display"
+                            >{{ current_user.name if current_user else 'غير
+                            محدد' }}</small
+                        >
+                        <ul class="nav nav-pills nav-fill my-2">
+                            <li class="nav-item">
+                                <button
+                                    class="nav-link active py-1"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#supervisor-draw-tab"
+                                >
+                                    رسم
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button
+                                    class="nav-link py-1"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#supervisor-upload-tab"
+                                >
+                                    رفع
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div
+                                class="tab-pane fade show active"
+                                id="supervisor-draw-tab"
+                            >
+                                <div class="signature-pad-container">
+                                    <canvas
+                                        id="supervisor-signature-canvas"
+                                    ></canvas>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary mt-2 w-100 clear-signature"
+                                    data-canvas-id="supervisor-signature-canvas"
+                                >
+                                    مسح
+                                </button>
+                            </div>
+                            <div
+                                class="tab-pane fade"
+                                id="supervisor-upload-tab"
+                            >
+                                <input
+                                    type="file"
+                                    class="form-control form-control-sm signature-upload"
+                                    accept="image/*"
+                                    data-target-input-id="supervisor-signature-data"
+                                /><img
+                                    src=""
+                                    class="img-fluid mt-2 d-none signature-preview"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <!-- توقيع السائق -->
+                    <div class="my-4">
+                        <h5 class="mb-0">توقيع السائق/المستلم</h5>
+                        <small
+                            class="text-muted"
+                            id="driver-name-display"
+                        ></small>
+                        <ul class="nav nav-pills nav-fill my-2">
+                            <li class="nav-item">
+                                <button
+                                    class="nav-link active py-1"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#driver-draw-tab"
+                                >
+                                    رسم
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button
+                                    class="nav-link py-1"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#driver-upload-tab"
+                                >
+                                    رفع
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div
+                                class="tab-pane fade show active"
+                                id="driver-draw-tab"
+                            >
+                                <div class="signature-pad-container">
+                                    <canvas
+                                        id="driver-signature-canvas"
+                                    ></canvas>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary mt-2 w-100 clear-signature"
+                                    data-canvas-id="driver-signature-canvas"
+                                >
+                                    مسح
+                                </button>
+                            </div>
+                            <div class="tab-pane fade" id="driver-upload-tab">
+                                <input
+                                    type="file"
+                                    class="form-control form-control-sm signature-upload"
+                                    accept="image/*"
+                                    data-target-input-id="driver-signature-data"
+                                /><img
+                                    src=""
+                                    class="img-fluid mt-2 d-none signature-preview"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <!-- توقيع مسؤول الحركة -->
+                    <div class="mt-4">
+                        <h5 class="mb-0">
+                            بيانات وتوقيع مسؤول الحركة (اختياري)
+                        </h5>
+                        <div class="my-2">
+                            <input
+                                type="text"
+                                class="form-control form-control-sm"
+                                name="movement_officer_name"
+                                placeholder="اسم مسؤول الحركة"
+                            />
+                        </div>
+                        <ul class="nav nav-pills nav-fill my-2">
+                            <li class="nav-item">
+                                <button
+                                    class="nav-link active py-1"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#movement-officer-draw-tab"
+                                >
+                                    رسم
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button
+                                    class="nav-link py-1"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#movement-officer-upload-tab"
+                                >
+                                    رفع
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content">
+                            <div
+                                class="tab-pane fade show active"
+                                id="movement-officer-draw-tab"
+                            >
+                                <div class="signature-pad-container">
+                                    <canvas
+                                        id="movement-officer-signature-canvas"
+                                    ></canvas>
+                                </div>
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary mt-2 w-100 clear-signature"
+                                    data-canvas-id="movement-officer-signature-canvas"
+                                >
+                                    مسح
+                                </button>
+                            </div>
+                            <div
+                                class="tab-pane fade"
+                                id="movement-officer-upload-tab"
+                            >
+                                <input
+                                    type="file"
+                                    class="form-control form-control-sm signature-upload"
+                                    accept="image/*"
+                                    data-target-input-id="movement-officer-signature-data"
+                                /><img
+                                    src=""
+                                    class="img-fluid mt-2 d-none signature-preview"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- البطاقة 9: تخصيص التقرير -->
+            <div class="accordion mb-3" id="reportCustomizationAccordion">
+                <div class="card shadow-sm">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button
+                                class="accordion-button collapsed py-2"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#collapseCustomization"
+                            >
+                                <i class="fas fa-cog me-2"></i>تخصيص التقرير
+                                (اختياري)
+                            </button>
+                        </h2>
+                        <div
+                            id="collapseCustomization"
+                            class="accordion-collapse collapse"
+                            data-bs-parent="#reportCustomizationAccordion"
+                        >
+                            <div class="accordion-body">
+                                <div class="mb-3">
+                                    <label
+                                        for="custom_company_name"
+                                        class="form-label"
+                                        >اسم شركة مخصص</label
+                                    ><input
+                                        type="text"
+                                        class="form-control"
+                                        name="custom_company_name"
+                                    />
+                                </div>
+                                <div>
+                                    <label
+                                        for="custom_logo_file"
+                                        class="form-label"
+                                        >شعار مخصص</label
+                                    ><input
+                                        class="form-control"
+                                        type="file"
+                                        name="custom_logo_file"
+                                        accept="image/*"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الحقول المخفية للتواقيع (مصححة) -->
+            <input
+                type="hidden"
+                name="supervisor_signature_data"
+                id="supervisor-signature-data"
+            />
+            <input
+                type="hidden"
+                name="driver_signature_data"
+                id="driver-signature-data"
+            />
+            <input
+                type="hidden"
+                name="movement_officer_signature_data"
+                id="movement-officer-signature-data"
+            />
+
+            <!-- أزرار الحفظ النهائية -->
+            <div class="d-grid p-2 sticky-bottom">
+                {% if is_editing %}
+                <!-- أزرار التعديل -->
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button
+                            type="submit"
+                            name="action"
+                            value="update"
+                            class="btn btn-primary btn-lg shadow w-100"
+                        >
+                            <i class="fas fa-edit me-2"></i>تحديث السجل الحالي
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button
+                            type="submit"
+                            name="action"
+                            value="save_as_new"
+                            class="btn btn-success btn-lg shadow w-100"
+                        >
+                            <i class="fas fa-copy me-2"></i>حفظ كنسخة جديدة
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <!-- زر الإنشاء -->
+                <button type="submit" class="btn btn-primary btn-lg shadow">
+                    <i class="fas fa-save me-2"></i>حفظ وإنشاء التقرير
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Modal for expanded damage canvas -->
+<div
+    class="modal fade"
+    id="damageCanvasModal"
+    tabindex="-1"
+    aria-labelledby="damageCanvasModalLabel"
+    aria-hidden="true"
+>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="damageCanvasModalLabel">
+                    <i class="fas fa-car me-2"></i>مخطط الضرر - عرض موسع
+                </h5>
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"
+                ></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <canvas id="modal-damage-canvas"></canvas>
+                </div>
+                <div class="btn-toolbar justify-content-center" role="toolbar">
+                    <div class="btn-group me-2 mb-2" role="group">
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm active"
+                            id="modal-draw-mode-btn"
+                        >
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="modal-select-mode-btn"
+                        >
+                            <i class="fas fa-mouse-pointer"></i>
+                        </button>
+                    </div>
+                    <div
+                        class="input-group input-group-sm me-2 mb-2"
+                        style="width: auto"
+                    >
+                        <span class="input-group-text">اللون</span>
+                        <input
+                            type="color"
+                            class="form-control-color"
+                            id="modal-draw-color-picker"
+                            value="#E53935"
+                            title="اختر لون الخط"
+                        />
+                    </div>
+                    <div
+                        class="input-group input-group-sm mb-2"
+                        style="width: auto"
+                    >
+                        <input
+                            type="range"
+                            class="form-range"
+                            min="2"
+                            max="20"
+                            value="4"
+                            id="modal-draw-line-width"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger btn-sm ms-auto mb-2"
+                        id="modal-clear-canvas-btn"
+                    >
+                        <i class="fas fa-trash-alt"></i> مسح
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal"
+                >
+                    إغلاق
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="sync-canvas-btn"
+                >
+                    <i class="fas fa-sync-alt me-2"></i>مزامنة مع النموذج
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {% block scripts %} {{ super() }}
+<!-- لا حاجة لتحميل المكتبات هنا، layout.html يوفرها -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Select2 يتطلب jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// تحميل Fabric.js بطريقة موثوقة
+(function loadFabricJS() {
+    console.log('🔄 بدء تحميل Fabric.js...');
+    
+    // إزالة أي script سابق
+    const existingScript = document.querySelector('script[src*="fabric"]');
+    if (existingScript) {
+        existingScript.remove();
+    }
+    
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js';
+    script.async = false; // تحميل متزامن
+    
+    script.onload = function() {
+        console.log('✅ تم تحميل Fabric.js بنجاح!');
+        // تشغيل تهيئة Canvas عند التحميل
+        if (typeof initializeDamageDiagram === 'function') {
+            setTimeout(initializeDamageDiagram, 100);
+        }
+    };
+    
+    script.onerror = function() {
+        console.error('❌ فشل تحميل Fabric.js');
+        // محاولة رابط بديل
+        const backupScript = document.createElement('script');
+        backupScript.src = 'https://unpkg.com/fabric@5.3.0/dist/fabric.min.js';
+        backupScript.onload = function() {
+            console.log('✅ تم تحميل Fabric.js من المصدر البديل!');
+        };
+        document.head.appendChild(backupScript);
+    };
+    
+    document.head.appendChild(script);
+})();
+</script>
+<script src="{{ url_for('static', filename='js/vehicle_damage_map.js') }}"></script>
+
+<!-- السكربت الموحد للصفحة (النسخة النهائية والمصححة) -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // === 1. التهيئة العامة ===
+        const vehicleSelect = $('#vehicle_id');
+        const formContainer = $('#handover-form-container');
+        const mainForm = document.getElementById('main-handover-form');
+
+        // ضبط التاريخ والوقت الحالي تلقائياً
+        const dateInput = document.getElementById('handover_date');
+        const timeInput = document.getElementById('handover_time');
+        const now = new Date();
+
+        if (dateInput) {
+            dateInput.value = now.toISOString().split('T')[0];
+        }
+        if (timeInput) {
+            timeInput.value = now.toTimeString().slice(0, 5);
+        }
+
+        vehicleSelect.select2({ theme: 'bootstrap-5', placeholder: "ابحث برقم اللوحة أو النوع...", dir: "rtl" });
+
+        // === 2. المنطق الرئيسي عند اختيار سيارة ===
+        vehicleSelect.on('select2:select', function (e) {
+            const selectedOption = $(e.params.data.element);
+
+            const vehicleStatus = selectedOption.data('status');
+            const statusAlert = document.getElementById('vehicle-status-alert');
+            const statusAlertSuccess = document.getElementById('vehicle-status-alert-avaliable');
+
+            
+            // فحص المركبات خارج الخدمة
+            if (vehicleStatus === 'out_of_service') {
+                statusAlert.classList.remove('d-none');
+                formContainer.addClass('d-none');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+            else if (vehicleStatus !== "available"){
+                statusAlertSuccess.classList.remove('d-none');
+                formContainer.addClass('d-none');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = true;
+                return;
+            }
+             else {
+                statusAlert.classList.add('d-none');
+                statusAlertSuccess.classList.add('d-none');
+                const submitBtn = document.querySelector('button[type="submit"]');
+                if (submitBtn) submitBtn.disabled = false;
+            }
+            
+            document.getElementById('project_name').value = selectedOption.data('project');
+            document.getElementById('city').value = selectedOption.data('location');
+            
+
+            const handoverTypeSelect = document.getElementById('handover_type');
+            if (vehicleStatus === 'available') { handoverTypeSelect.value = 'delivery'; }
+            else { handoverTypeSelect.value = 'return'; }
+
+            formContainer.removeClass('d-none').hide().fadeIn(400);
+
+            // **مهم جداً: تفعيل كل شيء بعد إظهار النموذج**
+            initializeAllInteractiveElements();
+        });
+
+        // --- هذه الدالة ستكون المركز الرئيسي لتشغيل كل شيء ---
+        let areElementsInitialized = false;
+        function initializeAllInteractiveElements() {
+            if (areElementsInitialized) return; // تشغيل مرة واحدة فقط
+
+            // أ. تفعيل بحث السائق فقط (المشرف يأتي من بيانات المستخدم)
+            setupEmployeeSearch('driver');
+
+            // ب. تفعيل مخطط الضرر
+            initializeDamageDiagram();
+
+            // ج. تفعيل لوحات التوقيع
+            setupSignatures();
+
+            // د. تفعيل نظام رفع الملفات التوثيقية
+            setupFileUploader();
+
+            areElementsInitialized = true;
+        }
+
+        // === 3. إدارة البحث عن الموظفين (سائق فقط) ===
+        const employeeData = JSON.parse('{{ employeeData | tojson | safe }}');
+        function setupEmployeeSearch(type) {
+            const searchBody = document.getElementById(`${type}_search_body`);
+            if (!searchBody.innerHTML) { // لإنشاء الواجهة مرة واحدة فقط
+                const template = document.getElementById('search-template').innerHTML;
+                searchBody.innerHTML = template;
+            }
+
+            const nameInput = document.getElementById('person_name');
+            const idInput = document.getElementById('employee_id');
+            const departmentSelect = searchBody.querySelector('.department-select');
+            const searchInput = searchBody.querySelector('.search-input');
+            const listContainer = searchBody.querySelector('.list-container');
+            const noResultsAlert = searchBody.querySelector('.no-results-alert');
+            const accordionCollapse = searchBody.closest('.accordion-collapse');
+
+            function renderList(employees) {
+                listContainer.innerHTML = '';
+                noResultsAlert.classList.toggle('d-none', employees.length > 0);
+                employees.forEach(emp => {
+                    const a = document.createElement('a');
+                    a.href = '#'; a.className = 'list-group-item list-group-item-action';
+
+                    // عرض أسماء الأقسام
+                    let departmentNames = '-';
+                    if (emp.departments && emp.departments.length > 0) {
+                        departmentNames = emp.departments.map(dept => dept.name).join(', ');
+                    } else if (emp.department && emp.department.name) {
+                        departmentNames = emp.department.name;
+                    }
+
+                    a.innerHTML = `<div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${emp.name}</h6><small class="text-muted">${emp.employee_id||''}</small></div><small>${departmentNames}</small>`;
+                    a.onclick = (e) => {
+                        e.preventDefault();
+                        nameInput.value = emp.name;
+                        idInput.value = emp.id;
+                        document.getElementById('driver-name-display').textContent = emp.name; // تحديث اسم التوقيع
+                        new bootstrap.Collapse(accordionCollapse).hide();
+                    };
+                    listContainer.appendChild(a);
+                });
+            }
+
+            function filter() {
+                const deptId = departmentSelect.value;
+                const term = searchInput.value.toLowerCase().trim();
+                const filtered = employeeData.filter(emp => {
+                    // فلترة حسب القسم - التحقق من القسم الأساسي أو جميع الأقسام
+                    let deptMatch = !deptId;
+                    if (deptId) {
+                        // التحقق من القسم الأساسي
+                        if (emp.department_id && String(emp.department_id) === deptId) {
+                            deptMatch = true;
+                        }
+                        // التحقق من جميع الأقسام
+                        if (emp.departments && emp.departments.length > 0) {
+                            deptMatch = emp.departments.some(dept => String(dept.id) === deptId);
+                        }
+                    }
+
+                    // فلترة حسب النص المدخل
+                    const textMatch = !term ||
+                        (emp.name || '').toLowerCase().includes(term) ||
+                        (emp.employee_id || '').toLowerCase().includes(term);
+
+                    return deptMatch && textMatch;
+                });
+                renderList(filtered);
+            }
+            searchInput.oninput = filter;
+            departmentSelect.onchange = filter;
+            renderList(employeeData);
+        }
+
+        // === 4. إدارة مخطط الضرر ===
+        let damageCanvas = null;
+        let modalDamageCanvas = null;
+
+        function initializeDamageDiagram() {
+            if (damageCanvas) return;
+            const diagramEl = document.getElementById('damage-canvas');
+            if (!diagramEl) return;
+
+            const diagramContainer = diagramEl.parentElement;
+            damageCanvas = new fabric.Canvas('damage-canvas', { isDrawingMode: true, backgroundColor: '#fff' });
+            damageCanvas.freeDrawingBrush.color = "#E53935";
+            damageCanvas.freeDrawingBrush.width = 4;
+
+            const imageUrl = "{{ url_for('static', filename='images/vehicle_diagram.png') }}";
+            fabric.Image.fromURL(imageUrl, (img) => {
+                const w = diagramContainer.offsetWidth > 0 ? diagramContainer.offsetWidth : 350;
+                const scale = w / img.width;
+                damageCanvas.setWidth(w).setHeight(img.height * scale);
+                damageCanvas.setBackgroundImage(img, damageCanvas.renderAll.bind(damageCanvas), { scaleX: scale, scaleY: scale });
+            }, { crossOrigin: 'anonymous' });
+
+            // Main canvas controls
+            document.getElementById('draw-mode-btn').onclick = () => { damageCanvas.isDrawingMode = true; };
+            document.getElementById('select-mode-btn').onclick = () => { damageCanvas.isDrawingMode = false; };
+            document.getElementById('draw-color-picker').oninput = e => { damageCanvas.freeDrawingBrush.color = e.target.value; };
+            document.getElementById('draw-line-width').oninput = e => { damageCanvas.freeDrawingBrush.width = parseInt(e.target.value); };
+            document.getElementById('clear-canvas-btn').onclick = () => { if (confirm("هل تريد مسح كل الرسوم؟")) damageCanvas.remove(...damageCanvas.getObjects()); };
+
+            // Expand button functionality
+            document.getElementById('expand-canvas-btn').onclick = openDamageModal;
+        }
+
+        function openDamageModal() {
+            const modal = new bootstrap.Modal(document.getElementById('damageCanvasModal'));
+            modal.show();
+
+            // Initialize modal canvas after modal is shown
+            document.getElementById('damageCanvasModal').addEventListener('shown.bs.modal', function() {
+                initializeModalCanvas();
+            }, { once: true });
+        }
+
+        function initializeModalCanvas() {
+            if (modalDamageCanvas) {
+                // Update existing modal canvas with current data
+                syncCanvasToModal();
+                return;
+            }
+
+            const modalCanvasEl = document.getElementById('modal-damage-canvas');
+            if (!modalCanvasEl) return;
+
+            // Set modal canvas size
+            const modalBody = modalCanvasEl.closest('.modal-body');
+            const maxWidth = Math.min(modalBody.offsetWidth - 40, 600);
+            const maxHeight = Math.min(window.innerHeight * 0.6, 400);
+
+            modalDamageCanvas = new fabric.Canvas('modal-damage-canvas', {
+                isDrawingMode: true,
+                backgroundColor: '#fff',
+                width: maxWidth,
+                height: maxHeight
+            });
+
+            modalDamageCanvas.freeDrawingBrush.color = "#E53935";
+            modalDamageCanvas.freeDrawingBrush.width = 4;
+
+            // Load background image
+            const imageUrl = "{{ url_for('static', filename='images/vehicle_diagram.png') }}";
+            fabric.Image.fromURL(imageUrl, (img) => {
+                const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+                const scaledWidth = img.width * scale;
+                const scaledHeight = img.height * scale;
+
+                modalDamageCanvas.setWidth(scaledWidth).setHeight(scaledHeight);
+                modalDamageCanvas.setBackgroundImage(img, modalDamageCanvas.renderAll.bind(modalDamageCanvas), {
+                    scaleX: scale,
+                    scaleY: scale
+                });
+
+                // Copy existing drawings from main canvas
+                syncCanvasToModal();
+            }, { crossOrigin: 'anonymous' });
+
+            // Modal canvas controls
+            document.getElementById('modal-draw-mode-btn').onclick = () => { modalDamageCanvas.isDrawingMode = true; };
+            document.getElementById('modal-select-mode-btn').onclick = () => { modalDamageCanvas.isDrawingMode = false; };
+            document.getElementById('modal-draw-color-picker').oninput = e => { modalDamageCanvas.freeDrawingBrush.color = e.target.value; };
+            document.getElementById('modal-draw-line-width').oninput = e => { modalDamageCanvas.freeDrawingBrush.width = parseInt(e.target.value); };
+            document.getElementById('modal-clear-canvas-btn').onclick = () => {
+                if (confirm("هل تريد مسح كل الرسوم؟")) modalDamageCanvas.remove(...modalDamageCanvas.getObjects());
+            };
+
+            // Sync button functionality
+            document.getElementById('sync-canvas-btn').onclick = syncModalToCanvas;
+        }
+
+        function syncCanvasToModal() {
+            if (!modalDamageCanvas || !damageCanvas) return;
+
+            // Clear modal canvas objects
+            modalDamageCanvas.remove(...modalDamageCanvas.getObjects());
+
+            // Copy objects from main canvas to modal
+            damageCanvas.getObjects().forEach(obj => {
+                const clonedObj = fabric.util.object.clone(obj);
+                modalDamageCanvas.add(clonedObj);
+            });
+
+            modalDamageCanvas.renderAll();
+        }
+
+        function syncModalToCanvas() {
+            if (!modalDamageCanvas || !damageCanvas) return;
+
+            // Clear main canvas objects
+            damageCanvas.remove(...damageCanvas.getObjects());
+
+            // Copy objects from modal to main canvas
+            modalDamageCanvas.getObjects().forEach(obj => {
+                const clonedObj = fabric.util.object.clone(obj);
+                damageCanvas.add(clonedObj);
+            });
+
+            damageCanvas.renderAll();
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('damageCanvasModal'));
+            if (modal) modal.hide();
+        }
+
+        // === 5. إدارة التواقيع (شاملة) ===
+        const signaturePads = {};
+        function setupSignatures() {
+            ['supervisor', 'driver', 'movement-officer'].forEach(type => {
+                const canvasId = `${type}-signature-canvas`;
+                const el = document.getElementById(canvasId);
+                if (el) {
+                    signaturePads[canvasId] = new fabric.Canvas(el, { isDrawingMode: true, backgroundColor: 'rgba(0,0,0,0)' });
+                    signaturePads[canvasId].freeDrawingBrush.color = "#000";
+                    signaturePads[canvasId].freeDrawingBrush.width = 2;
+                }
+            });
+
+            document.querySelectorAll('.clear-signature').forEach(btn => {
+                btn.onclick = () => {
+                    const canvas = signaturePads[btn.dataset.canvasId];
+                    if (canvas) canvas.clear();
+                };
+            });
+
+            document.querySelectorAll('.signature-upload').forEach(input => {
+                input.onchange = e => {
+                    const file = e.target.files[0]; if(!file) return;
+                    const previewEl = input.parentElement.querySelector('.signature-preview');
+                    const targetInput = document.getElementById(input.dataset.targetInputId);
+                    const reader = new FileReader();
+                    reader.onload = res => {
+                        targetInput.value = res.target.result;
+                        previewEl.src = res.target.result;
+                        previewEl.classList.remove('d-none');
+                        const canvas = signaturePads[input.dataset.targetInputId.replace('-data', '-canvas')];
+                        if (canvas) canvas.clear();
+                    };
+                    reader.readAsDataURL(file);
+                };
+            });
+
+            document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(e) {
+                    const canvasId = e.target.dataset.bsTarget.replace('#','').replace('-draw-tab','-signature-canvas');
+                    const canvas = signaturePads[canvasId];
+                    if(canvas){
+                        const container = canvas.getElement().parentElement;
+                        canvas.setWidth(container.offsetWidth).setHeight(container.offsetHeight).renderAll();
+                    }
+                });
+            });
+        }
+
+        // === 6. إدارة رفع الملفات التوثيقية (السبب الرئيسي للمشكلة) ===
+        function setupFileUploader() {
+            const filesInput = document.getElementById('files');
+            const filePreviews = document.getElementById('file-previews');
+            const triggerFileSelectBtn = document.getElementById('trigger-file-select');
+            let filesTransferList = new DataTransfer();
+
+            triggerFileSelectBtn.onclick = () => {
+                const tempInput = document.createElement('input');
+                tempInput.type = 'file'; tempInput.multiple = true; tempInput.accept = "image/*,application/pdf";
+                tempInput.onchange = () => { Array.from(tempInput.files).forEach(addFilePreview); };
+                tempInput.click();
+            };
+
+            async function addFilePreview(file) {
+                for (let f of filesTransferList.files) { if (f.name === file.name && f.size === file.size) return; }
+
+                // إنشاء العرض أولاً بالملف الأصلي
+                const tplId = file.name.toLowerCase().endsWith('.pdf') ? 'pdf-preview-template' : 'image-preview-template';
+                const clone = document.getElementById(tplId).firstElementChild.cloneNode(true);
+                clone.querySelector('.file-description').name = `description_${file.name}`;
+
+                let processedFile = file; // إعلان المتغير في البداية
+
+                if (tplId.includes('image')) {
+                    // عرض الصورة مباشرة (الأصلية أولاً)
+                    const img = clone.querySelector('img');
+                    const reader = new FileReader();
+                    reader.onload = e => img.src = e.target.result;
+                    reader.readAsDataURL(file);
+
+                    // ضغط الصورة في الخلفية إذا كانت كبيرة
+                    if (file.type.startsWith('image/') && file.size > 500000) {
+                        // إضافة مؤشر الضغط
+                        const sizeIndicator = clone.querySelector('.file-description');
+                        const originalText = sizeIndicator.placeholder;
+                        sizeIndicator.placeholder = 'جاري ضغط الصورة...';
+
+                        try {
+                            processedFile = await compressImage(file, 0.7, 1200);
+                            console.log(`تم ضغط ${file.name} من ${(file.size/1024).toFixed(1)}KB إلى ${(processedFile.size/1024).toFixed(1)}KB`);
+
+                            // تحديث عرض الصورة بالنسخة المضغوطة
+                            const compressedReader = new FileReader();
+                            compressedReader.onload = e => img.src = e.target.result;
+                            compressedReader.readAsDataURL(processedFile);
+
+                            sizeIndicator.placeholder = `مضغوطة: ${(processedFile.size/1024).toFixed(0)}KB`;
+                        } catch (error) {
+                            console.log('فشل ضغط الصورة، سيتم استخدام الملف الأصلي:', error);
+                            processedFile = file;
+                            sizeIndicator.placeholder = originalText;
+                        }
+                    }
+                } else {
+                    clone.querySelector('.pdf-filename').textContent = file.name;
+                }
+
+                filePreviews.appendChild(clone);
+
+                // إضافة الملف للقائمة (مضغوط أو أصلي)
+                filesTransferList.items.add(processedFile);
+                filesInput.files = filesTransferList.files;
+
+                // ربط زر الحذف
+                clone.querySelector('.remove-file').onclick = () => removeFilePreview(clone, processedFile);
+            }
+
+            // دالة ضغط الصور
+            function compressImage(file, quality = 0.6, maxWidth = 1200) {
+                return new Promise((resolve, reject) => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
+
+                    img.onload = () => {
+                        let { width, height } = img;
+
+                        // تصغير الأبعاد إذا كانت كبيرة
+                        if (width > maxWidth) {
+                            height = (height * maxWidth) / width;
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            if (blob) {
+                                // إنشاء ملف جديد بنفس الاسم
+                                const compressedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(compressedFile);
+                            } else {
+                                reject(new Error('فشل في ضغط الصورة'));
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+
+                    img.onerror = () => reject(new Error('فشل في تحميل الصورة'));
+                    img.src = URL.createObjectURL(file);
+                });
+            }
+
+            function removeFilePreview(item, fileToRemove) {
+                const newTransferList = new DataTransfer();
+                for (let f of filesTransferList.files) { if (f.name !== fileToRemove.name || f.size !== fileToRemove.size) newTransferList.items.add(f); }
+                filesTransferList = newTransferList;
+                filesInput.files = filesTransferList.files;
+                item.remove();
+            }
+        }
+
+        // === 7. معالج الإرسال النهائي ===
+        mainForm.addEventListener('submit', function (e) {
+            // فحص حجم الملفات قبل الإرسال
+            const filesInput = document.getElementById('files');
+            let totalSize = 0;
+
+            if (filesInput.files) {
+                for (let file of filesInput.files) {
+                    totalSize += file.size;
+                }
+            }
+
+            // حساب حجم التواقيع والمخططات
+            const signatures = ['supervisor-signature-data', 'driver-signature-data', 'movement-officer-signature-data', 'damage-diagram-data'];
+            for (let id of signatures) {
+                const input = document.getElementById(id);
+                if (input && input.value && input.value.startsWith('data:image')) {
+                    // تقدير حجم base64 (حوالي 75% من الحجم الفعلي)
+                    totalSize += input.value.length * 0.75;
+                }
+            }
+
+            const maxSize = 20 * 1024 * 1024; // 20 MB
+            if (totalSize > maxSize) {
+                e.preventDefault();
+                const sizeMB = (totalSize / (1024 * 1024)).toFixed(1);
+                alert(`حجم البيانات كبير جداً (${sizeMB} ميجابايت). الحد الأقصى 20 ميجابايت. يرجى تقليل عدد الصور أو ضغطها.`);
+                return false;
+            }
+
+            // أ. حفظ مخطط الضرر (من الكانفاس الرئيسي أو المودال)
+            let canvasToSave = damageCanvas;
+            if (modalDamageCanvas && modalDamageCanvas.getObjects().length > 0) {
+                canvasToSave = modalDamageCanvas;
+            } else if (damageCanvas && damageCanvas.getObjects().length > 0) {
+                canvasToSave = damageCanvas;
+            }
+
+            if (canvasToSave && canvasToSave.getObjects().length > 0) {
+                document.getElementById('damage-diagram-data').value = canvasToSave.toDataURL({ format: 'png', quality: 0.8 });
+            }
+            // ب. حفظ التواقيع المرسومة فقط (التي تم رفعها محفوظة بالفعل)
+            for (const id in signaturePads) {
+                const hiddenInput = document.getElementById(id.replace('-canvas', '-data'));
+                if (hiddenInput && !hiddenInput.value.startsWith('data:image')) {
+                    const canvas = signaturePads[id];
+                    if (canvas.getObjects().length > 0) {
+                        hiddenInput.value = canvas.toDataURL({ format: 'png' });
+                    }
+                }
+            }
+
+            // ج. حفظ توقيع المشرف (من بيانات المستخدم الحالي)
+            const supervisorSignatureInput = document.getElementById('supervisor-signature-data');
+            if (supervisorSignatureInput) {
+                const supervisorCanvas = signaturePads['supervisor-signature-canvas'];
+                if (supervisorCanvas && supervisorCanvas.getObjects().length > 0) {
+                    supervisorSignatureInput.value = supervisorCanvas.toDataURL({ format: 'png' });
+                }
+            }
+        });
+
+    }); // نهاية DOMContentLoaded
+
+    // === 8. ملء البيانات الموجودة عند التعديل ===
+    {% if existing_handover %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const handover = JSON.parse('{{ existing_handover|tojson|safe }}');
+
+        // ملء بيانات المركبة
+        if (handover.vehicle_id) {
+            const vehicleSelect = document.getElementById('vehicle_id');
+            vehicleSelect.value = handover.vehicle_id;
+            vehicleSelect.dispatchEvent(new Event('change'));
+        }
+
+        // ملء نوع العملية
+        if (handover.handover_type) {
+            const typeSelect = document.getElementById('handover_type');
+            typeSelect.value = handover.handover_type;
+        }
+
+        // ملء البيانات الأساسية
+        if (handover.project_name) {
+            document.getElementById('project_name').value = handover.project_name;
+        }
+        if (handover.city) {
+            document.getElementById('city').value = handover.city;
+        }
+        if (handover.mileage) {
+            document.getElementById('mileage').value = handover.mileage;
+        }
+        if (handover.fuel_level) {
+            document.getElementById('fuel_level').value = handover.fuel_level;
+        }
+        if (handover.reason_for_change) {
+            document.getElementById('reason_for_change').value = handover.reason_for_change;
+        }
+
+        // ملء بيانات السائق
+        if (handover.person_name) {
+            document.getElementById('person_name').value = handover.person_name;
+        }
+        if (handover.employee_id) {
+            document.getElementById('employee_id').value = handover.employee_id;
+        }
+
+        // ملء بيانات المشرف
+        if (handover.supervisor_name) {
+            document.getElementById('supervisor_name').value = handover.supervisor_name;
+        }
+        if (handover.supervisor_employee_id) {
+            document.getElementById('supervisor_employee_id').value = handover.supervisor_employee_id;
+        }
+
+        // ملء قائمة الفحص
+        const checklistItems = [
+            'has_spare_tire', 'has_fire_extinguisher', 'has_first_aid_kit',
+            'has_warning_triangle', 'has_tools', 'has_oil_leaks', 'has_gear_issue',
+            'has_clutch_issue', 'has_engine_issue', 'has_windows_issue',
+            'has_tires_issue', 'has_body_issue', 'has_electricity_issue',
+            'has_lights_issue', 'has_ac_issue'
+        ];
+
+        checklistItems.forEach(item => {
+            if (handover[item]) {
+                const checkbox = document.getElementById(item);
+                if (checkbox) {
+                    checkbox.checked = handover[item];
+                }
+            }
+        });
+
+        // ملء الملاحظات والحقول الإضافية
+        if (handover.notes) {
+            const notesField = document.getElementById('notes');
+            if (notesField) {
+                notesField.value = handover.notes;
+            }
+        }
+        if (handover.vehicle_status_summary) {
+            const statusField = document.getElementById('vehicle_status_summary');
+            if (statusField) {
+                statusField.value = handover.vehicle_status_summary;
+            }
+        }
+        if (handover.reason_for_authorization) {
+            const authField = document.getElementById('reason_for_authorization');
+            if (authField) {
+                authField.value = handover.reason_for_authorization;
+            }
+        }
+        if (handover.authorization_details) {
+            const detailsField = document.getElementById('authorization_details');
+            if (detailsField) {
+                detailsField.value = handover.authorization_details;
+            }
+        }
+        if (handover.movement_officer_name) {
+            const officerField = document.getElementById('movement_officer_name');
+            if (officerField) {
+                officerField.value = handover.movement_officer_name;
+            }
+        }
+        if (handover.form_link) {
+            const linkField = document.getElementById('form_link');
+            if (linkField) {
+                linkField.value = handover.form_link;
+            }
+        }
+        if (handover.custom_company_name) {
+            const companyField = document.getElementById('custom_company_name');
+            if (companyField) {
+                companyField.value = handover.custom_company_name;
+            }
+        }
+
+        // إظهار النموذج بعد ملء البيانات
+        setTimeout(() => {
+            const container = document.getElementById('handover-form-container');
+            if (container) {
+                container.classList.remove('d-none');
+            }
+        }, 500);
+    });
+    {% endif %}
+</script>
+
+<!-- Template للبحث عن الموظفين -->
+<script type="text/html" id="search-template">
+    <div class="mb-3">
+        <label class="form-label">فلترة حسب القسم:</label>
+        <select class="form-select department-select">
+            <option value="">كل الأقسام</option>
+            {% for dept in departments %}
+            <option value="{{ dept.id }}">{{ dept.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">البحث بالاسم أو رقم الموظف:</label>
+        <input
+            type="text"
+            class="form-control search-input"
+            placeholder="اكتب للبحث..."
+        />
+    </div>
+    <div
+        class="list-group list-container"
+        style="max-height: 300px; overflow-y: auto;"
+    ></div>
+    <div class="alert alert-info text-center d-none no-results-alert">
+        <i class="fas fa-search"></i> لا توجد نتائج للبحث
+    </div>
+</script>
+{% endblock %}
