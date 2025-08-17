@@ -5,6 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SelectField, DecimalField, DateField, BooleanField, IntegerField, FieldList, FormField, SubmitField
 from wtforms.validators import DataRequired, Length, NumberRange, Email, Optional
 from wtforms.widgets import TextArea
+from decimal import Decimal
 from models_accounting import AccountType, TransactionType, PaymentMethod, EntryType
 
 
@@ -100,7 +101,7 @@ class VendorForm(FlaskForm):
     address = TextAreaField('العنوان', validators=[Optional()], widget=TextArea())
     contact_person = StringField('الشخص المسؤول', validators=[Optional(), Length(max=100)])
     payment_terms = StringField('شروط الدفع', validators=[Optional(), Length(max=100)])
-    credit_limit = DecimalField('حد الائتمان', validators=[Optional(), NumberRange(min=0)], default=0)
+    credit_limit = DecimalField('حد الائتمان', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
     is_active = BooleanField('نشط', default=True)
 
 
@@ -114,7 +115,7 @@ class CustomerForm(FlaskForm):
     email = StringField('البريد الإلكتروني', validators=[Optional(), Email(), Length(max=120)])
     address = TextAreaField('العنوان', validators=[Optional()], widget=TextArea())
     contact_person = StringField('الشخص المسؤول', validators=[Optional(), Length(max=100)])
-    credit_limit = DecimalField('حد الائتمان', validators=[Optional(), NumberRange(min=0)], default=0)
+    credit_limit = DecimalField('حد الائتمان', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
     is_active = BooleanField('نشط', default=True)
 
 
@@ -125,7 +126,7 @@ class CostCenterForm(FlaskForm):
     name_en = StringField('الاسم بالإنجليزية', validators=[Optional(), Length(max=200)])
     description = TextAreaField('وصف المركز', validators=[Optional()], widget=TextArea())
     parent_id = SelectField('المركز الرئيسي', coerce=lambda x: int(x) if x else None, validators=[Optional()])
-    budget_amount = DecimalField('الميزانية المخصصة (ريال)', validators=[Optional(), NumberRange(min=0)], default=0)
+    budget_amount = DecimalField('الميزانية المخصصة (ريال)', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
     is_active = BooleanField('حالة المركز', default=True)
     submit = SubmitField('حفظ البيانات')
 
@@ -145,18 +146,18 @@ class BudgetForm(FlaskForm):
     cost_center_id = SelectField('مركز التكلفة', coerce=lambda x: int(x) if x else None, validators=[Optional()])
     
     # المبالغ الشهرية
-    jan_amount = DecimalField('يناير', validators=[Optional(), NumberRange(min=0)], default=0)
-    feb_amount = DecimalField('فبراير', validators=[Optional(), NumberRange(min=0)], default=0)
-    mar_amount = DecimalField('مارس', validators=[Optional(), NumberRange(min=0)], default=0)
-    apr_amount = DecimalField('أبريل', validators=[Optional(), NumberRange(min=0)], default=0)
-    may_amount = DecimalField('مايو', validators=[Optional(), NumberRange(min=0)], default=0)
-    jun_amount = DecimalField('يونيو', validators=[Optional(), NumberRange(min=0)], default=0)
-    jul_amount = DecimalField('يوليو', validators=[Optional(), NumberRange(min=0)], default=0)
-    aug_amount = DecimalField('أغسطس', validators=[Optional(), NumberRange(min=0)], default=0)
-    sep_amount = DecimalField('سبتمبر', validators=[Optional(), NumberRange(min=0)], default=0)
-    oct_amount = DecimalField('أكتوبر', validators=[Optional(), NumberRange(min=0)], default=0)
-    nov_amount = DecimalField('نوفمبر', validators=[Optional(), NumberRange(min=0)], default=0)
-    dec_amount = DecimalField('ديسمبر', validators=[Optional(), NumberRange(min=0)], default=0)
+    jan_amount = DecimalField('يناير', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    feb_amount = DecimalField('فبراير', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    mar_amount = DecimalField('مارس', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    apr_amount = DecimalField('أبريل', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    may_amount = DecimalField('مايو', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    jun_amount = DecimalField('يونيو', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    jul_amount = DecimalField('يوليو', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    aug_amount = DecimalField('أغسطس', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    sep_amount = DecimalField('سبتمبر', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    oct_amount = DecimalField('أكتوبر', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    nov_amount = DecimalField('نوفمبر', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
+    dec_amount = DecimalField('ديسمبر', validators=[Optional(), NumberRange(min=0)], default=Decimal('0'))
     
     notes = TextAreaField('ملاحظات', validators=[Optional()], widget=TextArea())
 

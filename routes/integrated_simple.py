@@ -154,7 +154,7 @@ def auto_accounting():
                 text("SELECT COUNT(*) FROM transactions WHERE DATE(created_at) = :today"),
                 {'today': today}
             ).scalar() or 0
-        except:
+        except Exception as e:
             processed_entries = 0
         
         # حساب المعاملات المعلقة
@@ -162,7 +162,7 @@ def auto_accounting():
             pending_transactions = db.session.execute(
                 text("SELECT COUNT(*) FROM salaries WHERE net_salary > 0")
             ).scalar() or 0
-        except:
+        except Exception as e:
             pending_transactions = 0
         
         # حساب إجمالي المبلغ المعالج اليوم
@@ -171,7 +171,7 @@ def auto_accounting():
                 text("SELECT COALESCE(SUM(total_amount), 0) FROM transactions WHERE DATE(created_at) = :today"),
                 {'today': today}
             ).scalar() or 0
-        except:
+        except Exception as e:
             total_amount = 0
         
         # سجل العمليات الحقيقي

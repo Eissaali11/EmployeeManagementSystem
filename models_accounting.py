@@ -125,7 +125,9 @@ class CostCenter(db.Model):
     def get_total_budget(self):
         """إجمالي الميزانية شاملة المراكز الفرعية"""
         total = self.budget_amount or 0
-        for child in self.children:
+        # إصلاح: استخدام relationship صحيح للحصول على المراكز الفرعية
+        child_centers = CostCenter.query.filter_by(parent_id=self.id).all()
+        for child in child_centers:
             total += child.get_total_budget()
         return total
     
