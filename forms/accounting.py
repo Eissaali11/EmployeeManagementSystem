@@ -215,12 +215,12 @@ class ReportFiltersForm(FlaskForm):
     transaction_type = SelectField('نوع المعاملة',
                                   choices=[
                                       ('', 'جميع الأنواع'),
-                                      ('manual', 'قيد يدوي'),
-                                      ('salary', 'راتب'),
-                                      ('vehicle_expense', 'مصروف مركبة'),
-                                      ('depreciation', 'استهلاك'),
-                                      ('payment', 'دفع'),
-                                      ('receipt', 'قبض')
+                                      ('MANUAL', 'قيد يدوي'),
+                                      ('SALARY', 'راتب'),
+                                      ('VEHICLE_EXPENSE', 'مصروف مركبة'),
+                                      ('DEPRECIATION', 'استهلاك'),
+                                      ('PAYMENT', 'دفع'),
+                                      ('RECEIPT', 'قبض')
                                   ],
                                   validators=[Optional()])
 
