@@ -5948,10 +5948,19 @@ def export_valid_documents_excel():
         plate_number = request.args.get('plate_number', '').strip()
         vehicle_make = request.args.get('vehicle_make', '').strip()
         
-        # استخدام الدالة المساعدة لجلب البيانات المفلترة
-        expired_registration, expired_inspection, expired_authorization, expired_all = get_filtered_vehicle_documents(
-            document_status, document_type, plate_number, vehicle_make
-        )
+        # جلب جميع السيارات مع التصفية
+        query = Vehicle.query
+        
+        if plate_number:
+            query = query.filter(Vehicle.plate_number.ilike(f'%{plate_number}%'))
+        
+        if vehicle_make:
+            query = query.filter(or_(
+                Vehicle.make.ilike(f'%{vehicle_make}%'),
+                Vehicle.model.ilike(f'%{vehicle_make}%')
+            ))
+        
+        all_vehicles = query.all()
 
         # إنشاء قوائم البيانات
         registration_data = []

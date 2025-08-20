@@ -8,10 +8,20 @@
     <!-- عنوان الصفحة -->
     <div class="row mb-4">
         <div class="col-12">
-            <h2 class="text-center text-primary">
-                <i class="fas fa-car"></i>
-                جميع السيارات مع حالة الفحص الدوري
-            </h2>
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="text-primary">
+                    <i class="fas fa-car"></i>
+                    جميع السيارات مع حالة الفحص الدوري
+                </h2>
+                <div>
+                    <button onclick="location.reload()" class="btn btn-info me-2">
+                        <i class="fas fa-sync-alt"></i> تحديث الصفحة
+                    </button>
+                    <a href="{{ url_for('vehicles.export_valid_documents_excel') }}" class="btn btn-success">
+                        <i class="fas fa-file-excel"></i> تصدير Excel
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -77,6 +87,7 @@
                             <a href="{{ url_for('vehicles.valid_documents') }}" class="btn btn-secondary">
                                 <i class="fas fa-times"></i> إزالة الفلاتر
                             </a>
+
                         </div>
                     </form>
                 </div>
