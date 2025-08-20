@@ -530,6 +530,8 @@ class SystemAudit(db.Model):
 # نماذج إدارة السيارات
 class Vehicle(db.Model):
     """نموذج السيارة مع المعلومات الأساسية"""
+    __tablename__ = 'vehicles'  # تحديد اسم الجدول صراحة
+    
     id = db.Column(db.Integer, primary_key=True)
     plate_number = db.Column(db.String(20), nullable=False, unique=True)  # رقم اللوحة
     make = db.Column(db.String(50), nullable=False)  # الشركة المصنعة (تويوتا، نيسان، إلخ)
