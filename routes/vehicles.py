@@ -485,18 +485,23 @@ def get_filtered_vehicle_documents(document_status='expired', document_type='all
                     Vehicle.registration_expiry_date.isnot(None),
                     Vehicle.registration_expiry_date >= today
                 ).order_by(Vehicle.registration_expiry_date).all()
+                print(f"DEBUG: السيارات مع استمارة سارية: {len(expired_registration)}")
             
             if document_type in ['all', 'inspection']:
                 expired_inspection = base_query.filter(
                     Vehicle.inspection_expiry_date.isnot(None),
                     Vehicle.inspection_expiry_date >= today
                 ).order_by(Vehicle.inspection_expiry_date).all()
+                print(f"DEBUG: السيارات مع فحص دوري ساري: {len(expired_inspection)}")
+                for v in expired_inspection:
+                    print(f"DEBUG: سيارة: {v.plate_number} - فحص دوري: {v.inspection_expiry_date}")
             
             if document_type in ['all', 'authorization']:
                 expired_authorization = base_query.filter(
                     Vehicle.authorization_expiry_date.isnot(None),
                     Vehicle.authorization_expiry_date >= today
                 ).order_by(Vehicle.authorization_expiry_date).all()
+                print(f"DEBUG: السيارات مع تفويض ساري: {len(expired_authorization)}")
                 
         elif document_status == 'expiring_soon':
             # تنتهي خلال 30 يوم
