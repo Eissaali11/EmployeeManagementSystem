@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file, make_response
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
@@ -48,6 +48,11 @@ from datetime import date
 
 
 vehicles_bp = Blueprint('vehicles', __name__)
+
+# استيرادات إضافية لـ Excel
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Font, PatternFill, Alignment
 
 def update_vehicle_driver(vehicle_id):
         """تحديث اسم السائق في جدول السيارات بناءً على آخر سجل تسليم من نوع delivery"""
