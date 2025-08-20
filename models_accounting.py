@@ -202,7 +202,7 @@ class Transaction(db.Model):
     vendor_id = db.Column(db.Integer, db.ForeignKey('vendors.id'))
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'))  # للرواتب
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'))  # لمصروفات المركبات
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'))  # لمصروفات المركبات
     
     # معلومات التدقيق
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

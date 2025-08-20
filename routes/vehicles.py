@@ -5865,78 +5865,30 @@ def view_external_authorization(vehicle_id, auth_id):
 @vehicles_bp.route('/valid-documents')
 @login_required
 def valid_documents():
-        """عرض قائمة الوثائق السارية للمركبات - إصدار محدث ومبسط"""
-        # التاريخ الحالي
-        today = datetime.now().date()
-        
-        # جلب الفلاتر من الطلب
+        """عرض قائمة الوثائق السارية للمركبات"""
+        # إجبار الفلتر على الوثائق السارية
+        document_status = 'valid'
         document_type = request.args.get('document_type', 'all')
         plate_number = request.args.get('plate_number', '').strip()
         vehicle_make = request.args.get('vehicle_make', '').strip()
         
         # تسجيل معلومات التشخيص
-        total_vehicles = Vehicle.query.count()
-        current_app.logger.debug(f"إجمالي السيارات في قاعدة البيانات: {total_vehicles}")
-        current_app.logger.debug(f"فلاتر البحث - نوع الوثيقة: {document_type}, رقم اللوحة: {plate_number}, الصانع: {vehicle_make}")
+        current_app.logger.debug(f"عدد السيارات المُرسلة للصفحة: {Vehicle.query.count()}")
+        current_app.logger.debug(f"قيود الفلترة - حالة: {document_status}, شركة: {vehicle_make}, مشروع: {document_type}, رقم: {plate_number}")
         
-        # بناء الاستعلام الأساسي
-        base_query = Vehicle.query
+        # استخدام الدالة المساعدة لجلب البيانات المفلترة
+        expired_registration, expired_inspection, expired_authorization, expired_all = get_filtered_vehicle_documents(
+            document_status, document_type, plate_number, vehicle_make
+        )
         
-        # تطبيق فلاتر البحث النصية
-        if plate_number:
-            base_query = base_query.filter(Vehicle.plate_number.ilike(f'%{plate_number}%'))
-            current_app.logger.debug(f"تطبيق فلتر رقم اللوحة: {plate_number}")
+        # التاريخ الحالي
+        today = datetime.now().date()
         
-        if vehicle_make:
-            base_query = base_query.filter(or_(
-                Vehicle.make.ilike(f'%{vehicle_make}%'),
-                Vehicle.model.ilike(f'%{vehicle_make}%')
-            ))
-            current_app.logger.debug(f"تطبيق فلتر الصانع: {vehicle_make}")
-        
-        # جلب السيارات مع استمارة سارية
-        if document_type in ['all', 'registration']:
-            expired_registration = base_query.filter(
-                Vehicle.registration_expiry_date.isnot(None),
-                Vehicle.registration_expiry_date >= today
-            ).order_by(Vehicle.registration_expiry_date).all()
-            current_app.logger.debug(f"السيارات مع استمارة سارية: {len(expired_registration)}")
-        else:
-            expired_registration = []
-        
-        # جلب السيارات مع فحص دوري ساري
-        if document_type in ['all', 'inspection']:
-            expired_inspection = base_query.filter(
-                Vehicle.inspection_expiry_date.isnot(None),
-                Vehicle.inspection_expiry_date >= today
-            ).order_by(Vehicle.inspection_expiry_date).all()
-            current_app.logger.debug(f"السيارات مع فحص دوري ساري: {len(expired_inspection)}")
-            # طباعة تفاصيل كل سيارة
-            for v in expired_inspection:
-                current_app.logger.debug(f"سيارة: {v.plate_number} - صانع: {v.make} - فحص: {v.inspection_expiry_date}")
-        else:
-            expired_inspection = []
-        
-        # جلب السيارات مع تفويض ساري
-        if document_type in ['all', 'authorization']:
-            expired_authorization = base_query.filter(
-                Vehicle.authorization_expiry_date.isnot(None),
-                Vehicle.authorization_expiry_date >= today
-            ).order_by(Vehicle.authorization_expiry_date).all()
-            current_app.logger.debug(f"السيارات مع تفويض ساري: {len(expired_authorization)}")
-        else:
-            expired_authorization = []
-        
-        # جميع السيارات السارية (مع أي وثيقة سارية واحدة على الأقل)
-        expired_all = base_query.filter(
-            or_(
-                (Vehicle.registration_expiry_date.isnot(None)) & (Vehicle.registration_expiry_date >= today),
-                (Vehicle.inspection_expiry_date.isnot(None)) & (Vehicle.inspection_expiry_date >= today),
-                (Vehicle.authorization_expiry_date.isnot(None)) & (Vehicle.authorization_expiry_date >= today)
-            )
-        ).order_by(Vehicle.plate_number).all()
-        
-        current_app.logger.debug(f"إجمالي السيارات مع وثائق سارية: {len(expired_all)}")
+        # إضافة معلومات تشخيص إضافية
+        current_app.logger.debug(f"عدد السيارات المفلترة - فحص دوري: {len(expired_inspection)}")
+        current_app.logger.debug(f"عدد السيارات المفلترة - تفويض: {len(expired_authorization)}")
+        current_app.logger.debug(f"عدد السيارات المفلترة - استمارة: {len(expired_registration)}")
+        current_app.logger.debug(f"عدد السيارات المفلترة - جميع: {len(expired_all)}")
 
         return render_template(
                 'vehicles/valid_documents.html',
@@ -5945,7 +5897,7 @@ def valid_documents():
                 expired_authorization=expired_authorization,
                 expired_all=expired_all,
                 today=today,
-                document_status='valid',
+                document_status=document_status,
                 document_type=document_type
         )
 
