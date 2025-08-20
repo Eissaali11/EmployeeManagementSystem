@@ -5867,6 +5867,10 @@ def valid_documents():
         plate_number = request.args.get('plate_number', '').strip()
         vehicle_make = request.args.get('vehicle_make', '').strip()
         
+        # تسجيل معلومات التشخيص
+        current_app.logger.debug(f"عدد السيارات المُرسلة للصفحة: {Vehicle.query.count()}")
+        current_app.logger.debug(f"قيود الفلترة - حالة: {document_status}, شركة: {vehicle_make}, مشروع: {document_type}, رقم: {plate_number}")
+        
         # استخدام الدالة المساعدة لجلب البيانات المفلترة
         expired_registration, expired_inspection, expired_authorization, expired_all = get_filtered_vehicle_documents(
             document_status, document_type, plate_number, vehicle_make
@@ -5874,6 +5878,12 @@ def valid_documents():
         
         # التاريخ الحالي
         today = datetime.now().date()
+        
+        # إضافة معلومات تشخيص إضافية
+        current_app.logger.debug(f"عدد السيارات المفلترة - فحص دوري: {len(expired_inspection)}")
+        current_app.logger.debug(f"عدد السيارات المفلترة - تفويض: {len(expired_authorization)}")
+        current_app.logger.debug(f"عدد السيارات المفلترة - استمارة: {len(expired_registration)}")
+        current_app.logger.debug(f"عدد السيارات المفلترة - جميع: {len(expired_all)}")
 
         return render_template(
                 'vehicles/valid_documents.html',
