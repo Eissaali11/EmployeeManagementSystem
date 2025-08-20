@@ -18,7 +18,7 @@ employee_departments = db.Table('employee_departments',
 
 # جدول الربط بين المركبات والمستخدمين - يسمح لأكثر من مستخدم الوصول للمركبة الواحدة
 vehicle_user_access = db.Table('vehicle_user_access',
-    db.Column('vehicle_id', db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('vehicle_id', db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
 )
 class Department(db.Model):
@@ -530,6 +530,7 @@ class SystemAudit(db.Model):
 # نماذج إدارة السيارات
 class Vehicle(db.Model):
     """نموذج السيارة مع المعلومات الأساسية"""
+    __tablename__ = 'vehicles'
     id = db.Column(db.Integer, primary_key=True)
     plate_number = db.Column(db.String(20), nullable=False, unique=True)  # رقم اللوحة
     make = db.Column(db.String(50), nullable=False)  # الشركة المصنعة (تويوتا، نيسان، إلخ)
