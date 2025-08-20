@@ -5880,3 +5880,165 @@ def valid_documents():
                 document_status=document_status,
                 document_type=document_type
         )
+
+@vehicles_bp.route('/valid-documents/export/excel')
+@login_required
+def export_valid_documents_excel():
+        """تصدير بيانات الوثائق السارية للمركبات إلى ملف Excel منسق"""
+        # التاريخ الحالي
+        today = datetime.now().date()
+
+        # الحصول على معاملات الفلترة
+        document_status = 'valid'  # إجبار الحالة على الوثائق السارية
+        document_type = request.args.get('document_type', 'all')
+        plate_number = request.args.get('plate_number', '').strip()
+        vehicle_make = request.args.get('vehicle_make', '').strip()
+        
+        # استخدام الدالة المساعدة لجلب البيانات المفلترة
+        expired_registration, expired_inspection, expired_authorization, expired_all = get_filtered_vehicle_documents(
+            document_status, document_type, plate_number, vehicle_make
+        )
+
+        # إنشاء قوائم البيانات
+        registration_data = []
+        for vehicle in expired_registration:
+                days_remaining = (vehicle.registration_expiry_date - today).days if vehicle.registration_expiry_date else 0
+                registration_data.append({
+                        'رقم اللوحة': vehicle.plate_number,
+                        'الشركة المصنعة': vehicle.make,
+                        'الموديل': vehicle.model,
+                        'السنة': vehicle.year,
+                        'تاريخ انتهاء الاستمارة': vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else 'غير محدد',
+                        'الأيام المتبقية': days_remaining,
+                        'الحالة': 'ساري'
+                })
+
+        inspection_data = []
+        for vehicle in expired_inspection:
+                days_remaining = (vehicle.inspection_expiry_date - today).days if vehicle.inspection_expiry_date else 0
+                inspection_data.append({
+                        'رقم اللوحة': vehicle.plate_number,
+                        'الشركة المصنعة': vehicle.make,
+                        'الموديل': vehicle.model,
+                        'السنة': vehicle.year,
+                        'تاريخ انتهاء الفحص الدوري': vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else 'غير محدد',
+                        'الأيام المتبقية': days_remaining,
+                        'الحالة': 'ساري'
+                })
+
+        authorization_data = []
+        for vehicle in expired_authorization:
+                days_remaining = (vehicle.authorization_expiry_date - today).days if vehicle.authorization_expiry_date else 0
+                authorization_data.append({
+                        'رقم اللوحة': vehicle.plate_number,
+                        'الشركة المصنعة': vehicle.make,
+                        'الموديل': vehicle.model,
+                        'السنة': vehicle.year,
+                        'تاريخ انتهاء التفويض': vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else 'غير محدد',
+                        'الأيام المتبقية': days_remaining,
+                        'الحالة': 'ساري'
+                })
+
+        all_data = []
+        for vehicle in expired_all:
+                # التحقق من حالة كل وثيقة
+                registration_status = 'ساري' if vehicle.registration_expiry_date and vehicle.registration_expiry_date >= today else 'منتهي' if vehicle.registration_expiry_date else 'غير محدد'
+                inspection_status = 'ساري' if vehicle.inspection_expiry_date and vehicle.inspection_expiry_date >= today else 'منتهي' if vehicle.inspection_expiry_date else 'غير محدد'
+                authorization_status = 'ساري' if vehicle.authorization_expiry_date and vehicle.authorization_expiry_date >= today else 'منتهي' if vehicle.authorization_expiry_date else 'غير محدد'
+                
+                all_data.append({
+                        'رقم اللوحة': vehicle.plate_number,
+                        'الشركة المصنعة': vehicle.make,
+                        'الموديل': vehicle.model,
+                        'السنة': vehicle.year,
+                        'تاريخ انتهاء الاستمارة': vehicle.registration_expiry_date.strftime('%Y-%m-%d') if vehicle.registration_expiry_date else 'غير محدد',
+                        'حالة الاستمارة': registration_status,
+                        'تاريخ انتهاء الفحص الدوري': vehicle.inspection_expiry_date.strftime('%Y-%m-%d') if vehicle.inspection_expiry_date else 'غير محدد',
+                        'حالة الفحص الدوري': inspection_status,
+                        'تاريخ انتهاء التفويض': vehicle.authorization_expiry_date.strftime('%Y-%m-%d') if vehicle.authorization_expiry_date else 'غير محدد',
+                        'حالة التفويض': authorization_status
+                })
+
+        # إنشاء ملف Excel
+        wb = Workbook()
+        
+        # حذف الورقة الافتراضية
+        default_sheet = wb.active
+        wb.remove(default_sheet)
+
+        # إنشاء ورقة الاستمارات السارية
+        if registration_data:
+                ws_registration = wb.create_sheet(title="الاستمارات السارية")
+                df_registration = pd.DataFrame(registration_data)
+                
+                for r in dataframe_to_rows(df_registration, index=False, header=True):
+                        ws_registration.append(r)
+                
+                # تنسيق الرؤوس
+                for cell in ws_registration[1]:
+                        cell.font = Font(bold=True, color="FFFFFF")
+                        cell.fill = PatternFill(start_color="28a745", end_color="28a745", fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # إنشاء ورقة الفحص الدوري الساري
+        if inspection_data:
+                ws_inspection = wb.create_sheet(title="الفحص الدوري الساري")
+                df_inspection = pd.DataFrame(inspection_data)
+                
+                for r in dataframe_to_rows(df_inspection, index=False, header=True):
+                        ws_inspection.append(r)
+                
+                # تنسيق الرؤوس
+                for cell in ws_inspection[1]:
+                        cell.font = Font(bold=True, color="FFFFFF")
+                        cell.fill = PatternFill(start_color="28a745", end_color="28a745", fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # إنشاء ورقة التفاويض السارية
+        if authorization_data:
+                ws_authorization = wb.create_sheet(title="التفاويض السارية")
+                df_authorization = pd.DataFrame(authorization_data)
+                
+                for r in dataframe_to_rows(df_authorization, index=False, header=True):
+                        ws_authorization.append(r)
+                
+                # تنسيق الرؤوس
+                for cell in ws_authorization[1]:
+                        cell.font = Font(bold=True, color="FFFFFF")
+                        cell.fill = PatternFill(start_color="28a745", end_color="28a745", fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # إنشاء ورقة جميع الوثائق
+        if all_data:
+                ws_all = wb.create_sheet(title="جميع الوثائق")
+                df_all = pd.DataFrame(all_data)
+                
+                for r in dataframe_to_rows(df_all, index=False, header=True):
+                        ws_all.append(r)
+                
+                # تنسيق الرؤوس
+                for cell in ws_all[1]:
+                        cell.font = Font(bold=True, color="FFFFFF")
+                        cell.fill = PatternFill(start_color="007bff", end_color="007bff", fill_type="solid")
+                        cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # إذا لم تكن هناك بيانات، إنشاء ورقة فارغة مع رسالة
+        if not any([registration_data, inspection_data, authorization_data, all_data]):
+                ws_empty = wb.create_sheet(title="لا توجد بيانات")
+                ws_empty['A1'] = "لا توجد وثائق سارية متطابقة مع الفلاتر المحددة"
+                ws_empty['A1'].font = Font(bold=True, size=14)
+                ws_empty['A1'].alignment = Alignment(horizontal="center", vertical="center")
+
+        # إنشاء الاستجابة
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        # تسجيل العملية
+        audit_log("export", "valid_vehicle_documents", f"تم تصدير تقرير الوثائق السارية للمركبات إلى Excel - الفلتر: {document_type}")
+
+        response = make_response(output.read())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename=valid_vehicle_documents_{today.strftime("%Y%m%d")}.xlsx'
+        
+        return response
