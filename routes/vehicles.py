@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from flask_wtf import FlaskForm
 from werkzeug.utils import secure_filename
-from sqlalchemy import extract, func, or_
+from sqlalchemy import extract, func, or_, and_, not_, exists, case
 from forms.vehicle_forms import VehicleAccidentForm, VehicleDocumentsForm
 import os
 import uuid
@@ -5865,40 +5865,74 @@ def view_external_authorization(vehicle_id, auth_id):
 @vehicles_bp.route('/valid-documents')
 @login_required
 def valid_documents():
-        """عرض قائمة الوثائق السارية للمركبات"""
-        # إجبار الفلتر على الوثائق السارية
-        document_status = 'valid'
-        document_type = request.args.get('document_type', 'all')
+        """عرض قائمة جميع السيارات مع حالة الفحص الدوري"""
+        # الحصول على التصفية
         plate_number = request.args.get('plate_number', '').strip()
         vehicle_make = request.args.get('vehicle_make', '').strip()
-        
-        # تسجيل معلومات التشخيص
-        current_app.logger.debug(f"عدد السيارات المُرسلة للصفحة: {Vehicle.query.count()}")
-        current_app.logger.debug(f"قيود الفلترة - حالة: {document_status}, شركة: {vehicle_make}, مشروع: {document_type}, رقم: {plate_number}")
-        
-        # استخدام الدالة المساعدة لجلب البيانات المفلترة
-        expired_registration, expired_inspection, expired_authorization, expired_all = get_filtered_vehicle_documents(
-            document_status, document_type, plate_number, vehicle_make
-        )
         
         # التاريخ الحالي
         today = datetime.now().date()
         
-        # إضافة معلومات تشخيص إضافية
-        current_app.logger.debug(f"عدد السيارات المفلترة - فحص دوري: {len(expired_inspection)}")
-        current_app.logger.debug(f"عدد السيارات المفلترة - تفويض: {len(expired_authorization)}")
-        current_app.logger.debug(f"عدد السيارات المفلترة - استمارة: {len(expired_registration)}")
-        current_app.logger.debug(f"عدد السيارات المفلترة - جميع: {len(expired_all)}")
+        # جلب جميع السيارات مع التصفية
+        query = Vehicle.query
+        
+        if plate_number:
+            query = query.filter(Vehicle.plate_number.ilike(f'%{plate_number}%'))
+        
+        if vehicle_make:
+            query = query.filter(or_(
+                Vehicle.make.ilike(f'%{vehicle_make}%'),
+                Vehicle.model.ilike(f'%{vehicle_make}%')
+            ))
+        
+        # جلب جميع السيارات مرتبة حسب حالة الفحص الدوري
+        all_vehicles = query.order_by(
+            case(
+                (Vehicle.inspection_expiry_date == None, 3),  # غير محدد
+                (Vehicle.inspection_expiry_date >= today, 1),  # ساري  
+                else_=2  # منتهي
+            ),
+            Vehicle.inspection_expiry_date
+        ).all()
+        
+        # تصنيف السيارات حسب حالة الفحص الدوري
+        valid_inspection = []
+        expired_inspection = []
+        undefined_inspection = []
+        
+        for vehicle in all_vehicles:
+            if vehicle.inspection_expiry_date is None:
+                undefined_inspection.append(vehicle)
+            elif vehicle.inspection_expiry_date >= today:
+                valid_inspection.append(vehicle)
+            else:
+                expired_inspection.append(vehicle)
+        
+        # إحصائيات
+        total_vehicles = len(all_vehicles)
+        valid_count = len(valid_inspection)
+        expired_count = len(expired_inspection)
+        undefined_count = len(undefined_inspection)
+        
+        # تسجيل معلومات التشخيص
+        current_app.logger.debug(f"إجمالي السيارات: {total_vehicles}")
+        current_app.logger.debug(f"فحص ساري: {valid_count}")
+        current_app.logger.debug(f"فحص منتهي: {expired_count}")
+        current_app.logger.debug(f"غير محدد: {undefined_count}")
 
         return render_template(
                 'vehicles/valid_documents.html',
-                expired_registration=expired_registration,
+                all_vehicles=all_vehicles,
+                valid_inspection=valid_inspection,
                 expired_inspection=expired_inspection,
-                expired_authorization=expired_authorization,
-                expired_all=expired_all,
+                undefined_inspection=undefined_inspection,
+                total_vehicles=total_vehicles,
+                valid_count=valid_count,
+                expired_count=expired_count,
+                undefined_count=undefined_count,
                 today=today,
-                document_status=document_status,
-                document_type=document_type
+                plate_number=plate_number,
+                vehicle_make=vehicle_make
         )
 
 @vehicles_bp.route('/valid-documents/export/excel')
