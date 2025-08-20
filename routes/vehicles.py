@@ -6040,7 +6040,7 @@ def export_valid_documents_excel():
         output.seek(0)
 
         # تسجيل العملية
-        audit_log("export", "valid_vehicle_documents", f"تم تصدير تقرير الوثائق السارية للمركبات إلى Excel - الفلتر: {document_type}")
+        log_activity("export", "valid_vehicle_documents", details=f"تم تصدير تقرير الوثائق السارية للمركبات إلى Excel - الفلتر: {document_type}")
 
         response = make_response(output.read())
         response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
