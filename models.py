@@ -18,7 +18,7 @@ employee_departments = db.Table('employee_departments',
 
 # جدول الربط بين المركبات والمستخدمين - يسمح لأكثر من مستخدم الوصول للمركبة الواحدة
 vehicle_user_access = db.Table('vehicle_user_access',
-    db.Column('vehicle_id', db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('vehicle_id', db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), primary_key=True),
     db.Column('user_id', db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
 )
 class Department(db.Model):
@@ -425,7 +425,7 @@ class Fee(db.Model):
     # العلاقات (اختياري - يمكن ربط الرسم بموظف أو مركبة أو مستند)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', ondelete='SET NULL'), nullable=True)
     document_id = db.Column(db.Integer, db.ForeignKey('document.id', ondelete='SET NULL'), nullable=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='SET NULL'), nullable=True)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='SET NULL'), nullable=True)
     
     # العلاقات
     employee = db.relationship('Employee', backref=db.backref('fees', lazy='dynamic'))
@@ -586,7 +586,7 @@ class Vehicle(db.Model):
 class VehicleRental(db.Model):
     """معلومات إيجار السيارة"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     start_date = db.Column(db.Date, nullable=False)  # تاريخ بداية الإيجار
     end_date = db.Column(db.Date)  # تاريخ نهاية الإيجار (قد يكون فارغا إذا كان الإيجار مستمرا)
     monthly_cost = db.Column(db.Float, nullable=False)  # قيمة الإيجار الشهري
@@ -609,7 +609,7 @@ class VehicleRental(db.Model):
 class VehicleWorkshop(db.Model):
     """معلومات دخول وخروج السيارة من الورشة"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     entry_date = db.Column(db.Date, nullable=False)  # تاريخ دخول الورشة
     exit_date = db.Column(db.Date)  # تاريخ الخروج (قد يكون فارغا إذا كانت ما زالت في الورشة)
     reason = db.Column(db.String(50), nullable=False)  # السبب: عطل، صيانة دورية، حادث
@@ -652,7 +652,7 @@ class VehicleWorkshopImage(db.Model):
 class VehicleProject(db.Model):
     """معلومات تخصيص السيارة لمشروع معين"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     project_name = db.Column(db.String(100), nullable=False)  # اسم المشروع
     location = db.Column(db.String(100), nullable=False)  # موقع المشروع (المدينة، المنطقة)
     manager_name = db.Column(db.String(100), nullable=False)  # اسم مسؤول المشروع
@@ -696,7 +696,7 @@ class VehicleHandover(db.Model):
     
     # --- 2. معلومات السيارة المنسوخة (Snapshot) ---
     # يبقى الربط فقط لسهولة الوصول للسيارة الحالية، ولكن بيانات التقرير تأتي من الحقول أدناه    
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', name='fk_handover_driver_employee_id'), nullable=True)
     supervisor_employee_id = db.Column(db.Integer, db.ForeignKey('employee.id', name='fk_handover_supervisor_employee_id'), nullable=True)
 
@@ -863,7 +863,7 @@ class VehicleHandover(db.Model):
 # class VehicleHandover(db.Model):
 #     """نموذج تسليم واستلام السيارة"""
 #     id = db.Column(db.Integer, primary_key=True)
-#     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+#     vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
 #     handover_type = db.Column(db.String(20), nullable=False)  # النوع: تسليم، استلام
 #     handover_date = db.Column(db.Date, nullable=False)  # تاريخ التسليم/الاستلام
 #     person_name = db.Column(db.String(100), nullable=False)  # اسم الشخص المستلم/المسلم
@@ -943,7 +943,7 @@ class VehicleHandoverImage(db.Model):
 class VehicleChecklist(db.Model):
     """تشيك لست فحص السيارة"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     inspection_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
     inspector_name = db.Column(db.String(100), nullable=False)  # اسم الفاحص
     inspection_type = db.Column(db.String(20), nullable=False)  # نوع الفحص: يومي، أسبوعي، شهري، ربع سنوي
@@ -1046,7 +1046,7 @@ class VehicleDamageMarker(db.Model):
 class VehicleMaintenance(db.Model):
     """سجل صيانة المركبات"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     date = db.Column(db.Date, nullable=False)  # تاريخ الصيانة
     maintenance_type = db.Column(db.String(30), nullable=False)  # نوع الصيانة: دورية، طارئة، إصلاح، فحص
     description = db.Column(db.String(200), nullable=False)  # وصف الصيانة
@@ -1088,7 +1088,7 @@ class VehicleMaintenanceImage(db.Model):
 class VehicleFuelConsumption(db.Model):
     """تسجيل استهلاك الوقود اليومي للسيارات"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     date = db.Column(db.Date, nullable=False)  # تاريخ تعبئة الوقود
     liters = db.Column(db.Float, nullable=False)  # كمية اللترات
     cost = db.Column(db.Float, nullable=False)  # التكلفة الإجمالية
@@ -1116,7 +1116,7 @@ class VehicleFuelConsumption(db.Model):
 class VehiclePeriodicInspection(db.Model):
     """سجل الفحص الدوري للسيارات"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     inspection_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
     expiry_date = db.Column(db.Date, nullable=False)  # تاريخ انتهاء الفحص
     
@@ -1161,7 +1161,7 @@ class VehiclePeriodicInspection(db.Model):
 class VehicleSafetyCheck(db.Model):
     """فحص السلامة للسيارات (يومي، أسبوعي، شهري)"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     check_date = db.Column(db.Date, nullable=False)  # تاريخ الفحص
     check_type = db.Column(db.String(20), nullable=False)  # نوع الفحص: يومي، أسبوعي، شهري
     driver_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # معرف السائق
@@ -1189,7 +1189,7 @@ class VehicleSafetyCheck(db.Model):
 class VehicleAccident(db.Model):
     """نموذج الحوادث المرورية للمركبات"""
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     accident_date = db.Column(db.Date, nullable=False)  # تاريخ الحادث
     driver_name = db.Column(db.String(100), nullable=False)  # اسم السائق
     accident_status = db.Column(db.String(50), default='قيد المعالجة')  # حالة الحادث: قيد المعالجة، مغلق، معلق، إلخ
@@ -1233,7 +1233,7 @@ class ExternalAuthorization(db.Model):
     __tablename__ = 'external_authorization'
     
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id'), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=True)  # اختياري في حالة الإدخال اليدوي
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=True)
     project_name = db.Column(db.String(200), nullable=True)  # اسم المشروع/القسم
@@ -1312,7 +1312,7 @@ class VehicleExternalSafetyCheck(db.Model):
     __tablename__ = 'vehicle_external_safety_check'
     
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     
     # بيانات السائق
     driver_name = db.Column(db.String(100), nullable=False)  # اسم السائق
@@ -1384,7 +1384,7 @@ class SafetyInspection(db.Model):
     __tablename__ = 'safety_inspection'
     
     id = db.Column(db.Integer, primary_key=True)
-    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicle.id', ondelete='CASCADE'), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey('vehicles.id', ondelete='CASCADE'), nullable=False)
     employee_id = db.Column(db.String(20), nullable=False)  # رقم الموظف
     driver_name = db.Column(db.String(100), nullable=False)
     
@@ -1427,7 +1427,7 @@ class OperationRequest(db.Model):
     related_record_id = db.Column(db.Integer, nullable=False)
     
     # معرف السيارة
-    vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicle.id", ondelete="CASCADE"), nullable=False)
+    vehicle_id = db.Column(db.Integer, db.ForeignKey("vehicles.id", ondelete="CASCADE"), nullable=False)
     
     # معلومات العملية
     title = db.Column(db.String(200), nullable=False)  # عنوان العملية
