@@ -5851,3 +5851,32 @@ def view_external_authorization(vehicle_id, auth_id):
     return render_template('vehicles/view_external_authorization.html',
                          vehicle=vehicle,
                          authorization=auth)
+
+@vehicles_bp.route('/valid-documents')
+@login_required
+def valid_documents():
+        """عرض قائمة الوثائق السارية للمركبات"""
+        # إجبار الفلتر على الوثائق السارية
+        document_status = 'valid'
+        document_type = request.args.get('document_type', 'all')
+        plate_number = request.args.get('plate_number', '').strip()
+        vehicle_make = request.args.get('vehicle_make', '').strip()
+        
+        # استخدام الدالة المساعدة لجلب البيانات المفلترة
+        expired_registration, expired_inspection, expired_authorization, expired_all = get_filtered_vehicle_documents(
+            document_status, document_type, plate_number, vehicle_make
+        )
+        
+        # التاريخ الحالي
+        today = datetime.now().date()
+
+        return render_template(
+                'vehicles/valid_documents.html',
+                expired_registration=expired_registration,
+                expired_inspection=expired_inspection,
+                expired_authorization=expired_authorization,
+                expired_all=expired_all,
+                today=today,
+                document_status=document_status,
+                document_type=document_type
+        )

@@ -7,7 +7,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0">إدارة وثائق المركبات</h1>
         <div>
-            <a href="{{ url_for('vehicles.export_expired_documents_excel') }}" class="btn btn-success ms-2">
+            <a href="{{ url_for('vehicles.valid_documents') }}" class="btn btn-success ms-2">
+                <i class="fas fa-check-circle me-1"></i> الوثائق السارية
+            </a>
+            <a href="{{ url_for('vehicles.export_expired_documents_excel') }}" class="btn btn-outline-success ms-2">
                 <i class="fas fa-file-excel me-1"></i> تصدير Excel
             </a>
             <a href="{{ url_for('vehicles.index') }}" class="btn btn-secondary">
@@ -306,36 +309,94 @@
 
     <!-- التبويبات للوثائق المختلفة -->
     <div class="card shadow-sm">
+        {% if document_status == 'expired' %}
         <div class="card-header bg-danger text-white">
             <h5 class="mb-0">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 قائمة المركبات ذات الوثائق المنتهية
             </h5>
         </div>
+        {% elif document_status == 'valid' %}
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-check-circle me-2"></i>
+                قائمة المركبات ذات الوثائق السارية
+            </h5>
+        </div>
+        {% elif document_status == 'expiring_soon' %}
+        <div class="card-header bg-warning text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-clock me-2"></i>
+                قائمة المركبات ذات الوثائق التي تنتهي قريباً
+            </h5>
+        </div>
+        {% else %}
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                قائمة جميع المركبات والوثائق
+            </h5>
+        </div>
+        {% endif %}
         <div class="card-body">
             <ul class="nav nav-tabs mb-4" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="inspection-tab" data-bs-toggle="tab" data-bs-target="#inspection-tab-pane" type="button" role="tab" aria-controls="inspection-tab-pane" aria-selected="true">
                         الفحص الدوري
+                        {% if document_status == 'expired' %}
                         <span class="badge bg-danger ms-1">{{ expired_inspection|length }}</span>
+                        {% elif document_status == 'valid' %}
+                        <span class="badge bg-success ms-1">{{ expired_inspection|length }}</span>
+                        {% elif document_status == 'expiring_soon' %}
+                        <span class="badge bg-warning ms-1">{{ expired_inspection|length }}</span>
+                        {% else %}
+                        <span class="badge bg-info ms-1">{{ expired_inspection|length }}</span>
+                        {% endif %}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="authorization-tab" data-bs-toggle="tab" data-bs-target="#authorization-tab-pane" type="button" role="tab" aria-controls="authorization-tab-pane" aria-selected="false">
                         التفويض
+                        {% if document_status == 'expired' %}
                         <span class="badge bg-danger ms-1">{{ expired_authorization|length }}</span>
+                        {% elif document_status == 'valid' %}
+                        <span class="badge bg-success ms-1">{{ expired_authorization|length }}</span>
+                        {% elif document_status == 'expiring_soon' %}
+                        <span class="badge bg-warning ms-1">{{ expired_authorization|length }}</span>
+                        {% else %}
+                        <span class="badge bg-info ms-1">{{ expired_authorization|length }}</span>
+                        {% endif %}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="registration-tab" data-bs-toggle="tab" data-bs-target="#registration-tab-pane" type="button" role="tab" aria-controls="registration-tab-pane" aria-selected="false">
                         الاستمارة
+                        {% if document_status == 'expired' %}
                         <span class="badge bg-danger ms-1">{{ expired_registration|length }}</span>
+                        {% elif document_status == 'valid' %}
+                        <span class="badge bg-success ms-1">{{ expired_registration|length }}</span>
+                        {% elif document_status == 'expiring_soon' %}
+                        <span class="badge bg-warning ms-1">{{ expired_registration|length }}</span>
+                        {% else %}
+                        <span class="badge bg-info ms-1">{{ expired_registration|length }}</span>
+                        {% endif %}
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all-tab-pane" type="button" role="tab" aria-controls="all-tab-pane" aria-selected="false">
+                        {% if document_status == 'expired' %}
                         كافة الوثائق المنتهية
                         <span class="badge bg-danger ms-1">{{ expired_all|length }}</span>
+                        {% elif document_status == 'valid' %}
+                        كافة الوثائق السارية
+                        <span class="badge bg-success ms-1">{{ expired_all|length }}</span>
+                        {% elif document_status == 'expiring_soon' %}
+                        كافة الوثائق التي تنتهي قريباً
+                        <span class="badge bg-warning ms-1">{{ expired_all|length }}</span>
+                        {% else %}
+                        كافة الوثائق
+                        <span class="badge bg-info ms-1">{{ expired_all|length }}</span>
+                        {% endif %}
                     </button>
                 </li>
             </ul>
