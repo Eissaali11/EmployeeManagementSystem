@@ -431,6 +431,119 @@ def calculate_rental_adjustment(vehicle_id, year, month):
 
         return adjustment
 
+def get_filtered_vehicle_documents(document_status='expired', document_type='all', plate_number='', vehicle_make=''):
+        """دالة مساعدة لجلب وثائق المركبات مع الفلاتر"""
+        today = datetime.now().date()
+        
+        # بناء الاستعلام الأساسي
+        base_query = Vehicle.query
+        
+        # تطبيق فلاتر البحث النصية
+        if plate_number:
+            base_query = base_query.filter(Vehicle.plate_number.ilike(f'%{plate_number}%'))
+        
+        if vehicle_make:
+            base_query = base_query.filter(or_(
+                Vehicle.make.ilike(f'%{vehicle_make}%'),
+                Vehicle.model.ilike(f'%{vehicle_make}%')
+            ))
+        
+        # تطبيق فلاتر حالة الوثائق
+        expired_registration = []
+        expired_inspection = []
+        expired_authorization = []
+        
+        if document_status == 'expired':
+            # الوثائق المنتهية فقط
+            if document_type in ['all', 'registration']:
+                expired_registration = base_query.filter(
+                    Vehicle.registration_expiry_date.isnot(None),
+                    Vehicle.registration_expiry_date < today
+                ).order_by(Vehicle.registration_expiry_date).all()
+            
+            if document_type in ['all', 'inspection']:
+                expired_inspection = base_query.filter(
+                    Vehicle.inspection_expiry_date.isnot(None),
+                    Vehicle.inspection_expiry_date < today
+                ).order_by(Vehicle.inspection_expiry_date).all()
+            
+            if document_type in ['all', 'authorization']:
+                expired_authorization = base_query.filter(
+                    Vehicle.authorization_expiry_date.isnot(None),
+                    Vehicle.authorization_expiry_date < today
+                ).order_by(Vehicle.authorization_expiry_date).all()
+                
+        elif document_status == 'valid':
+            # الوثائق السارية فقط
+            if document_type in ['all', 'registration']:
+                expired_registration = base_query.filter(
+                    Vehicle.registration_expiry_date.isnot(None),
+                    Vehicle.registration_expiry_date >= today
+                ).order_by(Vehicle.registration_expiry_date).all()
+            
+            if document_type in ['all', 'inspection']:
+                expired_inspection = base_query.filter(
+                    Vehicle.inspection_expiry_date.isnot(None),
+                    Vehicle.inspection_expiry_date >= today
+                ).order_by(Vehicle.inspection_expiry_date).all()
+            
+            if document_type in ['all', 'authorization']:
+                expired_authorization = base_query.filter(
+                    Vehicle.authorization_expiry_date.isnot(None),
+                    Vehicle.authorization_expiry_date >= today
+                ).order_by(Vehicle.authorization_expiry_date).all()
+                
+        elif document_status == 'expiring_soon':
+            # تنتهي خلال 30 يوم
+            future_date = today + timedelta(days=30)
+            
+            if document_type in ['all', 'registration']:
+                expired_registration = base_query.filter(
+                    Vehicle.registration_expiry_date.isnot(None),
+                    Vehicle.registration_expiry_date >= today,
+                    Vehicle.registration_expiry_date <= future_date
+                ).order_by(Vehicle.registration_expiry_date).all()
+            
+            if document_type in ['all', 'inspection']:
+                expired_inspection = base_query.filter(
+                    Vehicle.inspection_expiry_date.isnot(None),
+                    Vehicle.inspection_expiry_date >= today,
+                    Vehicle.inspection_expiry_date <= future_date
+                ).order_by(Vehicle.inspection_expiry_date).all()
+            
+            if document_type in ['all', 'authorization']:
+                expired_authorization = base_query.filter(
+                    Vehicle.authorization_expiry_date.isnot(None),
+                    Vehicle.authorization_expiry_date >= today,
+                    Vehicle.authorization_expiry_date <= future_date
+                ).order_by(Vehicle.authorization_expiry_date).all()
+                
+        else:  # all
+            # جميع الوثائق
+            if document_type in ['all', 'registration']:
+                expired_registration = base_query.filter(
+                    Vehicle.registration_expiry_date.isnot(None)
+                ).order_by(Vehicle.registration_expiry_date).all()
+            
+            if document_type in ['all', 'inspection']:
+                expired_inspection = base_query.filter(
+                    Vehicle.inspection_expiry_date.isnot(None)
+                ).order_by(Vehicle.inspection_expiry_date).all()
+            
+            if document_type in ['all', 'authorization']:
+                expired_authorization = base_query.filter(
+                    Vehicle.authorization_expiry_date.isnot(None)
+                ).order_by(Vehicle.authorization_expiry_date).all()
+
+        # دمج كل الوثائق
+        all_vehicles = set()
+        all_vehicles.update(expired_registration)
+        all_vehicles.update(expired_inspection)
+        all_vehicles.update(expired_authorization)
+        expired_all = list(all_vehicles)
+        
+        return expired_registration, expired_inspection, expired_authorization, expired_all
+
 # المسارات الأساسية
 @vehicles_bp.route('/expired-documents')
 @login_required

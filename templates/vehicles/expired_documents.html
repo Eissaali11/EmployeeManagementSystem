@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">الوثائق المنتهية للمركبات</h1>
+        <h1 class="h3 mb-0">إدارة وثائق المركبات</h1>
         <div>
             <a href="{{ url_for('vehicles.export_expired_documents_excel') }}" class="btn btn-success ms-2">
                 <i class="fas fa-file-excel me-1"></i> تصدير Excel
@@ -16,10 +16,88 @@
         </div>
     </div>
 
-    <!-- ملخص الوثائق المنتهية -->
+    <!-- فلاتر البحث والعرض -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-filter me-2"></i>
+                فلاتر البحث والعرض
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="document_status" class="form-label">حالة الوثائق</label>
+                        <select class="form-select" name="document_status" id="document_status">
+                            <option value="expired" {% if request.args.get('document_status', 'expired') == 'expired' %}selected{% endif %}>
+                                الوثائق المنتهية الصلاحية
+                            </option>
+                            <option value="valid" {% if request.args.get('document_status') == 'valid' %}selected{% endif %}>
+                                الوثائق السارية
+                            </option>
+                            <option value="expiring_soon" {% if request.args.get('document_status') == 'expiring_soon' %}selected{% endif %}>
+                                تنتهي خلال 30 يوم
+                            </option>
+                            <option value="all" {% if request.args.get('document_status') == 'all' %}selected{% endif %}>
+                                جميع الوثائق
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="document_type" class="form-label">نوع الوثيقة</label>
+                        <select class="form-select" name="document_type" id="document_type">
+                            <option value="all" {% if request.args.get('document_type', 'all') == 'all' %}selected{% endif %}>
+                                جميع الوثائق
+                            </option>
+                            <option value="inspection" {% if request.args.get('document_type') == 'inspection' %}selected{% endif %}>
+                                الفحص الدوري
+                            </option>
+                            <option value="authorization" {% if request.args.get('document_type') == 'authorization' %}selected{% endif %}>
+                                التفويض
+                            </option>
+                            <option value="registration" {% if request.args.get('document_type') == 'registration' %}selected{% endif %}>
+                                الاستمارة
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="plate_number" class="form-label">رقم اللوحة</label>
+                        <input type="text" class="form-control" name="plate_number" id="plate_number" 
+                               value="{{ request.args.get('plate_number', '') }}" placeholder="ابحث برقم اللوحة">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="vehicle_make" class="form-label">نوع المركبة</label>
+                        <input type="text" class="form-control" name="vehicle_make" id="vehicle_make" 
+                               value="{{ request.args.get('vehicle_make', '') }}" placeholder="ابحث بنوع المركبة">
+                    </div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-1"></i> تطبيق الفلاتر
+                        </button>
+                        <a href="{{ url_for('vehicles.expired_documents') }}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-refresh me-1"></i> إعادة تعيين
+                        </a>
+                    </div>
+                    <div class="col-md-8 text-end">
+                        <div class="btn-group">
+                            <a href="{{ url_for('vehicles.export_expired_documents_excel', **request.args) }}" class="btn btn-success">
+                                <i class="fas fa-file-excel me-1"></i> تصدير النتائج الحالية (Excel)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ملخص الوثائق -->
     <div class="row mb-4">
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm">
+                {% if document_status == 'expired' %}
                 <div class="card-body bg-danger bg-opacity-10 border-danger">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
@@ -35,10 +113,60 @@
                         </div>
                     </div>
                 </div>
+                {% elif document_status == 'valid' %}
+                <div class="card-body bg-success bg-opacity-10 border-success">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-success">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-clipboard-check fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">الفحص الدوري</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_inspection|length }}</h3>
+                            <span class="text-success">مركبة سارية الفحص الدوري</span>
+                        </div>
+                    </div>
+                </div>
+                {% elif document_status == 'expiring_soon' %}
+                <div class="card-body bg-warning bg-opacity-10 border-warning">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-warning">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-clipboard-check fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">الفحص الدوري</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_inspection|length }}</h3>
+                            <span class="text-warning">تنتهي خلال 30 يوم</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card-body bg-info bg-opacity-10 border-info">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-info">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-clipboard-check fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">الفحص الدوري</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_inspection|length }}</h3>
+                            <span class="text-info">إجمالي المركبات</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm">
+                {% if document_status == 'expired' %}
                 <div class="card-body bg-danger bg-opacity-10 border-danger">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
@@ -54,10 +182,60 @@
                         </div>
                     </div>
                 </div>
+                {% elif document_status == 'valid' %}
+                <div class="card-body bg-success bg-opacity-10 border-success">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-success">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-id-card fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">التفويض</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_authorization|length }}</h3>
+                            <span class="text-success">مركبة سارية التفويض</span>
+                        </div>
+                    </div>
+                </div>
+                {% elif document_status == 'expiring_soon' %}
+                <div class="card-body bg-warning bg-opacity-10 border-warning">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-warning">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-id-card fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">التفويض</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_authorization|length }}</h3>
+                            <span class="text-warning">تنتهي خلال 30 يوم</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card-body bg-info bg-opacity-10 border-info">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-info">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-id-card fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">التفويض</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_authorization|length }}</h3>
+                            <span class="text-info">إجمالي المركبات</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm">
+                {% if document_status == 'expired' %}
                 <div class="card-body bg-danger bg-opacity-10 border-danger">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
@@ -73,6 +251,55 @@
                         </div>
                     </div>
                 </div>
+                {% elif document_status == 'valid' %}
+                <div class="card-body bg-success bg-opacity-10 border-success">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-success">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-file-alt fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">الاستمارة</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_registration|length }}</h3>
+                            <span class="text-success">مركبة سارية الاستمارة</span>
+                        </div>
+                    </div>
+                </div>
+                {% elif document_status == 'expiring_soon' %}
+                <div class="card-body bg-warning bg-opacity-10 border-warning">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-warning">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-file-alt fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">الاستمارة</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_registration|length }}</h3>
+                            <span class="text-warning">تنتهي خلال 30 يوم</span>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card-body bg-info bg-opacity-10 border-info">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <span class="fa-stack fa-lg text-info">
+                                <i class="fas fa-circle fa-stack-2x"></i>
+                                <i class="fas fa-file-alt fa-stack-1x fa-inverse"></i>
+                            </span>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h5 class="mb-1">الاستمارة</h5>
+                            <h3 class="mb-0 fw-bold">{{ expired_registration|length }}</h3>
+                            <span class="text-info">إجمالي المركبات</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
