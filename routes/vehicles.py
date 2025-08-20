@@ -6025,3 +6025,35 @@ def export_valid_documents_excel():
         response.headers['Content-Disposition'] = f'attachment; filename="vehicles_inspection_status_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
         
         return response
+
+@vehicles_bp.route('/<int:id>/edit-documents', methods=['GET', 'POST'])
+@login_required
+def edit_vehicle_documents(id):
+    """تعديل تواريخ وثائق السيارة"""
+    vehicle = Vehicle.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        # تحديث تواريخ الوثائق
+        registration_expiry = request.form.get('registration_expiry_date')
+        inspection_expiry = request.form.get('inspection_expiry_date') 
+        authorization_expiry = request.form.get('authorization_expiry_date')
+        
+        if registration_expiry:
+            vehicle.registration_expiry_date = datetime.strptime(registration_expiry, '%Y-%m-%d').date()
+        
+        if inspection_expiry:
+            vehicle.inspection_expiry_date = datetime.strptime(inspection_expiry, '%Y-%m-%d').date()
+            
+        if authorization_expiry:
+            vehicle.authorization_expiry_date = datetime.strptime(authorization_expiry, '%Y-%m-%d').date()
+        
+        vehicle.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        # تسجيل الإجراء
+        log_audit('update', 'vehicle_documents', vehicle.id, f'تم تعديل تواريخ وثائق السيارة: {vehicle.plate_number}')
+        
+        flash('تم تحديث تواريخ الوثائق بنجاح!', 'success')
+        return redirect(url_for('vehicles.valid_documents'))
+    
+    return render_template('vehicles/edit_documents.html', vehicle=vehicle)
