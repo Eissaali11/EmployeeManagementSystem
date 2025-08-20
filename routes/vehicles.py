@@ -5930,9 +5930,9 @@ def valid_documents():
         # جميع السيارات السارية (مع أي وثيقة سارية واحدة على الأقل)
         expired_all = base_query.filter(
             or_(
-                and_(Vehicle.registration_expiry_date.isnot(None), Vehicle.registration_expiry_date >= today),
-                and_(Vehicle.inspection_expiry_date.isnot(None), Vehicle.inspection_expiry_date >= today),
-                and_(Vehicle.authorization_expiry_date.isnot(None), Vehicle.authorization_expiry_date >= today)
+                (Vehicle.registration_expiry_date.isnot(None)) & (Vehicle.registration_expiry_date >= today),
+                (Vehicle.inspection_expiry_date.isnot(None)) & (Vehicle.inspection_expiry_date >= today),
+                (Vehicle.authorization_expiry_date.isnot(None)) & (Vehicle.authorization_expiry_date >= today)
             )
         ).order_by(Vehicle.plate_number).all()
         
