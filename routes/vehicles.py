@@ -6022,6 +6022,6 @@ def export_valid_documents_excel():
         # إنشاء الاستجابة
         response = make_response(output.getvalue())
         response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        response.headers['Content-Disposition'] = f'attachment; filename=جميع_السيارات_حالة_الفحص_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        response.headers['Content-Disposition'] = f'attachment; filename="vehicles_inspection_status_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx"'
         
         return response
