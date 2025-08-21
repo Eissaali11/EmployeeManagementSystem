@@ -76,21 +76,21 @@
         background: white;
     }
 
-    /* بطاقات السيارات - تصميم جديد */
+    /* بطاقات السيارات - تصميم مطابق للصورة */
     .vehicle-card {
         background: white;
-        border-radius: 20px;
-        padding: 24px;
+        border-radius: 16px;
+        padding: 20px;
         margin-bottom: 16px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid #f0f0f5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
         transition: all 0.3s ease;
         cursor: pointer;
         position: relative;
     }
 
     .vehicle-card:hover {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         transform: translateY(-2px);
     }
 
@@ -100,110 +100,148 @@
         gap: 16px;
     }
 
-    .vehicle-top-row {
+    .vehicle-top-section {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
     }
 
+    .vehicle-left-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
     .vehicle-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
+        width: 50px;
+        height: 50px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
+        font-size: 24px;
         color: #2c3e50;
-        background: #f8f9fa;
         flex-shrink: 0;
+    }
+
+    .vehicle-title-section {
+        text-align: right;
+    }
+
+    .vehicle-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+        text-align: right;
+    }
+
+    .vehicle-id {
+        font-size: 14px;
+        color: #6c757d;
+        text-align: right;
+        margin-bottom: 16px;
+    }
+
+    .vehicle-plate-container {
+        display: flex;
+        justify-content: center;
+        margin: 16px 0;
+    }
+
+    .vehicle-plate {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        border: 3px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+        width: fit-content;
+        margin: 0 auto;
+    }
+
+    .plate-number {
+        background: white;
+        color: #333;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        font-size: 18px;
+        padding: 12px 16px;
+        text-align: center;
+        border-right: 2px solid #333;
+    }
+
+    .plate-region {
+        background: white;
+        color: #333;
+        font-family: 'Arial', sans-serif;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 12px 8px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vehicle-country {
+        color: #34C759;
+        font-size: 14px;
+        font-weight: 600;
+        text-align: center;
+        margin: 8px 0;
     }
 
     .vehicle-status {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 13px;
+        border-radius: 16px;
+        font-size: 14px;
         font-weight: 600;
-        position: absolute;
-        top: 20px;
-        right: 20px;
+        margin: 16px 0;
+        width: fit-content;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .status-available { 
         background: rgba(52, 199, 89, 0.1); 
         color: #34C759;
-        border: 1px solid rgba(52, 199, 89, 0.2);
+        border: 1px solid rgba(52, 199, 89, 0.3);
     }
     .status-rented { 
         background: rgba(255, 149, 0, 0.1); 
         color: #FF9500;
-        border: 1px solid rgba(255, 149, 0, 0.2);
+        border: 1px solid rgba(255, 149, 0, 0.3);
     }
     .status-maintenance { 
         background: rgba(255, 59, 48, 0.1); 
         color: #FF3B30;
-        border: 1px solid rgba(255, 59, 48, 0.2);
+        border: 1px solid rgba(255, 59, 48, 0.3);
     }
     .status-in_workshop { 
         background: rgba(142, 142, 147, 0.1); 
         color: #8E8E93;
-        border: 1px solid rgba(142, 142, 147, 0.2);
+        border: 1px solid rgba(142, 142, 147, 0.3);
     }
 
-    .vehicle-main-info {
-        margin-top: 16px;
-    }
-
-    .vehicle-name {
-        font-size: 20px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 8px;
-        text-align: right;
-        line-height: 1.3;
-    }
-
-    .vehicle-plate {
-        font-size: 16px;
-        color: #6c757d;
-        font-family: 'Courier New', monospace;
-        font-weight: 700;
-        text-align: center;
-        background: #f8f9fa;
-        padding: 8px 16px;
-        border-radius: 8px;
-        border: 2px solid #e9ecef;
-        margin: 12px 0;
-        letter-spacing: 2px;
-    }
-
-    .vehicle-details {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        margin-top: 16px;
-    }
-
-    .vehicle-detail {
+    .vehicle-driver {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 8px;
-        font-size: 14px;
         color: #6c757d;
-        padding: 6px 0;
-    }
-
-    .vehicle-detail i {
-        width: 16px;
-        color: #8e8e93;
         font-size: 14px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #f0f0f0;
     }
 
-    .vehicle-detail span {
-        font-weight: 500;
+    .vehicle-driver i {
+        color: #8e8e93;
+        font-size: 16px;
     }
 
     /* زر الإضافة */
