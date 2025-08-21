@@ -67,22 +67,22 @@
     </div>
     
     <div class="mobile-card-content">
-        <div class="attendance-summary">
-            <div class="attendance-stat">
-                <div class="attendance-count">{{ today_stats.present or 0 }}</div>
-                <div class="attendance-label">حاضر</div>
+        <div class="attendance-summary-compact">
+            <div class="attendance-stat-mini present">
+                <div class="stat-count">{{ today_stats.present or 0 }}</div>
+                <div class="stat-label">حاضر</div>
             </div>
-            <div class="attendance-stat">
-                <div class="attendance-count">{{ today_stats.absent or 0 }}</div>
-                <div class="attendance-label">غائب</div>
+            <div class="attendance-stat-mini absent">
+                <div class="stat-count">{{ today_stats.absent or 0 }}</div>
+                <div class="stat-label">غائب</div>
             </div>
-            <div class="attendance-stat">
-                <div class="attendance-count">{{ today_stats.leave or 0 }}</div>
-                <div class="attendance-label">إجازة</div>
+            <div class="attendance-stat-mini leave">
+                <div class="stat-count">{{ today_stats.leave or 0 }}</div>
+                <div class="stat-label">إجازة</div>
             </div>
-            <div class="attendance-stat">
-                <div class="attendance-count">{{ today_stats.total or 0 }}</div>
-                <div class="attendance-label">الإجمالي</div>
+            <div class="attendance-stat-mini total">
+                <div class="stat-count">{{ today_stats.total or 0 }}</div>
+                <div class="stat-label">الإجمالي</div>
             </div>
         </div>
     </div>
@@ -98,42 +98,32 @@
     <div class="mobile-card-content p-0">
         <div class="mobile-list">
             {% for record in attendance_records %}
-            <div class="mobile-list-item">
-                <div class="mobile-list-item-icon">
+            <div class="mobile-attendance-card">
+                <div class="mobile-attendance-status-icon">
                     {% if record.status == 'حاضر' %}
-                    <i class="fas fa-check-circle text-success"></i>
+                    <i class="fas fa-check-circle" style="color: #34C759;"></i>
                     {% elif record.status == 'غائب' %}
-                    <i class="fas fa-times-circle text-danger"></i>
+                    <i class="fas fa-times-circle" style="color: #FF3B30;"></i>
                     {% elif record.status == 'إجازة' %}
-                    <i class="fas fa-calendar-minus text-info"></i>
+                    <i class="fas fa-calendar-minus" style="color: #007AFF;"></i>
                     {% else %}
-                    <i class="fas fa-question-circle text-secondary"></i>
+                    <i class="fas fa-question-circle" style="color: #8E8E93;"></i>
                     {% endif %}
                 </div>
-                <div class="mobile-list-item-content">
-                    <div class="mobile-list-item-title">{{ record.employee.name }}</div>
-                    <div class="mobile-list-item-subtitle">
-                        {{ record.date.strftime('%Y-%m-%d') }}
+                <div class="mobile-attendance-main-info">
+                    <div class="mobile-attendance-name">{{ record.employee.name }}</div>
+                    <div class="mobile-attendance-details">
+                        <span class="attendance-date-mini">{{ record.date.strftime('%m/%d') }}</span>
                         {% if record.check_in %}
-                        <span class="time-badge check-in">
-                            <i class="fas fa-sign-in-alt"></i> {{ record.check_in.strftime('%H:%M') }}
-                        </span>
+                        <span class="time-badge check-in">{{ record.check_in.strftime('%H:%M') }}</span>
                         {% endif %}
-                        
                         {% if record.check_out %}
-                        <span class="time-badge check-out">
-                            <i class="fas fa-sign-out-alt"></i> {{ record.check_out.strftime('%H:%M') }}
-                        </span>
-                        {% endif %}
-                    </div>
-                    <div class="mobile-list-item-info">
-                        {% if record.notes %}
-                        <small>{{ record.notes }}</small>
+                        <span class="time-badge check-out">{{ record.check_out.strftime('%H:%M') }}</span>
                         {% endif %}
                     </div>
                 </div>
-                <div class="mobile-list-item-action">
-                    <a href="{{ url_for('mobile.edit_attendance', record_id=record.id) }}" class="action-btn">
+                <div class="mobile-attendance-action">
+                    <a href="{{ url_for('mobile.edit_attendance', record_id=record.id) }}">
                         <i class="fas fa-edit"></i>
                     </a>
                 </div>
@@ -185,97 +175,159 @@
 {% endif %}
 
 <style>
+/* التصميم المضغوط لبطاقات الحضور */
 .mobile-list {
-    border-top: 1px solid #eee;
+    padding: 0;
 }
 
-.mobile-list-item {
+.mobile-attendance-card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
     display: flex;
-    padding: 15px;
-    border-bottom: 1px solid #eee;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
     position: relative;
+    overflow: hidden;
 }
 
-.mobile-list-item-icon {
-    margin-left: 15px;
-    font-size: 1.5rem;
+.mobile-attendance-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #007AFF, #0051D0);
+}
+
+.mobile-attendance-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-attendance-status-icon {
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
 }
 
-.mobile-list-item-content {
+.mobile-attendance-main-info {
     flex: 1;
+    min-width: 0;
 }
 
-.mobile-list-item-title {
-    font-weight: bold;
-    margin-bottom: 5px;
+.mobile-attendance-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+    line-height: 1.2;
 }
 
-.mobile-list-item-subtitle {
-    color: #757575;
-    font-size: 0.9rem;
-    margin-bottom: 5px;
-}
-
-.mobile-list-item-info {
-    color: #757575;
-    font-size: 0.85rem;
-}
-
-.mobile-list-item-action {
+.mobile-attendance-details {
     display: flex;
     align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    line-height: 1.2;
 }
 
-.action-btn {
-    color: #757575;
-    padding: 5px;
-    text-decoration: none;
+.attendance-date-mini {
+    background: #f8f9fa;
+    color: #495057;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    border: 1px solid #e9ecef;
 }
 
 .time-badge {
-    display: inline-block;
-    padding: 2px 5px;
+    padding: 2px 6px;
     border-radius: 4px;
-    font-size: 0.8rem;
-    margin-right: 5px;
+    font-size: 10px;
+    font-weight: 600;
 }
 
 .check-in {
-    background-color: rgba(40, 167, 69, 0.1);
-    color: #28a745;
+    background: rgba(52, 199, 89, 0.1);
+    color: #34C759;
+    border: 1px solid rgba(52, 199, 89, 0.2);
 }
 
 .check-out {
-    background-color: rgba(0, 123, 255, 0.1);
-    color: #007bff;
+    background: rgba(0, 122, 255, 0.1);
+    color: #007AFF;
+    border: 1px solid rgba(0, 122, 255, 0.2);
 }
 
-.attendance-summary {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 0;
+.mobile-attendance-action {
+    color: #8e8e93;
+    font-size: 14px;
 }
 
-.attendance-stat {
+.mobile-attendance-action a {
+    color: inherit;
+    text-decoration: none;
+    padding: 6px;
+}
+
+/* الإحصائيات المضغوطة */
+.attendance-summary-compact {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 0;
+}
+
+.attendance-stat-mini {
     text-align: center;
-    flex: 1;
-    padding: 10px;
-    border-radius: 6px;
-    background-color: rgba(0, 0, 0, 0.03);
-    margin: 0 5px;
+    padding: 12px 8px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #e9ecef;
 }
 
-.attendance-count {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 5px;
+.attendance-stat-mini.present {
+    background: linear-gradient(135deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.05));
+    border-color: rgba(52, 199, 89, 0.2);
 }
 
-.attendance-label {
-    font-size: 0.85rem;
-    color: #757575;
+.attendance-stat-mini.absent {
+    background: linear-gradient(135deg, rgba(255, 59, 48, 0.1), rgba(255, 59, 48, 0.05));
+    border-color: rgba(255, 59, 48, 0.2);
+}
+
+.attendance-stat-mini.leave {
+    background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(0, 122, 255, 0.05));
+    border-color: rgba(0, 122, 255, 0.2);
+}
+
+.attendance-stat-mini.total {
+    background: linear-gradient(135deg, rgba(142, 142, 147, 0.1), rgba(142, 142, 147, 0.05));
+    border-color: rgba(142, 142, 147, 0.2);
+}
+
+.stat-count {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #1a1a1a;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #6c757d;
+    font-weight: 500;
 }
 
 .mobile-card-subtitle {
