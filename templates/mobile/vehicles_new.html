@@ -1,109 +1,284 @@
 {% extends 'mobile/base_layout.html' %}
 
 {% block title %}السيارات - نُظم{% endblock %}
-{% block header_title %}السيارات{% endblock %}
+{% block header_title %}
+    <div class="header-with-action">
+        <span>السيارات</span>
+        <div class="header-actions">
+            <button class="icon-btn" onclick="toggleSearch()">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="icon-btn" onclick="toggleFilters()">
+                <i class="fas fa-filter"></i>
+            </button>
+        </div>
+    </div>
+{% endblock %}
 
 {% block extra_styles %}
 <style>
-    .vehicle-stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-        margin-bottom: 20px;
+    .header-with-action {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
     }
 
-    .stat-card {
-        background: white;
-        padding: 20px;
-        border-radius: 16px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        border: 1px solid #f0f0f5;
+    .header-actions {
+        display: flex;
+        gap: 10px;
     }
 
-    .stat-icon {
+    .icon-btn {
         width: 40px;
         height: 40px;
         border-radius: 12px;
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 10px;
-        font-size: 18px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .icon-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+    }
+
+    /* شريط البحث المخفي */
+    .search-bar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 20px;
+        transform: translateY(-20px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .search-bar.show {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 20px;
+        border: 2px solid #f0f0f5;
+        border-radius: 12px;
+        font-size: 16px;
+        background: white;
+        transition: all 0.3s ease;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    .search-input:focus {
+        border-color: #4A90E2;
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    }
+
+    /* إحصائيات السيارات بتصميم محسّن */
+    .vehicle-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
+        padding: 24px 20px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, #4A90E2, #357ABD, #34C759, #FF9500);
+        border-radius: 22px;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .stat-card:hover::before {
+        opacity: 0.1;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 12px;
+        font-size: 22px;
+        position: relative;
     }
 
     .stat-icon.total {
-        background: rgba(74, 144, 226, 0.1);
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(74, 144, 226, 0.05) 100%);
         color: #4A90E2;
     }
 
     .stat-icon.available {
-        background: rgba(52, 199, 89, 0.1);
+        background: linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(52, 199, 89, 0.05) 100%);
         color: #34C759;
     }
 
-    .stat-icon.rented {
-        background: rgba(255, 149, 0, 0.1);
-        color: #FF9500;
-    }
-
     .stat-icon.maintenance {
-        background: rgba(255, 59, 48, 0.1);
+        background: linear-gradient(135deg, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0.05) 100%);
         color: #FF3B30;
     }
 
+    .stat-icon.inactive {
+        background: linear-gradient(135deg, rgba(142, 142, 147, 0.15) 0%, rgba(142, 142, 147, 0.05) 100%);
+        color: #8E8E93;
+    }
+
     .stat-number {
-        font-size: 24px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 5px;
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
+        line-height: 1.2;
     }
 
     .stat-label {
         font-size: 14px;
-        color: #8e8e93;
-        font-weight: 500;
+        color: #6b7280;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
 
-    .filter-card {
-        background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 100%);
+    /* شريط الفلاتر */
+    .filters-bar {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
         border-radius: 16px;
         padding: 20px;
         margin-bottom: 20px;
+        transform: translateY(-20px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    }
+
+    .filters-bar.show {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .filter-select {
+        padding: 12px 16px;
+        border: 2px solid #f0f0f5;
+        border-radius: 12px;
+        font-size: 14px;
+        background: white;
+        transition: all 0.3s ease;
+        outline: none;
+    }
+
+    .filter-select:focus {
+        border-color: #4A90E2;
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    }
+
+    /* بطاقات السيارات المحسّنة */
+    .vehicles-grid {
+        display: grid;
+        gap: 16px;
     }
 
     .vehicle-card {
-        background: white;
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        border: 1px solid #f0f0f5;
-        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .vehicle-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #4A90E2, #34C759, #FF9500, #FF3B30);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    .vehicle-card:hover::before {
+        transform: translateX(0);
     }
 
     .vehicle-card:hover {
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        transform: translateY(-2px);
+        transform: translateY(-6px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
     }
 
     .vehicle-header {
         display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 16px;
     }
 
     .vehicle-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 24px;
         color: white;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        position: relative;
+        flex-shrink: 0;
     }
 
     .vehicle-icon.available {
@@ -114,281 +289,513 @@
         background: linear-gradient(135deg, #FF9500 0%, #FF9F0A 100%);
     }
 
-    .vehicle-icon.maintenance {
+    .vehicle-icon.in_workshop {
         background: linear-gradient(135deg, #FF3B30 0%, #FF453A 100%);
     }
 
-    .vehicle-icon.workshop {
+    .vehicle-icon.accident {
         background: linear-gradient(135deg, #8E8E93 0%, #AEAEB2 100%);
     }
 
-    .vehicle-info {
-        flex: 1;
+    .vehicle-icon.in_project {
+        background: linear-gradient(135deg, #AF52DE 0%, #BF5AF2 100%);
     }
 
-    .vehicle-name {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1a1a1a;
-        margin-bottom: 4px;
+    .vehicle-icon.out_of_service {
+        background: linear-gradient(135deg, #6D6D70 0%, #8E8E93 100%);
+    }
+
+    .vehicle-main-info {
+        flex: 1;
+        min-width: 0;
     }
 
     .vehicle-plate {
-        font-size: 14px;
-        color: #8e8e93;
-        margin-bottom: 8px;
-        font-family: monospace;
+        font-size: 20px;
+        font-weight: 800;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+
+    .vehicle-brand {
+        font-size: 16px;
         font-weight: 600;
-    }
-
-    .vehicle-details {
-        display: flex;
-        gap: 15px;
-        font-size: 12px;
-        color: #8e8e93;
-    }
-
-    .vehicle-detail {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+        color: #4a5568;
+        margin-bottom: 8px;
     }
 
     .vehicle-status {
-        display: inline-block;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 11px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 13px;
         font-weight: 600;
-        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .status-available {
+    .vehicle-status.available {
         background: rgba(52, 199, 89, 0.1);
         color: #34C759;
+        border: 1px solid rgba(52, 199, 89, 0.2);
     }
 
-    .status-rented {
+    .vehicle-status.rented {
         background: rgba(255, 149, 0, 0.1);
         color: #FF9500;
+        border: 1px solid rgba(255, 149, 0, 0.2);
     }
 
-    .status-maintenance {
+    .vehicle-status.in_workshop {
         background: rgba(255, 59, 48, 0.1);
         color: #FF3B30;
+        border: 1px solid rgba(255, 59, 48, 0.2);
     }
 
-    .status-workshop {
+    .vehicle-status.accident {
         background: rgba(142, 142, 147, 0.1);
         color: #8E8E93;
+        border: 1px solid rgba(142, 142, 147, 0.2);
     }
 
-    .form-control {
-        border: 1px solid #e1e5e9;
-        border-radius: 12px;
-        padding: 12px 16px;
+    .vehicle-status.in_project {
+        background: rgba(175, 82, 222, 0.1);
+        color: #AF52DE;
+        border: 1px solid rgba(175, 82, 222, 0.2);
+    }
+
+    .vehicle-status.out_of_service {
+        background: rgba(109, 109, 112, 0.1);
+        color: #6D6D70;
+        border: 1px solid rgba(109, 109, 112, 0.2);
+    }
+
+    .vehicle-details {
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #f0f0f5;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
         font-size: 14px;
-        background: white;
-        transition: all 0.3s ease;
-        margin-bottom: 15px;
     }
 
-    .form-control:focus {
-        border-color: #4A90E2;
-        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        outline: none;
+    .detail-label {
+        color: #6b7280;
+        font-weight: 500;
     }
 
-    .fab-button {
-        position: fixed;
-        bottom: 100px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    .detail-value {
+        color: #1a1a1a;
+        font-weight: 600;
+    }
+
+    .vehicle-actions {
+        margin-top: 16px;
+        display: flex;
+        gap: 8px;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: 10px 16px;
         border: none;
-        color: white;
-        font-size: 20px;
-        box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        z-index: 999;
-    }
-
-    .fab-button:hover {
-        transform: translateX(-50%) scale(1.1);
-        box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-    }
-
-    .empty-icon {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        background: rgba(142, 142, 147, 0.1);
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 20px;
-        color: #8e8e93;
-        font-size: 32px;
+        gap: 6px;
+    }
+
+    .action-btn.primary {
+        background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+        color: white;
+    }
+
+    .action-btn.primary:hover {
+        background: linear-gradient(135deg, #357ABD 0%, #2d5aa0 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+    }
+
+    .action-btn.secondary {
+        background: rgba(74, 144, 226, 0.1);
+        color: #4A90E2;
+        border: 1px solid rgba(74, 144, 226, 0.2);
+    }
+
+    .action-btn.secondary:hover {
+        background: rgba(74, 144, 226, 0.2);
+        transform: translateY(-2px);
+    }
+
+    /* حالة فارغة محسّنة */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: linear-gradient(135deg, #f8fafb 0%, #e8f0fe 100%);
+        border-radius: 20px;
+        margin: 20px 0;
+    }
+
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(74, 144, 226, 0.05) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        color: #4A90E2;
+        font-size: 40px;
     }
 
     .empty-title {
-        font-size: 18px;
-        font-weight: 600;
+        font-size: 22px;
+        font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
     }
 
     .empty-subtitle {
-        font-size: 14px;
-        color: #8e8e93;
-        line-height: 1.4;
+        font-size: 16px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin-bottom: 24px;
     }
 
-    @media (max-width: 375px) {
-        .fab-button {
-            left: auto;
-            right: 20px;
-            transform: none;
-        }
+    .empty-action {
+        background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+        color: white;
+        padding: 14px 28px;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
 
-        .fab-button:hover {
-            transform: scale(1.1);
+    .empty-action:hover {
+        background: linear-gradient(135deg, #357ABD 0%, #2d5aa0 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+    }
+
+    /* تحسينات أخرى */
+    .slide-up {
+        animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .stagger-1 { animation-delay: 0.1s; opacity: 0; }
+    .stagger-2 { animation-delay: 0.2s; opacity: 0; }
+    .stagger-3 { animation-delay: 0.3s; opacity: 0; }
+    .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+
+    /* تحسينات للشاشات الصغيرة */
+    @media (max-width: 480px) {
+        .vehicle-stats {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .stat-card {
+            padding: 20px 16px;
+        }
+        
+        .vehicle-card {
+            padding: 16px;
+        }
+        
+        .vehicle-header {
+            gap: 12px;
+        }
+        
+        .vehicle-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+        
+        .vehicle-plate {
+            font-size: 18px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- إحصائيات السيارات -->
-<div class="vehicle-stats slide-up">
-    <div class="stat-card">
-        <div class="stat-icon total">
-            <i class="fas fa-car"></i>
-        </div>
-        <div class="stat-number">{{ vehicles|length or 0 }}</div>
-        <div class="stat-label">إجمالي السيارات</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon available">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'available')|list|length or 0 }}</div>
-        <div class="stat-label">متاحة</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon rented">
-            <i class="fas fa-user"></i>
-        </div>
-        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'rented')|list|length or 0 }}</div>
-        <div class="stat-label">مؤجرة</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon maintenance">
-            <i class="fas fa-wrench"></i>
-        </div>
-        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'in_workshop')|list|length or 0 }}</div>
-        <div class="stat-label">في الورشة</div>
-    </div>
+<!-- شريط البحث المخفي -->
+<div class="search-bar" id="searchBar">
+    <form method="GET" action="{{ url_for('mobile.vehicles') }}">
+        <input type="text" 
+               name="search" 
+               class="search-input" 
+               placeholder="البحث عن سيارة..." 
+               value="{{ request.args.get('search', '') }}"
+               autocomplete="off">
+        <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
+        <input type="hidden" name="make" value="{{ request.args.get('make', '') }}">
+    </form>
 </div>
 
-<!-- البحث والفلترة -->
-<div class="filter-card slide-up">
-    <form method="GET">
-        <input type="text" name="search" class="form-control" placeholder="🔍 البحث عن رقم لوحة أو نوع السيارة..." value="{{ request.args.get('search', '') }}">
-        
-        <select name="status" class="form-control">
-            <option value="">🚗 جميع الحالات</option>
-            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>متاحة</option>
-            <option value="rented" {% if request.args.get('status') == 'rented' %}selected{% endif %}>مؤجرة</option>
-            <option value="in_workshop" {% if request.args.get('status') == 'in_workshop' %}selected{% endif %}>في الورشة</option>
-            <option value="maintenance" {% if request.args.get('status') == 'maintenance' %}selected{% endif %}>صيانة</option>
-        </select>
-        
-        <div style="display: flex; gap: 10px;">
-            <button type="submit" class="btn btn-primary" style="flex: 1;">
-                <i class="fas fa-search"></i> بحث
+<!-- شريط الفلاتر -->
+<div class="filters-bar" id="filtersBar">
+    <form method="GET" action="{{ url_for('mobile.vehicles') }}">
+        <div class="filter-row">
+            <select name="status" class="filter-select">
+                <option value="">جميع الحالات</option>
+                <option value="available" {{ 'selected' if request.args.get('status') == 'available' }}>متاحة</option>
+                <option value="rented" {{ 'selected' if request.args.get('status') == 'rented' }}>مؤجرة</option>
+                <option value="in_workshop" {{ 'selected' if request.args.get('status') == 'in_workshop' }}>في الورشة</option>
+                <option value="accident" {{ 'selected' if request.args.get('status') == 'accident' }}>حادث</option>
+                <option value="in_project" {{ 'selected' if request.args.get('status') == 'in_project' }}>في مشروع</option>
+            </select>
+            <select name="make" class="filter-select">
+                <option value="">جميع الماركات</option>
+                {% for make in makes %}
+                <option value="{{ make }}" {{ 'selected' if request.args.get('make') == make }}>{{ make }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
+        <div style="text-align: center;">
+            <button type="submit" class="action-btn primary" style="width: auto; padding: 12px 24px;">
+                <i class="fas fa-filter"></i>
+                تطبيق الفلاتر
             </button>
-            <a href="{{ url_for('mobile.vehicles') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-refresh"></i>
-            </a>
         </div>
     </form>
 </div>
 
+<!-- إحصائيات السيارات -->
+<div class="vehicle-stats slide-up">
+    <div class="stat-card stagger-1">
+        <div class="stat-icon total">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-number">{{ stats.total }}</div>
+        <div class="stat-label">إجمالي السيارات</div>
+    </div>
+    <div class="stat-card stagger-2">
+        <div class="stat-icon available">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-number">{{ stats.active }}</div>
+        <div class="stat-label">متاحة</div>
+    </div>
+    <div class="stat-card stagger-3">
+        <div class="stat-icon maintenance">
+            <i class="fas fa-wrench"></i>
+        </div>
+        <div class="stat-number">{{ stats.maintenance }}</div>
+        <div class="stat-label">في الورشة</div>
+    </div>
+    <div class="stat-card stagger-4">
+        <div class="stat-icon inactive">
+            <i class="fas fa-pause-circle"></i>
+        </div>
+        <div class="stat-number">{{ stats.inactive }}</div>
+        <div class="stat-label">غير نشطة</div>
+    </div>
+</div>
+
 <!-- قائمة السيارات -->
-{% if vehicles %}
-    <div class="slide-up">
+<div class="vehicles-grid slide-up">
+    {% if vehicles %}
         {% for vehicle in vehicles %}
         <div class="vehicle-card" onclick="window.location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
             <div class="vehicle-header">
                 <div class="vehicle-icon {{ vehicle.status }}">
-                    <i class="fas fa-car"></i>
+                    {% if vehicle.status == 'available' %}
+                        <i class="fas fa-check"></i>
+                    {% elif vehicle.status == 'rented' %}
+                        <i class="fas fa-handshake"></i>
+                    {% elif vehicle.status == 'in_workshop' %}
+                        <i class="fas fa-wrench"></i>
+                    {% elif vehicle.status == 'accident' %}
+                        <i class="fas fa-exclamation-triangle"></i>
+                    {% elif vehicle.status == 'in_project' %}
+                        <i class="fas fa-project-diagram"></i>
+                    {% else %}
+                        <i class="fas fa-car"></i>
+                    {% endif %}
                 </div>
-                <div class="vehicle-info">
-                    <div class="vehicle-name">{{ vehicle.car_type }} {{ vehicle.model or '' }}</div>
-                    <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
-                    <div class="vehicle-details">
-                        <div class="vehicle-detail">
-                            <i class="fas fa-calendar"></i>
-                            <span>{{ vehicle.model_year or 'غير محدد' }}</span>
-                        </div>
-                        {% if vehicle.driver_name %}
-                        <div class="vehicle-detail">
-                            <i class="fas fa-user"></i>
-                            <span>{{ vehicle.driver_name }}</span>
-                        </div>
+                <div class="vehicle-main-info">
+                    <div class="vehicle-plate">{{ vehicle.plate_number or 'غير محدد' }}</div>
+                    <div class="vehicle-brand">{{ vehicle.make }} {{ vehicle.model }}</div>
+                    <div class="vehicle-status {{ vehicle.status }}">
+                        <i class="fas fa-circle" style="font-size: 8px;"></i>
+                        {% if vehicle.status == 'available' %}
+                            متاحة
+                        {% elif vehicle.status == 'rented' %}
+                            مؤجرة
+                        {% elif vehicle.status == 'in_workshop' %}
+                            في الورشة
+                        {% elif vehicle.status == 'accident' %}
+                            حادث
+                        {% elif vehicle.status == 'in_project' %}
+                            في مشروع
+                        {% elif vehicle.status == 'out_of_service' %}
+                            خارج الخدمة
+                        {% else %}
+                            {{ vehicle.status }}
                         {% endif %}
                     </div>
                 </div>
-                <div>
-                    <div class="vehicle-status status-{{ vehicle.status }}">
-                        {% if vehicle.status == 'available' %}متاحة
-                        {% elif vehicle.status == 'rented' %}مؤجرة
-                        {% elif vehicle.status == 'in_workshop' %}ورشة
-                        {% elif vehicle.status == 'maintenance' %}صيانة
-                        {% else %}{{ vehicle.status }}{% endif %}
-                    </div>
-                    <div style="margin-top: 8px;">
-                        <i class="fas fa-chevron-left" style="color: #8e8e93;"></i>
-                    </div>
+            </div>
+            
+            <div class="vehicle-details">
+                <div class="detail-row">
+                    <span class="detail-label">النوع</span>
+                    <span class="detail-value">{{ vehicle.vehicle_type or 'غير محدد' }}</span>
                 </div>
+                <div class="detail-row">
+                    <span class="detail-label">اللون</span>
+                    <span class="detail-value">{{ vehicle.color or 'غير محدد' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">سنة الصنع</span>
+                    <span class="detail-value">{{ vehicle.year or 'غير محدد' }}</span>
+                </div>
+                {% if vehicle.driver_name %}
+                <div class="detail-row">
+                    <span class="detail-label">السائق الحالي</span>
+                    <span class="detail-value">{{ vehicle.driver_name }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="vehicle-actions">
+                <button class="action-btn primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
+                    <i class="fas fa-eye"></i>
+                    عرض التفاصيل
+                </button>
+                <button class="action-btn secondary" onclick="event.stopPropagation(); alert('قريباً...')">
+                    <i class="fas fa-edit"></i>
+                    تعديل
+                </button>
             </div>
         </div>
         {% endfor %}
-    </div>
-{% else %}
-    <div class="card slide-up">
-        <div class="card-body">
-            <div class="empty-state">
-                <div class="empty-icon">
-                    <i class="fas fa-car"></i>
-                </div>
-                <div class="empty-title">لا توجد سيارات</div>
-                <div class="empty-subtitle">
-                    {% if request.args.get('search') or request.args.get('status') %}
-                        لم يتم العثور على سيارات تطابق معايير البحث المحددة.
-                    {% else %}
-                        لم يتم إضافة أي سيارات بعد. انقر على زر الإضافة لبدء إضافة السيارات.
-                    {% endif %}
-                </div>
+    {% else %}
+        <!-- حالة فارغة -->
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-car"></i>
             </div>
+            <div class="empty-title">لا توجد سيارات</div>
+            <div class="empty-subtitle">
+                {% if request.args.get('search') or request.args.get('status') or request.args.get('make') %}
+                    لم يتم العثور على سيارات تطابق معايير البحث المحددة
+                {% else %}
+                    لم يتم إضافة أي سيارات بعد
+                {% endif %}
+            </div>
+            {% if request.args.get('search') or request.args.get('status') or request.args.get('make') %}
+            <button class="empty-action" onclick="window.location.href='{{ url_for('mobile.vehicles') }}'">
+                <i class="fas fa-refresh"></i>
+                عرض جميع السيارات
+            </button>
+            {% else %}
+            <button class="empty-action" onclick="alert('قريباً...')">
+                <i class="fas fa-plus"></i>
+                إضافة سيارة جديدة
+            </button>
+            {% endif %}
         </div>
-    </div>
-{% endif %}
+    {% endif %}
+</div>
 
-<!-- زر الإضافة العائم -->
-<button class="fab-button" onclick="window.location.href='{{ url_for('mobile.add_vehicle') }}'">
-    <i class="fas fa-plus"></i>
-</button>
+<!-- التنقل بين الصفحات -->
+{% if pagination and pagination.pages > 1 %}
+<div class="pagination-container slide-up" style="margin-top: 30px;">
+    <div class="pagination-wrapper">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('mobile.vehicles', page=pagination.prev_num, **request.args) }}" class="pagination-btn">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+        
+        <span class="pagination-info">
+            صفحة {{ pagination.page }} من {{ pagination.pages }}
+        </span>
+        
+        {% if pagination.has_next %}
+        <a href="{{ url_for('mobile.vehicles', page=pagination.next_num, **request.args) }}" class="pagination-btn">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+}
+
+.pagination-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 12px 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f5;
+}
+
+.pagination-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.pagination-btn:hover {
+    background: linear-gradient(135deg, #357ABD 0%, #2d5aa0 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+}
+
+.pagination-info {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    white-space: nowrap;
+}
+</style>
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}
@@ -411,5 +818,58 @@
             }
         });
     });
+
+    // تبديل عرض شريط البحث
+    function toggleSearch() {
+        const searchBar = document.getElementById('searchBar');
+        const filtersBar = document.getElementById('filtersBar');
+        
+        searchBar.classList.toggle('show');
+        filtersBar.classList.remove('show');
+        
+        if (searchBar.classList.contains('show')) {
+            setTimeout(() => {
+                searchBar.querySelector('.search-input').focus();
+            }, 200);
+        }
+    }
+
+    // تبديل عرض شريط الفلاتر
+    function toggleFilters() {
+        const filtersBar = document.getElementById('filtersBar');
+        const searchBar = document.getElementById('searchBar');
+        
+        filtersBar.classList.toggle('show');
+        searchBar.classList.remove('show');
+    }
+
+    // تأثير النقر على البطاقات
+    document.querySelectorAll('.vehicle-card').forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.transform = 'translateY(-8px) scale(0.98)';
+            setTimeout(() => {
+                this.style.transform = 'translateY(-6px) scale(1)';
+            }, 150);
+        });
+    });
+
+    // إرسال النموذج عند تغيير الفلاتر
+    document.querySelectorAll('.filter-select').forEach(select => {
+        select.addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    });
+
+    // البحث التلقائي عند الكتابة
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.closest('form').submit();
+            }, 500);
+        });
+    }
 </script>
 {% endblock %}
