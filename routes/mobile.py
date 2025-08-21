@@ -5920,12 +5920,15 @@ def operations_list():
 def operation_details(operation_id):
     """عرض تفاصيل العملية للنسخة المحمولة"""
     
-    # التحقق من صلاحيات المدير فقط
-    if current_user.role != UserRole.ADMIN:
-        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.index'))
-    
+    # الحصول على العملية
     operation = OperationRequest.query.get_or_404(operation_id)
+    
+    # التحقق من الصلاحيات - المدراء يرون جميع العمليات، والمستخدمون يرون عملياتهم فقط
+    if current_user.role != UserRole.ADMIN and operation.requested_by != current_user.id:
+        flash('غير مسموح لك بعرض هذه العملية', 'danger')
+        return redirect(url_for('mobile.operations'))
+    
+    return render_template('mobile/operation_details.html', operation=operation)
     related_record = operation.get_related_record()
     
     # جلب الصور المرتبطة إذا كانت العملية من نوع الورشة
