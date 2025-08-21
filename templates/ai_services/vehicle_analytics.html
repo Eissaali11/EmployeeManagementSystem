@@ -1,0 +1,239 @@
+{% extends 'layout.html' %}
+
+{% block title %}تحليل المركبات الذكي - الذكاء الاصطناعي{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+    }
+
+    .vehicle-analytics-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .vehicle-analytics-card:hover {
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+    }
+
+    .vehicle-stat-card {
+        background: linear-gradient(45deg, var(--ai-accent), var(--ai-secondary));
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .vehicle-chart {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة -->
+    <div class="vehicle-analytics-card">
+        <div class="card-body text-center">
+            <h1 class="text-light mb-3">
+                <i class="fas fa-car me-3" style="color: var(--ai-accent);"></i>
+                تحليل المركبات الذكي
+            </h1>
+            <p class="lead text-light">
+                تحليل متقدم لأسطول المركبات ومعدلات الاستخدام والصيانة
+            </p>
+        </div>
+    </div>
+
+    <!-- إحصائيات المركبات -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="vehicle-stat-card">
+                <span class="stat-number">{{ vehicle_stats.total or 12 }}</span>
+                <span class="stat-label">إجمالي المركبات</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vehicle-stat-card">
+                <span class="stat-number">{{ vehicle_stats.available or 8 }}</span>
+                <span class="stat-label">مركبات متاحة</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vehicle-stat-card">
+                <span class="stat-number">{{ vehicle_stats.in_use or 3 }}</span>
+                <span class="stat-label">قيد الاستخدام</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vehicle-stat-card">
+                <span class="stat-number">{{ vehicle_stats.maintenance or 1 }}</span>
+                <span class="stat-label">في الصيانة</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- تحليل أنواع المركبات -->
+    <div class="vehicle-analytics-card">
+        <div class="card-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                توزيع أنواع المركبات
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="vehicle-chart">
+                <canvas id="vehicleTypesChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- معدلات الاستخدام -->
+    <div class="vehicle-analytics-card">
+        <div class="card-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-chart-line me-2"></i>
+                معدلات الاستخدام والكفاءة
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="vehicle-chart">
+                        <canvas id="usageChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-light">التوصيات الذكية:</h5>
+                    <ul class="text-light">
+                        <li>تحسين جدولة استخدام المركبات</li>
+                        <li>صيانة دورية للمركبات عالية الاستخدام</li>
+                        <li>مراجعة احتياجات الأسطول</li>
+                        <li>تطبيق نظام تتبع GPS</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="text-center">
+        <a href="/ai/" class="btn btn-outline-light btn-lg me-3">
+            <i class="fas fa-arrow-left me-2"></i>
+            العودة للذكاء الاصطناعي
+        </a>
+        <button class="btn btn-outline-info btn-lg" onclick="exportVehicleReport()">
+            <i class="fas fa-download me-2"></i>
+            تصدير تقرير المركبات
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// رسم بياني لأنواع المركبات
+const ctx1 = document.getElementById('vehicleTypesChart').getContext('2d');
+const vehicleTypesChart = new Chart(ctx1, {
+    type: 'doughnut',
+    data: {
+        labels: ['سيدان', 'شاحنة', 'حافلة'],
+        datasets: [{
+            data: [6, 4, 2],
+            backgroundColor: ['#00d4aa', '#0099cc', '#1e3a5c'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#ffffff'
+                }
+            }
+        }
+    }
+});
+
+// رسم بياني لمعدلات الاستخدام
+const ctx2 = document.getElementById('usageChart').getContext('2d');
+const usageChart = new Chart(ctx2, {
+    type: 'bar',
+    data: {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+        datasets: [{
+            label: 'ساعات الاستخدام',
+            data: [450, 520, 480, 600, 550, 580],
+            backgroundColor: 'rgba(0, 212, 170, 0.7)',
+            borderColor: '#00d4aa',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#ffffff'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
+    }
+});
+
+function exportVehicleReport() {
+    alert('سيتم إضافة وظيفة تصدير تقرير المركبات قريباً');
+}
+</script>
+{% endblock %}

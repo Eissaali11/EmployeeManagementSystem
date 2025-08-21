@@ -1,0 +1,184 @@
+{% extends 'layout.html' %}
+
+{% block title %}التحليل التنبؤي - الذكاء الاصطناعي{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+    }
+
+    .prediction-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .prediction-card:hover {
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+    }
+
+    .prediction-metric {
+        background: linear-gradient(45deg, var(--ai-accent), var(--ai-secondary));
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        display: block;
+    }
+
+    .metric-trend {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة -->
+    <div class="prediction-card">
+        <div class="card-body text-center">
+            <h1 class="text-light mb-3">
+                <i class="fas fa-crystal-ball me-3" style="color: var(--ai-accent);"></i>
+                التحليل التنبؤي المتقدم
+            </h1>
+            <p class="lead text-light">
+                توقعات مستقبلية دقيقة مبنية على الذكاء الاصطناعي وتعلم الآلة
+            </p>
+        </div>
+    </div>
+
+    <!-- التوقعات الرئيسية -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="prediction-metric">
+                <span class="metric-value">95%</span>
+                <span class="metric-trend">توقع معدل الحضور القادم</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="prediction-metric">
+                <span class="metric-value">12%</span>
+                <span class="metric-trend">نمو متوقع في الموظفين</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="prediction-metric">
+                <span class="metric-value">85,000</span>
+                <span class="metric-trend">التكلفة المتوقعة شهرياً</span>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="prediction-metric">
+                <span class="metric-value">3</span>
+                <span class="metric-trend">مركبات تحتاج صيانة</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- رسوم بيانية تنبؤية -->
+    <div class="prediction-card">
+        <div class="card-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-chart-line me-2"></i>
+                التوقعات المستقبلية
+            </h4>
+        </div>
+        <div class="card-body">
+            <canvas id="predictiveChart" width="400" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="text-center">
+        <a href="/ai/" class="btn btn-outline-light btn-lg me-3">
+            <i class="fas fa-arrow-left me-2"></i>
+            العودة للذكاء الاصطناعي
+        </a>
+        <button class="btn btn-outline-info btn-lg" onclick="exportPredictions()">
+            <i class="fas fa-download me-2"></i>
+            تصدير التوقعات
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// رسم بياني تنبؤي
+const ctx = document.getElementById('predictiveChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+        datasets: [{
+            label: 'التوقع الفعلي',
+            data: [92, 94, 95, 93, 96, 95],
+            borderColor: '#00d4aa',
+            backgroundColor: 'rgba(0, 212, 170, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'النموذج التنبؤي',
+            data: [94, 95, 96, 97, 97, 98],
+            borderColor: '#0099cc',
+            backgroundColor: 'rgba(0, 153, 204, 0.1)',
+            borderDash: [5, 5],
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#ffffff'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
+    }
+});
+
+function exportPredictions() {
+    alert('سيتم إضافة وظيفة تصدير التوقعات قريباً');
+}
+</script>
+{% endblock %}
