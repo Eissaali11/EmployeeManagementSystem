@@ -4,30 +4,56 @@
 
 {% block extra_css %}
 <style>
-    /* Reports Page Specific Styles */
+    /* ألوان وأنماط صفحة التقارير المحسنة */
     :root {
-        --report-primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        --report-secondary-gradient: linear-gradient(135deg, #64748b 0%, #475569 100%);
-        --report-success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        --report-warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        --report-danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        --report-info-gradient: linear-gradient(135deg, #06b6d4 0%, #0e7490 100%);
-        --glass-bg: rgba(255, 255, 255, 0.95);
-        --glass-border: rgba(255, 255, 255, 0.2);
-        --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        /* ألوان النظام المعاصرة */
+        --primary-color: #1e3a5c;
+        --primary-light: #2d5a87;
+        --primary-dark: #0f1f2f;
+        --secondary-color: #1a1a1a;
+        --accent-blue: #0d6efd;
+        --accent-gold: #ffc107;
+        --accent-green: #198754;
+        --accent-red: #dc3545;
+        --accent-purple: #6f42c1;
+        --text-light: #ffffff;
+        --text-muted: #6c757d;
+        --text-dark: #212529;
+        
+        /* تدرجات محسنة */
+        --report-primary-gradient: linear-gradient(135deg, #1e3a5c 0%, #2d5a87 100%);
+        --report-success-gradient: linear-gradient(135deg, #198754 0%, #20c997 100%);
+        --report-warning-gradient: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+        --report-danger-gradient: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        --report-info-gradient: linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%);
+        --report-purple-gradient: linear-gradient(135deg, #6f42c1 0%, #8b5cf6 100%);
+        
+        /* خلفيات وتأثيرات */
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --card-bg: rgba(255, 255, 255, 0.03);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
     }
 
-    /* Main Header */
+    /* خلفية الصفحة */
+    body {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 50%, var(--secondary-color) 100%);
+        min-height: 100vh;
+        color: var(--text-light);
+    }
+
+    /* رأس الصفحة الرئيسي */
     .report-main-header {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
         box-shadow: var(--card-shadow);
         overflow: hidden;
         position: relative;
-        animation: slideDown 0.6s ease-out;
+        margin-bottom: 2rem;
     }
 
     .report-main-header::before {
@@ -36,30 +62,49 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
         background: var(--report-primary-gradient);
     }
 
     .report-main-header .card-body {
         background: var(--report-primary-gradient);
         color: white;
-        padding: 3rem 2rem;
+        padding: 2.5rem 2rem;
+        position: relative;
     }
 
-    /* Enhanced Report Cards */
+    .report-main-header .card-body::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+        transform: translateX(-100%);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    /* بطاقات التقارير المحسنة */
     .report-feature-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
         box-shadow: var(--card-shadow);
         overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
         height: 100%;
+        position: relative;
     }
 
     .report-feature-card:hover {
-        transform: translateY(-8px);
+        transform: translateY(-5px);
         box-shadow: var(--card-shadow-hover);
     }
 
@@ -115,9 +160,30 @@
         background: var(--report-info-gradient);
     }
 
+    .vehicles-report .report-card-header {
+        background: var(--report-purple-gradient);
+    }
+
+    .analytics-report .report-card-header {
+        background: var(--report-danger-gradient);
+    }
+
+    .integrated-report .report-card-header {
+        background: var(--report-primary-gradient);
+    }
+
+    .accounting-report .report-card-header {
+        background: var(--report-warning-gradient);
+    }
+
+    .mobile-report .report-card-header {
+        background: var(--report-success-gradient);
+    }
+
     .report-card-body {
         padding: 1.5rem;
-        color: #212529; /* Added dark text color for body */
+        color: var(--text-light);
+        background: rgba(255, 255, 255, 0.02);
     }
 
     .feature-list {
@@ -127,26 +193,39 @@
     }
 
     .employees-report .feature-list {
-        border-color: #3b82f6;
+        border-color: #1e3a5c;
     }
 
     .attendance-report .feature-list {
-        border-color: #10b981;
+        border-color: #198754;
     }
 
     .salaries-report .feature-list {
-        border-color: #f59e0b;
+        border-color: #ffc107;
     }
 
     .documents-report .feature-list {
-        border-color: #ef4444;
+        border-color: #dc3545;
+    }
+
+    .enhanced-reports-card .feature-list {
+        border-color: #0dcaf0;
+    }
+
+    .vehicles-report .feature-list {
+        border-color: #6f42c1;
+    }
+
+    .analytics-report .feature-list {
+        border-color: #fd7e14;
     }
 
     .feature-list-item {
         margin-bottom: 0.75rem;
         display: flex;
         align-items: center;
-        color: #212529; /* Added dark text color for list items */
+        color: var(--text-light);
+        opacity: 0.9;
     }
 
     /* Enhanced Buttons */
@@ -211,9 +290,35 @@
         color: white;
     }
 
-    /* Text Colors */
+    .btn-purple {
+        background: var(--report-purple-gradient);
+        color: white;
+    }
+
+    .btn-analytics {
+        background: var(--report-danger-gradient);
+        color: white;
+    }
+
+    .btn-integrated {
+        background: var(--report-primary-gradient);
+        color: white;
+    }
+
+    .btn-accounting {
+        background: var(--report-warning-gradient);
+        color: white;
+    }
+
+    .btn-mobile {
+        background: var(--report-success-gradient);
+        color: white;
+    }
+
+    /* ألوان النصوص */
     .card-text {
-        color: #212529; /* Dark text for better contrast */
+        color: var(--text-light);
+        opacity: 0.9;
     }
 
     /* Animations */
@@ -424,6 +529,132 @@
                     <a href="{{ url_for('reports.documents_report') }}" class="report-btn btn-documents">
                         <i class="fas fa-file-alt me-1"></i>
                         عرض تقارير الوثائق
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vehicles Report -->
+        <div class="col-md-6 mb-4 report-card vehicles-report" style="animation: slideUp 0.6s ease-out 0.5s both;">
+            <div class="report-feature-card h-100">
+                <div class="report-card-header">
+                    <h4 class="card-title mb-0 text-center">
+                        <i class="fas fa-car me-2"></i>
+                        تقارير السيارات
+                    </h4>
+                </div>
+                <div class="report-card-body">
+                    <p class="card-text lead text-center mb-4">تقارير شاملة عن أسطول السيارات وحالتها وورش الصيانة.</p>
+                    <div class="feature-list">
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تقارير السيارات المفصلة
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تقارير ورش الصيانة
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تصدير PDF و Excel
+                        </div>
+                    </div>
+                    <a href="{{ url_for('vehicles.detailed_list') }}" class="report-btn btn-purple">
+                        <i class="fas fa-file-alt me-1"></i>
+                        عرض تقارير السيارات
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Report -->
+        <div class="col-md-6 mb-4 report-card analytics-report" style="animation: slideUp 0.6s ease-out 0.6s both;">
+            <div class="report-feature-card h-100">
+                <div class="report-card-header">
+                    <h4 class="card-title mb-0 text-center">
+                        <i class="fas fa-chart-line me-2"></i>
+                        التحليلات المالية الذكية
+                    </h4>
+                </div>
+                <div class="report-card-body">
+                    <p class="card-text lead text-center mb-4">تحليلات مالية متقدمة مدعومة بالذكاء الاصطناعي للتنبؤات والتوصيات.</p>
+                    <div class="feature-list">
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            تحليلات مالية بالذكاء الاصطناعي
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            توصيات ذكية للتوفير
+                        </div>
+                        <div class="feature-list-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            رسوم بيانية تفاعلية
+                        </div>
+                    </div>
+                    <a href="/accounting/analytics" class="report-btn btn-analytics">
+                        <i class="fas fa-brain me-1"></i>
+                        عرض التحليلات الذكية
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Second Row - Additional Reports -->
+    <div class="row mt-2">
+        <!-- Integrated System Report -->
+        <div class="col-md-4 mb-4 report-card integrated-report" style="animation: slideUp 0.6s ease-out 0.7s both;">
+            <div class="report-feature-card h-100">
+                <div class="report-card-header">
+                    <h4 class="card-title mb-0 text-center">
+                        <i class="fas fa-layer-group me-2"></i>
+                        النظام المتكامل
+                    </h4>
+                </div>
+                <div class="report-card-body">
+                    <p class="card-text text-center mb-3">لوحة معلومات شاملة لجميع أنظمة الشركة.</p>
+                    <a href="/integrated/dashboard" class="report-btn btn-integrated">
+                        <i class="fas fa-tachometer-alt me-1"></i>
+                        عرض النظام المتكامل
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Accounting Report -->
+        <div class="col-md-4 mb-4 report-card accounting-report" style="animation: slideUp 0.6s ease-out 0.8s both;">
+            <div class="report-feature-card h-100">
+                <div class="report-card-header">
+                    <h4 class="card-title mb-0 text-center">
+                        <i class="fas fa-calculator me-2"></i>
+                        النظام المحاسبي
+                    </h4>
+                </div>
+                <div class="report-card-body">
+                    <p class="card-text text-center mb-3">تقارير مالية شاملة ودليل الحسابات.</p>
+                    <a href="/accounting" class="report-btn btn-accounting">
+                        <i class="fas fa-coins me-1"></i>
+                        عرض النظام المحاسبي
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Devices Report -->
+        <div class="col-md-4 mb-4 report-card mobile-report" style="animation: slideUp 0.6s ease-out 0.9s both;">
+            <div class="report-feature-card h-100">
+                <div class="report-card-header">
+                    <h4 class="card-title mb-0 text-center">
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        الأجهزة المحمولة
+                    </h4>
+                </div>
+                <div class="report-card-body">
+                    <p class="card-text text-center mb-3">إدارة وتقارير الأجهزة المحمولة والشرائح.</p>
+                    <a href="/mobile-devices" class="report-btn btn-mobile">
+                        <i class="fas fa-list me-1"></i>
+                        عرض الأجهزة المحمولة
                     </a>
                 </div>
             </div>
