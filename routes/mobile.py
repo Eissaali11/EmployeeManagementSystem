@@ -5739,13 +5739,48 @@ def edit_workshop_mobile(workshop_id):
 
 @mobile_bp.route('/operations')
 @login_required
+def operations():
+    """العمليات العامة للمستخدمين العاديين"""
+    
+    # عرض العمليات المرتبطة بالمستخدم أو جميع العمليات للمدراء
+    if current_user.role == UserRole.ADMIN:
+        # المدراء يرون جميع العمليات
+        user_operations = OperationRequest.query.order_by(OperationRequest.requested_at.desc()).limit(20).all()
+    else:
+        # المستخدمون العاديون يرون عملياتهم فقط
+        user_operations = OperationRequest.query.filter_by(
+            requested_by=current_user.id
+        ).order_by(OperationRequest.requested_at.desc()).limit(20).all()
+    
+    # إحصائيات للمستخدم الحالي
+    if current_user.role == UserRole.ADMIN:
+        stats = {
+            'pending': OperationRequest.query.filter_by(status='pending').count(),
+            'under_review': OperationRequest.query.filter_by(status='under_review').count(),
+            'approved': OperationRequest.query.filter_by(status='approved').count(),
+            'rejected': OperationRequest.query.filter_by(status='rejected').count(),
+        }
+    else:
+        stats = {
+            'pending': OperationRequest.query.filter_by(requested_by=current_user.id, status='pending').count(),
+            'under_review': OperationRequest.query.filter_by(requested_by=current_user.id, status='under_review').count(),
+            'approved': OperationRequest.query.filter_by(requested_by=current_user.id, status='approved').count(),
+            'rejected': OperationRequest.query.filter_by(requested_by=current_user.id, status='rejected').count(),
+        }
+    
+    return render_template('mobile/operations_general.html', 
+                         operations=user_operations, 
+                         stats=stats)
+
+@mobile_bp.route('/operations/dashboard')
+@login_required
 def operations_dashboard():
-    """لوحة إدارة العمليات الرئيسية للنسخة المحمولة"""
+    """لوحة إدارة العمليات للمدراء فقط"""
     
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.dashboard'))
+        return redirect(url_for('mobile.operations'))
 
     # استلام قيمة البحث من رابط URL
     search_plate = request.args.get('search_plate', '').strip()

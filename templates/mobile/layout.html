@@ -225,11 +225,19 @@
             </a>
           </li>
           
+          <!-- العمليات المحمولة - متاحة لجميع المستخدمين -->
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.operations') }}" class="sidebar-menu-link {{ 'active' if 'operations' in request.endpoint and 'operations_dashboard' not in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-clipboard-list"></i></span>
+              <span class="sidebar-menu-text">العمليات</span>
+            </a>
+          </li>
+          
           {% if current_user.role == 'admin' %}
           <li class="sidebar-menu-item">
-            <a href="{{ url_for('mobile.operations_dashboard') }}" class="sidebar-menu-link {{ 'active' if 'operations' in request.endpoint }}">
+            <a href="{{ url_for('mobile.operations_dashboard') }}" class="sidebar-menu-link {{ 'active' if 'operations_dashboard' in request.endpoint }}">
               <span class="sidebar-menu-icon"><i class="fas fa-cogs"></i></span>
-              <span class="sidebar-menu-text">إدارة العمليات</span>
+              <span class="sidebar-menu-text">إدارة العمليات المتقدمة</span>
             </a>
           </li>
           {% endif %}

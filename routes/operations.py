@@ -1397,3 +1397,100 @@ def export_notifications_excel():
         current_app.logger.error(f"خطأ في تصدير إشعارات العمليات: {str(e)}")
         flash(f'خطأ في تصدير البيانات: {str(e)}', 'danger')
         return redirect(request.referrer or url_for('mobile.operations_notifications'))
+
+
+@operations_bp.route('/export-all-operations-excel')
+@login_required
+def export_all_operations_excel():
+    """تصدير جميع العمليات إلى ملف Excel"""
+    try:
+        # جلب العمليات حسب دور المستخدم
+        if current_user.role == 'admin':
+            operations = OperationRequest.query.order_by(OperationRequest.requested_at.desc()).all()
+        else:
+            operations = OperationRequest.query.filter_by(
+                requested_by=current_user.id
+            ).order_by(OperationRequest.requested_at.desc()).all()
+        
+        if not operations:
+            flash('لا توجد عمليات للتصدير', 'warning')
+            return redirect(request.referrer or url_for('mobile.operations'))
+        
+        # إعداد البيانات للتصدير
+        operations_data = []
+        for operation in operations:
+            # جلب بيانات السيارة المرتبطة
+            vehicle_info = ""
+            if operation.vehicle_id:
+                vehicle = Vehicle.query.get(operation.vehicle_id)
+                if vehicle:
+                    vehicle_info = f"{vehicle.plate_number} - {vehicle.make} {vehicle.model}"
+            
+            # جلب بيانات المستخدم الطالب
+            user_name = ""
+            if operation.requested_by:
+                user = User.query.get(operation.requested_by)
+                if user:
+                    user_name = user.name or user.username
+            
+            # تحديد نوع العملية
+            operation_type_ar = {
+                'handover': 'تسليم مركبة',
+                'workshop_record': 'سجل ورشة',
+                'external_authorization': 'تصريح خارجي',
+                'safety_inspection': 'فحص أمان',
+                'maintenance': 'صيانة',
+                'other': 'أخرى'
+            }.get(operation.operation_type, operation.operation_type or '')
+            
+            operations_data.append({
+                'رقم العملية': operation.id,
+                'العنوان': operation.title or '',
+                'الوصف': operation.description or '',
+                'نوع العملية': operation_type_ar,
+                'الحالة': get_status_name(operation.status),
+                'الأولوية': get_priority_name(operation.priority),
+                'السيارة': vehicle_info,
+                'طالب العملية': user_name,
+                'تاريخ الطلب': operation.requested_at.strftime('%Y-%m-%d %H:%M:%S') if operation.requested_at else '',
+                'تاريخ المراجعة': operation.reviewed_at.strftime('%Y-%m-%d %H:%M:%S') if operation.reviewed_at else '',
+                'ملاحظات المراجع': operation.reviewer_notes or ''
+            })
+        
+        # إنشاء DataFrame
+        df = pd.DataFrame(operations_data)
+        
+        # إنشاء ملف Excel في الذاكرة
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='العمليات', index=False)
+            
+            # تنسيق الورقة
+            worksheet = writer.sheets['العمليات']
+            
+            # تحديد عرض الأعمدة
+            column_widths = {
+                'A': 15, 'B': 30, 'C': 40, 'D': 20, 'E': 15,
+                'F': 15, 'G': 25, 'H': 20, 'I': 25, 'J': 25, 'K': 30
+            }
+            
+            for col, width in column_widths.items():
+                worksheet.column_dimensions[col].width = width
+        
+        output.seek(0)
+        
+        # تحديد اسم الملف
+        filename = f"operations_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"خطأ في تصدير العمليات: {str(e)}")
+        flash(f'خطأ في تصدير البيانات: {str(e)}', 'danger')
+        return redirect(request.referrer or url_for('mobile.operations'))
+
