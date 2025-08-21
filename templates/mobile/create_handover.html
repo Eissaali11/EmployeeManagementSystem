@@ -4,32 +4,51 @@
 
 {% block content %}
 <style>
-/* إصلاح مشكلة الزر المختفي خلف القائمة السفلية */
-.mobile-content {
-    padding-bottom: 120px !important; /* مساحة كبيرة للقائمة السفلية */
+/* حل جذري لمشكلة الزر المختفي خلف القائمة السفلية */
+
+/* إزالة أي padding من body والاعتماد على المحتوى */
+body {
+    padding-bottom: 0 !important;
 }
 
-/* إصلاح الكونتينر */
+/* تطبيق المساحة على المحتوى مباشرة */
+.mobile-content-wrapper {
+    padding-bottom: 150px !important; /* مساحة كبيرة للقائمة السفلية */
+    min-height: 100vh !important;
+}
+
+/* إصلاح الكونتينر بشكل جذري */
 .container.py-4 {
-    margin-bottom: 100px !important; /* مساحة كبيرة في أسفل الكونتينر */
-    padding-bottom: 40px !important;
+    margin-bottom: 0 !important;
+    padding-bottom: 150px !important; /* مساحة كبيرة جداً */
 }
 
-/* تأكد من أن أزرار الإرسال لها مساحة كافية */
+/* تأكد من أن مجموعة الأزرار لها مساحة كافية */
 .d-grid.gap-2.mb-4 {
-    margin-bottom: 80px !important; /* مساحة كبيرة جداً بعد الأزرار */
-    padding-bottom: 40px !important; /* مساحة داخلية إضافية */
+    margin-bottom: 100px !important; /* مساحة كبيرة جداً بعد الأزرار */
+    padding-bottom: 50px !important; /* مساحة داخلية كبيرة */
+    position: relative !important;
+    z-index: 1 !important; /* أولوية أعلى من القائمة السفلية */
+}
+
+/* ضمان ظهور الأزرار فوق القائمة السفلية */
+.btn {
+    position: relative !important;
+    z-index: 2 !important;
 }
 
 /* إصلاح القائمة السفلية */
 .mobile-footer {
-    height: 80px !important; /* ارتفاع القائمة السفلية */
-    z-index: 1000 !important;
+    height: 80px !important;
+    z-index: 900 !important; /* أولوية أقل من الأزرار */
+    position: fixed !important;
+    bottom: 0 !important;
 }
 
-/* إصلاح متغير الارتفاع */
-:root {
-    --footer-height: 80px !important;
+/* إضافة مساحة إضافية للفورم */
+form {
+    margin-bottom: 120px !important;
+    padding-bottom: 50px !important;
 }
 </style>
 <div class="container py-4">
@@ -198,16 +217,22 @@
             </div>
         </div>
         
-        <div class="d-grid gap-2 mb-4">
-            <button type="submit" class="btn btn-primary btn-lg">
+        <!-- مساحة إضافية قبل الأزرار لضمان عدم اختفائها -->
+        <div style="height: 50px;"></div>
+        
+        <div class="d-grid gap-2 mb-4" style="margin-bottom: 120px !important; padding-bottom: 80px !important; background: transparent; position: relative; z-index: 999 !important;">
+            <button type="submit" class="btn btn-primary btn-lg" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important;">
                 <i class="fas fa-save ms-1"></i>
                 حفظ نموذج التسليم/الاستلام
             </button>
-            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary">
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important;">
                 <i class="fas fa-times ms-1"></i>
                 إلغاء
             </a>
         </div>
+        
+        <!-- مساحة إضافية بعد الأزرار لضمان عدم اختفائها -->
+        <div style="height: 100px;"></div>
     </form>
 </div>
 {% endblock %}
