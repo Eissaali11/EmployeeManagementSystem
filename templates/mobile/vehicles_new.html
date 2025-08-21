@@ -1119,10 +1119,10 @@
             <button class="header-btn" onclick="window.location.href='/mobile/dashboard'" title="لوحة التحكم">
                 <i class="fas fa-tachometer-alt"></i>
             </button>
-            <button class="header-btn" id="searchToggle" title="البحث">
+            <button class="header-btn" id="searchToggle" onclick="toggleSearch()" title="البحث">
                 <i class="fas fa-search"></i>
             </button>
-            <button class="header-btn" id="filtersToggle" title="الفلاتر">
+            <button class="header-btn" id="filtersToggle" onclick="toggleFilters()" title="الفلاتر">
                 <i class="fas fa-filter"></i>
             </button>
             <button class="header-btn" onclick="alert('قريباً - إضافة سيارة جديدة')" title="إضافة سيارة">
@@ -1530,44 +1530,66 @@
 
     });
 
-    // تعريف دالة navigateTo في نطاق عام
-    function navigateTo(url) {
+    // تعريف جميع الدوال في النطاق العام
+    window.navigateTo = function(url) {
         console.log('Navigating to:', url);
         window.location.href = url;
-    }
+    };
 
-    // وظيفة البحث الفوري
-    function performSearch() {
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            const searchValue = searchInput.value.trim();
-            console.log('Searching for:', searchValue);
+    window.toggleSearch = function() {
+        console.log('toggleSearch called');
+        const searchBar = document.getElementById('searchBar');
+        const filtersBar = document.getElementById('filtersBar');
+        const searchToggle = document.getElementById('searchToggle');
+        const filtersToggle = document.getElementById('filtersToggle');
+        
+        if (searchBar && searchToggle) {
+            const isCurrentlyShown = searchBar.classList.contains('show');
             
-            // إنشاء URL الجديد مع البحث
-            const currentUrl = new URL(window.location);
-            if (searchValue) {
-                currentUrl.searchParams.set('search', searchValue);
+            // إخفاء الفلاتر أولاً
+            if (filtersBar) filtersBar.classList.remove('show');
+            if (filtersToggle) filtersToggle.classList.remove('active');
+            
+            // تبديل البحث
+            if (isCurrentlyShown) {
+                searchBar.classList.remove('show');
+                searchToggle.classList.remove('active');
             } else {
-                currentUrl.searchParams.delete('search');
+                searchBar.classList.add('show');
+                searchToggle.classList.add('active');
+                
+                setTimeout(() => {
+                    const searchInput = searchBar.querySelector('.search-input');
+                    if (searchInput) searchInput.focus();
+                }, 300);
             }
-            
-            // الانتقال للنتائج
-            window.location.href = currentUrl.toString();
         }
-    }
+    };
 
-    // إضافة مستمع لزر Enter في البحث
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    performSearch();
-                }
-            });
+    window.toggleFilters = function() {
+        console.log('toggleFilters called');
+        const filtersBar = document.getElementById('filtersBar');
+        const searchBar = document.getElementById('searchBar');
+        const searchToggle = document.getElementById('searchToggle');
+        const filtersToggle = document.getElementById('filtersToggle');
+        
+        if (filtersBar && filtersToggle) {
+            const isCurrentlyShown = filtersBar.classList.contains('show');
+            
+            // إخفاء البحث أولاً
+            if (searchBar) searchBar.classList.remove('show');
+            if (searchToggle) searchToggle.classList.remove('active');
+            
+            // تبديل الفلاتر
+            if (isCurrentlyShown) {
+                filtersBar.classList.remove('show');
+                filtersToggle.classList.remove('active');
+            } else {
+                filtersBar.classList.add('show');
+                filtersToggle.classList.add('active');
+            }
         }
-    });
+    };
 
     // تأثير النقر على البطاقات
     document.querySelectorAll('.vehicle-card').forEach(card => {
