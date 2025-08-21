@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - نُظم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fb;
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .phone-container {
+            max-width: 375px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* شريط الحالة */
+        .status-bar {
+            background: white;
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 1px solid #f0f0f5;
+        }
+
+        .status-time {
+            color: #000;
+        }
+
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #000;
+        }
+
+        /* رأس الصفحة */
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f5;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .header-icon {
+            width: 24px;
+            height: 24px;
+            color: #8e8e93;
+            cursor: pointer;
+        }
+
+        /* بطاقة الترحيب */
+        .welcome-card {
+            background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 100%);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .welcome-greeting {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+
+        .welcome-subtitle {
+            font-size: 14px;
+            color: #8e8e93;
+            margin-bottom: 8px;
+        }
+
+        .welcome-date {
+            font-size: 12px;
+            color: #8e8e93;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* شبكة الإحصائيات */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f0f0f5;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 18px;
+        }
+
+        .stat-icon.employees {
+            background: rgba(74, 144, 226, 0.1);
+            color: #4A90E2;
+        }
+
+        .stat-icon.vehicles {
+            background: rgba(255, 149, 0, 0.1);
+            color: #FF9500;
+        }
+
+        .stat-icon.maintenance {
+            background: rgba(52, 199, 89, 0.1);
+            color: #34C759;
+        }
+
+        .stat-icon.documents {
+            background: rgba(255, 59, 48, 0.1);
+            color: #FF3B30;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #8e8e93;
+            font-weight: 500;
+        }
+
+        /* قسم الوثائق */
+        .documents-section {
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .documents-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f0f0f5;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .documents-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(142, 142, 147, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: #8e8e93;
+            font-size: 20px;
+        }
+
+        .documents-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+
+        .documents-subtitle {
+            font-size: 14px;
+            color: #8e8e93;
+            line-height: 1.4;
+        }
+
+        /* تأثيرات الحركة */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        /* تحسينات للأجهزة الصغيرة */
+        @media (max-width: 375px) {
+            .phone-container {
+                max-width: 100%;
+                box-shadow: none;
+            }
+            
+            .welcome-card,
+            .stats-grid,
+            .documents-section {
+                margin-left: 15px;
+                margin-right: 15px;
+            }
+            
+            .stats-grid {
+                padding: 0;
+            }
+            
+            .documents-section {
+                padding: 0;
+            }
+        }
+
+        /* الوضع الليلي */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #000;
+            }
+            
+            .phone-container {
+                background: #1c1c1e;
+            }
+            
+            .status-bar,
+            .header {
+                background: #1c1c1e;
+                border-color: #38383a;
+            }
+            
+            .status-time,
+            .header-title {
+                color: #fff;
+            }
+            
+            .stat-card,
+            .documents-card {
+                background: #2c2c2e;
+                border-color: #38383a;
+            }
+            
+            .stat-number,
+            .documents-title,
+            .section-title {
+                color: #fff;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container fade-in">
+        <!-- شريط الحالة -->
+        <div class="status-bar">
+            <div class="status-time">9:41</div>
+            <div class="status-icons">
+                <i class="fas fa-signal"></i>
+                <i class="fas fa-wifi"></i>
+                <i class="fas fa-battery-full"></i>
+            </div>
+        </div>
+
+        <!-- رأس الصفحة -->
+        <div class="header">
+            <div class="header-icons">
+                <i class="fas fa-bell header-icon"></i>
+            </div>
+            <div class="header-title">لوحة التحكم</div>
+            <div class="header-icons">
+                <i class="fas fa-bars header-icon"></i>
+            </div>
+        </div>
+
+        <!-- بطاقة الترحيب -->
+        <div class="welcome-card slide-up">
+            <div class="welcome-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="welcome-greeting">مرحباً عيسى عبدالله 👋</div>
+            <div class="welcome-subtitle">في نظام إدارة الموظفين</div>
+            <div class="welcome-date">
+                <i class="fas fa-calendar"></i>
+                <span>Thursday, 7 January 2021 📅</span>
+            </div>
+        </div>
+
+        <!-- شبكة الإحصائيات -->
+        <div class="stats-grid slide-up">
+            <!-- الموظفين -->
+            <div class="stat-card">
+                <div class="stat-icon employees">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-number">{{ stats.employees_count or 5 }}</div>
+                <div class="stat-label">الموظفين</div>
+            </div>
+
+            <!-- الوثائق -->
+            <div class="stat-card">
+                <div class="stat-icon documents">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-number">{{ stats.documents_count or 5 }}</div>
+                <div class="stat-label">الوثائق</div>
+            </div>
+
+            <!-- سيارات تحت الصيانة -->
+            <div class="stat-card">
+                <div class="stat-icon maintenance">
+                    <i class="fas fa-wrench"></i>
+                </div>
+                <div class="stat-number">5</div>
+                <div class="stat-label">سيارات تحت الصيانة</div>
+            </div>
+
+            <!-- جميع السيارات -->
+            <div class="stat-card">
+                <div class="stat-icon vehicles">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="stat-number">{{ stats.vehicles_count or 5 }}</div>
+                <div class="stat-label">جميع السيارات</div>
+            </div>
+        </div>
+
+        <!-- قسم الوثائق -->
+        <div class="documents-section slide-up">
+            <div class="section-title">
+                <i class="fas fa-file-text"></i>
+                وثائق تنتهي قريباً
+            </div>
+            <div class="documents-card">
+                <div class="documents-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="documents-title">جميع الوثائق سارية المفعول</div>
+                <div class="documents-subtitle">
+                    لا توجد وثائق تنتهي في الأيام القادمة.<br>
+                    جميع الوثائق محدثة وسارية المفعول.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // تحديث الوقت في شريط الحالة
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-SA', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+            });
+            document.querySelector('.status-time').textContent = timeString;
+        }
+
+        // تحديث التاريخ في بطاقة الترحيب
+        function updateDate() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            };
+            const dateString = now.toLocaleDateString('ar-SA', options);
+            const dateElement = document.querySelector('.welcome-date span');
+            if (dateElement) {
+                dateElement.innerHTML = dateString + ' 📅';
+            }
+        }
+
+        // تحديث البيانات كل دقيقة
+        updateTime();
+        updateDate();
+        setInterval(updateTime, 60000);
+
+        // إضافة تفاعل عند النقر على البطاقات
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // إضافة تأثير النقر
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'translateY(-2px)';
+                }, 150);
+            });
+        });
+
+        // إضافة تفاعل لأيقونات الرأس
+        document.querySelectorAll('.header-icon').forEach(icon => {
+            icon.addEventListener('click', function() {
+                // تأثير النقر
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 150);
+            });
+        });
+
+        // محاكاة تحديث الإحصائيات (اختياري)
+        function animateNumbers() {
+            document.querySelectorAll('.stat-number').forEach(element => {
+                const finalNumber = parseInt(element.textContent);
+                let currentNumber = 0;
+                const increment = finalNumber / 20;
+                
+                const timer = setInterval(() => {
+                    currentNumber += increment;
+                    if (currentNumber >= finalNumber) {
+                        element.textContent = finalNumber;
+                        clearInterval(timer);
+                    } else {
+                        element.textContent = Math.floor(currentNumber);
+                    }
+                }, 50);
+            });
+        }
+
+        // تشغيل أنيميشن الأرقام عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            setTimeout(animateNumbers, 500);
+        });
+    </script>
+</body>
+</html>
