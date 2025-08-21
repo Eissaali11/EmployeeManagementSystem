@@ -474,24 +474,7 @@ def export_attendance():
 
     return render_template('mobile/attendance_export.html', departments=departments)
 
-@mobile_bp.route('/vehicles/<int:vehicle_id>')
-@login_required
-def vehicle_details(vehicle_id):
-    """صفحة تفاصيل السيارة للنسخة المحمولة"""
-    from models import Vehicle, VehicleHandover, VehicleDocument
-    
-    vehicle = Vehicle.query.get_or_404(vehicle_id)
-    
-    # الحصول على تسليمات السيارة
-    handovers = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).order_by(VehicleHandover.handover_date.desc()).all()
-    
-    # الحصول على وثائق السيارة
-    documents = VehicleDocument.query.filter_by(vehicle_id=vehicle_id).all()
-    
-    return render_template('mobile/vehicle_details.html', 
-                          vehicle=vehicle,
-                          handovers=handovers,
-                          documents=documents)
+
 
 # إضافة سجل حضور جديد - النسخة المحمولة
 @mobile_bp.route('/attendance/add', methods=['GET', 'POST'])
