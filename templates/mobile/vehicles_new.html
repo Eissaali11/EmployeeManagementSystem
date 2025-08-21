@@ -76,12 +76,12 @@
         background: white;
     }
 
-    /* بطاقات السيارات - تصميم مطابق للصورة */
+    /* بطاقات السيارات - تصميم مضغوط */
     .vehicle-card {
         background: white;
         border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         border: 1px solid #e9ecef;
         transition: all 0.3s ease;
@@ -97,66 +97,66 @@
     .vehicle-header {
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 8px;
     }
 
     .vehicle-top-section {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
     }
 
     .vehicle-left-content {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 12px;
     }
 
     .vehicle-icon {
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 20px;
         color: #2c3e50;
         flex-shrink: 0;
     }
 
     .vehicle-title-section {
         text-align: right;
+        flex: 1;
     }
 
     .vehicle-name {
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 8px;
+        margin-bottom: 2px;
         text-align: right;
     }
 
     .vehicle-id {
-        font-size: 14px;
+        font-size: 12px;
         color: #6c757d;
         text-align: right;
-        margin-bottom: 16px;
     }
 
-    .vehicle-plate-container {
+    .vehicle-middle-section {
         display: flex;
-        justify-content: center;
-        margin: 16px 0;
+        align-items: center;
+        justify-content: space-between;
+        margin: 8px 0;
     }
 
     .vehicle-plate {
         display: grid;
         grid-template-columns: 2fr 1fr;
-        border: 3px solid #333;
-        border-radius: 8px;
+        border: 2px solid #333;
+        border-radius: 6px;
         overflow: hidden;
         background: white;
         width: fit-content;
-        margin: 0 auto;
     }
 
     .plate-number {
@@ -164,10 +164,10 @@
         color: #333;
         font-family: 'Arial', sans-serif;
         font-weight: bold;
-        font-size: 18px;
-        padding: 12px 16px;
+        font-size: 14px;
+        padding: 6px 12px;
         text-align: center;
-        border-right: 2px solid #333;
+        border-right: 1px solid #333;
     }
 
     .plate-region {
@@ -175,8 +175,8 @@
         color: #333;
         font-family: 'Arial', sans-serif;
         font-weight: bold;
-        font-size: 16px;
-        padding: 12px 8px;
+        font-size: 12px;
+        padding: 6px 4px;
         text-align: center;
         display: flex;
         align-items: center;
@@ -185,25 +185,21 @@
 
     .vehicle-country {
         color: #34C759;
-        font-size: 14px;
+        font-size: 11px;
         font-weight: 600;
         text-align: center;
-        margin: 8px 0;
     }
 
     .vehicle-status {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 8px 16px;
-        border-radius: 16px;
-        font-size: 14px;
+        gap: 4px;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
         font-weight: 600;
-        margin: 16px 0;
         width: fit-content;
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .status-available { 
@@ -227,21 +223,21 @@
         border: 1px solid rgba(142, 142, 147, 0.3);
     }
 
-    .vehicle-driver {
+    .vehicle-bottom-section {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
+        gap: 6px;
         color: #6c757d;
-        font-size: 14px;
-        margin-top: 16px;
-        padding-top: 16px;
+        font-size: 11px;
+        margin-top: 8px;
+        padding-top: 8px;
         border-top: 1px solid #f0f0f0;
     }
 
-    .vehicle-driver i {
+    .vehicle-bottom-section i {
         color: #8e8e93;
-        font-size: 16px;
+        font-size: 12px;
     }
 
     /* زر الإضافة */
@@ -512,7 +508,7 @@
         {% for vehicle in vehicles %}
         <div class="vehicle-card" onclick="window.location.href='/vehicles/{{ vehicle.id }}'">
             <div class="vehicle-header">
-                <!-- القسم العلوي مع الأيقونة والاسم والرقم -->
+                <!-- القسم العلوي -->
                 <div class="vehicle-top-section">
                     <div class="vehicle-left-content">
                         <div class="vehicle-icon">
@@ -530,37 +526,36 @@
                     </div>
                 </div>
                 
-                <!-- لوحة السيارة -->
-                {% if vehicle.plate_number %}
-                <div class="vehicle-plate-container">
-                    <div class="vehicle-plate">
-                        <div class="plate-number">{{ vehicle.plate_number }}</div>
-                        <div class="plate-region">KH</div>
+                <!-- القسم الأوسط مع اللوحة والحالة -->
+                <div class="vehicle-middle-section">
+                    {% if vehicle.plate_number %}
+                    <div>
+                        <div class="vehicle-plate">
+                            <div class="plate-number">{{ vehicle.plate_number }}</div>
+                            <div class="plate-region">KH</div>
+                        </div>
+                        <div class="vehicle-country">السعودية AUA</div>
                     </div>
-                </div>
-                {% endif %}
-                
-                <!-- دولة التسجيل -->
-                <div class="vehicle-country">السعودية AUA</div>
-                
-                <!-- حالة السيارة -->
-                <div class="vehicle-status status-{{ vehicle.status or 'available' }}">
-                    {% if vehicle.status == 'available' %}
-                        متاحة
-                    {% elif vehicle.status == 'rented' %}
-                        مؤجرة
-                    {% elif vehicle.status == 'maintenance' %}
-                        صيانة
-                    {% elif vehicle.status == 'in_workshop' %}
-                        ورشة
-                    {% else %}
-                        متاحة
                     {% endif %}
+                    
+                    <div class="vehicle-status status-{{ vehicle.status or 'available' }}">
+                        {% if vehicle.status == 'available' %}
+                            متاحة
+                        {% elif vehicle.status == 'rented' %}
+                            مؤجرة
+                        {% elif vehicle.status == 'maintenance' %}
+                            صيانة
+                        {% elif vehicle.status == 'in_workshop' %}
+                            ورشة
+                        {% else %}
+                            متاحة
+                        {% endif %}
+                    </div>
                 </div>
                 
                 <!-- معلومات السائق -->
                 {% if vehicle.driver_name %}
-                <div class="vehicle-driver">
+                <div class="vehicle-bottom-section">
                     <i class="fas fa-user"></i>
                     <span>{{ vehicle.driver_name }}</span>
                 </div>
