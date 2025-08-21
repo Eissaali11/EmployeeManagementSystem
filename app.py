@@ -365,7 +365,7 @@ with app.app_context():
     from routes.insights import insights_bp
     from routes.external_safety import external_safety_bp
     from routes.mobile_devices import mobile_devices_bp
-    from routes.operations import operations_bp, operation_redirect_bp
+    from routes.operations import operations_bp
     from routes.sim_management import sim_management_bp
     from routes.device_management import device_management_bp
     from routes.device_assignment import device_assignment_bp
@@ -401,7 +401,6 @@ with app.app_context():
     app.register_blueprint(external_safety_bp, url_prefix='/external-safety')
     app.register_blueprint(mobile_devices_bp, url_prefix='/mobile-devices')
     app.register_blueprint(operations_bp, url_prefix='/operations')
-    app.register_blueprint(operation_redirect_bp, url_prefix='/operation')
     app.register_blueprint(sim_management_bp, url_prefix='/sim-management')
     app.register_blueprint(device_management_bp, url_prefix='/device-management')
     app.register_blueprint(device_assignment_bp, url_prefix='/device-assignment')
