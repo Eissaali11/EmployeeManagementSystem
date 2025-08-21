@@ -4,20 +4,32 @@
 
 {% block content %}
 <style>
-/* إصلاح تموضع المحتوى بعيداً عن الهيدر والفوتر */
-body {
-    padding-top: 70px !important; /* مساحة للهيدر */
-    padding-bottom: 150px !important; /* مساحة أكبر للقائمة السفلية */
+/* إصلاح مشكلة الزر المختفي خلف القائمة السفلية */
+.mobile-content {
+    padding-bottom: 120px !important; /* مساحة كبيرة للقائمة السفلية */
 }
 
-.mobile-content-wrapper {
-    padding-top: 20px;
-    padding-bottom: 40px; /* مساحة إضافية في الأسفل */
+/* إصلاح الكونتينر */
+.container.py-4 {
+    margin-bottom: 100px !important; /* مساحة كبيرة في أسفل الكونتينر */
+    padding-bottom: 40px !important;
 }
 
 /* تأكد من أن أزرار الإرسال لها مساحة كافية */
 .d-grid.gap-2.mb-4 {
-    margin-bottom: 3rem !important; /* مساحة إضافية بعد الأزرار */
+    margin-bottom: 80px !important; /* مساحة كبيرة جداً بعد الأزرار */
+    padding-bottom: 40px !important; /* مساحة داخلية إضافية */
+}
+
+/* إصلاح القائمة السفلية */
+.mobile-footer {
+    height: 80px !important; /* ارتفاع القائمة السفلية */
+    z-index: 1000 !important;
+}
+
+/* إصلاح متغير الارتفاع */
+:root {
+    --footer-height: 80px !important;
 }
 </style>
 <div class="container py-4">
