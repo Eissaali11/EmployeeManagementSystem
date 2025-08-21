@@ -156,7 +156,7 @@
         <div class="sidebar-menu-title">القائمة الرئيسية</div>
         <ul class="sidebar-menu-items">
           <li class="sidebar-menu-item">
-            <a href="{{ url_for('mobile.dashboard') }}" class="sidebar-menu-link {{ 'active' if request.endpoint == 'mobile.dashboard' }}">
+            <a href="{{ url_for('mobile.index') }}" class="sidebar-menu-link {{ 'active' if request.endpoint == 'mobile.index' }}">
               <span class="sidebar-menu-icon"><i class="fas fa-home"></i></span>
               <span class="sidebar-menu-text">الرئيسية</span>
             </a>
@@ -213,7 +213,7 @@
     <!-- شريط التنقل السفلي -->
     <nav class="mobile-footer">
       <div class="mobile-footer-items">
-        <a href="{{ url_for('mobile.dashboard') }}" class="mobile-footer-item {{ 'active' if request.endpoint == 'mobile.dashboard' }}">
+        <a href="{{ url_for('mobile.index') }}" class="mobile-footer-item {{ 'active' if request.endpoint == 'mobile.index' }}">
           <i class="fas fa-home"></i>
           <span>الرئيسية</span>
         </a>
