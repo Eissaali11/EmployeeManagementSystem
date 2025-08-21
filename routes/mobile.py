@@ -5780,7 +5780,7 @@ def operations_dashboard():
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.operations'))
+        return redirect(url_for('mobile.index'))
 
     # استلام قيمة البحث من رابط URL
     search_plate = request.args.get('search_plate', '').strip()
@@ -5819,7 +5819,7 @@ def operations_list():
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.dashboard'))
+        return redirect(url_for('mobile.index'))
     
     # فلترة العمليات
     status_filter = request.args.get('status', 'all')
@@ -5868,7 +5868,7 @@ def operation_details(operation_id):
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.dashboard'))
+        return redirect(url_for('mobile.index'))
     
     operation = OperationRequest.query.get_or_404(operation_id)
     related_record = operation.get_related_record()
@@ -5908,7 +5908,7 @@ def operations_notifications():
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.dashboard'))
+        return redirect(url_for('mobile.index'))
     
     # جلب الإشعارات مرتبة بالتاريخ
     notifications = OperationNotification.query.filter_by(
