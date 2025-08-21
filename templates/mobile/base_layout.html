@@ -479,23 +479,23 @@
 
         <!-- القائمة السفلية -->
         <div class="bottom-nav">
-            <div class="nav-item" data-nav="dashboard" onclick="window.location.href='/mobile/dashboard'">
+            <div class="nav-item" data-nav="dashboard" onclick="navigateTo('/mobile/dashboard')">
                 <i class="fas fa-home"></i>
                 <span>الرئيسية</span>
             </div>
-            <div class="nav-item" data-nav="employees" onclick="window.location.href='/mobile/employees'">
+            <div class="nav-item" data-nav="employees" onclick="navigateTo('/mobile/employees')">
                 <i class="fas fa-users"></i>
                 <span>الموظفين</span>
             </div>
-            <div class="nav-item" data-nav="vehicles" onclick="window.location.href='/mobile/vehicles'">
+            <div class="nav-item" data-nav="vehicles" onclick="navigateTo('/mobile/vehicles')">
                 <i class="fas fa-car"></i>
                 <span>السيارات</span>
             </div>
-            <div class="nav-item" data-nav="attendance" onclick="window.location.href='/mobile/attendance'">
+            <div class="nav-item" data-nav="attendance" onclick="navigateTo('/mobile/attendance')">
                 <i class="fas fa-clock"></i>
                 <span>الحضور</span>
             </div>
-            <div class="nav-item" data-nav="reports" onclick="window.location.href='/mobile/reports'">
+            <div class="nav-item" data-nav="reports" onclick="navigateTo('/mobile/reports')">
                 <i class="fas fa-chart-bar"></i>
                 <span>التقارير</span>
             </div>
@@ -545,40 +545,11 @@
 
         // التنقل إلى صفحة جديدة
         function navigateTo(url) {
-            console.log('Navigating to:', url);
             closeSidebar();
             setTimeout(() => {
                 window.location.href = url;
-            }, 100);
+            }, 300);
         }
-
-        // إعداد التنقل للقائمة السفلية
-        document.addEventListener('DOMContentLoaded', function() {
-            // تحديد الصفحة النشطة في القائمة السفلية
-            const currentPath = window.location.pathname;
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-                const nav = item.dataset.nav;
-                if (currentPath.includes(nav)) {
-                    item.classList.add('active');
-                }
-            });
-
-            // إضافة مستمعات الأحداث للقائمة السفلية
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    console.log('Bottom nav clicked:', this.dataset.nav);
-                    
-                    // إزالة الكلاس النشط من جميع العناصر
-                    document.querySelectorAll('.nav-item').forEach(navItem => {
-                        navItem.classList.remove('active');
-                    });
-                    
-                    // إضافة الكلاس النشط للعنصر المنقر عليه
-                    this.classList.add('active');
-                });
-            });
-        });
 
         // تسجيل الخروج
         function logout() {

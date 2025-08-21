@@ -5,838 +5,105 @@
 
 {% block extra_styles %}
 <style>
-    /* أزرار العمل في الهيدر */
-    .page-header {
-        background: linear-gradient(135deg, #0f1419 0%, #1e2b3e 50%, #2c4267 80%, #34495e 100%);
-        color: white;
-        padding: 32px 24px;
-        margin: -20px -20px 24px -20px;
-        border-radius: 0 0 30px 30px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    }
-
-    .page-header::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(45deg, rgba(0,212,255,0.1) 0%, transparent 50%);
-        pointer-events: none;
-    }
-
-    .page-header::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
-        animation: glow 15s ease-in-out infinite;
-        pointer-events: none;
-    }
-
-    @keyframes glow {
-        0%, 100% { transform: translate(0, 0); opacity: 0.3; }
-        50% { transform: translate(30px, 30px); opacity: 0.6; }
-    }
-
-    .header-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-    }
-
-    .page-title {
-        font-size: 28px;
-        font-weight: 900;
-        margin: 0;
-        background: linear-gradient(135deg, #ffffff 0%, #e8f4f8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-        position: relative;
-        z-index: 2;
-    }
-
-    .header-actions {
-        display: flex;
-        gap: 10px;
-    }
-
-    .header-btn {
-        width: 48px;
-        height: 48px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-        backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-        position: relative;
-        z-index: 2;
-    }
-
-    .header-btn:hover {
-        background: linear-gradient(135deg, rgba(0, 212, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 16px 48px rgba(0, 212, 255, 0.2);
-        border-color: rgba(0, 212, 255, 0.5);
-    }
-
-    .header-btn.active {
-        background: linear-gradient(135deg, rgba(0, 212, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%);
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 16px 48px rgba(0, 212, 255, 0.3);
-        border-color: rgba(0, 212, 255, 0.6);
-    }
-
-    .header-stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-top: 15px;
-    }
-
-    .header-stat {
-        text-align: center;
-        padding: 16px 12px;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
-        border-radius: 18px;
-        backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        transition: all 0.3s ease;
-        position: relative;
-        z-index: 2;
-    }
-
-    .header-stat:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
-    }
-
-    .stat-value {
-        font-size: 24px;
-        font-weight: 900;
-        margin-bottom: 6px;
-        line-height: 1;
-        background: linear-gradient(135deg, #ffffff 0%, #e8f4f8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-
-    .stat-label {
-        font-size: 12px;
-        opacity: 0.95;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    /* شريط البحث والفلاتر */
-    .search-bar, .filters-bar {
-        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.1) 100%);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 20px;
-        padding: 20px;
-        margin: 15px 20px 20px;
-        transform: translateY(-30px) scale(0.9);
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-    }
-
-    .search-bar.show, .filters-bar.show {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .search-input {
-        width: 100%;
-        padding: 18px 24px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 16px;
-        font-size: 16px;
-        background: rgba(255,255,255,0.9);
-        color: #1a1a1a;
-        transition: all 0.3s ease;
-        outline: none;
-        box-sizing: border-box;
-        backdrop-filter: blur(10px);
-    }
-
-    .search-input:focus {
-        border-color: #00d4ff;
-        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.2);
-        background: rgba(255,255,255,1);
-    }
-
-    .search-input::placeholder {
-        color: rgba(26, 26, 26, 0.6);
-    }
-
-    /* عنوان قائمة السيارات */
-    .section-header {
-        margin: 30px 0 20px;
-        padding: 0 20px;
-    }
-    
-    .section-title {
-        color: #ffffff;
-        font-size: 22px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 0;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
-    
-    .section-title i {
-        color: #00d4ff;
-        font-size: 20px;
-    }
-    
-    .results-count {
-        font-size: 16px;
-        color: #00d4ff;
-        font-weight: 500;
-        margin-right: 8px;
-    }
-
-    /* تحسين أنماط الفلاتر */
-    .filter-select {
-        width: 100%;
-        padding: 16px 20px;
-        border: 2px solid rgba(255,255,255,0.3);
-        border-radius: 16px;
-        font-size: 15px;
-        background: rgba(255,255,255,0.9);
-        color: #1a1a1a;
-        transition: all 0.3s ease;
-        outline: none;
-        margin-bottom: 16px;
-        box-sizing: border-box;
-        backdrop-filter: blur(10px);
-        cursor: pointer;
-    }
-
-    .filter-select:focus, .filter-select:hover {
-        border-color: #00d4ff;
-        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.2);
-        background: rgba(255,255,255,1);
-    }
-
-    .filter-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    /* تحسين grid السيارات */
-    .vehicles-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 20px;
-        padding: 0 20px;
-        margin-bottom: 100px;
-    }
-
-    @media (min-width: 640px) {
-        .vehicles-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-
-    /* تصميم بطاقات السيارات المحسن */
-    .vehicle-card {
-        background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255,255,255,0.2);
-        border-radius: 20px;
-        padding: 20px;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-
-    .vehicle-card::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(45deg, #00d4ff, #4A90E2, #34C759, #FF9500);
-        border-radius: 22px;
-        z-index: -1;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .vehicle-card:hover::before {
-        opacity: 0.3;
-    }
-
-    .vehicle-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        border-color: rgba(255,255,255,0.3);
-    }
-
-    .vehicle-header {
-        display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
-
-    .vehicle-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        color: white;
-        font-weight: bold;
-        flex-shrink: 0;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    }
-
-    .vehicle-icon.available {
-        background: linear-gradient(135deg, #34C759, #28A745);
-    }
-
-    .vehicle-icon.rented {
-        background: linear-gradient(135deg, #007AFF, #0056CC);
-    }
-
-    .vehicle-icon.in_workshop {
-        background: linear-gradient(135deg, #FF9500, #CC7700);
-    }
-
-    .vehicle-icon.accident {
-        background: linear-gradient(135deg, #FF3B30, #CC2E26);
-    }
-
-    .vehicle-icon.in_project {
-        background: linear-gradient(135deg, #8E44AD, #6C3483);
-    }
-
-    .vehicle-main-info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .vehicle-plate {
-        font-size: 18px;
-        font-weight: 800;
-        color: #ffffff;
-        margin-bottom: 6px;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    }
-
-    .vehicle-brand {
-        font-size: 14px;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 8px;
-        font-weight: 600;
-    }
-
-    .vehicle-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 4px 12px;
-        border-radius: 20px;
-        backdrop-filter: blur(10px);
-    }
-
-    .vehicle-status.available {
-        background: rgba(52, 199, 89, 0.2);
-        color: #34C759;
-        border: 1px solid rgba(52, 199, 89, 0.3);
-    }
-
-    .vehicle-status.rented {
-        background: rgba(0, 122, 255, 0.2);
-        color: #007AFF;
-        border: 1px solid rgba(0, 122, 255, 0.3);
-    }
-
-    .vehicle-status.in_workshop {
-        background: rgba(255, 149, 0, 0.2);
-        color: #FF9500;
-        border: 1px solid rgba(255, 149, 0, 0.3);
-    }
-
-    .vehicle-status.accident {
-        background: rgba(255, 59, 48, 0.2);
-        color: #FF3B30;
-        border: 1px solid rgba(255, 59, 48, 0.3);
-    }
-
-    .vehicle-status.in_project {
-        background: rgba(142, 68, 173, 0.2);
-        color: #8E44AD;
-        border: 1px solid rgba(142, 68, 173, 0.3);
-    }
-
-    .vehicle-details {
-        margin: 16px 0;
-        padding: 16px;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .detail-row:last-child {
-        border-bottom: none;
-    }
-
-    .detail-label {
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.7);
-        font-weight: 600;
-    }
-
-    .detail-value {
-        font-size: 13px;
-        color: #ffffff;
-        font-weight: 700;
-        text-align: left;
-    }
-
-    .vehicle-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 16px;
-    }
-
-    .action-btn {
-        flex: 1;
-        padding: 12px 16px;
-        border: none;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .action-btn.primary {
-        background: linear-gradient(135deg, #4A90E2, #357ABD);
-        color: white;
-        box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
-    }
-
-    .action-btn.primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(74, 144, 226, 0.4);
-    }
-
-    .action-btn.secondary {
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .action-btn.secondary:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-    }
-
-    /* تأثيرات hover للأزرار النشطة */
-    .header-btn.active {
-        background: rgba(0, 212, 255, 0.2) !important;
-        border-color: #00d4ff !important;
-        color: #00d4ff !important;
-        transform: scale(1.1);
-    }
-
-    /* حالة فارغة */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: rgba(255, 255, 255, 0.7);
-    }
-
-    .empty-icon {
-        font-size: 64px;
-        margin-bottom: 20px;
-        opacity: 0.5;
-    }
-
-    .empty-title {
-        font-size: 24px;
-        font-weight: 700;
-        margin-bottom: 12px;
-        color: #ffffff;
-    }
-
-    .empty-subtitle {
-        font-size: 16px;
-        margin-bottom: 30px;
-        line-height: 1.5;
-    }
-
-    .empty-action {
-        background: linear-gradient(135deg, #4A90E2, #357ABD);
-        color: white;
-        border: none;
-        padding: 16px 32px;
-        border-radius: 16px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .empty-action:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 32px rgba(74, 144, 226, 0.4);
-    }
-
-    /* زر تطبيق الفلاتر */
-    .filter-apply-btn {
-        background: linear-gradient(135deg, #00d4ff, #0099cc);
-        color: white;
-        border: none;
-        padding: 16px 32px;
-        border-radius: 16px;
-        font-size: 16px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 12px;
-        box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
-        backdrop-filter: blur(10px);
-    }
-
-    .filter-apply-btn:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 40px rgba(0, 212, 255, 0.4);
-        background: linear-gradient(135deg, #33ddff, #00aadd);
-    }
-
-    .filter-apply-btn:active {
-        transform: translateY(-2px);
-    }
-
-    /* زر البحث */
-    .search-btn {
-        background: linear-gradient(135deg, #00d4ff, #0099cc);
-        color: white;
-        border: none;
-        padding: 18px 20px;
-        border-radius: 16px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
-        backdrop-filter: blur(10px);
-        min-width: 60px;
-    }
-
-    .search-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 32px rgba(0, 212, 255, 0.4);
-        background: linear-gradient(135deg, #33ddff, #00aadd);
-    }
-
-    .search-btn:active {
-        transform: translateY(0);
-    }
-
-    .search-btn i {
-        font-size: 16px;
-    }
-
-    /* إحصائيات السيارات بتصميم محسّن */
     .vehicle-stats {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        gap: 15px;
+        margin-bottom: 20px;
     }
 
     .stat-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
-        padding: 24px 20px;
-        border-radius: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
         text-align: center;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s ease;
-    }
-
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(135deg, #4A90E2, #357ABD, #34C759, #FF9500);
-        border-radius: 22px;
-        z-index: -1;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-    .stat-card:hover::before {
-        opacity: 0.1;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f0f0f5;
     }
 
     .stat-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 16px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 0 auto 12px;
-        font-size: 22px;
-        position: relative;
+        margin: 0 auto 10px;
+        font-size: 18px;
     }
 
     .stat-icon.total {
-        background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(74, 144, 226, 0.05) 100%);
+        background: rgba(74, 144, 226, 0.1);
         color: #4A90E2;
     }
 
     .stat-icon.available {
-        background: linear-gradient(135deg, rgba(52, 199, 89, 0.15) 0%, rgba(52, 199, 89, 0.05) 100%);
+        background: rgba(52, 199, 89, 0.1);
         color: #34C759;
     }
 
+    .stat-icon.rented {
+        background: rgba(255, 149, 0, 0.1);
+        color: #FF9500;
+    }
+
     .stat-icon.maintenance {
-        background: linear-gradient(135deg, rgba(255, 59, 48, 0.15) 0%, rgba(255, 59, 48, 0.05) 100%);
+        background: rgba(255, 59, 48, 0.1);
         color: #FF3B30;
     }
 
-    .stat-icon.inactive {
-        background: linear-gradient(135deg, rgba(142, 142, 147, 0.15) 0%, rgba(142, 142, 147, 0.05) 100%);
-        color: #8E8E93;
-    }
-
     .stat-number {
-        font-size: 28px;
-        font-weight: 800;
-        background: linear-gradient(135deg, #1a1a1a 0%, #4a4a4a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 6px;
-        line-height: 1.2;
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 5px;
     }
 
     .stat-label {
         font-size: 14px;
-        color: #6b7280;
-        font-weight: 600;
-        letter-spacing: 0.5px;
+        color: #8e8e93;
+        font-weight: 500;
     }
 
-    /* شريط الفلاتر */
-    .filters-bar {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
+    .filter-card {
+        background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 100%);
         border-radius: 16px;
         padding: 20px;
         margin-bottom: 20px;
-        transform: translateY(-20px);
-        opacity: 0;
-        visibility: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-    }
-
-    .filters-bar.show {
-        transform: translateY(0);
-        opacity: 1;
-        visibility: visible;
-    }
-
-    .filter-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .filter-select {
-        padding: 12px 16px;
-        border: 2px solid #f0f0f5;
-        border-radius: 12px;
-        font-size: 14px;
-        background: white;
-        transition: all 0.3s ease;
-        outline: none;
-    }
-
-    .filter-select:focus {
-        border-color: #4A90E2;
-        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
-    }
-
-    /* بطاقات السيارات المحسّنة */
-    .vehicles-grid {
-        display: grid;
-        gap: 24px;
-        padding: 0 20px;
     }
 
     .vehicle-card {
-        background: linear-gradient(135deg, 
-            rgba(255, 255, 255, 0.98) 0%, 
-            rgba(248, 250, 252, 0.95) 50%, 
-            rgba(241, 245, 249, 0.92) 100%);
-        border-radius: 24px;
-        padding: 24px;
-        box-shadow: 
-            0 20px 60px rgba(0, 0, 0, 0.12),
-            0 8px 32px rgba(0, 212, 255, 0.06),
-            inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(30px) saturate(180%);
-        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f0f0f5;
+        transition: all 0.3s ease;
         cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .vehicle-card::before {
-        content: '';
-        position: absolute;
-        top: -2px;
-        left: -2px;
-        right: -2px;
-        bottom: -2px;
-        background: linear-gradient(135deg, 
-            rgba(0, 212, 255, 0.4) 0%, 
-            rgba(52, 199, 89, 0.3) 50%,
-            rgba(74, 144, 226, 0.2) 100%);
-        border-radius: 26px;
-        z-index: -1;
-        opacity: 0;
-        transition: all 0.5s ease;
-    }
-
-    .vehicle-card::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, 
-            rgba(0, 212, 255, 0.08) 0%, 
-            rgba(52, 199, 89, 0.06) 50%,
-            rgba(74, 144, 226, 0.04) 100%);
-        opacity: 0;
-        transition: all 0.4s ease;
-        pointer-events: none;
-    }
-
-    .vehicle-card:hover::before {
-        opacity: 0.7;
-    }
-
-    .vehicle-card:hover::after {
-        opacity: 1;
     }
 
     .vehicle-card:hover {
-        transform: translateY(-12px) scale(1.02);
-        box-shadow: 
-            0 32px 80px rgba(0, 0, 0, 0.18),
-            0 16px 48px rgba(0, 212, 255, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 1);
-        border-color: rgba(0, 212, 255, 0.5);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
     }
 
     .vehicle-header {
         display: flex;
-        align-items: flex-start;
-        gap: 16px;
-        margin-bottom: 16px;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
     }
 
     .vehicle-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 20px;
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 28px;
+        font-size: 20px;
         color: white;
-        box-shadow: 
-            0 8px 32px rgba(0, 0, 0, 0.25),
-            0 4px 16px rgba(0, 0, 0, 0.15),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-        position: relative;
-        flex-shrink: 0;
-        transition: all 0.3s ease;
-    }
-
-    .vehicle-card:hover .vehicle-icon {
-        transform: scale(1.1) rotate(5deg);
-        box-shadow: 
-            0 16px 48px rgba(0, 0, 0, 0.3),
-            0 8px 24px rgba(0, 0, 0, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
 
     .vehicle-icon.available {
@@ -847,547 +114,281 @@
         background: linear-gradient(135deg, #FF9500 0%, #FF9F0A 100%);
     }
 
-    .vehicle-icon.in_workshop {
+    .vehicle-icon.maintenance {
         background: linear-gradient(135deg, #FF3B30 0%, #FF453A 100%);
     }
 
-    .vehicle-icon.accident {
+    .vehicle-icon.workshop {
         background: linear-gradient(135deg, #8E8E93 0%, #AEAEB2 100%);
     }
 
-    .vehicle-icon.in_project {
-        background: linear-gradient(135deg, #AF52DE 0%, #BF5AF2 100%);
-    }
-
-    .vehicle-icon.out_of_service {
-        background: linear-gradient(135deg, #6D6D70 0%, #8E8E93 100%);
-    }
-
-    .vehicle-main-info {
+    .vehicle-info {
         flex: 1;
-        min-width: 0;
+    }
+
+    .vehicle-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 4px;
     }
 
     .vehicle-plate {
-        font-size: 22px;
-        font-weight: 900;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 6px;
-        line-height: 1.2;
-        letter-spacing: -0.5px;
-    }
-
-    .vehicle-brand {
-        font-size: 17px;
-        font-weight: 700;
-        color: #4a5568;
-        margin-bottom: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .vehicle-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 13px;
+        font-size: 14px;
+        color: #8e8e93;
+        margin-bottom: 8px;
+        font-family: monospace;
         font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-
-    .vehicle-status.available {
-        background: rgba(52, 199, 89, 0.1);
-        color: #34C759;
-        border: 1px solid rgba(52, 199, 89, 0.2);
-    }
-
-    .vehicle-status.rented {
-        background: rgba(255, 149, 0, 0.1);
-        color: #FF9500;
-        border: 1px solid rgba(255, 149, 0, 0.2);
-    }
-
-    .vehicle-status.in_workshop {
-        background: rgba(255, 59, 48, 0.1);
-        color: #FF3B30;
-        border: 1px solid rgba(255, 59, 48, 0.2);
-    }
-
-    .vehicle-status.accident {
-        background: rgba(142, 142, 147, 0.1);
-        color: #8E8E93;
-        border: 1px solid rgba(142, 142, 147, 0.2);
-    }
-
-    .vehicle-status.in_project {
-        background: rgba(175, 82, 222, 0.1);
-        color: #AF52DE;
-        border: 1px solid rgba(175, 82, 222, 0.2);
-    }
-
-    .vehicle-status.out_of_service {
-        background: rgba(109, 109, 112, 0.1);
-        color: #6D6D70;
-        border: 1px solid rgba(109, 109, 112, 0.2);
     }
 
     .vehicle-details {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #f0f0f5;
+        display: flex;
+        gap: 15px;
+        font-size: 12px;
+        color: #8e8e93;
     }
 
-    .detail-row {
+    .vehicle-detail {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 8px;
-        font-size: 14px;
+        gap: 4px;
     }
 
-    .detail-label {
-        color: #6b7280;
-        font-weight: 500;
-    }
-
-    .detail-value {
-        color: #1a1a1a;
+    .vehicle-status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
         font-weight: 600;
+        text-transform: uppercase;
     }
 
-    .vehicle-actions {
-        margin-top: 16px;
-        display: flex;
-        gap: 8px;
+    .status-available {
+        background: rgba(52, 199, 89, 0.1);
+        color: #34C759;
     }
 
-    .action-btn {
-        flex: 1;
-        padding: 10px 16px;
-        border: none;
+    .status-rented {
+        background: rgba(255, 149, 0, 0.1);
+        color: #FF9500;
+    }
+
+    .status-maintenance {
+        background: rgba(255, 59, 48, 0.1);
+        color: #FF3B30;
+    }
+
+    .status-workshop {
+        background: rgba(142, 142, 147, 0.1);
+        color: #8E8E93;
+    }
+
+    .form-control {
+        border: 1px solid #e1e5e9;
         border-radius: 12px;
+        padding: 12px 16px;
         font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
+        background: white;
         transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
+        margin-bottom: 15px;
     }
 
-    .action-btn.primary {
-        background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-        color: white;
+    .form-control:focus {
+        border-color: #4A90E2;
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        outline: none;
     }
 
-    .action-btn.primary:hover {
-        background: linear-gradient(135deg, #357ABD 0%, #2d5aa0 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
-    }
-
-    .action-btn.secondary {
-        background: rgba(74, 144, 226, 0.1);
-        color: #4A90E2;
-        border: 1px solid rgba(74, 144, 226, 0.2);
-    }
-
-    .action-btn.secondary:hover {
-        background: rgba(74, 144, 226, 0.2);
-        transform: translateY(-2px);
-    }
-
-    /* حالة فارغة محسّنة */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        background: linear-gradient(135deg, #f8fafb 0%, #e8f0fe 100%);
-        border-radius: 20px;
-        margin: 20px 0;
-    }
-
-    .empty-icon {
-        width: 100px;
-        height: 100px;
+    .fab-button {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
-        background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(74, 144, 226, 0.05) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 24px;
-        color: #4A90E2;
-        font-size: 40px;
-    }
-
-    .empty-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #1a1a1a;
-        margin-bottom: 12px;
-    }
-
-    .empty-subtitle {
-        font-size: 16px;
-        color: #6b7280;
-        line-height: 1.5;
-        margin-bottom: 24px;
-    }
-
-    .empty-action {
         background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-        color: white;
-        padding: 14px 28px;
         border: none;
-        border-radius: 16px;
-        font-size: 16px;
-        font-weight: 600;
+        color: white;
+        font-size: 20px;
+        box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
         cursor: pointer;
         transition: all 0.3s ease;
+        z-index: 999;
     }
 
-    .empty-action:hover {
-        background: linear-gradient(135deg, #357ABD 0%, #2d5aa0 100%);
-        transform: translateY(-2px);
+    .fab-button:hover {
+        transform: translateX(-50%) scale(1.1);
         box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
     }
 
-    /* تحسينات أخرى */
-    .slide-up {
-        animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
     }
 
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(142, 142, 147, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        color: #8e8e93;
+        font-size: 32px;
     }
 
-    .stagger-1 { animation-delay: 0.1s; opacity: 0; }
-    .stagger-2 { animation-delay: 0.2s; opacity: 0; }
-    .stagger-3 { animation-delay: 0.3s; opacity: 0; }
-    .stagger-4 { animation-delay: 0.4s; opacity: 0; }
+    .empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
 
-    /* تحسينات للشاشات الصغيرة */
-    @media (max-width: 480px) {
-        .vehicle-stats {
-            grid-template-columns: 1fr;
-            gap: 12px;
+    .empty-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 375px) {
+        .fab-button {
+            left: auto;
+            right: 20px;
+            transform: none;
         }
-        
-        .stat-card {
-            padding: 20px 16px;
-        }
-        
-        .vehicle-card {
-            padding: 16px;
-        }
-        
-        .vehicle-header {
-            gap: 12px;
-        }
-        
-        .vehicle-icon {
-            width: 48px;
-            height: 48px;
-            font-size: 20px;
-        }
-        
-        .vehicle-plate {
-            font-size: 18px;
+
+        .fab-button:hover {
+            transform: scale(1.1);
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- هيدر مخصص للصفحة -->
-<div class="page-header">
-    <div class="header-row">
-        <h1 class="page-title">إدارة السيارات</h1>
-        <div class="header-actions">
-            <button class="header-btn" onclick="window.location.href='/mobile/dashboard'" title="لوحة التحكم">
-                <i class="fas fa-tachometer-alt"></i>
-            </button>
-            <button class="header-btn" id="searchToggle" onclick="toggleSearch()" title="البحث">
-                <i class="fas fa-search"></i>
-            </button>
-            <button class="header-btn" id="filtersToggle" onclick="toggleFilters()" title="الفلاتر">
-                <i class="fas fa-filter"></i>
-            </button>
-            <button class="header-btn" onclick="alert('قريباً - إضافة سيارة جديدة')" title="إضافة سيارة">
-                <i class="fas fa-plus"></i>
-            </button>
+<!-- إحصائيات السيارات -->
+<div class="vehicle-stats slide-up">
+    <div class="stat-card">
+        <div class="stat-icon total">
+            <i class="fas fa-car"></i>
         </div>
+        <div class="stat-number">{{ vehicles|length or 0 }}</div>
+        <div class="stat-label">إجمالي السيارات</div>
     </div>
-    
-    <!-- إحصائيات سريعة في الهيدر -->
-    <div class="header-stats">
-        <div class="header-stat">
-            <div class="stat-value">{{ stats.total }}</div>
-            <div class="stat-label">الإجمالي</div>
+    <div class="stat-card">
+        <div class="stat-icon available">
+            <i class="fas fa-check-circle"></i>
         </div>
-        <div class="header-stat">
-            <div class="stat-value">{{ stats.active }}</div>
-            <div class="stat-label">متاحة</div>
+        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'available')|list|length or 0 }}</div>
+        <div class="stat-label">متاحة</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon rented">
+            <i class="fas fa-user"></i>
         </div>
-        <div class="header-stat">
-            <div class="stat-value">{{ stats.maintenance }}</div>
-            <div class="stat-label">في الورشة</div>
+        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'rented')|list|length or 0 }}</div>
+        <div class="stat-label">مؤجرة</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon maintenance">
+            <i class="fas fa-wrench"></i>
         </div>
-        <div class="header-stat">
-            <div class="stat-value">{{ stats.inactive }}</div>
-            <div class="stat-label">غير نشطة</div>
-        </div>
+        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'in_workshop')|list|length or 0 }}</div>
+        <div class="stat-label">في الورشة</div>
     </div>
 </div>
 
-<!-- شريط البحث المخفي -->
-<div class="search-bar" id="searchBar">
-    <form method="GET" action="{{ url_for('mobile.vehicles') }}">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <input type="text" 
-                   name="search" 
-                   class="search-input" 
-                   placeholder="البحث عن سيارة..." 
-                   value="{{ request.args.get('search', '') }}"
-                   autocomplete="off"
-                   style="flex: 1;">
-            <button type="submit" class="search-btn">
-                <i class="fas fa-search"></i>
+<!-- البحث والفلترة -->
+<div class="filter-card slide-up">
+    <form method="GET">
+        <input type="text" name="search" class="form-control" placeholder="🔍 البحث عن رقم لوحة أو نوع السيارة..." value="{{ request.args.get('search', '') }}">
+        
+        <select name="status" class="form-control">
+            <option value="">🚗 جميع الحالات</option>
+            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>متاحة</option>
+            <option value="rented" {% if request.args.get('status') == 'rented' %}selected{% endif %}>مؤجرة</option>
+            <option value="in_workshop" {% if request.args.get('status') == 'in_workshop' %}selected{% endif %}>في الورشة</option>
+            <option value="maintenance" {% if request.args.get('status') == 'maintenance' %}selected{% endif %}>صيانة</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-search"></i> بحث
             </button>
-        </div>
-        <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
-        <input type="hidden" name="make" value="{{ request.args.get('make', '') }}">
-    </form>
-</div>
-
-<!-- شريط الفلاتر -->
-<div class="filters-bar" id="filtersBar">
-    <form method="GET" action="{{ url_for('mobile.vehicles') }}">
-        <div class="filter-row">
-            <select name="status" class="filter-select">
-                <option value="">جميع الحالات</option>
-                <option value="available" {{ 'selected' if request.args.get('status') == 'available' }}>متاحة</option>
-                <option value="rented" {{ 'selected' if request.args.get('status') == 'rented' }}>مؤجرة</option>
-                <option value="in_workshop" {{ 'selected' if request.args.get('status') == 'in_workshop' }}>في الورشة</option>
-                <option value="accident" {{ 'selected' if request.args.get('status') == 'accident' }}>حادث</option>
-                <option value="in_project" {{ 'selected' if request.args.get('status') == 'in_project' }}>في مشروع</option>
-            </select>
-            <select name="make" class="filter-select">
-                <option value="">جميع الماركات</option>
-                {% for make in makes %}
-                <option value="{{ make }}" {{ 'selected' if request.args.get('make') == make }}>{{ make }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
-        <div style="text-align: center; margin-top: 20px;">
-            <button type="submit" class="filter-apply-btn">
-                <i class="fas fa-filter"></i>
-                تطبيق الفلاتر
-            </button>
+            <a href="{{ url_for('mobile.vehicles') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-refresh"></i>
+            </a>
         </div>
     </form>
-</div>
-
-
-
-<!-- عنوان قائمة السيارات -->
-<div class="section-header">
-    <h2 class="section-title">
-        <i class="fas fa-list"></i>
-        قائمة السيارات
-        {% if vehicles %}
-            <span class="results-count">({{ vehicles|length }} سيارة)</span>
-        {% endif %}
-    </h2>
 </div>
 
 <!-- قائمة السيارات -->
-<div class="vehicles-grid slide-up">
-    {% if vehicles %}
+{% if vehicles %}
+    <div class="slide-up">
         {% for vehicle in vehicles %}
         <div class="vehicle-card" onclick="window.location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
             <div class="vehicle-header">
                 <div class="vehicle-icon {{ vehicle.status }}">
-                    {% if vehicle.status == 'available' %}
-                        <i class="fas fa-check"></i>
-                    {% elif vehicle.status == 'rented' %}
-                        <i class="fas fa-handshake"></i>
-                    {% elif vehicle.status == 'in_workshop' %}
-                        <i class="fas fa-wrench"></i>
-                    {% elif vehicle.status == 'accident' %}
-                        <i class="fas fa-exclamation-triangle"></i>
-                    {% elif vehicle.status == 'in_project' %}
-                        <i class="fas fa-project-diagram"></i>
-                    {% else %}
-                        <i class="fas fa-car"></i>
-                    {% endif %}
+                    <i class="fas fa-car"></i>
                 </div>
-                <div class="vehicle-main-info">
-                    <div class="vehicle-plate">{{ vehicle.plate_number or 'غير محدد' }}</div>
-                    <div class="vehicle-brand">{{ vehicle.make }} {{ vehicle.model }}</div>
-                    <div class="vehicle-status {{ vehicle.status }}">
-                        <i class="fas fa-circle" style="font-size: 8px;"></i>
-                        {% if vehicle.status == 'available' %}
-                            متاحة
-                        {% elif vehicle.status == 'rented' %}
-                            مؤجرة
-                        {% elif vehicle.status == 'in_workshop' %}
-                            في الورشة
-                        {% elif vehicle.status == 'accident' %}
-                            حادث
-                        {% elif vehicle.status == 'in_project' %}
-                            في مشروع
-                        {% elif vehicle.status == 'out_of_service' %}
-                            خارج الخدمة
-                        {% else %}
-                            {{ vehicle.status }}
+                <div class="vehicle-info">
+                    <div class="vehicle-name">{{ vehicle.car_type }} {{ vehicle.model or '' }}</div>
+                    <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
+                    <div class="vehicle-details">
+                        <div class="vehicle-detail">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ vehicle.model_year or 'غير محدد' }}</span>
+                        </div>
+                        {% if vehicle.driver_name %}
+                        <div class="vehicle-detail">
+                            <i class="fas fa-user"></i>
+                            <span>{{ vehicle.driver_name }}</span>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
-            </div>
-            
-            <div class="vehicle-details">
-                <div class="detail-row">
-                    <span class="detail-label">النوع</span>
-                    <span class="detail-value">{{ vehicle.vehicle_type or 'غير محدد' }}</span>
+                <div>
+                    <div class="vehicle-status status-{{ vehicle.status }}">
+                        {% if vehicle.status == 'available' %}متاحة
+                        {% elif vehicle.status == 'rented' %}مؤجرة
+                        {% elif vehicle.status == 'in_workshop' %}ورشة
+                        {% elif vehicle.status == 'maintenance' %}صيانة
+                        {% else %}{{ vehicle.status }}{% endif %}
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <i class="fas fa-chevron-left" style="color: #8e8e93;"></i>
+                    </div>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">اللون</span>
-                    <span class="detail-value">{{ vehicle.color or 'غير محدد' }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">سنة الصنع</span>
-                    <span class="detail-value">{{ vehicle.year or 'غير محدد' }}</span>
-                </div>
-                {% if vehicle.driver_name %}
-                <div class="detail-row">
-                    <span class="detail-label">السائق الحالي</span>
-                    <span class="detail-value">{{ vehicle.driver_name }}</span>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="vehicle-actions">
-                <button class="action-btn primary" onclick="event.stopPropagation(); window.location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
-                    <i class="fas fa-eye"></i>
-                    عرض التفاصيل
-                </button>
-                <button class="action-btn secondary" onclick="event.stopPropagation(); alert('قريباً...')">
-                    <i class="fas fa-edit"></i>
-                    تعديل
-                </button>
             </div>
         </div>
         {% endfor %}
-    {% else %}
-        <!-- حالة فارغة -->
-        <div class="empty-state">
-            <div class="empty-icon">
-                <i class="fas fa-car"></i>
-            </div>
-            <div class="empty-title">لا توجد سيارات</div>
-            <div class="empty-subtitle">
-                {% if request.args.get('search') or request.args.get('status') or request.args.get('make') %}
-                    لم يتم العثور على سيارات تطابق معايير البحث المحددة
-                {% else %}
-                    لم يتم إضافة أي سيارات بعد
-                {% endif %}
-            </div>
-            {% if request.args.get('search') or request.args.get('status') or request.args.get('make') %}
-            <button class="empty-action" onclick="window.location.href='{{ url_for('mobile.vehicles') }}'">
-                <i class="fas fa-refresh"></i>
-                عرض جميع السيارات
-            </button>
-            {% else %}
-            <button class="empty-action" onclick="alert('قريباً...')">
-                <i class="fas fa-plus"></i>
-                إضافة سيارة جديدة
-            </button>
-            {% endif %}
-        </div>
-    {% endif %}
-</div>
-
-<!-- التنقل بين الصفحات -->
-{% if pagination and pagination.pages > 1 %}
-<div class="pagination-container slide-up" style="margin-top: 30px;">
-    <div class="pagination-wrapper">
-        {% if pagination.has_prev %}
-        <a href="{{ url_for('mobile.vehicles', page=pagination.prev_num, search=request.args.get('search', ''), status=request.args.get('status', ''), make=request.args.get('make', '')) }}" class="pagination-btn">
-            <i class="fas fa-chevron-right"></i>
-        </a>
-        {% endif %}
-        
-        <span class="pagination-info">
-            صفحة {{ pagination.page }} من {{ pagination.pages }}
-        </span>
-        
-        {% if pagination.has_next %}
-        <a href="{{ url_for('mobile.vehicles', page=pagination.next_num, search=request.args.get('search', ''), status=request.args.get('status', ''), make=request.args.get('make', '')) }}" class="pagination-btn">
-            <i class="fas fa-chevron-left"></i>
-        </a>
-        {% endif %}
     </div>
-</div>
-
-<style>
-.pagination-container {
-    display: flex;
-    justify-content: center;
-    padding: 20px 0;
-}
-
-.pagination-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background: white;
-    padding: 12px 20px;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    border: 1px solid #f0f0f5;
-}
-
-.pagination-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: all 0.3s ease;
-}
-
-.pagination-btn:hover {
-    background: linear-gradient(135deg, #357ABD 0%, #2d5aa0 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
-}
-
-.pagination-info {
-    font-size: 14px;
-    font-weight: 600;
-    color: #6b7280;
-    white-space: nowrap;
-}
-</style>
+{% else %}
+    <div class="card slide-up">
+        <div class="card-body">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="empty-title">لا توجد سيارات</div>
+                <div class="empty-subtitle">
+                    {% if request.args.get('search') or request.args.get('status') %}
+                        لم يتم العثور على سيارات تطابق معايير البحث المحددة.
+                    {% else %}
+                        لم يتم إضافة أي سيارات بعد. انقر على زر الإضافة لبدء إضافة السيارات.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
 {% endif %}
+
+<!-- زر الإضافة العائم -->
+<button class="fab-button" onclick="window.location.href='{{ url_for('mobile.add_vehicle') }}'">
+    <i class="fas fa-plus"></i>
+</button>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -1410,214 +411,5 @@
             }
         });
     });
-
-    // دوال البحث والفلاتر - محسنة
-    function toggleSearch() {
-        console.log('toggleSearch called');
-        const searchBar = document.getElementById('searchBar');
-        const filtersBar = document.getElementById('filtersBar');
-        const searchToggle = document.getElementById('searchToggle');
-        const filtersToggle = document.getElementById('filtersToggle');
-        
-        if (searchBar && searchToggle) {
-            const isCurrentlyShown = searchBar.classList.contains('show');
-            
-            // إخفاء الفلاتر أولاً
-            if (filtersBar) {
-                filtersBar.classList.remove('show');
-            }
-            if (filtersToggle) {
-                filtersToggle.classList.remove('active');
-            }
-            
-            // تبديل البحث
-            if (isCurrentlyShown) {
-                searchBar.classList.remove('show');
-                searchToggle.classList.remove('active');
-            } else {
-                searchBar.classList.add('show');
-                searchToggle.classList.add('active');
-                
-                // التركيز على input البحث
-                setTimeout(() => {
-                    const searchInput = searchBar.querySelector('.search-input');
-                    if (searchInput) {
-                        searchInput.focus();
-                    }
-                }, 300);
-            }
-        }
-    }
-
-    function toggleFilters() {
-        console.log('toggleFilters called');
-        const filtersBar = document.getElementById('filtersBar');
-        const searchBar = document.getElementById('searchBar');
-        const searchToggle = document.getElementById('searchToggle');
-        const filtersToggle = document.getElementById('filtersToggle');
-        
-        if (filtersBar && filtersToggle) {
-            const isCurrentlyShown = filtersBar.classList.contains('show');
-            
-            // إخفاء البحث أولاً
-            if (searchBar) {
-                searchBar.classList.remove('show');
-            }
-            if (searchToggle) {
-                searchToggle.classList.remove('active');
-            }
-            
-            // تبديل الفلاتر
-            if (isCurrentlyShown) {
-                filtersBar.classList.remove('show');
-                filtersToggle.classList.remove('active');
-            } else {
-                filtersBar.classList.add('show');
-                filtersToggle.classList.add('active');
-            }
-        }
-    }
-
-    // تأكد من تشغيل الكود بعد تحميل الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-        // إضافة مستمعات الأحداث للأزرار
-        const searchToggle = document.getElementById('searchToggle');
-        const filtersToggle = document.getElementById('filtersToggle');
-        
-        if (searchToggle) {
-            searchToggle.addEventListener('click', function() {
-                console.log('Search button clicked');
-                toggleSearch();
-            });
-        }
-        
-        if (filtersToggle) {
-            filtersToggle.addEventListener('click', function() {
-                console.log('Filters button clicked');
-                toggleFilters();
-            });
-        }
-
-        // إضافة مستمع للبحث التلقائي
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            let searchTimeout;
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    this.closest('form').submit();
-                }, 800);
-            });
-        }
-
-        // إضافة مستمع للفلاتر التلقائية
-        document.querySelectorAll('.filter-select').forEach(select => {
-            select.addEventListener('change', function() {
-                console.log('Filter changed:', this.value);
-                this.closest('form').submit();
-            });
-        });
-
-        // إضافة تأثيرات للبطاقات
-        document.querySelectorAll('.vehicle-card').forEach(card => {
-            card.addEventListener('click', function() {
-                this.style.transform = 'translateY(-8px) scale(0.98)';
-                setTimeout(() => {
-                    this.style.transform = 'translateY(-6px) scale(1)';
-                }, 150);
-            });
-        });
-
-    });
-
-    // تعريف جميع الدوال في النطاق العام
-    window.navigateTo = function(url) {
-        console.log('Navigating to:', url);
-        window.location.href = url;
-    };
-
-    window.toggleSearch = function() {
-        console.log('toggleSearch called');
-        const searchBar = document.getElementById('searchBar');
-        const filtersBar = document.getElementById('filtersBar');
-        const searchToggle = document.getElementById('searchToggle');
-        const filtersToggle = document.getElementById('filtersToggle');
-        
-        if (searchBar && searchToggle) {
-            const isCurrentlyShown = searchBar.classList.contains('show');
-            
-            // إخفاء الفلاتر أولاً
-            if (filtersBar) filtersBar.classList.remove('show');
-            if (filtersToggle) filtersToggle.classList.remove('active');
-            
-            // تبديل البحث
-            if (isCurrentlyShown) {
-                searchBar.classList.remove('show');
-                searchToggle.classList.remove('active');
-            } else {
-                searchBar.classList.add('show');
-                searchToggle.classList.add('active');
-                
-                setTimeout(() => {
-                    const searchInput = searchBar.querySelector('.search-input');
-                    if (searchInput) searchInput.focus();
-                }, 300);
-            }
-        }
-    };
-
-    window.toggleFilters = function() {
-        console.log('toggleFilters called');
-        const filtersBar = document.getElementById('filtersBar');
-        const searchBar = document.getElementById('searchBar');
-        const searchToggle = document.getElementById('searchToggle');
-        const filtersToggle = document.getElementById('filtersToggle');
-        
-        if (filtersBar && filtersToggle) {
-            const isCurrentlyShown = filtersBar.classList.contains('show');
-            
-            // إخفاء البحث أولاً
-            if (searchBar) searchBar.classList.remove('show');
-            if (searchToggle) searchToggle.classList.remove('active');
-            
-            // تبديل الفلاتر
-            if (isCurrentlyShown) {
-                filtersBar.classList.remove('show');
-                filtersToggle.classList.remove('active');
-            } else {
-                filtersBar.classList.add('show');
-                filtersToggle.classList.add('active');
-            }
-        }
-    };
-
-    // تأثير النقر على البطاقات
-    document.querySelectorAll('.vehicle-card').forEach(card => {
-        card.addEventListener('click', function() {
-            this.style.transform = 'translateY(-8px) scale(0.98)';
-            setTimeout(() => {
-                this.style.transform = 'translateY(-6px) scale(1)';
-            }, 150);
-        });
-    });
-
-    // إرسال النموذج عند تغيير الفلاتر
-    document.querySelectorAll('.filter-select').forEach(select => {
-        select.addEventListener('change', function() {
-            this.closest('form').submit();
-        });
-    });
-
-    // البحث التلقائي عند الكتابة
-    const searchInput = document.querySelector('.search-input');
-    if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                this.closest('form').submit();
-            }, 500);
-        });
-    }
 </script>
 {% endblock %}
