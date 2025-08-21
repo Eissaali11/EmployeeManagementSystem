@@ -7,11 +7,42 @@
 <style>
     /* أزرار العمل في الهيدر */
     .page-header {
-        background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+        background: linear-gradient(135deg, #0f1419 0%, #1e2b3e 50%, #2c4267 80%, #34495e 100%);
         color: white;
-        padding: 20px;
-        margin: -20px -20px 20px -20px;
-        border-radius: 0 0 20px 20px;
+        padding: 32px 24px;
+        margin: -20px -20px 24px -20px;
+        border-radius: 0 0 30px 30px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(45deg, rgba(0,212,255,0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        animation: glow 15s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    @keyframes glow {
+        0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+        50% { transform: translate(30px, 30px); opacity: 0.6; }
     }
 
     .header-row {
@@ -22,9 +53,16 @@
     }
 
     .page-title {
-        font-size: 24px;
-        font-weight: 800;
+        font-size: 28px;
+        font-weight: 900;
         margin: 0;
+        background: linear-gradient(135deg, #ffffff 0%, #e8f4f8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 2;
     }
 
     .header-actions {
@@ -33,30 +71,36 @@
     }
 
     .header-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
+        font-size: 20px;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        position: relative;
+        z-index: 2;
     }
 
     .header-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: scale(1.05);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.3) 0%, rgba(255, 255, 255, 0.2) 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 16px 48px rgba(0, 212, 255, 0.2);
+        border-color: rgba(0, 212, 255, 0.5);
     }
 
     .header-btn.active {
-        background: rgba(255, 255, 255, 0.3);
-        transform: scale(1.05);
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.4) 0%, rgba(255, 255, 255, 0.25) 100%);
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 16px 48px rgba(0, 212, 255, 0.3);
+        border-color: rgba(0, 212, 255, 0.6);
     }
 
     .header-stats {
@@ -68,24 +112,39 @@
 
     .header-stat {
         text-align: center;
-        padding: 12px 8px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        padding: 16px 12px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.08) 100%);
+        border-radius: 18px;
+        backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 2;
+    }
+
+    .header-stat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.1) 100%);
     }
 
     .stat-value {
-        font-size: 20px;
-        font-weight: 800;
-        margin-bottom: 4px;
+        font-size: 24px;
+        font-weight: 900;
+        margin-bottom: 6px;
         line-height: 1;
+        background: linear-gradient(135deg, #ffffff 0%, #e8f4f8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .stat-label {
-        font-size: 11px;
-        opacity: 0.9;
-        font-weight: 600;
+        font-size: 12px;
+        opacity: 0.95;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     /* شريط البحث والفلاتر */
@@ -674,16 +733,24 @@
     /* بطاقات السيارات المحسّنة */
     .vehicles-grid {
         display: grid;
-        gap: 16px;
+        gap: 24px;
+        padding: 0 20px;
     }
 
     .vehicle-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
-        border-radius: 20px;
-        padding: 20px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: linear-gradient(135deg, 
+            rgba(255, 255, 255, 0.98) 0%, 
+            rgba(248, 250, 252, 0.95) 50%, 
+            rgba(241, 245, 249, 0.92) 100%);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: 
+            0 20px 60px rgba(0, 0, 0, 0.12),
+            0 8px 32px rgba(0, 212, 255, 0.06),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(30px) saturate(180%);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
         position: relative;
         overflow: hidden;
@@ -692,22 +759,51 @@
     .vehicle-card::before {
         content: '';
         position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.4) 0%, 
+            rgba(52, 199, 89, 0.3) 50%,
+            rgba(74, 144, 226, 0.2) 100%);
+        border-radius: 26px;
+        z-index: -1;
+        opacity: 0;
+        transition: all 0.5s ease;
+    }
+
+    .vehicle-card::after {
+        content: '';
+        position: absolute;
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #4A90E2, #34C759, #FF9500, #FF3B30);
-        transform: translateX(-100%);
-        transition: transform 0.6s ease;
+        bottom: 0;
+        background: linear-gradient(135deg, 
+            rgba(0, 212, 255, 0.08) 0%, 
+            rgba(52, 199, 89, 0.06) 50%,
+            rgba(74, 144, 226, 0.04) 100%);
+        opacity: 0;
+        transition: all 0.4s ease;
+        pointer-events: none;
     }
 
     .vehicle-card:hover::before {
-        transform: translateX(0);
+        opacity: 0.7;
+    }
+
+    .vehicle-card:hover::after {
+        opacity: 1;
     }
 
     .vehicle-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        transform: translateY(-12px) scale(1.02);
+        box-shadow: 
+            0 32px 80px rgba(0, 0, 0, 0.18),
+            0 16px 48px rgba(0, 212, 255, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 1);
+        border-color: rgba(0, 212, 255, 0.5);
     }
 
     .vehicle-header {
@@ -718,17 +814,29 @@
     }
 
     .vehicle-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 16px;
+        width: 64px;
+        height: 64px;
+        border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 28px;
         color: white;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        box-shadow: 
+            0 8px 32px rgba(0, 0, 0, 0.25),
+            0 4px 16px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
         position: relative;
         flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .vehicle-card:hover .vehicle-icon {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 
+            0 16px 48px rgba(0, 0, 0, 0.3),
+            0 8px 24px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
 
     .vehicle-icon.available {
@@ -761,18 +869,24 @@
     }
 
     .vehicle-plate {
-        font-size: 20px;
-        font-weight: 800;
-        color: #1a1a1a;
-        margin-bottom: 4px;
+        font-size: 22px;
+        font-weight: 900;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 6px;
         line-height: 1.2;
+        letter-spacing: -0.5px;
     }
 
     .vehicle-brand {
-        font-size: 16px;
-        font-weight: 600;
+        font-size: 17px;
+        font-weight: 700;
         color: #4a5568;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .vehicle-status {
