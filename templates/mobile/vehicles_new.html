@@ -88,41 +88,49 @@
         font-weight: 600;
     }
 
-    /* شريط البحث المخفي */
+    /* شريط البحث والفلاتر */
     .search-bar, .filters-bar {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 16px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.1) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 20px;
+        padding: 20px;
         margin: 15px 20px 20px;
-        transform: translateY(-20px);
+        transform: translateY(-30px) scale(0.9);
         opacity: 0;
         visibility: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
     }
 
     .search-bar.show, .filters-bar.show {
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
         opacity: 1;
         visibility: visible;
     }
 
     .search-input {
         width: 100%;
-        padding: 14px 20px;
-        border: 2px solid #f0f0f5;
-        border-radius: 12px;
+        padding: 18px 24px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 16px;
         font-size: 16px;
-        background: white;
+        background: rgba(255,255,255,0.9);
+        color: #1a1a1a;
         transition: all 0.3s ease;
         outline: none;
         box-sizing: border-box;
+        backdrop-filter: blur(10px);
     }
 
     .search-input:focus {
-        border-color: #4A90E2;
-        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+        border-color: #00d4ff;
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.2);
+        background: rgba(255,255,255,1);
+    }
+
+    .search-input::placeholder {
+        color: rgba(26, 26, 26, 0.6);
     }
 
     /* عنوان قائمة السيارات */
@@ -157,20 +165,24 @@
     /* تحسين أنماط الفلاتر */
     .filter-select {
         width: 100%;
-        padding: 12px 16px;
-        border: 2px solid #f0f0f5;
-        border-radius: 12px;
-        font-size: 14px;
-        background: white;
+        padding: 16px 20px;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 16px;
+        font-size: 15px;
+        background: rgba(255,255,255,0.9);
+        color: #1a1a1a;
         transition: all 0.3s ease;
         outline: none;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         box-sizing: border-box;
+        backdrop-filter: blur(10px);
+        cursor: pointer;
     }
 
-    .filter-select:focus {
-        border-color: #4A90E2;
-        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    .filter-select:focus, .filter-select:hover {
+        border-color: #00d4ff;
+        box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.2);
+        background: rgba(255,255,255,1);
     }
 
     .filter-row {
@@ -463,6 +475,65 @@
     .empty-action:hover {
         transform: translateY(-4px);
         box-shadow: 0 12px 32px rgba(74, 144, 226, 0.4);
+    }
+
+    /* زر تطبيق الفلاتر */
+    .filter-apply-btn {
+        background: linear-gradient(135deg, #00d4ff, #0099cc);
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+        backdrop-filter: blur(10px);
+    }
+
+    .filter-apply-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 40px rgba(0, 212, 255, 0.4);
+        background: linear-gradient(135deg, #33ddff, #00aadd);
+    }
+
+    .filter-apply-btn:active {
+        transform: translateY(-2px);
+    }
+
+    /* زر البحث */
+    .search-btn {
+        background: linear-gradient(135deg, #00d4ff, #0099cc);
+        color: white;
+        border: none;
+        padding: 18px 20px;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(0, 212, 255, 0.3);
+        backdrop-filter: blur(10px);
+        min-width: 60px;
+    }
+
+    .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(0, 212, 255, 0.4);
+        background: linear-gradient(135deg, #33ddff, #00aadd);
+    }
+
+    .search-btn:active {
+        transform: translateY(0);
+    }
+
+    .search-btn i {
+        font-size: 16px;
     }
 
     /* إحصائيات السيارات بتصميم محسّن */
@@ -970,12 +1041,18 @@
 <!-- شريط البحث المخفي -->
 <div class="search-bar" id="searchBar">
     <form method="GET" action="{{ url_for('mobile.vehicles') }}">
-        <input type="text" 
-               name="search" 
-               class="search-input" 
-               placeholder="البحث عن سيارة..." 
-               value="{{ request.args.get('search', '') }}"
-               autocomplete="off">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <input type="text" 
+                   name="search" 
+                   class="search-input" 
+                   placeholder="البحث عن سيارة..." 
+                   value="{{ request.args.get('search', '') }}"
+                   autocomplete="off"
+                   style="flex: 1;">
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
         <input type="hidden" name="status" value="{{ request.args.get('status', '') }}">
         <input type="hidden" name="make" value="{{ request.args.get('make', '') }}">
     </form>
@@ -1001,8 +1078,8 @@
             </select>
         </div>
         <input type="hidden" name="search" value="{{ request.args.get('search', '') }}">
-        <div style="text-align: center;">
-            <button type="submit" class="action-btn primary" style="width: auto; padding: 12px 24px;">
+        <div style="text-align: center; margin-top: 20px;">
+            <button type="submit" class="filter-apply-btn">
                 <i class="fas fa-filter"></i>
                 تطبيق الفلاتر
             </button>
@@ -1337,32 +1414,45 @@
             });
         });
 
-        // التأكد من أن القائمة السفلية تعمل
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.preventDefault();
-                const page = this.dataset.nav;
-                console.log('Navigation clicked:', page);
-                
-                switch(page) {
-                    case 'dashboard':
-                        window.location.href = '/mobile/dashboard';
-                        break;
-                    case 'employees':
-                        window.location.href = '/mobile/employees';
-                        break;
-                    case 'vehicles':
-                        window.location.href = '/mobile/vehicles';
-                        break;
-                    case 'reports':
-                        window.location.href = '/mobile/reports';
-                        break;
-                    case 'settings':
-                        window.location.href = '/mobile/settings';
-                        break;
+    });
+
+    // تعريف دالة navigateTo في نطاق عام
+    function navigateTo(url) {
+        console.log('Navigating to:', url);
+        window.location.href = url;
+    }
+
+    // وظيفة البحث الفوري
+    function performSearch() {
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+            const searchValue = searchInput.value.trim();
+            console.log('Searching for:', searchValue);
+            
+            // إنشاء URL الجديد مع البحث
+            const currentUrl = new URL(window.location);
+            if (searchValue) {
+                currentUrl.searchParams.set('search', searchValue);
+            } else {
+                currentUrl.searchParams.delete('search');
+            }
+            
+            // الانتقال للنتائج
+            window.location.href = currentUrl.toString();
+        }
+    }
+
+    // إضافة مستمع لزر Enter في البحث
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    performSearch();
                 }
             });
-        });
+        }
     });
 
     // تأثير النقر على البطاقات
