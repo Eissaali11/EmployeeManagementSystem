@@ -706,7 +706,7 @@ body {
             <div class="action-label">التقارير والإحصائيات</div>
         </a>
         
-        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        {% if current_user.is_authenticated and current_user.role.value == 'admin' %}
         <a href="{{ url_for('mobile.operations_dashboard') }}" class="action-card">
             <div class="action-icon operations">
                 <i class="fas fa-cogs"></i>
