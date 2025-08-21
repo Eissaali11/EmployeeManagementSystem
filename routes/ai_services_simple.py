@@ -240,6 +240,12 @@ def smart_alerts():
     alerts = get_smart_alerts()
     return render_template('ai_services/smart_alerts.html', alerts=alerts)
 
+@ai_services_bp.route('/api-interface')
+@login_required
+def api_interface():
+    """واجهة برمجة التطبيقات الذكية"""
+    return render_template('ai_services/api_interface.html')
+
 # API endpoints for AJAX requests
 
 @ai_services_bp.route('/api/dashboard-stats')

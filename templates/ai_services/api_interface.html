@@ -1,0 +1,470 @@
+{% extends 'layout.html' %}
+
+{% block title %}واجهة برمجة التطبيقات الذكية - الذكاء الاصطناعي{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .api-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .api-header {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .api-section {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .api-section:hover {
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+    }
+
+    .endpoint-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(0, 212, 170, 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .endpoint-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--ai-accent);
+    }
+
+    .method-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .method-get { background-color: #28a745; color: white; }
+    .method-post { background-color: #007bff; color: white; }
+    .method-put { background-color: #ffc107; color: black; }
+    .method-delete { background-color: #dc3545; color: white; }
+
+    .code-block {
+        background-color: #2d3748;
+        border: 1px solid #4a5568;
+        border-radius: 6px;
+        padding: 1rem;
+        margin: 1rem 0;
+        overflow-x: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        color: #e2e8f0;
+    }
+
+    .response-example {
+        background-color: #1a202c;
+        border-left: 4px solid var(--ai-accent);
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0 6px 6px 0;
+    }
+
+    .test-button {
+        background: linear-gradient(45deg, var(--ai-accent), var(--ai-secondary));
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 0.5rem;
+    }
+
+    .test-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+    }
+
+    .api-key-section {
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .live-demo {
+        background: rgba(40, 167, 69, 0.1);
+        border: 1px solid rgba(40, 167, 69, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+    }
+
+    .status-active { background-color: #28a745; }
+    .status-inactive { background-color: #dc3545; }
+
+    .copy-button {
+        background: transparent;
+        border: 1px solid var(--ai-accent);
+        color: var(--ai-accent);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        float: right;
+        margin-top: -0.5rem;
+    }
+
+    .copy-button:hover {
+        background: var(--ai-accent);
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="api-container">
+    <!-- رأس الصفحة -->
+    <div class="api-header">
+        <h1 class="text-light mb-3">
+            <i class="fas fa-code me-3" style="color: var(--ai-accent);"></i>
+            واجهة برمجة التطبيقات الذكية
+        </h1>
+        <p class="lead text-light mb-0">
+            API متقدمة للذكاء الاصطناعي - تكامل سهل مع أنظمة خارجية
+        </p>
+        <div class="mt-3">
+            <span class="status-indicator status-active"></span>
+            <span class="text-light">API نشطة ومتاحة</span>
+        </div>
+    </div>
+
+    <!-- معلومات API Key -->
+    <div class="api-key-section">
+        <h4 class="text-warning mb-3">
+            <i class="fas fa-key me-2"></i>
+            مفتاح API
+        </h4>
+        <p class="text-light mb-2">للوصول للـ API، استخدم المفتاح التالي في Header:</p>
+        <div class="code-block">
+            Authorization: Bearer YOUR_API_KEY_HERE
+            <button class="copy-button" onclick="copyToClipboard('Authorization: Bearer YOUR_API_KEY_HERE')">نسخ</button>
+        </div>
+        <small class="text-muted">* تواصل مع المطور للحصول على مفتاح API الخاص بك</small>
+    </div>
+
+    <!-- نقاط النهاية المتاحة -->
+    <div class="api-section">
+        <h3 class="text-light mb-4">
+            <i class="fas fa-list me-2"></i>
+            نقاط النهاية المتاحة
+        </h3>
+
+        <!-- إحصائيات لوحة التحكم -->
+        <div class="endpoint-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="method-badge method-get">GET</span>
+                    <strong class="text-light">/ai/api/dashboard-stats</strong>
+                </div>
+                <button class="test-button" onclick="testEndpoint('/ai/api/dashboard-stats', 'GET')">
+                    <i class="fas fa-play me-1"></i> تجربة
+                </button>
+            </div>
+            <p class="text-light mt-2 mb-1">الحصول على إحصائيات لوحة التحكم</p>
+            <div class="code-block">
+curl -X GET "{{ request.url_root }}ai/api/dashboard-stats" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+                <button class="copy-button" onclick="copyToClipboard('curl -X GET \"{{ request.url_root }}ai/api/dashboard-stats\" -H \"Authorization: Bearer YOUR_API_KEY\"')">نسخ</button>
+            </div>
+            <div class="response-example">
+                <strong class="text-success">Response Example:</strong>
+                <pre class="text-light mt-2">{
+  "total_employees": 45,
+  "total_vehicles": 12,
+  "total_departments": 5,
+  "attendance_rate": 92.5
+}</pre>
+            </div>
+        </div>
+
+        <!-- توليد رؤى ذكية -->
+        <div class="endpoint-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="method-badge method-post">POST</span>
+                    <strong class="text-light">/ai/api/generate-insights</strong>
+                </div>
+                <button class="test-button" onclick="testEndpoint('/ai/api/generate-insights', 'POST')">
+                    <i class="fas fa-play me-1"></i> تجربة
+                </button>
+            </div>
+            <p class="text-light mt-2 mb-1">توليد رؤى ذكية مخصصة</p>
+            <div class="code-block">
+curl -X POST "{{ request.url_root }}ai/api/generate-insights" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"type": "general"}'
+                <button class="copy-button" onclick="copyToClipboard('curl -X POST \"{{ request.url_root }}ai/api/generate-insights\" -H \"Authorization: Bearer YOUR_API_KEY\" -H \"Content-Type: application/json\" -d \'{\"type\": \"general\"}\'')">نسخ</button>
+            </div>
+            <div class="response-example">
+                <strong class="text-success">Request Body:</strong>
+                <pre class="text-light mt-2">{
+  "type": "general" // أو "employees", "vehicles", "financial"
+}</pre>
+                <strong class="text-success">Response:</strong>
+                <pre class="text-light mt-2">{
+  "success": true,
+  "insight": "النظام يعمل بكفاءة عالية...",
+  "recommendations": ["توصية 1", "توصية 2"]
+}</pre>
+            </div>
+        </div>
+
+        <!-- تحديث التنبيهات -->
+        <div class="endpoint-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="method-badge method-get">GET</span>
+                    <strong class="text-light">/ai/api/refresh-alerts</strong>
+                </div>
+                <button class="test-button" onclick="testEndpoint('/ai/api/refresh-alerts', 'GET')">
+                    <i class="fas fa-play me-1"></i> تجربة
+                </button>
+            </div>
+            <p class="text-light mt-2 mb-1">الحصول على التنبيهات الذكية المحدثة</p>
+            <div class="code-block">
+curl -X GET "{{ request.url_root }}ai/api/refresh-alerts" \
+  -H "Authorization: Bearer YOUR_API_KEY"
+                <button class="copy-button" onclick="copyToClipboard('curl -X GET \"{{ request.url_root }}ai/api/refresh-alerts\" -H \"Authorization: Bearer YOUR_API_KEY\"')">نسخ</button>
+            </div>
+            <div class="response-example">
+                <strong class="text-success">Response:</strong>
+                <pre class="text-light mt-2">{
+  "alerts": [
+    {
+      "type": "warning",
+      "title": "تنبيه مهم",
+      "message": "رسالة التنبيه",
+      "time": "منذ ساعة",
+      "action_url": "/action"
+    }
+  ],
+  "count": 1
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- تجربة مباشرة -->
+    <div class="api-section">
+        <h3 class="text-light mb-4">
+            <i class="fas fa-terminal me-2"></i>
+            تجربة مباشرة
+        </h3>
+        <div class="live-demo">
+            <h5 class="text-success mb-3">
+                <i class="fas fa-rocket me-2"></i>
+                اختبار API مباشر
+            </h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="text-light mb-2">اختر نقطة النهاية:</label>
+                    <select id="endpoint-select" class="form-control mb-3" style="background: #2d3748; color: white; border: 1px solid #4a5568;">
+                        <option value="/ai/api/dashboard-stats">إحصائيات لوحة التحكم</option>
+                        <option value="/ai/api/refresh-alerts">التنبيهات الذكية</option>
+                    </select>
+                    <button class="test-button w-100" onclick="runLiveTest()">
+                        <i class="fas fa-play me-2"></i>
+                        تشغيل الاختبار
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <label class="text-light mb-2">النتيجة:</label>
+                    <div id="live-result" class="code-block" style="min-height: 120px;">
+                        اضغط على "تشغيل الاختبار" لرؤية النتيجة...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- معلومات إضافية -->
+    <div class="api-section">
+        <h3 class="text-light mb-4">
+            <i class="fas fa-info-circle me-2"></i>
+            معلومات إضافية
+        </h3>
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="text-info">معدل الطلبات</h5>
+                <p class="text-light">حد أقصى: 1000 طلب/ساعة لكل مفتاح API</p>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-info">تشفير البيانات</h5>
+                <p class="text-light">جميع البيانات مشفرة بـ HTTPS/TLS 1.3</p>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-info">التوثيق</h5>
+                <p class="text-light">يتم تحديث التوثيق تلقائياً مع كل إضافة جديدة</p>
+            </div>
+            <div class="col-md-6">
+                <h5 class="text-info">الدعم الفني</h5>
+                <p class="text-light">متاح 24/7 للمساعدة في التكامل</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار التنقل -->
+    <div class="text-center mt-4">
+        <a href="/ai/" class="btn btn-outline-light btn-lg me-3">
+            <i class="fas fa-arrow-left me-2"></i>
+            العودة للذكاء الاصطناعي
+        </a>
+        <button class="btn btn-outline-info btn-lg" onclick="downloadSDK()">
+            <i class="fas fa-download me-2"></i>
+            تحميل SDK
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// نسخ النص للحافظة
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // إظهار رسالة نجاح
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        Toast.fire({
+            icon: 'success',
+            title: 'تم نسخ الكود!'
+        });
+    });
+}
+
+// اختبار نقطة نهاية
+function testEndpoint(endpoint, method) {
+    const loadingHtml = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الاختبار...';
+    const button = event.target;
+    const originalHtml = button.innerHTML;
+    button.innerHTML = loadingHtml;
+    button.disabled = true;
+
+    fetch(endpoint, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.fire({
+            title: 'نتيجة الاختبار',
+            html: '<pre class="text-left">' + JSON.stringify(data, null, 2) + '</pre>',
+            icon: 'success',
+            confirmButtonText: 'إغلاق'
+        });
+    })
+    .catch(error => {
+        Swal.fire({
+            title: 'خطأ في الاختبار',
+            text: 'فشل في الاتصال بـ API',
+            icon: 'error',
+            confirmButtonText: 'إغلاق'
+        });
+    })
+    .finally(() => {
+        button.innerHTML = originalHtml;
+        button.disabled = false;
+    });
+}
+
+// تشغيل اختبار مباشر
+function runLiveTest() {
+    const endpoint = document.getElementById('endpoint-select').value;
+    const resultDiv = document.getElementById('live-result');
+    
+    resultDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تشغيل الاختبار...';
+    
+    fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+            resultDiv.innerHTML = JSON.stringify(data, null, 2);
+        })
+        .catch(error => {
+            resultDiv.innerHTML = 'خطأ: ' + error.message;
+        });
+}
+
+// تحميل SDK
+function downloadSDK() {
+    Swal.fire({
+        title: 'SDK غير متاح حالياً',
+        text: 'سيتم إضافة SDK قريباً للغات البرمجة المختلفة',
+        icon: 'info',
+        confirmButtonText: 'حسناً'
+    });
+}
+
+// تحديث الصفحة كل 30 ثانية لعرض أحدث المعلومات
+setInterval(() => {
+    const statusIndicator = document.querySelector('.status-indicator');
+    if (statusIndicator) {
+        // فحص حالة API
+        fetch('/ai/api/dashboard-stats')
+            .then(response => {
+                if (response.ok) {
+                    statusIndicator.className = 'status-indicator status-active';
+                } else {
+                    statusIndicator.className = 'status-indicator status-inactive';
+                }
+            })
+            .catch(() => {
+                statusIndicator.className = 'status-indicator status-inactive';
+            });
+    }
+}, 30000);
+</script>
+{% endblock %}
