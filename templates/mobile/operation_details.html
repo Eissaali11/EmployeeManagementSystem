@@ -440,7 +440,7 @@
             
             {% if operation.operation_type == 'handover' and related_record %}
             <div class="col-6">
-                <a href="{{ url_for('vehicles.handover_pdf_public', handover_id=related_record.id) }}" 
+                <a href="{{ url_for('vehicles.handover_pdf_public', id=related_record.id) }}" 
                    class="btn btn-outline-danger w-100" target="_blank">
                     <i class="fas fa-file-pdf me-2"></i>
                     تحميل PDF
