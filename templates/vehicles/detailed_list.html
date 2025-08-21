@@ -5,34 +5,47 @@
 {% block extra_css %}
 <style>
     :root {
-        --primary-dark: #1a1a2e;
-        --secondary-dark: #16213e;
-        --accent-blue: #0f3460;
-        --accent-gold: #e94560;
-        --accent-purple: #8b5cf6;
-        --accent-green: #10b981;
-        --text-light: #f8fafc;
-        --text-muted: #94a3b8;
-        --glass-dark: rgba(26, 26, 46, 0.9);
-        --glass-light: rgba(255, 255, 255, 0.1);
-        --neon-blue: #00d4ff;
-        --neon-purple: #b347d9;
-        --neon-green: #39ff14;
-        --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        --card-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.5);
+        /* ألوان النظام المعاصرة */
+        --primary-color: #1e3a5c;
+        --primary-light: #2d5a87;
+        --primary-dark: #0f1f2f;
+        --secondary-color: #1a1a1a;
+        --accent-blue: #0d6efd;
+        --accent-gold: #ffc107;
+        --accent-green: #198754;
+        --accent-red: #dc3545;
+        --accent-purple: #6f42c1;
+        --text-light: #ffffff;
+        --text-muted: #6c757d;
+        --text-dark: #212529;
+        
+        /* خلفيات وتأثيرات */
+        --glass-bg: rgba(30, 58, 92, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.25);
+        
+        /* تدرجات لونية */
+        --primary-gradient: linear-gradient(135deg, #1e3a5c 0%, #2d5a87 100%);
+        --success-gradient: linear-gradient(135deg, #198754 0%, #20c997 100%);
+        --danger-gradient: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        --warning-gradient: linear-gradient(135deg, #ffc107 0%, #ffca2c 100%);
+        --info-gradient: linear-gradient(135deg, #0dcaf0 0%, #0d6efd 100%);
+        --secondary-gradient: linear-gradient(135deg, #6c757d 0%, #adb5bd 100%);
     }
 
     body {
-        background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 50%, var(--secondary-color) 100%);
         font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         direction: rtl;
         min-height: 100vh;
         color: var(--text-light);
         position: relative;
-        overflow-x: hidden;
     }
 
-    /* Animated Background */
+    /* خلفية متحركة بسيطة */
     body::before {
         content: '';
         position: fixed;
@@ -41,31 +54,22 @@
         width: 100%;
         height: 100%;
         background: 
-            radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(179, 71, 217, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
-        animation: float 20s ease-in-out infinite;
+            radial-gradient(circle at 20% 80%, rgba(30, 58, 92, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(13, 110, 253, 0.08) 0%, transparent 50%);
         z-index: -1;
     }
 
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        33% { transform: translate(30px, -30px) rotate(120deg); }
-        66% { transform: translate(-20px, 20px) rotate(240deg); }
-    }
-
-    /* Enhanced Header */
+    /* رأس الصفحة المحسن */
     .page-header {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
         box-shadow: var(--card-shadow);
-        padding: 1.5rem 2rem;
+        padding: 2rem;
         margin-bottom: 2rem;
         position: relative;
         overflow: hidden;
-        animation: slideDown 0.6s ease-out;
     }
 
     .page-header::before {
@@ -74,50 +78,36 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 3px;
         background: var(--primary-gradient);
     }
 
     .page-header h2 {
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+        color: var(--text-light);
         font-weight: 700;
         margin-bottom: 0.5rem;
+        font-size: 1.75rem;
     }
 
-    /* Enhanced Buttons */
+    .page-header .text-muted {
+        color: var(--text-muted) !important;
+        opacity: 0.8;
+    }
+
+    /* أزرار محسنة */
     .btn-enhanced {
-        position: relative;
-        overflow: hidden;
         border: none;
-        border-radius: 12px;
+        border-radius: 8px;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
         box-shadow: var(--card-shadow);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
-        min-width: 140px;
+        min-width: 120px;
         justify-content: center;
-    }
-
-    .btn-enhanced::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s ease;
-    }
-
-    .btn-enhanced:hover::before {
-        left: 100%;
     }
 
     .btn-enhanced:hover {
@@ -156,21 +146,23 @@
         color: white;
     }
 
-    /* Enhanced Filters Section */
+    /* قسم الفلاتر المحسن */
     .filters-section {
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
         box-shadow: var(--card-shadow);
         padding: 1.5rem;
         margin-bottom: 1.5rem;
-        animation: slideUp 0.6s ease-out 0.2s both;
     }
 
     .filter-toggle-btn {
-        border-radius: 12px;
+        border-radius: 8px;
         transition: all 0.3s ease;
+        background: var(--secondary-gradient);
+        border: none;
+        color: white;
     }
 
     .filter-toggle-btn:hover {
@@ -178,38 +170,40 @@
         box-shadow: var(--card-shadow-hover);
     }
 
-    /* Enhanced Table */
+    /* جدول محسن */
     .table-container {
         position: relative;
-        background: var(--glass-bg);
-        backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
         box-shadow: var(--card-shadow);
         overflow: hidden;
-        animation: fadeIn 0.8s ease-out;
     }
 
     .vehicle-table {
         margin-bottom: 0;
+        color: var(--text-light);
     }
 
     .vehicle-table th {
         white-space: nowrap;
-        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-        border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+        background: var(--primary-gradient);
+        border-bottom: 2px solid var(--primary-light);
         font-weight: 700;
         padding: 1rem;
+        color: white;
     }
 
     .vehicle-table td {
         padding: 0.75rem 1rem;
         vertical-align: middle;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.02);
     }
 
     .vehicle-table tr:hover td {
-        background: rgba(102, 126, 234, 0.05);
+        background: rgba(30, 58, 92, 0.2);
     }
 
     .scroll-indicator {
@@ -217,11 +211,11 @@
         right: 15px;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(102, 126, 234, 0.8);
+        background: var(--accent-blue);
         color: white;
         padding: 10px;
         border-radius: 50%;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        box-shadow: var(--card-shadow);
         cursor: pointer;
         transition: all 0.3s ease;
         z-index: 10;
@@ -233,7 +227,7 @@
     }
 
     .scroll-indicator:hover {
-        background: rgba(102, 126, 234, 1);
+        background: var(--primary-color);
         transform: translateY(-50%) scale(1.1);
     }
 
@@ -274,29 +268,30 @@
         font-size: 1em;
         font-weight: bold;
         letter-spacing: 1px;
-        background: var(--secondary-gradient);
+        background: var(--primary-gradient);
         color: white;
     }
 
     .badge-location {
-        background: linear-gradient(135deg, #6f42c1 0%, #4a1d96 100%);
+        background: var(--info-gradient);
         color: white;
     }
 
     .badge-project {
-        background: linear-gradient(135deg, #20c997 0%, #0d6e5e 100%);
+        background: var(--success-gradient);
         color: white;
     }
 
-    /* Enhanced Pagination */
+    /* تنسيق محسن للصفحات */
     .pagination-enhanced .page-item {
         margin: 0 3px;
     }
 
     .pagination-enhanced .page-link {
         border-radius: 8px;
-        border: none;
-        color: #495057;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: var(--text-light);
         font-weight: 600;
         min-width: 40px;
         text-align: center;
@@ -306,75 +301,94 @@
     .pagination-enhanced .page-link:hover {
         transform: translateY(-2px);
         box-shadow: var(--card-shadow-hover);
+        background: var(--primary-color);
+        color: white;
     }
 
     .pagination-enhanced .page-item.active .page-link {
         background: var(--primary-gradient);
         color: white;
+        border-color: var(--primary-color);
     }
 
     .pagination-enhanced .page-item.disabled .page-link {
         opacity: 0.5;
+        background: var(--card-bg);
+        color: var(--text-muted);
     }
 
-    /* Enhanced Empty State */
+    /* حالة فارغة محسنة */
     .empty-state {
         padding: 3rem;
         text-align: center;
-        background: rgba(255, 255, 255, 0.7);
-        border-radius: 16px;
+        background: var(--card-bg);
+        border-radius: 12px;
         box-shadow: var(--card-shadow);
+        color: var(--text-light);
     }
 
     .empty-state i {
         font-size: 3rem;
         margin-bottom: 1rem;
+        color: var(--accent-blue);
+    }
+
+    .empty-state h5 {
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+
+    .empty-state .text-muted {
+        color: var(--text-muted) !important;
+    }
+
+    /* تحسينات إضافية للنماذج */
+    .form-control,
+    .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--card-border);
+        color: var(--text-light);
+        border-radius: 6px;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        color: var(--text-light);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-muted);
+    }
+
+    .form-label {
+        color: var(--text-light);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .input-group-text {
         background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        border-color: var(--accent-blue);
+        color: white;
     }
 
-    /* Animations */
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes slideUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Responsive Design */
+    /* تصميم متجاوب */
     @media (max-width: 768px) {
         .page-header {
-            padding: 1.25rem;
+            padding: 1.5rem;
         }
         
         .page-header h2 {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
         }
         
         .btn-enhanced {
             padding: 0.5rem 1rem;
             min-width: auto;
+            font-size: 0.9rem;
         }
         
         .filters-section {
@@ -384,11 +398,37 @@
         .vehicle-table th,
         .vehicle-table td {
             padding: 0.5rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         
         .empty-state {
             padding: 2rem 1rem;
+        }
+        
+        .badge-enhanced {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+    }
+
+    /* تحسينات إضافية للتجاوب */
+    @media (max-width: 576px) {
+        .container-fluid {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+        
+        .page-header {
+            padding: 1rem;
+        }
+        
+        .page-header .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .vehicle-table {
+            font-size: 0.8rem;
         }
     }
 </style>
