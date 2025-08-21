@@ -262,10 +262,11 @@ def api_generate_insights():
         'financial': 'التكاليف ضمن الحدود المعقولة مع فرص للتوفير'
     }
     
+    recommendations_data = get_ai_recommendations()
     return jsonify({
         'success': True,
         'insight': insights.get(insight_type, insights['general']),
-        'recommendations': get_ai_recommendations().get(insight_type, [])
+        'recommendations': recommendations_data.get(insight_type, [])
     })
 
 @ai_services_bp.route('/api/refresh-alerts')
