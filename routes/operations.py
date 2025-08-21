@@ -58,6 +58,17 @@ from datetime import date
 
 operations_bp = Blueprint('operations', __name__, url_prefix='/operations')
 
+# إضافة راوت بديل للمسار القديم /operation
+from flask import Blueprint
+operation_redirect_bp = Blueprint('operation_redirect', __name__, url_prefix='/operation')
+
+@operation_redirect_bp.route('/')
+@operation_redirect_bp.route('')
+def operation_redirect():
+    """إعادة توجيه من /operation إلى /operations"""
+    from flask import redirect, url_for
+    return redirect('/operations')
+
 
 
 def update_vehicle_state(vehicle_id):
