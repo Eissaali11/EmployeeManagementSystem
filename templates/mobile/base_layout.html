@@ -545,11 +545,25 @@
 
         // التنقل إلى صفحة جديدة
         function navigateTo(url) {
+            console.log('Navigating to:', url);
             closeSidebar();
             setTimeout(() => {
                 window.location.href = url;
-            }, 300);
+            }, 100);
         }
+
+        // إعداد التنقل للقائمة السفلية
+        document.addEventListener('DOMContentLoaded', function() {
+            // تحديد الصفحة النشطة في القائمة السفلية
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                const nav = item.dataset.nav;
+                if (currentPath.includes(nav)) {
+                    item.classList.add('active');
+                }
+            });
+        });
 
         // تسجيل الخروج
         function logout() {

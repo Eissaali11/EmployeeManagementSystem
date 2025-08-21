@@ -1326,6 +1326,43 @@
                 this.closest('form').submit();
             });
         });
+
+        // إضافة تأثيرات للبطاقات
+        document.querySelectorAll('.vehicle-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.style.transform = 'translateY(-8px) scale(0.98)';
+                setTimeout(() => {
+                    this.style.transform = 'translateY(-6px) scale(1)';
+                }, 150);
+            });
+        });
+
+        // التأكد من أن القائمة السفلية تعمل
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.nav;
+                console.log('Navigation clicked:', page);
+                
+                switch(page) {
+                    case 'dashboard':
+                        window.location.href = '/mobile/dashboard';
+                        break;
+                    case 'employees':
+                        window.location.href = '/mobile/employees';
+                        break;
+                    case 'vehicles':
+                        window.location.href = '/mobile/vehicles';
+                        break;
+                    case 'reports':
+                        window.location.href = '/mobile/reports';
+                        break;
+                    case 'settings':
+                        window.location.href = '/mobile/settings';
+                        break;
+                }
+            });
+        });
     });
 
     // تأثير النقر على البطاقات
