@@ -232,40 +232,128 @@
         margin-bottom: 10px;
         padding: 0 2px;
     }
+
+    /* بطاقة إحصائيات السيارات - تصميم جديد */
+    .vehicle-stats-card {
+        background: linear-gradient(135deg, #7b68ee 0%, #9370db 100%);
+        border-radius: 20px;
+        padding: 25px 20px;
+        margin: 20px 0;
+        color: white;
+        box-shadow: 0 10px 30px rgba(123, 104, 238, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .vehicle-stats-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+
+    .stats-header {
+        text-align: center;
+        margin-bottom: 25px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .stats-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .stats-title i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .stats-subtitle {
+        font-size: 13px;
+        opacity: 0.9;
+        font-weight: 400;
+        line-height: 1.4;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .vehicle-stats-card .stat-card {
+        background: rgba(255, 255, 255, 0.18);
+        border-radius: 16px;
+        padding: 16px 12px;
+        text-align: center;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .vehicle-stats-card .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .vehicle-stats-card .stat-number {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 6px;
+        color: white;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .vehicle-stats-card .stat-label {
+        font-size: 12px;
+        opacity: 0.95;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="vehicles-container">
-    <!-- إحصائيات السيارات -->
-    <div class="vehicle-stats">
-        <div class="stat-card">
-            <div class="stat-icon total">
-                <i class="fas fa-car"></i>
+    <!-- بنر أسطول السيارات الجديد -->
+    <div class="vehicle-stats-card">
+        <div class="stats-header">
+            <div class="stats-title">
+                <i class="fas fa-truck"></i>
+                أسطول السيارات
             </div>
-            <div class="stat-number">{{ stats.total or 0 }}</div>
-            <div class="stat-label">إجمالي السيارات</div>
+            <div class="stats-subtitle">
+                إدارة شاملة ومتقدمة لجميع المركبات
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon available">
-                <i class="fas fa-check"></i>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total or 0 }}</div>
+                <div class="stat-label">إجمالي المركبات</div>
             </div>
-            <div class="stat-number">{{ stats.active or 0 }}</div>
-            <div class="stat-label">متاحة</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon rented">
-                <i class="fas fa-user"></i>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.active or 0 }}</div>
+                <div class="stat-label">متاحة للعمل</div>
             </div>
-            <div class="stat-number">{{ stats.inactive or 0 }}</div>
-            <div class="stat-label">مؤجرة</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon maintenance">
-                <i class="fas fa-wrench"></i>
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.maintenance or 0 }}</div>
+                <div class="stat-label">قيد الصيانة</div>
             </div>
-            <div class="stat-number">{{ stats.maintenance or 0 }}</div>
-            <div class="stat-label">صيانة</div>
         </div>
     </div>
 
