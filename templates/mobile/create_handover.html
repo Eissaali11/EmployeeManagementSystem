@@ -4,75 +4,135 @@
 
 {% block content %}
 <style>
-/* حل جذري لمشكلة الزر المختفي خلف القائمة السفلية */
+/* حل احترافي بالحواف الآمنة للجوال */
+:root {
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --nav-height: 80px;
+    --button-spacing: 16px;
+    --total-bottom-space: calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom));
+}
 
-/* إزالة أي padding من body والاعتماد على المحتوى */
+/* تفعيل الحواف الآمنة */
+html {
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+/* حجز مساحة سفلية محسوبة بدقة */
 body {
-    padding-bottom: 0 !important;
-}
-
-/* تطبيق المساحة على المحتوى مباشرة */
-.mobile-content-wrapper {
-    padding-bottom: 150px !important; /* مساحة كبيرة للقائمة السفلية */
-    min-height: 100vh !important;
-}
-
-/* إصلاح الكونتينر بشكل جذري */
-.container.py-4 {
-    margin-bottom: 0 !important;
-    padding-bottom: 150px !important; /* مساحة كبيرة جداً */
-}
-
-/* تأكد من أن مجموعة الأزرار لها مساحة كافية */
-.d-grid.gap-2.mb-4 {
-    margin-bottom: 100px !important; /* مساحة كبيرة جداً بعد الأزرار */
-    padding-bottom: 50px !important; /* مساحة داخلية كبيرة */
-    position: relative !important;
-    z-index: 1 !important; /* أولوية أعلى من القائمة السفلية */
-}
-
-/* ضمان ظهور الأزرار فوق القائمة السفلية */
-.btn {
-    position: relative !important;
-    z-index: 2 !important;
-}
-
-/* إخفاء القائمة السفلية تماماً في صفحة إنشاء التسليم */
-.mobile-footer {
-    display: none !important;
-}
-
-/* أو بديلاً - جعلها تختفي عند التمرير */
-body {
+    padding-bottom: calc(var(--total-bottom-space) + 88px) !important;
     overflow-y: auto !important;
 }
 
-/* إضافة زر عودة ثابت بدلاً من القائمة السفلية */
+/* تحديث ارتفاع القائمة السفلية */
+.mobile-footer {
+    height: var(--nav-height) !important;
+    bottom: var(--safe-area-bottom) !important;
+    z-index: 100 !important;
+}
+
+/* إزالة مساحات زائدة من المحتوى */
+.mobile-content-wrapper,
+.container.py-4,
+form {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* زر العودة المحسن */
 .custom-back-button {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: calc(20px + env(safe-area-inset-top, 0px));
+    right: calc(20px + env(safe-area-inset-right, 0px));
     z-index: 1001;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
 }
 
-/* إضافة مساحة إضافية للفورم */
-form {
-    margin-bottom: 200px !important;
-    padding-bottom: 100px !important;
+.custom-back-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 25px rgba(0,0,0,0.2);
 }
 
-/* مساحة إضافية للصفحة كاملة */
-.mobile-content {
-    padding-bottom: 250px !important;
+/* زر الإرسال الثابت أسفل الشاشة */
+.fixed-submit-button {
+    position: fixed;
+    bottom: calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom));
+    left: 16px;
+    right: 16px;
+    z-index: 150 !important; /* أعلى من القائمة السفلية */
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+}
+
+.fixed-submit-button:hover,
+.fixed-submit-button:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(76, 175, 80, 0.4);
+    background: linear-gradient(135deg, #45a049, #4CAF50);
+    color: white;
+}
+
+.fixed-submit-button:active {
+    transform: translateY(0);
+}
+
+.fixed-submit-button i {
+    margin-left: 8px;
+}
+
+/* زر الإلغاء الثابت */
+.fixed-cancel-button {
+    position: fixed;
+    bottom: calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom) + 70px);
+    left: 16px;
+    right: 16px;
+    z-index: 149;
+    background: rgba(255, 255, 255, 0.95);
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 15px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+}
+
+.fixed-cancel-button:hover {
+    background: rgba(248, 249, 250, 0.98);
+    border-color: #999;
+    color: #333;
 }
 </style>
 <!-- زر عودة ثابت في أعلى الصفحة -->
@@ -116,7 +176,7 @@ form {
         </div>
     </div>
 
-    <form method="POST" class="needs-validation" novalidate>
+    <form id="handover-form" method="POST" class="needs-validation" novalidate>
         <div class="card mb-4">
             <div class="card-header bg-light">
                 <h5 class="mb-0">معلومات النموذج</h5>
@@ -242,22 +302,44 @@ form {
             </div>
         </div>
         
-        <!-- مساحة إضافية قبل الأزرار لضمان عدم اختفائها -->
-        <div style="height: 50px;"></div>
-        
-        <div class="d-grid gap-2 mb-4" style="margin-bottom: 120px !important; padding-bottom: 80px !important; background: white; position: relative; z-index: 999 !important; border-radius: 10px; padding: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1);">
-            <button type="submit" class="btn btn-primary btn-lg" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important; font-size: 16px; padding: 12px 20px;">
-                <i class="fas fa-save ms-1"></i>
-                حفظ نموذج التسليم/الاستلام
-            </button>
-            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important; font-size: 16px; padding: 12px 20px;">
-                <i class="fas fa-times ms-1"></i>
-                إلغاء
-            </a>
-        </div>
-        
-        <!-- مساحة إضافية كبيرة بعد الأزرار لضمان الوصول إليها -->
-        <div style="height: 200px; background: transparent;"></div>
+        <!-- مساحة للمحتوى قبل الزر الثابت -->
+        <div style="height: 40px;"></div>
     </form>
 </div>
+
+<!-- الأزرار الثابتة أسفل الشاشة -->
+<button type="submit" form="handover-form" class="fixed-submit-button">
+    <i class="fas fa-save"></i>
+    حفظ نموذج التسليم/الاستلام
+</button>
+
+<a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="fixed-cancel-button">
+    <i class="fas fa-times"></i>
+    إلغاء
+</a>
+
+<script>
+// تحسين الاستجابة للاتجاه والحجم
+function adjustForOrientation() {
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const submitBtn = document.querySelector('.fixed-submit-button');
+    const cancelBtn = document.querySelector('.fixed-cancel-button');
+    
+    if (isLandscape) {
+        submitBtn.style.bottom = 'calc(var(--nav-height) + 8px + var(--safe-area-bottom))';
+        cancelBtn.style.bottom = 'calc(var(--nav-height) + 66px + var(--safe-area-bottom))';
+    } else {
+        submitBtn.style.bottom = 'calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom))';
+        cancelBtn.style.bottom = 'calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom) + 70px)';
+    }
+}
+
+// تشغيل عند تحميل الصفحة وتغيير الاتجاه
+window.addEventListener('load', adjustForOrientation);
+window.addEventListener('orientationchange', () => {
+    setTimeout(adjustForOrientation, 300);
+});
+window.addEventListener('resize', adjustForOrientation);
+</script>
+
 {% endblock %}
