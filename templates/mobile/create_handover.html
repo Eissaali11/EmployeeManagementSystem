@@ -37,12 +37,24 @@ body {
     z-index: 2 !important;
 }
 
-/* إصلاح القائمة السفلية */
+/* إصلاح القائمة السفلية - جعلها شفافة جزئياً على هذه الصفحة */
 .mobile-footer {
     height: 80px !important;
     z-index: 900 !important; /* أولوية أقل من الأزرار */
     position: fixed !important;
     bottom: 0 !important;
+    background-color: rgba(255, 255, 255, 0.9) !important; /* شفافية جزئية */
+    backdrop-filter: blur(10px) !important; /* تأثير ضبابي */
+    border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* تحسين ظهور الأزرار عبر القائمة الشفافة */
+.mobile-footer-item {
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.mobile-footer-item.active {
+    color: var(--primary-color) !important;
 }
 
 /* إضافة مساحة إضافية للفورم */
@@ -225,12 +237,12 @@ form {
         <!-- مساحة إضافية قبل الأزرار لضمان عدم اختفائها -->
         <div style="height: 50px;"></div>
         
-        <div class="d-grid gap-2 mb-4" style="margin-bottom: 120px !important; padding-bottom: 80px !important; background: transparent; position: relative; z-index: 999 !important;">
-            <button type="submit" class="btn btn-primary btn-lg" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important;">
+        <div class="d-grid gap-2 mb-4" style="margin-bottom: 120px !important; padding-bottom: 80px !important; background: white; position: relative; z-index: 999 !important; border-radius: 10px; padding: 15px; box-shadow: 0 -5px 15px rgba(0,0,0,0.1);">
+            <button type="submit" class="btn btn-primary btn-lg" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important; font-size: 16px; padding: 12px 20px;">
                 <i class="fas fa-save ms-1"></i>
                 حفظ نموذج التسليم/الاستلام
             </button>
-            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important;">
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}" class="btn btn-outline-secondary" style="position: relative !important; z-index: 1000 !important; margin-bottom: 20px !important; font-size: 16px; padding: 12px 20px;">
                 <i class="fas fa-times ms-1"></i>
                 إلغاء
             </a>
