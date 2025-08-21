@@ -66,7 +66,7 @@ form {
 /* زر الحفظ مع تأثيرات بصرية قوية */
 .fixed-submit-button {
     position: fixed !important;
-    bottom: 20px !important;
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
     left: 20px !important;
     right: 20px !important;
     z-index: 9999 !important;
@@ -93,7 +93,7 @@ form {
 
 .fixed-cancel-button {
     position: fixed !important;
-    bottom: 80px !important;
+    bottom: calc(180px + env(safe-area-inset-bottom, 0px)) !important;
     left: 20px !important;
     right: 20px !important;
     z-index: 9998 !important;
@@ -276,13 +276,13 @@ form {
             </div>
         </div>
         
-        <!-- مساحة كبيرة للتمرير -->
-        <div style="height: 300px; background: transparent; width: 100%;"></div>
+        <!-- مساحة كبيرة للتمرير مع تحسين للشريط السفلي -->
+        <div style="height: calc(400px + env(safe-area-inset-bottom, 0px)); background: transparent; width: 100%;"></div>
     </form>
 </div>
 
-<!-- مساحة إضافية خارج النموذج لضمان التمرير -->
-<div style="height: 200px; background: transparent; width: 100%;"></div>
+<!-- مساحة إضافية خارج النموذج لضمان التمرير الكامل -->
+<div style="height: calc(300px + env(safe-area-inset-bottom, 0px)); background: transparent; width: 100%;"></div>
 
 <!-- الأزرار الثابتة أسفل الشاشة -->
 <button type="submit" form="handover-form" class="fixed-submit-button">
