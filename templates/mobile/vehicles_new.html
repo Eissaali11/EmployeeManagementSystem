@@ -1,27 +1,30 @@
 {% extends 'mobile/base_layout.html' %}
 
 {% block title %}السيارات - نُظم{% endblock %}
-{% block header_title %}
-    <div class="header-with-action">
-        <span>السيارات</span>
-        <div class="header-actions">
-            <button class="icon-btn" onclick="toggleSearch()">
-                <i class="fas fa-search"></i>
-            </button>
-            <button class="icon-btn" onclick="toggleFilters()">
-                <i class="fas fa-filter"></i>
-            </button>
-        </div>
-    </div>
-{% endblock %}
+{% block header_title %}السيارات{% endblock %}
 
 {% block extra_styles %}
 <style>
-    .header-with-action {
+    /* أزرار العمل في الهيدر */
+    .page-header {
+        background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+        color: white;
+        padding: 20px;
+        margin: -20px -20px 20px -20px;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .header-row {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        width: 100%;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .page-title {
+        font-size: 24px;
+        font-weight: 800;
+        margin: 0;
     }
 
     .header-actions {
@@ -29,24 +32,60 @@
         gap: 10px;
     }
 
-    .icon-btn {
-        width: 40px;
-        height: 40px;
+    .header-btn {
+        width: 44px;
+        height: 44px;
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.2);
-        border: none;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
+        font-size: 18px;
         cursor: pointer;
         transition: all 0.3s ease;
     }
 
-    .icon-btn:hover {
+    .header-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: scale(1.05);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .header-btn.active {
         background: rgba(255, 255, 255, 0.3);
         transform: scale(1.05);
+    }
+
+    .header-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .header-stat {
+        text-align: center;
+        padding: 12px 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .stat-value {
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 4px;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        opacity: 0.9;
+        font-weight: 600;
     }
 
     /* شريط البحث المخفي */
@@ -547,6 +586,47 @@
 {% endblock %}
 
 {% block content %}
+<!-- هيدر مخصص للصفحة -->
+<div class="page-header">
+    <div class="header-row">
+        <h1 class="page-title">إدارة السيارات</h1>
+        <div class="header-actions">
+            <button class="header-btn" onclick="window.location.href='{{ url_for('mobile.dashboard') }}'" title="لوحة التحكم">
+                <i class="fas fa-tachometer-alt"></i>
+            </button>
+            <button class="header-btn" onclick="toggleSearch()" title="البحث" id="searchToggle">
+                <i class="fas fa-search"></i>
+            </button>
+            <button class="header-btn" onclick="toggleFilters()" title="الفلاتر" id="filtersToggle">
+                <i class="fas fa-filter"></i>
+            </button>
+            <button class="header-btn" onclick="alert('قريباً - إضافة سيارة جديدة')" title="إضافة سيارة">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- إحصائيات سريعة في الهيدر -->
+    <div class="header-stats">
+        <div class="header-stat">
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">الإجمالي</div>
+        </div>
+        <div class="header-stat">
+            <div class="stat-value">{{ stats.active }}</div>
+            <div class="stat-label">متاحة</div>
+        </div>
+        <div class="header-stat">
+            <div class="stat-value">{{ stats.maintenance }}</div>
+            <div class="stat-label">في الورشة</div>
+        </div>
+        <div class="header-stat">
+            <div class="stat-value">{{ stats.inactive }}</div>
+            <div class="stat-label">غير نشطة</div>
+        </div>
+    </div>
+</div>
+
 <!-- شريط البحث المخفي -->
 <div class="search-bar" id="searchBar">
     <form method="GET" action="{{ url_for('mobile.vehicles') }}">
@@ -590,37 +670,7 @@
     </form>
 </div>
 
-<!-- إحصائيات السيارات -->
-<div class="vehicle-stats slide-up">
-    <div class="stat-card stagger-1">
-        <div class="stat-icon total">
-            <i class="fas fa-car"></i>
-        </div>
-        <div class="stat-number">{{ stats.total }}</div>
-        <div class="stat-label">إجمالي السيارات</div>
-    </div>
-    <div class="stat-card stagger-2">
-        <div class="stat-icon available">
-            <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="stat-number">{{ stats.active }}</div>
-        <div class="stat-label">متاحة</div>
-    </div>
-    <div class="stat-card stagger-3">
-        <div class="stat-icon maintenance">
-            <i class="fas fa-wrench"></i>
-        </div>
-        <div class="stat-number">{{ stats.maintenance }}</div>
-        <div class="stat-label">في الورشة</div>
-    </div>
-    <div class="stat-card stagger-4">
-        <div class="stat-icon inactive">
-            <i class="fas fa-pause-circle"></i>
-        </div>
-        <div class="stat-number">{{ stats.inactive }}</div>
-        <div class="stat-label">غير نشطة</div>
-    </div>
-</div>
+
 
 <!-- قائمة السيارات -->
 <div class="vehicles-grid slide-up">
@@ -823,9 +873,15 @@
     function toggleSearch() {
         const searchBar = document.getElementById('searchBar');
         const filtersBar = document.getElementById('filtersBar');
+        const searchToggle = document.getElementById('searchToggle');
+        const filtersToggle = document.getElementById('filtersToggle');
         
         searchBar.classList.toggle('show');
         filtersBar.classList.remove('show');
+        
+        // تحديث حالة الأزرار
+        searchToggle.classList.toggle('active');
+        filtersToggle.classList.remove('active');
         
         if (searchBar.classList.contains('show')) {
             setTimeout(() => {
@@ -838,9 +894,15 @@
     function toggleFilters() {
         const filtersBar = document.getElementById('filtersBar');
         const searchBar = document.getElementById('searchBar');
+        const searchToggle = document.getElementById('searchToggle');
+        const filtersToggle = document.getElementById('filtersToggle');
         
         filtersBar.classList.toggle('show');
         searchBar.classList.remove('show');
+        
+        // تحديث حالة الأزرار
+        filtersToggle.classList.toggle('active');
+        searchToggle.classList.remove('active');
     }
 
     // تأثير النقر على البطاقات
