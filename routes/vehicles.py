@@ -3509,7 +3509,7 @@ def handover_pdf(id):
                         'handover_type': 'تسليم' if handover.handover_type == 'delivery' else 'استلام',
                         'handover_date': handover.handover_date.strftime('%Y-%m-%d'),
                         'person_name': str(handover.person_name),
-                        'vehicle_condition': str(handover.vehicle_condition),
+                        'vehicle_status_summary': str(handover.vehicle_status_summary) if handover.vehicle_status_summary else "طبيعية",
                         'fuel_level': str(handover.fuel_level),
                         'mileage': int(handover.mileage),
                         'has_spare_tire': bool(handover.has_spare_tire),

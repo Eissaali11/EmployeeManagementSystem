@@ -281,7 +281,7 @@ def create_vehicle_handover_pdf(handover_data):
             ["Supervisor", safe_arabic_text(str(handover_data.supervisor_name) if handover_data.supervisor_name else "Not Specified")],
             [safe_arabic_text("قراءة العداد"), safe_arabic_text(f"{handover_data.mileage} km" if handover_data.mileage else "Not Specified")],
             [safe_arabic_text("مستوى الوقود"), safe_arabic_text(f"{handover_data.fuel_level}%" if handover_data.fuel_level else "Not Specified")],
-            ["Vehicle Status", safe_arabic_text(str(getattr(handover_data, 'vehicle_condition', None)) if getattr(handover_data, 'vehicle_condition', None) else "طبيعية")]
+            ["Vehicle Status", safe_arabic_text(str(handover_data.vehicle_status_summary) if hasattr(handover_data, 'vehicle_status_summary') and handover_data.vehicle_status_summary else "طبيعية")]
         ]
         
         handover_table = Table(handover_details, colWidths=[2.2*inch, 2.8*inch])
