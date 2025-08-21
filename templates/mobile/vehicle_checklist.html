@@ -101,6 +101,17 @@
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
         }
+
+        /* هذا الكود سيُطبق فقط على الشاشات التي عرضها 767px أو أقل (شاشات الهواتف) */
+        @media (max-width: 767px) {
+            .action-buttons-container {
+                /* 
+                 * نقلل الهامش العلوي على شاشات الهاتف.
+                 * نستخدم !important لضمان تجاوز كلاس mt-3 الخاص بـ Bootstrap.
+                */
+                margin-top: 1.5rem !important; /* يمكنك تغيير القيمة حسب رغبتك، مثلاً 0 */
+            }
+        }
     </style>
 {% endblock %}
 
@@ -342,6 +353,8 @@
         <input type="hidden" name="driver_signature_data" id="driver-signature-data">
         <input type="hidden" name="damage_diagram_data" id="damage-diagram-data">
 
+        <div class="d-grid mt-3 gap-2 action-buttons-container">
+
         <!-- أزرار الحفظ الديناميكية النهائية -->
         <div class="d-grid mt-3 gap-2">
              {% if is_editing %}
@@ -358,6 +371,7 @@
                 </button>
              {% endif %}
         </div>
+            </div>
     </form>
 
     <!-- قوالب المعاينة المخفية (ضرورية للـ JavaScript) -->

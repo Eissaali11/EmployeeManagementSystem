@@ -352,6 +352,12 @@
                 <i class="fas fa-eye me-1"></i>
                 عرض
             </a>
+            <a href="{{ url_for('operations.export_operation_excel', operation_id=operation.id) }}" 
+               class="btn btn-outline-success"
+               title="تصدير إلى Excel">
+                <i class="fas fa-file-excel me-1"></i>
+                Excel
+            </a>
             <button class="btn btn-success" 
                     onclick="quickApprove({{ operation.id }})">
                 <i class="fas fa-check me-1"></i>

@@ -322,6 +322,13 @@
                         عرض
                     </a>
                     
+                    <a href="{{ url_for('operations.export_operation_excel', operation_id=operation.id) }}" 
+                       class="action-btn btn btn-outline-success"
+                       title="تصدير إلى Excel">
+                        <i class="fas fa-file-excel"></i>
+                        Excel
+                    </a>
+                    
                     {% if operation.status == 'pending' %}
                     <button class="action-btn btn btn-success" 
                             onclick="quickApprove({{ operation.id }})">
