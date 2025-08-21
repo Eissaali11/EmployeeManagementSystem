@@ -425,10 +425,74 @@
 </div>
 {% endif %}
 
-<!-- أزرار الإجراءات -->
-{% if operation.status == 'pending' %}
+<!-- أزرار التصدير والإجراءات -->
 <div class="action-buttons">
     <div class="d-grid gap-2">
+        <!-- أزرار التصدير والروابط -->
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <a href="{{ url_for('operations.export_operation_excel', operation_id=operation.id) }}" 
+                   class="btn btn-outline-success w-100">
+                    <i class="fas fa-file-excel me-2"></i>
+                    تصدير Excel
+                </a>
+            </div>
+            
+            {% if operation.operation_type == 'handover' and related_record %}
+            <div class="col-6">
+                <a href="{{ url_for('vehicles.handover_pdf_public', handover_id=related_record.id) }}" 
+                   class="btn btn-outline-danger w-100" target="_blank">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    تحميل PDF
+                </a>
+            </div>
+            {% elif operation.operation_type == 'workshop' and related_record %}
+            <div class="col-6">
+                <a href="{{ url_for('vehicles.workshop_details', workshop_id=related_record.id) }}" 
+                   class="btn btn-outline-primary w-100">
+                    <i class="fas fa-wrench me-2"></i>
+                    عرض الورشة
+                </a>
+            </div>
+            {% elif operation.operation_type == 'external_authorization' and related_record %}
+            <div class="col-6">
+                <a href="{{ url_for('vehicles.external_authorization_details', auth_id=related_record.id) }}" 
+                   class="btn btn-outline-info w-100">
+                    <i class="fas fa-user-shield me-2"></i>
+                    عرض التفويض
+                </a>
+            </div>
+            {% elif operation.operation_type == 'safety_inspection' and related_record %}
+            <div class="col-6">
+                <a href="{{ url_for('vehicles.safety_check_details', check_id=related_record.id) }}" 
+                   class="btn btn-outline-warning w-100">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    عرض الفحص
+                </a>
+            </div>
+            {% else %}
+            <div class="col-6">
+                <button class="btn btn-outline-secondary w-100" disabled>
+                    <i class="fas fa-link me-2"></i>
+                    غير متاح
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- زر عرض السيارة -->
+        {% if operation.vehicle %}
+        <div class="mb-3">
+            <a href="{{ url_for('mobile.vehicle_details', vehicle_id=operation.vehicle.id) }}" 
+               class="btn btn-outline-dark w-100">
+                <i class="fas fa-car me-2"></i>
+                عرض تفاصيل السيارة {{ operation.vehicle.plate_number }}
+            </a>
+        </div>
+        {% endif %}
+        
+        <!-- أزرار الموافقة/الرفض -->
+        {% if operation.status == 'pending' %}
         <button class="btn btn-success" onclick="showApprovalForm()">
             <i class="fas fa-check me-2"></i>
             الموافقة على العملية
@@ -441,9 +505,9 @@
             <i class="fas fa-eye me-2"></i>
             وضع تحت المراجعة
         </button>
+        {% endif %}
     </div>
 </div>
-{% endif %}
 
 <!-- Modal للصور -->
 <div class="modal fade" id="imageModal" tabindex="-1">
