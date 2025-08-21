@@ -13,6 +13,125 @@
     margin-bottom: 20px;
 }
 
+/* تنسيق الإجراءات السريعة */
+.quick-actions-section {
+    margin: 20px 0;
+}
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 8px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.3s ease;
+    min-height: 80px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.quick-action-btn:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    color: #333;
+    text-decoration: none;
+}
+
+.quick-action-btn i {
+    font-size: 20px;
+    margin-bottom: 6px;
+}
+
+.quick-action-btn span {
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.quick-action-btn.warning {
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.quick-action-btn.warning:hover {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.quick-action-btn.info {
+    border-color: #17a2b8;
+    color: #0c5460;
+}
+
+.quick-action-btn.info:hover {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.quick-action-btn.success {
+    border-color: #28a745;
+    color: #155724;
+    background: white;
+    border: 1px solid #28a745;
+}
+
+.quick-action-btn.success:hover {
+    background: #d4edda;
+    color: #155724;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+/* تنسيق البحث */
+.search-section {
+    margin: 20px 0;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.search-input-group .form-control {
+    flex: 1;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    font-size: 14px;
+}
+
+.search-input-group .btn {
+    border-radius: 8px;
+    padding: 10px 16px;
+    white-space: nowrap;
+}
+
+.section-header h6 {
+    color: #333;
+    font-weight: 600;
+    margin: 0;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -198,18 +317,18 @@
         </a>
     </div>
     
-    {% if current_user.role == 'admin' %}
     <div class="d-flex gap-2">
+        {% if current_user.role == 'admin' %}
         <a href="{{ url_for('mobile.operations_dashboard') }}" class="btn btn-warning btn-sm">
             <i class="fas fa-cogs me-1"></i>
             لوحة الإدارة
         </a>
+        {% endif %}
         <a href="{{ url_for('operations.export_all_operations_excel') }}" class="excel-export-btn">
             <i class="fas fa-file-excel"></i>
             تصدير Excel
         </a>
     </div>
-    {% endif %}
 </div>
 
 <!-- الإحصائيات -->
@@ -230,6 +349,64 @@
         <div class="stat-number">{{ stats.rejected }}</div>
         <div class="stat-label">مرفوضة</div>
     </div>
+</div>
+
+<!-- الإجراءات السريعة -->
+<div class="quick-actions-section mt-4">
+    <div class="section-header mb-3">
+        <h6><i class="fas fa-bolt me-2"></i>إجراءات سريعة</h6>
+    </div>
+    <div class="row g-2">
+        <div class="col-6">
+            <a href="{{ url_for('mobile.operations_list') }}" class="quick-action-btn">
+                <i class="fas fa-list"></i>
+                <span>جميع العمليات</span>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ url_for('mobile.operations_list', status='pending') }}" class="quick-action-btn warning">
+                <i class="fas fa-clock"></i>
+                <span>العمليات المعلقة</span>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ url_for('mobile.operations_notifications') }}" class="quick-action-btn info position-relative">
+                <i class="fas fa-bell"></i>
+                <span>الإشعارات</span>
+                {% if stats.unread_notifications and stats.unread_notifications > 0 %}
+                <span class="notification-badge">{{ stats.unread_notifications }}</span>
+                {% endif %}
+            </a>
+        </div>
+        <div class="col-6">
+            <button class="quick-action-btn success" onclick="refreshNotifications()">
+                <i class="fas fa-sync-alt"></i>
+                <span>تحديث</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- خاصية البحث -->
+<div class="search-section mt-4">
+    <div class="section-header mb-3">
+        <h6><i class="fas fa-search me-2"></i>بحث في العمليات</h6>
+    </div>
+    <form method="GET" action="{{ url_for('mobile.operations') }}">
+        <div class="search-input-group">
+            <input type="text" class="form-control" name="search_plate" 
+                   value="{{ request.args.get('search_plate', '') }}" 
+                   placeholder="بحث برقم لوحة السيارة...">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+            {% if request.args.get('search_plate') %}
+                <a href="{{ url_for('mobile.operations') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            {% endif %}
+        </div>
+    </form>
 </div>
 
 <!-- قائمة العمليات -->
@@ -305,4 +482,116 @@
         <p class="text-muted">لم يتم إنشاء أي عمليات بعد</p>
     </div>
 {% endif %}
+
+<!-- صوت الإشعارات -->
+<audio id="notificationSound" preload="auto" style="display: none;">
+    <source src="{{ url_for('static', filename='sounds/notification.mp3') }}" type="audio/mpeg">
+    <source src="{{ url_for('static', filename='sounds/notification.wav') }}" type="audio/wav">
+</audio>
+
+<script>
+// تحديث الإشعارات
+function refreshNotifications() {
+    const refreshBtn = document.querySelector('.quick-action-btn.success');
+    const icon = refreshBtn.querySelector('i');
+    
+    // إضافة تأثير التحديث
+    icon.classList.add('fa-spin');
+    refreshBtn.style.opacity = '0.7';
+    
+    // محاكاة التحديث
+    setTimeout(() => {
+        icon.classList.remove('fa-spin');
+        refreshBtn.style.opacity = '1';
+        
+        // إشعار نجح التحديث
+        showNotification('تم تحديث الإشعارات بنجاح', 'success');
+        
+        // إعادة تحميل الصفحة للحصول على أحدث البيانات
+        window.location.reload();
+    }, 1500);
+}
+
+// عرض إشعار سريع
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        min-width: 300px;
+        text-align: center;
+        animation: slideDown 0.3s ease;
+    `;
+    notification.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // إزالة الإشعار بعد 3 ثواني
+    setTimeout(() => {
+        notification.style.animation = 'slideUp 0.3s ease';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// إضافة CSS للتأثيرات
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(0); opacity: 1; }
+        to { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// تحديث تلقائي كل 30 ثانية للإشعارات
+setInterval(() => {
+    fetch('{{ url_for("mobile.operations") }}?ajax=1')
+        .then(response => response.json())
+        .then(data => {
+            if (data.new_notifications) {
+                // تشغيل صوت الإشعار
+                const sound = document.getElementById('notificationSound');
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(e => console.log('Could not play notification sound'));
+                }
+                
+                // تحديث عدد الإشعارات
+                const badge = document.querySelector('.notification-badge');
+                if (badge && data.unread_count > 0) {
+                    badge.textContent = data.unread_count;
+                    badge.style.display = 'flex';
+                } else if (badge && data.unread_count === 0) {
+                    badge.style.display = 'none';
+                }
+            }
+        })
+        .catch(error => console.log('Auto-refresh error:', error));
+}, 30000);
+
+// تحسين تجربة المستخدم - إضافة تأثيرات الضغط
+document.querySelectorAll('.quick-action-btn, .btn').forEach(btn => {
+    btn.addEventListener('touchstart', function() {
+        this.style.transform = 'scale(0.95)';
+    });
+    
+    btn.addEventListener('touchend', function() {
+        this.style.transform = '';
+    });
+});
+</script>
+
 {% endblock %}
