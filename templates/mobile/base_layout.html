@@ -545,7 +545,19 @@
 
         // التنقل إلى صفحة جديدة
         function navigateTo(url) {
+            console.log('Navigating to:', url);
             closeSidebar();
+            
+            // إضافة تأثير بصري للعنصر المنقور عليه
+            const clickedElement = event.target.closest('.nav-item') || event.target.closest('.menu-item');
+            if (clickedElement) {
+                clickedElement.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    clickedElement.style.transform = 'scale(1)';
+                }, 150);
+            }
+            
+            // التنقل بعد تأخير بسيط
             setTimeout(() => {
                 window.location.href = url;
             }, 300);
@@ -561,13 +573,35 @@
         // تحديد الصفحة النشطة
         function setActivePage() {
             const currentPath = window.location.pathname;
-            const page = currentPath.split('/').pop() || 'dashboard';
+            let page = 'dashboard';
+            
+            // استخراج اسم الصفحة من المسار
+            if (currentPath.includes('/employees')) {
+                page = 'employees';
+            } else if (currentPath.includes('/vehicles')) {
+                page = 'vehicles';
+            } else if (currentPath.includes('/attendance')) {
+                page = 'attendance';
+            } else if (currentPath.includes('/reports')) {
+                page = 'reports';
+            } else if (currentPath.includes('/settings')) {
+                page = 'settings';
+            } else if (currentPath.includes('/departments')) {
+                page = 'departments';
+            } else if (currentPath.includes('/salaries')) {
+                page = 'salaries';
+            } else if (currentPath.includes('/dashboard')) {
+                page = 'dashboard';
+            }
+            
+            console.log('Current path:', currentPath, 'Detected page:', page);
             
             // تحديد القائمة الجانبية
             document.querySelectorAll('.menu-item').forEach(item => {
                 item.classList.remove('active');
                 if (item.dataset.page === page) {
                     item.classList.add('active');
+                    console.log('Activated sidebar item:', page);
                 }
             });
             
@@ -576,6 +610,7 @@
                 item.classList.remove('active');
                 if (item.dataset.nav === page) {
                     item.classList.add('active');
+                    console.log('Activated bottom nav item:', page);
                 }
             });
         }
@@ -593,6 +628,28 @@
                     }, 150);
                 });
             }
+        });
+
+        // دالة تهيئة الرسوم البيانية (للتوافق مع الصفحات التي تستدعيها)
+        function initializeDepartmentCharts() {
+            console.log('Department charts initialized (mobile fallback)');
+        }
+
+        // دالة البحث العامة (للتوافق مع الصفحات التي تستدعيها)
+        function toggleSearch() {
+            console.log('Search toggle (mobile version)');
+            const searchInput = document.querySelector('#search-input');
+            if (searchInput) {
+                searchInput.focus();
+            }
+        }
+
+        // معالج الأخطاء العام
+        window.addEventListener('error', function(e) {
+            console.log('JavaScript Error handled:', e.message);
+            // منع عرض الأخطاء للمستخدم
+            e.preventDefault();
+            return true;
         });
 
         {% block extra_scripts %}{% endblock %}
