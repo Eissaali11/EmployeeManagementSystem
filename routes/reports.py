@@ -576,8 +576,13 @@ def fees_excel():
 @reports_bp.route('/')
 def index():
     """الصفحة الرئيسية للتقارير"""
-    departments = Department.query.all()
-    return render_template('reports/index.html', departments=departments)
+    try:
+        departments = Department.query.all()
+        return render_template('reports/index.html', departments=departments)
+    except Exception as e:
+        print(f"Error in reports index: {e}")
+        # في حالة وجود خطأ، نرجع صفحة بسيطة
+        return render_template('reports/index.html', departments=[])
 
 @reports_bp.route('/employees')
 def employees_report():
