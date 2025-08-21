@@ -411,6 +411,60 @@
         transform: translateY(-2px);
     }
 
+    /* تأثيرات hover للأزرار النشطة */
+    .header-btn.active {
+        background: rgba(0, 212, 255, 0.2) !important;
+        border-color: #00d4ff !important;
+        color: #00d4ff !important;
+        transform: scale(1.1);
+    }
+
+    /* حالة فارغة */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .empty-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #ffffff;
+    }
+
+    .empty-subtitle {
+        font-size: 16px;
+        margin-bottom: 30px;
+        line-height: 1.5;
+    }
+
+    .empty-action {
+        background: linear-gradient(135deg, #4A90E2, #357ABD);
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .empty-action:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px rgba(74, 144, 226, 0.4);
+    }
+
     /* إحصائيات السيارات بتصميم محسّن */
     .vehicle-stats {
         display: grid;
@@ -1166,41 +1220,70 @@
         });
     });
 
-    // دوال البحث والفلاتر
+    // دوال البحث والفلاتر - محسنة
     function toggleSearch() {
+        console.log('toggleSearch called');
         const searchBar = document.getElementById('searchBar');
         const filtersBar = document.getElementById('filtersBar');
         const searchToggle = document.getElementById('searchToggle');
         const filtersToggle = document.getElementById('filtersToggle');
         
         if (searchBar && searchToggle) {
-            searchBar.classList.toggle('show');
-            searchToggle.classList.toggle('active');
+            const isCurrentlyShown = searchBar.classList.contains('show');
             
-            if (filtersBar) filtersBar.classList.remove('show');
-            if (filtersToggle) filtersToggle.classList.remove('active');
+            // إخفاء الفلاتر أولاً
+            if (filtersBar) {
+                filtersBar.classList.remove('show');
+            }
+            if (filtersToggle) {
+                filtersToggle.classList.remove('active');
+            }
             
-            if (searchBar.classList.contains('show')) {
+            // تبديل البحث
+            if (isCurrentlyShown) {
+                searchBar.classList.remove('show');
+                searchToggle.classList.remove('active');
+            } else {
+                searchBar.classList.add('show');
+                searchToggle.classList.add('active');
+                
+                // التركيز على input البحث
                 setTimeout(() => {
                     const searchInput = searchBar.querySelector('.search-input');
-                    if (searchInput) searchInput.focus();
-                }, 200);
+                    if (searchInput) {
+                        searchInput.focus();
+                    }
+                }, 300);
             }
         }
     }
 
     function toggleFilters() {
+        console.log('toggleFilters called');
         const filtersBar = document.getElementById('filtersBar');
         const searchBar = document.getElementById('searchBar');
         const searchToggle = document.getElementById('searchToggle');
         const filtersToggle = document.getElementById('filtersToggle');
         
         if (filtersBar && filtersToggle) {
-            filtersBar.classList.toggle('show');
-            filtersToggle.classList.toggle('active');
+            const isCurrentlyShown = filtersBar.classList.contains('show');
             
-            if (searchBar) searchBar.classList.remove('show');
-            if (searchToggle) searchToggle.classList.remove('active');
+            // إخفاء البحث أولاً
+            if (searchBar) {
+                searchBar.classList.remove('show');
+            }
+            if (searchToggle) {
+                searchToggle.classList.remove('active');
+            }
+            
+            // تبديل الفلاتر
+            if (isCurrentlyShown) {
+                filtersBar.classList.remove('show');
+                filtersToggle.classList.remove('active');
+            } else {
+                filtersBar.classList.add('show');
+                filtersToggle.classList.add('active');
+            }
         }
     }
 
