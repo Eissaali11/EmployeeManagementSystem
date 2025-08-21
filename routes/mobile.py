@@ -362,7 +362,7 @@ def employees():
     # الحصول على قائمة الأقسام للفلترة
     departments = Department.query.order_by(Department.name).all()
 
-    return render_template('mobile/employees.html',
+    return render_template('mobile/employees_new.html',
                            employees=employees,
                            pagination=pagination,
                            departments=departments)
@@ -435,7 +435,7 @@ def attendance():
     current_date = datetime.now().date()
     today_stats = {'present': 0, 'absent': 0, 'leave': 0, 'total': len(employees)}
 
-    return render_template('mobile/attendance.html',
+    return render_template('mobile/attendance_new.html',
                           employees=employees,
                           attendance_records=attendance_records,
                           current_date=current_date,
@@ -964,7 +964,7 @@ def reports():
     """صفحة التقارير للنسخة المحمولة"""
     # قائمة التقارير الأخيرة (يمكن جلبها من قاعدة البيانات لاحقًا)
     recent_reports = []
-    return render_template('mobile/reports.html', recent_reports=recent_reports)
+    return render_template('mobile/reports_new.html', recent_reports=recent_reports)
 
 # تقرير الموظفين - النسخة المحمولة
 @mobile_bp.route('/reports/employees')
@@ -1574,7 +1574,7 @@ def vehicles():
         'inactive': Vehicle.query.filter_by(status='accident').count() + Vehicle.query.filter_by(status='rented').count() + Vehicle.query.filter_by(status='in_project').count()
     }
 
-    return render_template('mobile/vehicles.html', 
+    return render_template('mobile/vehicles_new.html', 
                           vehicles=vehicles, 
                           stats=stats,
                           makes=makes,
@@ -4075,7 +4075,7 @@ def delete_notification(notification_id):
 def settings():
     """صفحة الإعدادات للنسخة المحمولة"""
     current_year = datetime.now().year
-    return render_template('mobile/settings.html', current_year=current_year)
+    return render_template('mobile/settings_new.html', current_year=current_year)
 
 # صفحة الملف الشخصي - النسخة المحمولة
 @mobile_bp.route('/profile')

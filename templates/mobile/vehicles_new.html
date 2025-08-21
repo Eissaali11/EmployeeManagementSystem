@@ -1,0 +1,415 @@
+{% extends 'mobile/base_layout.html' %}
+
+{% block title %}السيارات - نُظم{% endblock %}
+{% block header_title %}السيارات{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .vehicle-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f0f0f5;
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 18px;
+    }
+
+    .stat-icon.total {
+        background: rgba(74, 144, 226, 0.1);
+        color: #4A90E2;
+    }
+
+    .stat-icon.available {
+        background: rgba(52, 199, 89, 0.1);
+        color: #34C759;
+    }
+
+    .stat-icon.rented {
+        background: rgba(255, 149, 0, 0.1);
+        color: #FF9500;
+    }
+
+    .stat-icon.maintenance {
+        background: rgba(255, 59, 48, 0.1);
+        color: #FF3B30;
+    }
+
+    .stat-number {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: #8e8e93;
+        font-weight: 500;
+    }
+
+    .filter-card {
+        background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 100%);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .vehicle-card {
+        background: white;
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border: 1px solid #f0f0f5;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .vehicle-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .vehicle-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .vehicle-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+    }
+
+    .vehicle-icon.available {
+        background: linear-gradient(135deg, #34C759 0%, #30D158 100%);
+    }
+
+    .vehicle-icon.rented {
+        background: linear-gradient(135deg, #FF9500 0%, #FF9F0A 100%);
+    }
+
+    .vehicle-icon.maintenance {
+        background: linear-gradient(135deg, #FF3B30 0%, #FF453A 100%);
+    }
+
+    .vehicle-icon.workshop {
+        background: linear-gradient(135deg, #8E8E93 0%, #AEAEB2 100%);
+    }
+
+    .vehicle-info {
+        flex: 1;
+    }
+
+    .vehicle-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 4px;
+    }
+
+    .vehicle-plate {
+        font-size: 14px;
+        color: #8e8e93;
+        margin-bottom: 8px;
+        font-family: monospace;
+        font-weight: 600;
+    }
+
+    .vehicle-details {
+        display: flex;
+        gap: 15px;
+        font-size: 12px;
+        color: #8e8e93;
+    }
+
+    .vehicle-detail {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .vehicle-status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-available {
+        background: rgba(52, 199, 89, 0.1);
+        color: #34C759;
+    }
+
+    .status-rented {
+        background: rgba(255, 149, 0, 0.1);
+        color: #FF9500;
+    }
+
+    .status-maintenance {
+        background: rgba(255, 59, 48, 0.1);
+        color: #FF3B30;
+    }
+
+    .status-workshop {
+        background: rgba(142, 142, 147, 0.1);
+        color: #8E8E93;
+    }
+
+    .form-control {
+        border: 1px solid #e1e5e9;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 14px;
+        background: white;
+        transition: all 0.3s ease;
+        margin-bottom: 15px;
+    }
+
+    .form-control:focus {
+        border-color: #4A90E2;
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        outline: none;
+    }
+
+    .fab-button {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%);
+        border: none;
+        color: white;
+        font-size: 20px;
+        box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 999;
+    }
+
+    .fab-button:hover {
+        transform: translateX(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(142, 142, 147, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        color: #8e8e93;
+        font-size: 32px;
+    }
+
+    .empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a1a1a;
+        margin-bottom: 8px;
+    }
+
+    .empty-subtitle {
+        font-size: 14px;
+        color: #8e8e93;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 375px) {
+        .fab-button {
+            left: auto;
+            right: 20px;
+            transform: none;
+        }
+
+        .fab-button:hover {
+            transform: scale(1.1);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- إحصائيات السيارات -->
+<div class="vehicle-stats slide-up">
+    <div class="stat-card">
+        <div class="stat-icon total">
+            <i class="fas fa-car"></i>
+        </div>
+        <div class="stat-number">{{ vehicles|length or 0 }}</div>
+        <div class="stat-label">إجمالي السيارات</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon available">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'available')|list|length or 0 }}</div>
+        <div class="stat-label">متاحة</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon rented">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'rented')|list|length or 0 }}</div>
+        <div class="stat-label">مؤجرة</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon maintenance">
+            <i class="fas fa-wrench"></i>
+        </div>
+        <div class="stat-number">{{ vehicles|selectattr('status', 'equalto', 'in_workshop')|list|length or 0 }}</div>
+        <div class="stat-label">في الورشة</div>
+    </div>
+</div>
+
+<!-- البحث والفلترة -->
+<div class="filter-card slide-up">
+    <form method="GET">
+        <input type="text" name="search" class="form-control" placeholder="🔍 البحث عن رقم لوحة أو نوع السيارة..." value="{{ request.args.get('search', '') }}">
+        
+        <select name="status" class="form-control">
+            <option value="">🚗 جميع الحالات</option>
+            <option value="available" {% if request.args.get('status') == 'available' %}selected{% endif %}>متاحة</option>
+            <option value="rented" {% if request.args.get('status') == 'rented' %}selected{% endif %}>مؤجرة</option>
+            <option value="in_workshop" {% if request.args.get('status') == 'in_workshop' %}selected{% endif %}>في الورشة</option>
+            <option value="maintenance" {% if request.args.get('status') == 'maintenance' %}selected{% endif %}>صيانة</option>
+        </select>
+        
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+                <i class="fas fa-search"></i> بحث
+            </button>
+            <a href="{{ url_for('mobile.vehicles') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-refresh"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- قائمة السيارات -->
+{% if vehicles %}
+    <div class="slide-up">
+        {% for vehicle in vehicles %}
+        <div class="vehicle-card" onclick="window.location.href='{{ url_for('mobile.vehicle_details', vehicle_id=vehicle.id) }}'">
+            <div class="vehicle-header">
+                <div class="vehicle-icon {{ vehicle.status }}">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="vehicle-info">
+                    <div class="vehicle-name">{{ vehicle.car_type }} {{ vehicle.model or '' }}</div>
+                    <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
+                    <div class="vehicle-details">
+                        <div class="vehicle-detail">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ vehicle.model_year or 'غير محدد' }}</span>
+                        </div>
+                        {% if vehicle.driver_name %}
+                        <div class="vehicle-detail">
+                            <i class="fas fa-user"></i>
+                            <span>{{ vehicle.driver_name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="vehicle-status status-{{ vehicle.status }}">
+                        {% if vehicle.status == 'available' %}متاحة
+                        {% elif vehicle.status == 'rented' %}مؤجرة
+                        {% elif vehicle.status == 'in_workshop' %}ورشة
+                        {% elif vehicle.status == 'maintenance' %}صيانة
+                        {% else %}{{ vehicle.status }}{% endif %}
+                    </div>
+                    <div style="margin-top: 8px;">
+                        <i class="fas fa-chevron-left" style="color: #8e8e93;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card slide-up">
+        <div class="card-body">
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                <div class="empty-title">لا توجد سيارات</div>
+                <div class="empty-subtitle">
+                    {% if request.args.get('search') or request.args.get('status') %}
+                        لم يتم العثور على سيارات تطابق معايير البحث المحددة.
+                    {% else %}
+                        لم يتم إضافة أي سيارات بعد. انقر على زر الإضافة لبدء إضافة السيارات.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- زر الإضافة العائم -->
+<button class="fab-button" onclick="window.location.href='{{ url_for('mobile.add_vehicle') }}'">
+    <i class="fas fa-plus"></i>
+</button>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // تحديد الصفحة النشطة
+    document.addEventListener('DOMContentLoaded', function() {
+        // تحديد القائمة الجانبية
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.page === 'vehicles') {
+                item.classList.add('active');
+            }
+        });
+        
+        // تحديد القائمة السفلية
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.nav === 'vehicles') {
+                item.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}
