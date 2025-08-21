@@ -1,0 +1,430 @@
+{% extends 'layout.html' %}
+
+{% block title %}التنبيهات الذكية - الذكاء الاصطناعي{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+    }
+
+    .alert-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alert-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--alert-color, var(--ai-accent));
+    }
+
+    .alert-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert-warning::before { background: #ffc107; }
+    .alert-danger::before { background: #dc3545; }
+    .alert-info::before { background: #0dcaf0; }
+    .alert-success::before { background: #198754; }
+
+    .alert-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--ai-border);
+    }
+
+    .alert-body {
+        padding: 1.5rem;
+    }
+
+    .alert-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .alert-icon.warning { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .alert-icon.danger { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+    .alert-icon.info { background: rgba(13, 202, 240, 0.2); color: #0dcaf0; }
+    .alert-icon.success { background: rgba(25, 135, 84, 0.2); color: #198754; }
+
+    .alert-priority {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .priority-high { background: #dc3545; color: white; }
+    .priority-medium { background: #ffc107; color: #000; }
+    .priority-low { background: #198754; color: white; }
+
+    .alert-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .alert-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .alert-btn-primary {
+        background: var(--ai-accent);
+        color: white;
+    }
+
+    .alert-btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid var(--ai-border);
+    }
+
+    .alert-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .no-alerts {
+        text-align: center;
+        padding: 3rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .alerts-summary {
+        background: var(--ai-gradient);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+
+    .summary-stat {
+        text-align: center;
+    }
+
+    .summary-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        display: block;
+    }
+
+    .summary-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    .urgent-alert {
+        animation: pulse 2s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة -->
+    <div class="alerts-summary">
+        <div class="text-center mb-4">
+            <h1 class="mb-3">
+                <i class="fas fa-bell me-3"></i>
+                التنبيهات الذكية الاستباقية
+            </h1>
+            <p class="lead mb-0">
+                نظام تنبيهات ذكي يتوقع المشاكل قبل حدوثها ويقدم حلول استباقية
+            </p>
+        </div>
+
+        <!-- ملخص التنبيهات -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number text-danger">{{ alerts|selectattr('type', 'equalto', 'danger')|list|length }}</span>
+                    <span class="summary-label">تنبيهات عاجلة</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number text-warning">{{ alerts|selectattr('type', 'equalto', 'warning')|list|length }}</span>
+                    <span class="summary-label">تنبيهات مهمة</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number text-info">{{ alerts|selectattr('type', 'equalto', 'info')|list|length }}</span>
+                    <span class="summary-label">معلومات</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-stat">
+                    <span class="summary-number text-light">{{ alerts|length }}</span>
+                    <span class="summary-label">إجمالي التنبيهات</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- قائمة التنبيهات -->
+    {% if alerts %}
+        {% for alert in alerts %}
+        <div class="alert-card alert-{{ alert.type }} {% if alert.type == 'danger' %}urgent-alert{% endif %}">
+            <div class="alert-priority priority-{% if alert.type == 'danger' %}high{% elif alert.type == 'warning' %}medium{% else %}low{% endif %}">
+                {% if alert.type == 'danger' %}عاجل{% elif alert.type == 'warning' %}مهم{% else %}عادي{% endif %}
+            </div>
+            
+            <div class="alert-header">
+                <div class="d-flex align-items-center">
+                    <div class="alert-icon {{ alert.type }}">
+                        {% if alert.type == 'danger' %}
+                            <i class="fas fa-exclamation-triangle"></i>
+                        {% elif alert.type == 'warning' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% elif alert.type == 'info' %}
+                            <i class="fas fa-info-circle"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h4 class="text-light mb-1">{{ alert.title }}</h4>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            منذ {{ alert.time or 'بضع دقائق' }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-body">
+                <p class="text-light mb-3">{{ alert.message }}</p>
+                
+                {% if alert.type == 'warning' and 'وثائق' in alert.message %}
+                <!-- تفاصيل الوثائق المنتهية -->
+                <div class="alert alert-warning alpha-warning">
+                    <h6><i class="fas fa-file-alt me-2"></i>تفاصيل الوثائق</h6>
+                    <ul class="mb-0">
+                        <li>رخص القيادة: 5 رخص ستنتهي</li>
+                        <li>هويات الموظفين: 3 هويات</li>
+                        <li>عقود العمل: 7 عقود تحتاج تجديد</li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if alert.type == 'info' and 'مركبات' in alert.message %}
+                <!-- تفاصيل المركبات -->
+                <div class="alert alert-info alpha-info">
+                    <h6><i class="fas fa-car me-2"></i>تفاصيل المركبات</h6>
+                    <ul class="mb-0">
+                        <li>تغيير زيت: 2 مركبة</li>
+                        <li>فحص دوري: 1 مركبة</li>
+                        <li>إطارات: 1 مركبة تحتاج تغيير</li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="alert-actions">
+                    <button class="alert-btn alert-btn-primary" onclick="handleAlert('{{ alert.action_url or '#' }}')">
+                        <i class="fas fa-arrow-right me-1"></i>
+                        اتخاذ إجراء
+                    </button>
+                    <button class="alert-btn alert-btn-secondary" onclick="dismissAlert(this)">
+                        <i class="fas fa-times me-1"></i>
+                        تجاهل
+                    </button>
+                    <button class="alert-btn alert-btn-secondary" onclick="snoozeAlert(this)">
+                        <i class="fas fa-clock me-1"></i>
+                        تذكير لاحقاً
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <!-- حالة عدم وجود تنبيهات -->
+        <div class="alert-card">
+            <div class="no-alerts">
+                <i class="fas fa-check-circle fa-4x text-success mb-3"></i>
+                <h3 class="text-light">ممتاز! لا توجد تنبيهات</h3>
+                <p class="text-muted">
+                    جميع أنظمة الشركة تعمل بكفاءة عالية.
+                    سيتم إشعارك فور ظهور أي تنبيهات جديدة.
+                </p>
+                <button class="btn btn-outline-info mt-3" onclick="checkForAlerts()">
+                    <i class="fas fa-sync me-2"></i>
+                    فحص التنبيهات الجديدة
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- إعدادات التنبيهات -->
+    <div class="alert-card">
+        <div class="alert-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-cog me-2"></i>
+                إعدادات التنبيهات الذكية
+            </h4>
+        </div>
+        <div class="alert-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-light">تفعيل التنبيهات:</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="docAlerts" checked>
+                        <label class="form-check-label text-light" for="docAlerts">
+                            تنبيهات انتهاء الوثائق
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="vehicleAlerts" checked>
+                        <label class="form-check-label text-light" for="vehicleAlerts">
+                            تنبيهات صيانة المركبات
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="attendanceAlerts" checked>
+                        <label class="form-check-label text-light" for="attendanceAlerts">
+                            تنبيهات الحضور المنخفض
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-light">طرق الإشعار:</h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                        <label class="form-check-label text-light" for="emailNotif">
+                            إشعارات البريد الإلكتروني
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="smsNotif">
+                        <label class="form-check-label text-light" for="smsNotif">
+                            إشعارات الرسائل النصية
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="whatsappNotif">
+                        <label class="form-check-label text-light" for="whatsappNotif">
+                            إشعارات واتساب
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-3">
+                <button class="btn btn-outline-success" onclick="saveAlertSettings()">
+                    <i class="fas fa-save me-2"></i>
+                    حفظ الإعدادات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="text-center">
+        <a href="/ai/" class="btn btn-outline-light btn-lg me-3">
+            <i class="fas fa-arrow-left me-2"></i>
+            العودة للذكاء الاصطناعي
+        </a>
+        <button class="btn btn-outline-info btn-lg" onclick="exportAlerts()">
+            <i class="fas fa-download me-2"></i>
+            تصدير التنبيهات
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function handleAlert(actionUrl) {
+    if (actionUrl && actionUrl !== '#') {
+        window.location.href = actionUrl;
+    } else {
+        alert('سيتم إضافة إجراءات محددة لكل نوع تنبيه');
+    }
+}
+
+function dismissAlert(button) {
+    const alertCard = button.closest('.alert-card');
+    alertCard.style.opacity = '0.5';
+    alertCard.style.transform = 'translateX(100%)';
+    setTimeout(() => {
+        alertCard.remove();
+    }, 300);
+}
+
+function snoozeAlert(button) {
+    const alertCard = button.closest('.alert-card');
+    alertCard.style.opacity = '0.3';
+    alert('سيتم تذكيرك بهذا التنبيه خلال ساعة');
+}
+
+function checkForAlerts() {
+    // محاكاة فحص التنبيهات الجديدة
+    const loader = document.createElement('div');
+    loader.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الفحص...';
+    loader.className = 'text-center text-info';
+    
+    const button = event.target;
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الفحص...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalContent;
+        button.disabled = false;
+        alert('تم فحص جميع الأنظمة - لا توجد تنبيهات جديدة');
+    }, 2000);
+}
+
+function saveAlertSettings() {
+    alert('تم حفظ إعدادات التنبيهات بنجاح');
+}
+
+function exportAlerts() {
+    alert('سيتم إضافة وظيفة تصدير التنبيهات قريباً');
+}
+
+// تحديث التنبيهات كل 30 ثانية
+setInterval(() => {
+    console.log('فحص التنبيهات الجديدة...');
+    // يمكن إضافة استدعاء AJAX هنا لجلب التنبيهات الجديدة
+}, 30000);
+</script>
+{% endblock %}

@@ -315,6 +315,20 @@
         color: white;
     }
 
+    /* AI Services Card Styles */
+    .ai-services-card .report-card-header {
+        background: linear-gradient(135deg, #00d4aa 0%, #0099cc 100%);
+    }
+
+    .btn-ai-services {
+        background: linear-gradient(135deg, #00d4aa 0%, #0099cc 100%);
+        color: white;
+    }
+
+    .ai-services-card .feature-list {
+        border-color: #00d4aa;
+    }
+
     /* ألوان النصوص */
     .card-text {
         color: var(--text-light);
@@ -658,7 +672,43 @@
                     </a>
                 </div>
             </div>
+            <!-- بطاقة الذكاء الاصطناعي المتقدم -->
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="modern-report-card ai-services-card">
+                    <div class="report-card-header">
+                        <div class="report-card-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h5 class="report-card-title">
+                            خدمات الذكاء الاصطناعي
+                        </h5>
+                    </div>
+                    <div class="report-card-body">
+                        <p class="card-description">
+                            تحليل ذكي شامل وتوصيات احترافية مدعومة بالذكاء الاصطناعي
+                        </p>
+                        <div class="feature-list">
+                            <div class="feature-list-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                تحليل ذكي للبيانات
+                            </div>
+                            <div class="feature-list-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                توقعات مستقبلية دقيقة
+                            </div>
+                            <div class="feature-list-item">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                توصيات استراتيجية
+                            </div>
+                        </div>
+                        <a href="/ai/" class="report-btn btn-ai-services">
+                            <i class="fas fa-robot me-2"></i>
+                            الذكاء الاصطناعي
+                        </a>
+                    </div>
+                </div>
         </div>
+
     </div>
 </div>
 {% endblock %}

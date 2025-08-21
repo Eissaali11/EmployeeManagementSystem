@@ -1,0 +1,292 @@
+{% extends 'layout.html' %}
+
+{% block title %}تحليل الموظفين الذكي - الذكاء الاصطناعي{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+    }
+
+    .ai-insights-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .ai-insights-card:hover {
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.3);
+    }
+
+    .insights-chart {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .department-stat {
+        background: linear-gradient(45deg, var(--ai-accent), var(--ai-secondary));
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .insight-metric {
+        background: rgba(0, 212, 170, 0.1);
+        border: 1px solid var(--ai-border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--ai-accent);
+    }
+
+    .metric-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة -->
+    <div class="ai-insights-card">
+        <div class="card-body text-center">
+            <h1 class="text-light mb-3">
+                <i class="fas fa-user-tie me-3" style="color: var(--ai-accent);"></i>
+                تحليل الموظفين الذكي
+            </h1>
+            <p class="lead text-light">
+                تحليل متقدم لأداء الموظفين ومعدلات الحضور والإنتاجية
+            </p>
+        </div>
+    </div>
+
+    <!-- إحصائيات عامة -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="insight-metric">
+                <div class="metric-value">{{ employees_data|length }}</div>
+                <div class="metric-label">إجمالي الموظفين</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="insight-metric">
+                <div class="metric-value">{{ department_stats|length }}</div>
+                <div class="metric-label">عدد الأقسام</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="insight-metric">
+                <div class="metric-value">95%</div>
+                <div class="metric-label">معدل الحضور</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="insight-metric">
+                <div class="metric-value">87%</div>
+                <div class="metric-label">مؤشر الأداء</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- توزيع الموظفين حسب الأقسام -->
+    <div class="ai-insights-card">
+        <div class="card-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-chart-pie me-2"></i>
+                توزيع الموظفين حسب الأقسام
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for dept in department_stats %}
+                <div class="col-md-4 mb-3">
+                    <div class="department-stat">
+                        <h5>{{ dept[0] or 'قسم غير محدد' }}</h5>
+                        <div class="h3">{{ dept[1] }} موظف</div>
+                        <small>متوسط الراتب: {{ "%.0f"|format(dept[2] or 0) }} ريال</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- تحليلات الأداء -->
+    <div class="ai-insights-card">
+        <div class="card-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-chart-line me-2"></i>
+                تحليلات الأداء المتقدمة
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="insights-chart">
+                <canvas id="performanceChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5 class="text-light">التوصيات الذكية:</h5>
+                    <ul class="text-light">
+                        <li>تحسين برامج التدريب للأقسام ذات الأداء المنخفض</li>
+                        <li>تطبيق نظام حوافز للموظفين المتميزين</li>
+                        <li>مراجعة هيكل الرواتب في الأقسام التقنية</li>
+                        <li>تطوير برامج التطوير المهني</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h5 class="text-light">مؤشرات الأداء:</h5>
+                    <div class="insight-metric">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="metric-value" style="font-size: 1.5rem;">92%</div>
+                                <div class="metric-label">رضا الموظفين</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-value" style="font-size: 1.5rem;">88%</div>
+                                <div class="metric-label">معدل الاحتفاظ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تحليل تفصيلي للموظفين -->
+    <div class="ai-insights-card">
+        <div class="card-header">
+            <h4 class="text-light mb-0">
+                <i class="fas fa-users me-2"></i>
+                التحليل التفصيلي للموظفين
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th>الموظف</th>
+                            <th>معدل الحضور</th>
+                            <th>متوسط الراتب</th>
+                            <th>تقييم الأداء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in employees_data[:10] %}
+                        <tr>
+                            <td>موظف #{{ emp[0] }}</td>
+                            <td>
+                                <span class="badge bg-success">{{ emp[3] or 0 }} يوم</span>
+                            </td>
+                            <td>{{ "%.0f"|format(emp[4] or 0) }} ريال</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-info" style="width: {{ (emp[3] or 0) * 3 }}%">
+                                        {{ "%.0f"|format((emp[3] or 0) * 3) }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- أزرار الإجراءات -->
+    <div class="text-center">
+        <a href="/ai/" class="btn btn-outline-light btn-lg me-3">
+            <i class="fas fa-arrow-left me-2"></i>
+            العودة للذكاء الاصطناعي
+        </a>
+        <button class="btn btn-outline-info btn-lg" onclick="generateReport()">
+            <i class="fas fa-download me-2"></i>
+            تصدير التقرير
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// رسم بياني لتحليل الأداء
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+        datasets: [{
+            label: 'معدل الحضور',
+            data: [92, 94, 89, 96, 93, 95],
+            borderColor: '#00d4aa',
+            backgroundColor: 'rgba(0, 212, 170, 0.1)',
+            tension: 0.4
+        }, {
+            label: 'مؤشر الأداء',
+            data: [85, 87, 83, 90, 88, 87],
+            borderColor: '#0099cc',
+            backgroundColor: 'rgba(0, 153, 204, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#ffffff'
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#ffffff'
+                },
+                grid: {
+                    color: 'rgba(255, 255, 255, 0.1)'
+                }
+            }
+        }
+    }
+});
+
+function generateReport() {
+    alert('سيتم إضافة وظيفة تصدير التقرير قريباً');
+}
+</script>
+{% endblock %}

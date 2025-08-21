@@ -1,0 +1,379 @@
+{% extends 'layout.html' %}
+
+{% block title %}التوصيات الذكية - الذكاء الاصطناعي{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+    }
+
+    .recommendation-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .recommendation-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--ai-accent), var(--ai-secondary));
+    }
+
+    .recommendation-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 212, 170, 0.3);
+    }
+
+    .recommendation-header {
+        background: var(--ai-gradient);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px 15px 0 0;
+    }
+
+    .recommendation-item {
+        background: rgba(0, 212, 170, 0.1);
+        border: 1px solid var(--ai-border);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .recommendation-item:hover {
+        background: rgba(0, 212, 170, 0.2);
+        transform: translateX(5px);
+    }
+
+    .priority-high {
+        border-left: 4px solid #dc3545;
+    }
+
+    .priority-medium {
+        border-left: 4px solid #ffc107;
+    }
+
+    .priority-low {
+        border-left: 4px solid #198754;
+    }
+
+    .ai-analysis-box {
+        background: linear-gradient(45deg, rgba(0, 212, 170, 0.1), rgba(0, 153, 204, 0.1));
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 2rem 0;
+        position: relative;
+    }
+
+    .ai-analysis-box::before {
+        content: '🤖';
+        position: absolute;
+        top: -10px;
+        left: 20px;
+        background: var(--ai-gradient);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 1.2rem;
+    }
+
+    .impact-meter {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        height: 8px;
+        margin: 0.5rem 0;
+        overflow: hidden;
+    }
+
+    .impact-fill {
+        height: 100%;
+        border-radius: 20px;
+        transition: width 0.5s ease;
+    }
+
+    .impact-high { background: linear-gradient(90deg, #dc3545, #fd7e14); }
+    .impact-medium { background: linear-gradient(90deg, #ffc107, #ffca2c); }
+    .impact-low { background: linear-gradient(90deg, #198754, #20c997); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة -->
+    <div class="recommendation-card">
+        <div class="recommendation-header text-center">
+            <h1 class="mb-3">
+                <i class="fas fa-lightbulb me-3"></i>
+                التوصيات الاستراتيجية الذكية
+            </h1>
+            <p class="lead mb-0">
+                توصيات مدعومة بالذكاء الاصطناعي لتحسين الكفاءة التشغيلية والربحية
+            </p>
+        </div>
+    </div>
+
+    <!-- ملخص البيانات -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="recommendation-card">
+                <div class="card-body text-center">
+                    <h3 class="text-info">{{ company_data.employees or 0 }}</h3>
+                    <p class="text-light">الموظفين</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="recommendation-card">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ company_data.vehicles or 0 }}</h3>
+                    <p class="text-light">المركبات</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="recommendation-card">
+                <div class="card-body text-center">
+                    <h3 class="text-warning">{{ company_data.departments or 0 }}</h3>
+                    <p class="text-light">الأقسام</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="recommendation-card">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ "%.1f"|format(company_data.attendance_rate or 0) }}%</h3>
+                    <p class="text-light">معدل الحضور</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تحليل الذكاء الاصطناعي -->
+    <div class="ai-analysis-box">
+        <h4 class="text-light mb-3" style="margin-top: 1rem;">تحليل الذكاء الاصطناعي</h4>
+        <p class="text-light">
+            بناءً على تحليل البيانات المتاحة، تم تحديد عدة مجالات للتحسين والتطوير. 
+            النظام يعمل بكفاءة جيدة مع إمكانيات واعدة للنمو والتطوير في المستقبل.
+        </p>
+    </div>
+
+    <!-- التوصيات حسب الفئات -->
+    {% if recommendations %}
+        <!-- تحسين الكفاءة التشغيلية -->
+        <div class="recommendation-card">
+            <div class="recommendation-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-cogs me-2"></i>
+                    تحسين الكفاءة التشغيلية
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for item in recommendations.efficiency %}
+                <div class="recommendation-item priority-high">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-light">{{ item }}</h6>
+                            <small class="text-muted">الأولوية: عالية</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="impact-meter" style="width: 120px;">
+                                <div class="impact-fill impact-high" style="width: 85%;"></div>
+                            </div>
+                            <small class="text-light">تأثير: 85%</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- تطوير الموارد البشرية -->
+        <div class="recommendation-card">
+            <div class="recommendation-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    تطوير الموارد البشرية
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for item in recommendations.hr %}
+                <div class="recommendation-item priority-medium">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-light">{{ item }}</h6>
+                            <small class="text-muted">الأولوية: متوسطة</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="impact-meter" style="width: 120px;">
+                                <div class="impact-fill impact-medium" style="width: 70%;"></div>
+                            </div>
+                            <small class="text-light">تأثير: 70%</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- إدارة الأسطول -->
+        <div class="recommendation-card">
+            <div class="recommendation-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-car me-2"></i>
+                    إدارة الأسطول والمركبات
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for item in recommendations.fleet %}
+                <div class="recommendation-item priority-medium">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-light">{{ item }}</h6>
+                            <small class="text-muted">الأولوية: متوسطة</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="impact-meter" style="width: 120px;">
+                                <div class="impact-fill impact-medium" style="width: 65%;"></div>
+                            </div>
+                            <small class="text-light">تأثير: 65%</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- التحسينات المالية -->
+        <div class="recommendation-card">
+            <div class="recommendation-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-chart-line me-2"></i>
+                    التحسينات المالية
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for item in recommendations.financial %}
+                <div class="recommendation-item priority-high">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-light">{{ item }}</h6>
+                            <small class="text-muted">الأولوية: عالية</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="impact-meter" style="width: 120px;">
+                                <div class="impact-fill impact-high" style="width: 90%;"></div>
+                            </div>
+                            <small class="text-light">تأثير: 90%</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- الامتثال والأنظمة -->
+        <div class="recommendation-card">
+            <div class="recommendation-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    الامتثال والأنظمة السعودية
+                </h3>
+            </div>
+            <div class="card-body">
+                {% for item in recommendations.compliance %}
+                <div class="recommendation-item priority-low">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="text-light">{{ item }}</h6>
+                            <small class="text-muted">الأولوية: منخفضة</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="impact-meter" style="width: 120px;">
+                                <div class="impact-fill impact-low" style="width: 50%;"></div>
+                            </div>
+                            <small class="text-light">تأثير: 50%</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <!-- حالة عدم وجود توصيات -->
+        <div class="recommendation-card">
+            <div class="card-body text-center">
+                <i class="fas fa-robot fa-3x text-muted mb-3"></i>
+                <h4 class="text-light">جاري تحليل البيانات...</h4>
+                <p class="text-muted">يقوم الذكاء الاصطناعي بتحليل بيانات شركتكم لتقديم توصيات مخصصة</p>
+                <button class="btn btn-outline-info" onclick="refreshRecommendations()">
+                    <i class="fas fa-sync me-2"></i>
+                    تحديث التوصيات
+                </button>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- أزرار الإجراءات -->
+    <div class="text-center mt-4">
+        <a href="/ai/" class="btn btn-outline-light btn-lg me-3">
+            <i class="fas fa-arrow-left me-2"></i>
+            العودة للذكاء الاصطناعي
+        </a>
+        <button class="btn btn-outline-success btn-lg me-3" onclick="exportRecommendations()">
+            <i class="fas fa-download me-2"></i>
+            تصدير التوصيات
+        </button>
+        <button class="btn btn-outline-primary btn-lg" onclick="implementRecommendation()">
+            <i class="fas fa-play me-2"></i>
+            تطبيق التوصيات
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function refreshRecommendations() {
+    window.location.reload();
+}
+
+function exportRecommendations() {
+    // تصدير التوصيات إلى PDF
+    alert('سيتم إضافة وظيفة التصدير قريباً');
+}
+
+function implementRecommendation() {
+    // تطبيق التوصيات
+    alert('سيتم إضافة وظيفة التطبيق قريباً');
+}
+
+// تحديث أشرطة التأثير مع الرسوم المتحركة
+document.addEventListener('DOMContentLoaded', function() {
+    const impactFills = document.querySelectorAll('.impact-fill');
+    impactFills.forEach((fill, index) => {
+        setTimeout(() => {
+            fill.style.width = fill.style.width || '0%';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

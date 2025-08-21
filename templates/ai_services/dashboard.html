@@ -1,0 +1,525 @@
+{% extends 'layout.html' %}
+
+{% block title %}الذكاء الاصطناعي - لوحة التحكم{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ألوان وتصميم الذكاء الاصطناعي */
+    :root {
+        --ai-primary: #1e3a5c;
+        --ai-secondary: #2d5a87;
+        --ai-accent: #00d4aa;
+        --ai-gradient: linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-secondary) 100%);
+        --ai-glow: 0 0 20px rgba(0, 212, 170, 0.3);
+        --ai-card-bg: rgba(255, 255, 255, 0.05);
+        --ai-border: rgba(0, 212, 170, 0.2);
+    }
+
+    /* خلفية متحركة للذكاء الاصطناعي */
+    body {
+        background: linear-gradient(135deg, var(--ai-primary) 0%, #1a1a1a 50%, var(--ai-secondary) 100%);
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(0, 212, 170, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(0, 212, 170, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -1;
+        animation: aiGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes aiGlow {
+        0% { opacity: 0.3; }
+        100% { opacity: 0.7; }
+    }
+
+    /* رأس الصفحة */
+    .ai-header {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--ai-border);
+        border-radius: 15px;
+        box-shadow: var(--ai-glow);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 212, 170, 0.1), transparent);
+        animation: scan 3s infinite;
+    }
+
+    @keyframes scan {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    .ai-title {
+        background: linear-gradient(45deg, var(--ai-accent), #ffffff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 700;
+        text-shadow: var(--ai-glow);
+    }
+
+    /* بطاقات الإحصائيات المتقدمة */
+    .ai-stat-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--ai-glow);
+        border-color: var(--ai-accent);
+    }
+
+    .ai-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--ai-accent), var(--ai-secondary));
+    }
+
+    .ai-stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--ai-accent);
+        text-shadow: 0 0 10px rgba(0, 212, 170, 0.5);
+    }
+
+    .ai-stat-label {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    /* أزرار متقدمة */
+    .ai-btn {
+        background: var(--ai-gradient);
+        border: 1px solid var(--ai-border);
+        border-radius: 10px;
+        color: white;
+        padding: 12px 25px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--ai-glow);
+        color: white;
+    }
+
+    .ai-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .ai-btn:hover::before {
+        left: 100%;
+    }
+
+    /* قائمة الميزات المتقدمة */
+    .ai-features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .ai-feature-card {
+        background: var(--ai-card-bg);
+        backdrop-filter: blur(15px);
+        border: 1px solid var(--ai-border);
+        border-radius: 15px;
+        padding: 2rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .ai-feature-card:hover {
+        transform: scale(1.02);
+        box-shadow: var(--ai-glow);
+    }
+
+    .ai-feature-icon {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1rem;
+        background: var(--ai-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        box-shadow: var(--ai-glow);
+    }
+
+    .ai-feature-title {
+        color: var(--ai-accent);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .ai-feature-desc {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+    }
+
+    /* تأثيرات الحركة */
+    .ai-pulse {
+        animation: aiPulse 2s infinite;
+    }
+
+    @keyframes aiPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    /* تصميم متجاوب */
+    @media (max-width: 768px) {
+        .ai-features-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .ai-stat-number {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- رأس الصفحة المتقدم -->
+    <div class="ai-header">
+        <div class="card-body text-center">
+            <h1 class="ai-title mb-3">
+                <i class="fas fa-brain me-3"></i>
+                نظام الذكاء الاصطناعي المتقدم
+            </h1>
+            <p class="lead text-light mb-0">
+                تحليل ذكي • توقعات دقيقة • توصيات احترافية • رؤى مستقبلية
+            </p>
+        </div>
+    </div>
+
+    <!-- إحصائيات الذكاء الاصطناعي -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="ai-stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="ai-feature-icon me-3" style="width: 50px; height: 50px;">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <div class="ai-stat-number">{{ total_employees }}</div>
+                        <div class="ai-stat-label">إجمالي الموظفين</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="ai-stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="ai-feature-icon me-3" style="width: 50px; height: 50px;">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div>
+                        <div class="ai-stat-number">{{ total_vehicles }}</div>
+                        <div class="ai-stat-label">أسطول المركبات</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="ai-stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="ai-feature-icon me-3" style="width: 50px; height: 50px;">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div>
+                        <div class="ai-stat-number">{{ active_employees }}</div>
+                        <div class="ai-stat-label">موظفين نشطين</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="ai-stat-card">
+                <div class="d-flex align-items-center">
+                    <div class="ai-feature-icon me-3" style="width: 50px; height: 50px;">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div>
+                        <div class="ai-stat-number">{{ "%.1f"|format(attendance_rate) }}%</div>
+                        <div class="ai-stat-label">معدل الحضور</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ميزات الذكاء الاصطناعي المتقدمة -->
+    <div class="ai-features-grid">
+        <!-- تحليل الموظفين الذكي -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-icon ai-pulse">
+                <i class="fas fa-user-tie"></i>
+            </div>
+            <h4 class="ai-feature-title">تحليل الموظفين الذكي</h4>
+            <p class="ai-feature-desc">
+                تحليل متقدم لأداء الموظفين، معدلات الحضور، والإنتاجية مع توصيات مخصصة لكل قسم
+            </p>
+            <a href="{{ url_for('ai_services.employee_insights') }}" class="ai-btn mt-3">
+                <i class="fas fa-chart-bar"></i>
+                تحليل الموظفين
+            </a>
+        </div>
+
+        <!-- تحليل المركبات الذكي -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-icon ai-pulse">
+                <i class="fas fa-cars"></i>
+            </div>
+            <h4 class="ai-feature-title">إدارة الأسطول الذكية</h4>
+            <p class="ai-feature-desc">
+                تحليل كفاءة المركبات، توقع احتياجات الصيانة، وتحسين استخدام الأسطول
+            </p>
+            <a href="{{ url_for('ai_services.vehicle_analytics') }}" class="ai-btn mt-3">
+                <i class="fas fa-cogs"></i>
+                تحليل المركبات
+            </a>
+        </div>
+
+        <!-- التحليل التنبؤي -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-icon ai-pulse">
+                <i class="fas fa-crystal-ball"></i>
+            </div>
+            <h4 class="ai-feature-title">التحليل التنبؤي</h4>
+            <p class="ai-feature-desc">
+                توقعات دقيقة للحضور، التكاليف، والاحتياجات المستقبلية باستخدام خوارزميات متطورة
+            </p>
+            <a href="{{ url_for('ai_services.predictive_analytics') }}" class="ai-btn mt-3">
+                <i class="fas fa-chart-line"></i>
+                التنبؤات الذكية
+            </a>
+        </div>
+
+        <!-- التوصيات الذكية -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-icon ai-pulse">
+                <i class="fas fa-lightbulb"></i>
+            </div>
+            <h4 class="ai-feature-title">التوصيات الاستراتيجية</h4>
+            <p class="ai-feature-desc">
+                توصيات مدعومة بالذكاء الاصطناعي لتحسين الكفاءة التشغيلية والربحية
+            </p>
+            <a href="{{ url_for('ai_services.ai_recommendations') }}" class="ai-btn mt-3">
+                <i class="fas fa-brain"></i>
+                التوصيات الذكية
+            </a>
+        </div>
+
+        <!-- التنبيهات الذكية -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-icon ai-pulse">
+                <i class="fas fa-bell"></i>
+            </div>
+            <h4 class="ai-feature-title">التنبيهات الاستباقية</h4>
+            <p class="ai-feature-desc">
+                نظام تنبيهات ذكي يتوقع المشاكل قبل حدوثها ويقدم حلول استباقية
+            </p>
+            <a href="{{ url_for('ai_services.smart_alerts') }}" class="ai-btn mt-3">
+                <i class="fas fa-exclamation-triangle"></i>
+                التنبيهات الذكية
+            </a>
+        </div>
+
+        <!-- واجهة برمجة التطبيقات -->
+        <div class="ai-feature-card">
+            <div class="ai-feature-icon ai-pulse">
+                <i class="fas fa-code"></i>
+            </div>
+            <h4 class="ai-feature-title">واجهة برمجة ذكية</h4>
+            <p class="ai-feature-desc">
+                API متقدمة للتكامل مع أنظمة أخرى والحصول على تحليلات فورية
+            </p>
+            <button class="ai-btn mt-3" onclick="testAI()">
+                <i class="fas fa-play"></i>
+                اختبار الواجهة
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- نافذة نتائج التحليل -->
+<div class="modal fade" id="aiResultModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: var(--ai-card-bg); backdrop-filter: blur(20px); border: 1px solid var(--ai-border);">
+            <div class="modal-header" style="border-color: var(--ai-border);">
+                <h5 class="modal-title text-light">
+                    <i class="fas fa-brain me-2"></i>
+                    نتائج التحليل الذكي
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-light" id="aiResultContent">
+                <!-- سيتم تحميل النتائج هنا -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// دالة اختبار الذكاء الاصطناعي
+async function testAI() {
+    const modal = new bootstrap.Modal(document.getElementById('aiResultModal'));
+    const content = document.getElementById('aiResultContent');
+    
+    content.innerHTML = `
+        <div class="text-center">
+            <div class="spinner-border text-info" role="status">
+                <span class="visually-hidden">جاري التحليل...</span>
+            </div>
+            <p class="mt-3">جاري تحليل البيانات بالذكاء الاصطناعي...</p>
+        </div>
+    `;
+    
+    modal.show();
+    
+    try {
+        const response = await fetch('/ai/api/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                type: 'general'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            content.innerHTML = `
+                <div class="ai-analysis-result">
+                    <h6 class="text-info mb-3">
+                        <i class="fas fa-chart-line me-2"></i>
+                        نظرة عامة
+                    </h6>
+                    <p>${data.analysis.overview || 'تم تحليل البيانات بنجاح'}</p>
+                    
+                    <h6 class="text-success mb-3 mt-4">
+                        <i class="fas fa-thumbs-up me-2"></i>
+                        نقاط القوة
+                    </h6>
+                    <ul class="list-unstyled">
+                        ${(data.analysis.strengths || []).map(strength => 
+                            `<li><i class="fas fa-check text-success me-2"></i>${strength}</li>`
+                        ).join('')}
+                    </ul>
+                    
+                    <h6 class="text-warning mb-3 mt-4">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        التوصيات
+                    </h6>
+                    <ul class="list-unstyled">
+                        ${(data.analysis.recommendations || []).map(rec => 
+                            `<li><i class="fas fa-arrow-right text-warning me-2"></i>${rec}</li>`
+                        ).join('')}
+                    </ul>
+                    
+                    <div class="mt-4 p-3 rounded" style="background: rgba(0, 212, 170, 0.1); border: 1px solid var(--ai-border);">
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            تم التحليل في: ${new Date(data.timestamp).toLocaleString('ar-SA')}
+                        </small>
+                    </div>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    خطأ في التحليل: ${data.error}
+                </div>
+            `;
+        }
+    } catch (error) {
+        content.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-wifi me-2"></i>
+                خطأ في الاتصال. يرجى المحاولة مرة أخرى.
+            </div>
+        `;
+    }
+}
+
+// تحديث الإحصائيات بشكل دوري
+setInterval(function() {
+    fetch('/ai/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // تحديث الأرقام مع تأثير حركي
+                document.querySelectorAll('.ai-stat-number').forEach(element => {
+                    element.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                    }, 200);
+                });
+            }
+        })
+        .catch(error => console.log('تحديث الإحصائيات:', error));
+}, 30000); // كل 30 ثانية
+</script>
+{% endblock %}
