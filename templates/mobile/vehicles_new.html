@@ -125,6 +125,35 @@
         box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
     }
 
+    /* عنوان قائمة السيارات */
+    .section-header {
+        margin: 30px 0 20px;
+        padding: 0 20px;
+    }
+    
+    .section-title {
+        color: #ffffff;
+        font-size: 22px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .section-title i {
+        color: #00d4ff;
+        font-size: 20px;
+    }
+    
+    .results-count {
+        font-size: 16px;
+        color: #00d4ff;
+        font-weight: 500;
+        margin-right: 8px;
+    }
+
     /* إحصائيات السيارات بتصميم محسّن */
     .vehicle-stats {
         display: grid;
@@ -672,6 +701,17 @@
 
 
 
+<!-- عنوان قائمة السيارات -->
+<div class="section-header">
+    <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        قائمة السيارات
+        {% if vehicles %}
+            <span class="results-count">({{ vehicles|length }} سيارة)</span>
+        {% endif %}
+    </h2>
+</div>
+
 <!-- قائمة السيارات -->
 <div class="vehicles-grid slide-up">
     {% if vehicles %}
@@ -784,7 +824,7 @@
 <div class="pagination-container slide-up" style="margin-top: 30px;">
     <div class="pagination-wrapper">
         {% if pagination.has_prev %}
-        <a href="{{ url_for('mobile.vehicles', page=pagination.prev_num, **request.args) }}" class="pagination-btn">
+        <a href="{{ url_for('mobile.vehicles', page=pagination.prev_num, search=request.args.get('search', ''), status=request.args.get('status', ''), make=request.args.get('make', '')) }}" class="pagination-btn">
             <i class="fas fa-chevron-right"></i>
         </a>
         {% endif %}
@@ -794,7 +834,7 @@
         </span>
         
         {% if pagination.has_next %}
-        <a href="{{ url_for('mobile.vehicles', page=pagination.next_num, **request.args) }}" class="pagination-btn">
+        <a href="{{ url_for('mobile.vehicles', page=pagination.next_num, search=request.args.get('search', ''), status=request.args.get('status', ''), make=request.args.get('make', '')) }}" class="pagination-btn">
             <i class="fas fa-chevron-left"></i>
         </a>
         {% endif %}
