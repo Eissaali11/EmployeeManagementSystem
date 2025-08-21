@@ -241,28 +241,28 @@
             <div class="stat-icon total">
                 <i class="fas fa-car"></i>
             </div>
-            <div class="stat-number">{{ vehicle_stats.total or 0 }}</div>
+            <div class="stat-number">{{ stats.total or 0 }}</div>
             <div class="stat-label">إجمالي السيارات</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon available">
                 <i class="fas fa-check"></i>
             </div>
-            <div class="stat-number">{{ vehicle_stats.available or 0 }}</div>
+            <div class="stat-number">{{ stats.active or 0 }}</div>
             <div class="stat-label">متاحة</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon rented">
                 <i class="fas fa-user"></i>
             </div>
-            <div class="stat-number">{{ vehicle_stats.rented or 0 }}</div>
+            <div class="stat-number">{{ stats.inactive or 0 }}</div>
             <div class="stat-label">مؤجرة</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon maintenance">
                 <i class="fas fa-wrench"></i>
             </div>
-            <div class="stat-number">{{ vehicle_stats.maintenance or 0 }}</div>
+            <div class="stat-number">{{ stats.maintenance or 0 }}</div>
             <div class="stat-label">صيانة</div>
         </div>
     </div>
