@@ -5734,3 +5734,161 @@ def get_vehicle_driver_info(vehicle_id):
 def edit_workshop_mobile(workshop_id):
     """تعديل سجل الورشة للنسخة المحمولة"""
     return redirect(url_for('vehicles.edit_workshop', id=workshop_id))
+
+# ======================== روتات إدارة العمليات المحمولة ========================
+
+@mobile_bp.route('/operations')
+@login_required
+def operations_dashboard():
+    """لوحة إدارة العمليات الرئيسية للنسخة المحمولة"""
+    
+    # التحقق من صلاحيات المدير فقط
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('mobile.dashboard'))
+
+    # استلام قيمة البحث من رابط URL
+    search_plate = request.args.get('search_plate', '').strip()
+
+    # بناء استعلام العمليات المعلقة
+    pending_query = OperationRequest.query.filter_by(status='pending')
+
+    # تطبيق فلتر البحث (إذا تم إدخال قيمة)
+    if search_plate:
+        pending_query = pending_query.join(Vehicle).filter(Vehicle.plate_number.ilike(f"%{search_plate}%"))
+
+    # تنفيذ الاستعلام النهائي
+    pending_requests = pending_query.order_by(
+        OperationRequest.priority.desc(),
+        OperationRequest.requested_at.desc()
+    ).limit(10).all()
+
+    # إحصائيات العمليات
+    stats = {
+        'pending': OperationRequest.query.filter_by(status='pending').count(),
+        'under_review': OperationRequest.query.filter_by(status='under_review').count(),
+        'approved': OperationRequest.query.filter_by(status='approved').count(),
+        'rejected': OperationRequest.query.filter_by(status='rejected').count(),
+        'unread_notifications': OperationNotification.query.filter_by(user_id=current_user.id, is_read=False).count() if hasattr(current_user, 'id') else 0
+    }
+
+    return render_template('mobile/operations.html', 
+                         stats=stats, 
+                         pending_requests=pending_requests)
+
+@mobile_bp.route('/operations/list')
+@login_required
+def operations_list():
+    """قائمة جميع العمليات مع فلترة للنسخة المحمولة"""
+    
+    # التحقق من صلاحيات المدير فقط
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('mobile.dashboard'))
+    
+    # فلترة العمليات
+    status_filter = request.args.get('status', 'all')
+    operation_type_filter = request.args.get('operation_type', 'all')
+    priority_filter = request.args.get('priority', 'all')
+    vehicle_search = request.args.get('vehicle_search', '').strip()
+    
+    query = OperationRequest.query
+    
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    
+    if operation_type_filter != 'all':
+        query = query.filter_by(operation_type=operation_type_filter)
+    
+    if priority_filter != 'all':
+        query = query.filter_by(priority=priority_filter)
+    
+    # البحث حسب السيارة أو المحتوى
+    if vehicle_search:
+        query = query.filter(
+            or_(
+                OperationRequest.title.contains(vehicle_search),
+                OperationRequest.description.contains(vehicle_search)
+            )
+        )
+    
+    # ترتيب العمليات
+    operations = query.order_by(
+        OperationRequest.priority.desc(),
+        OperationRequest.requested_at.desc()
+    ).all()
+    
+    return render_template('mobile/operations_list.html', 
+                         operations=operations,
+                         status_filter=status_filter,
+                         operation_type_filter=operation_type_filter,
+                         priority_filter=priority_filter,
+                         vehicle_search=vehicle_search)
+
+@mobile_bp.route('/operations/<int:operation_id>')
+@login_required
+def operation_details(operation_id):
+    """عرض تفاصيل العملية للنسخة المحمولة"""
+    
+    # التحقق من صلاحيات المدير فقط
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('mobile.dashboard'))
+    
+    operation = OperationRequest.query.get_or_404(operation_id)
+    related_record = operation.get_related_record()
+    
+    # جلب الصور المرتبطة إذا كانت العملية من نوع الورشة
+    workshop_images = []
+    if operation.operation_type == 'workshop_record' and related_record:
+        try:
+            from sqlalchemy import text
+            result = db.session.execute(
+                text("SELECT id, image_type, image_path, notes, uploaded_at FROM vehicle_workshop_images WHERE workshop_record_id = :workshop_id ORDER BY uploaded_at DESC"),
+                {'workshop_id': related_record.id}
+            )
+            workshop_images = [
+                {
+                    'id': row[0],
+                    'image_type': row[1],
+                    'image_path': row[2],
+                    'notes': row[3],
+                    'uploaded_at': row[4]
+                } 
+                for row in result
+            ]
+        except Exception as e:
+            current_app.logger.error(f"خطأ في جلب صور الورشة: {str(e)}")
+    
+    return render_template('mobile/operation_details.html', 
+                         operation=operation,
+                         related_record=related_record,
+                         workshop_images=workshop_images)
+
+@mobile_bp.route('/operations/notifications')
+@login_required
+def operations_notifications():
+    """صفحة الإشعارات للنسخة المحمولة"""
+    
+    # التحقق من صلاحيات المدير فقط
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('mobile.dashboard'))
+    
+    # جلب الإشعارات مرتبة بالتاريخ
+    notifications = OperationNotification.query.filter_by(
+        user_id=current_user.id
+    ).order_by(
+        OperationNotification.is_read.asc(),  # غير المقروءة أولاً
+        OperationNotification.created_at.desc()
+    ).limit(50).all()  # أحدث 50 إشعار
+    
+    # عدد الإشعارات غير المقروءة
+    unread_count = OperationNotification.query.filter_by(
+        user_id=current_user.id, 
+        is_read=False
+    ).count()
+    
+    return render_template('mobile/operations_notifications.html',
+                         notifications=notifications,
+                         unread_count=unread_count)

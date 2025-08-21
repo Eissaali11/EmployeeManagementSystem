@@ -1,0 +1,398 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}إشعارات العمليات{% endblock %}
+
+{% block content %}
+<style>
+/* تنسيق صفحة الإشعارات */
+.notifications-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.notification-item {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.notification-item.unread {
+    border-left: 4px solid #007bff;
+    background: #f8f9ff;
+}
+
+.notification-item.urgent {
+    border-left: 4px solid #dc3545;
+}
+
+.notification-content {
+    padding: 15px;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: between;
+    align-items: start;
+    margin-bottom: 10px;
+}
+
+.notification-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 15px;
+    line-height: 1.4;
+}
+
+.notification-body {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.notification-meta {
+    display: flex;
+    justify-content: between;
+    align-items: center;
+    font-size: 12px;
+    color: #999;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.notification-type {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: 500;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.type-system {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.type-operation {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.type-urgent {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.empty-notifications {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.empty-notifications i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ddd;
+}
+
+.mark-all-read {
+    position: sticky;
+    top: 80px;
+    z-index: 100;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.mobile-content {
+    padding-bottom: 100px !important;
+}
+
+.unread-indicator {
+    width: 8px;
+    height: 8px;
+    background: #007bff;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+</style>
+
+<!-- Header الإشعارات -->
+<div class="notifications-header">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <h5 class="mb-1">
+                <i class="fas fa-bell me-2"></i>
+                إشعارات العمليات
+            </h5>
+            <p class="mb-0 opacity-75">تنبيهات وتحديثات النظام</p>
+        </div>
+        <a href="{{ url_for('mobile.operations_dashboard') }}" class="btn btn-light btn-sm">
+            <i class="fas fa-arrow-right me-1"></i>
+            عودة
+        </a>
+    </div>
+    
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-warning text-dark">{{ unread_count }} غير مقروءة</span>
+        </div>
+        <div class="text-end">
+            <small class="opacity-75">آخر تحديث: الآن</small>
+        </div>
+    </div>
+</div>
+
+<!-- أزرار التحكم -->
+{% if notifications and unread_count > 0 %}
+<div class="mark-all-read">
+    <div class="d-flex gap-2">
+        <button class="btn btn-primary flex-grow-1" onclick="markAllAsRead()">
+            <i class="fas fa-check-double me-2"></i>
+            تحديد الكل كمقروء
+        </button>
+        <button class="btn btn-outline-secondary" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<!-- قائمة الإشعارات -->
+{% if notifications %}
+    {% for notification in notifications %}
+    <div class="notification-item {% if not notification.is_read %}unread{% endif %} {% if notification.priority == 'urgent' %}urgent{% endif %}"
+         data-notification-id="{{ notification.id }}">
+        <div class="notification-content" onclick="markAsRead({{ notification.id }})">
+            <div class="notification-header">
+                <div class="flex-grow-1">
+                    {% if notification.notification_type == 'system' %}
+                        <span class="notification-type type-system">نظام</span>
+                    {% elif notification.notification_type == 'operation' %}
+                        <span class="notification-type type-operation">عملية</span>
+                    {% elif notification.priority == 'urgent' %}
+                        <span class="notification-type type-urgent">عاجل</span>
+                    {% endif %}
+                </div>
+                {% if not notification.is_read %}
+                    <span class="unread-indicator"></span>
+                {% endif %}
+            </div>
+            
+            <div class="notification-title">
+                {{ notification.title }}
+            </div>
+            
+            <div class="notification-body">
+                {{ notification.message }}
+            </div>
+            
+            <div class="notification-meta">
+                <div>
+                    <i class="fas fa-clock me-1"></i>
+                    {% if notification.created_at %}
+                        {{ notification.created_at.strftime('%Y/%m/%d %H:%M') }}
+                    {% endif %}
+                </div>
+                
+                {% if notification.operation_id %}
+                <div>
+                    <a href="{{ url_for('mobile.operation_details', operation_id=notification.operation_id) }}" 
+                       class="btn btn-sm btn-outline-primary"
+                       onclick="event.stopPropagation()">
+                        <i class="fas fa-eye me-1"></i>
+                        عرض العملية
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- تحميل المزيد -->
+    {% if notifications|length >= 20 %}
+    <div class="text-center mt-3">
+        <button class="btn btn-outline-primary" onclick="loadMoreNotifications()">
+            <i class="fas fa-plus me-2"></i>
+            تحميل المزيد
+        </button>
+    </div>
+    {% endif %}
+
+{% else %}
+    <div class="empty-notifications">
+        <div class="text-muted mb-3">
+            <i class="fas fa-bell-slash"></i>
+        </div>
+        <h5 class="text-muted">لا توجد إشعارات</h5>
+        <p class="text-muted">ستظهر الإشعارات الجديدة هنا</p>
+        <button class="btn btn-outline-primary" onclick="location.reload()">
+            <i class="fas fa-sync-alt me-2"></i>
+            تحديث
+        </button>
+    </div>
+{% endif %}
+
+<script>
+function markAsRead(notificationId) {
+    fetch(`/operations/notifications/${notificationId}/mark-read`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // إزالة مؤشر عدم القراءة
+            const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+            if (notification) {
+                notification.classList.remove('unread');
+                const indicator = notification.querySelector('.unread-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            }
+            
+            // تحديث العداد
+            updateUnreadCount(-1);
+        }
+    })
+    .catch(console.error);
+}
+
+function markAllAsRead() {
+    const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+    if (unreadNotifications.length === 0) {
+        alert('جميع الإشعارات مقروءة بالفعل');
+        return;
+    }
+    
+    if (confirm(`هل تريد تحديد ${unreadNotifications.length} إشعار كمقروء؟`)) {
+        fetch('/operations/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // إزالة جميع مؤشرات عدم القراءة
+                unreadNotifications.forEach(notification => {
+                    notification.classList.remove('unread');
+                    const indicator = notification.querySelector('.unread-indicator');
+                    if (indicator) {
+                        indicator.remove();
+                    }
+                });
+                
+                // إخفاء زر "تحديد الكل كمقروء"
+                const markAllButton = document.querySelector('.mark-all-read');
+                if (markAllButton) {
+                    markAllButton.style.display = 'none';
+                }
+                
+                // تحديث العداد
+                updateUnreadCount(-unreadNotifications.length);
+                
+                alert('تم تحديد جميع الإشعارات كمقروءة');
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+
+function updateUnreadCount(change) {
+    const badge = document.querySelector('.badge');
+    if (badge) {
+        const currentCount = parseInt(badge.textContent);
+        const newCount = Math.max(0, currentCount + change);
+        badge.textContent = `${newCount} غير مقروءة`;
+        
+        if (newCount === 0) {
+            badge.className = 'badge bg-success text-white';
+            badge.textContent = 'جميع الإشعارات مقروءة';
+        }
+    }
+}
+
+function loadMoreNotifications() {
+    // يمكن تنفيذ تحميل المزيد من الإشعارات هنا
+    alert('تحميل المزيد من الإشعارات...');
+}
+
+// تحديث الإشعارات تلقائياً كل دقيقة
+setInterval(() => {
+    fetch('/operations/api/notifications-count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.unread > 0) {
+                // إظهار إشعار للإشعارات الجديدة
+                showNewNotificationBanner(data.unread);
+            }
+        })
+        .catch(console.error);
+}, 60000);
+
+function showNewNotificationBanner(count) {
+    // إنشاء banner للإشعارات الجديدة
+    const banner = document.createElement('div');
+    banner.className = 'alert alert-info alert-dismissible fade show position-fixed';
+    banner.style.cssText = 'top: 20px; left: 20px; right: 20px; z-index: 9999;';
+    banner.innerHTML = `
+        <i class="fas fa-bell me-2"></i>
+        <strong>إشعارات جديدة!</strong> 
+        ${count} إشعار جديد
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    document.body.appendChild(banner);
+    
+    setTimeout(() => {
+        if (banner.parentNode) {
+            banner.remove();
+        }
+    }, 5000);
+}
+
+// تفعيل pull-to-refresh
+let startY = 0;
+document.addEventListener('touchstart', function(e) {
+    startY = e.touches[0].clientY;
+});
+
+document.addEventListener('touchend', function(e) {
+    const endY = e.changedTouches[0].clientY;
+    const diff = endY - startY;
+    
+    if (diff > 100 && window.scrollY === 0) {
+        location.reload();
+    }
+});
+</script>
+{% endblock %}

@@ -223,6 +223,16 @@
                 <i class="fas fa-tasks sidebar-menu-icon"></i>
                 <span>فحص المركبات</span>
             </a>
+          </li>
+          
+          {% if current_user.role == 'admin' %}
+          <li class="sidebar-menu-item">
+            <a href="{{ url_for('mobile.operations_dashboard') }}" class="sidebar-menu-link {{ 'active' if 'operations' in request.endpoint }}">
+              <span class="sidebar-menu-icon"><i class="fas fa-cogs"></i></span>
+              <span class="sidebar-menu-text">إدارة العمليات</span>
+            </a>
+          </li>
+          {% endif %}
               <span class="sidebar-menu-icon"><i class="fas fa-clipboard-check"></i></span>
               <span class="sidebar-menu-text">تشيك لست السيارات</span>
             </a>

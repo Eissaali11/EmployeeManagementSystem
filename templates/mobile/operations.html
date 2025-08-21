@@ -1,0 +1,509 @@
+{% extends "mobile/layout.html" %}
+
+{% block title %}إدارة العمليات{% endblock %}
+
+{% block content %}
+<style>
+/* تنسيق خاص لصفحة العمليات المحمولة */
+.operations-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stats-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    padding: 15px;
+    margin-bottom: 15px;
+    text-align: center;
+    border: none;
+}
+
+.stats-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.stats-number {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stats-label {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
+.quick-action-btn {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: #333;
+    display: block;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.quick-action-btn:hover,
+.quick-action-btn:focus {
+    border-color: #667eea;
+    color: #667eea;
+    text-decoration: none;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.operation-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: none;
+}
+
+.operation-header {
+    padding: 15px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.operation-body {
+    padding: 15px;
+}
+
+.operation-type-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 15px;
+    font-weight: 500;
+}
+
+.priority-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.operation-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.operation-actions .btn {
+    flex: 1;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.search-container {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #dc3545;
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    padding: 2px 6px;
+    min-width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ddd;
+}
+
+.refresh-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); }
+    50% { box-shadow: 0 4px 25px rgba(40, 167, 69, 0.5); }
+    100% { box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3); }
+}
+
+.mobile-content {
+    padding-bottom: 120px !important;
+}
+</style>
+
+<!-- Header العمليات -->
+<div class="operations-header">
+    <div class="row align-items-center">
+        <div class="col-8">
+            <h2 class="mb-1">
+                <i class="fas fa-cogs me-2"></i>
+                إدارة العمليات
+            </h2>
+            <p class="mb-0 opacity-75">مراجعة والموافقة على العمليات</p>
+        </div>
+        <div class="col-4 text-center">
+            <div class="stats-number text-white">{{ stats.pending }}</div>
+            <small class="opacity-75">عملية معلقة</small>
+        </div>
+    </div>
+</div>
+
+<!-- إحصائيات سريعة -->
+<div class="row mb-3">
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon text-warning">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stats-number text-warning">{{ stats.pending }}</div>
+            <p class="stats-label">معلقة</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon text-info">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="stats-number text-info">{{ stats.under_review }}</div>
+            <p class="stats-label">تحت المراجعة</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon text-success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stats-number text-success">{{ stats.approved }}</div>
+            <p class="stats-label">موافق عليها</p>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stats-card">
+            <div class="stats-icon text-danger">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="stats-number text-danger">{{ stats.rejected }}</div>
+            <p class="stats-label">مرفوضة</p>
+        </div>
+    </div>
+</div>
+
+<!-- إجراءات سريعة -->
+<div class="row mb-3">
+    <div class="col-6">
+        <a href="{{ url_for('mobile.operations_list') }}" class="quick-action-btn">
+            <i class="fas fa-list me-2"></i>
+            جميع العمليات
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{{ url_for('mobile.operations_list', status='pending') }}" class="quick-action-btn">
+            <i class="fas fa-clock me-2"></i>
+            العمليات المعلقة
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{{ url_for('mobile.operations_notifications') }}" class="quick-action-btn position-relative">
+            <i class="fas fa-bell me-2"></i>
+            الإشعارات
+            {% if stats.unread_notifications > 0 %}
+            <span class="notification-badge">{{ stats.unread_notifications }}</span>
+            {% endif %}
+        </a>
+    </div>
+    <div class="col-6">
+        <a href="{{ url_for('mobile.operations_dashboard') }}" class="quick-action-btn" onclick="location.reload(); return false;">
+            <i class="fas fa-sync-alt me-2"></i>
+            تحديث
+        </a>
+    </div>
+</div>
+
+<!-- بحث سريع -->
+<div class="search-container">
+    <form method="GET" action="{{ url_for('mobile.operations_dashboard') }}">
+        <div class="input-group">
+            <input type="text" class="form-control" name="search_plate" 
+                   value="{{ request.args.get('search_plate', '') }}" 
+                   placeholder="بحث برقم لوحة السيارة...">
+            <button class="btn btn-primary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+            {% if request.args.get('search_plate') %}
+            <a href="{{ url_for('mobile.operations_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- العمليات المعلقة -->
+{% if pending_requests %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+        <i class="fas fa-hourglass-half me-2"></i>
+        العمليات المعلقة
+    </h5>
+    <span class="badge bg-warning">{{ pending_requests|length }}</span>
+</div>
+
+{% for operation in pending_requests %}
+<div class="operation-card">
+    <div class="operation-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    {% if operation.operation_type == 'handover' %}
+                        <span class="operation-type-badge bg-info text-white">تسليم/استلام</span>
+                    {% elif operation.operation_type == 'workshop' %}
+                        <span class="operation-type-badge bg-warning text-dark">ورشة</span>
+                    {% elif operation.operation_type == 'external_authorization' %}
+                        <span class="operation-type-badge bg-primary text-white">تفويض خارجي</span>
+                    {% elif operation.operation_type == 'safety_inspection' %}
+                        <span class="operation-type-badge bg-success text-white">فحص سلامة</span>
+                    {% endif %}
+                    
+                    {% if operation.priority == 'urgent' %}
+                        <span class="priority-badge bg-danger text-white">عاجل</span>
+                    {% elif operation.priority == 'high' %}
+                        <span class="priority-badge bg-warning text-dark">عالي</span>
+                    {% elif operation.priority == 'normal' %}
+                        <span class="priority-badge bg-info text-white">عادي</span>
+                    {% else %}
+                        <span class="priority-badge bg-secondary text-white">منخفض</span>
+                    {% endif %}
+                </div>
+                <h6 class="mb-1">{{ operation.title }}</h6>
+                {% if operation.vehicle %}
+                <div class="text-muted small">
+                    <i class="fas fa-car me-1"></i>
+                    {{ operation.vehicle.plate_number }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="operation-body">
+        <div class="row text-center text-muted small mb-3">
+            <div class="col-6">
+                <i class="fas fa-user me-1"></i>
+                {% if operation.requester %}
+                    {{ operation.requester.name or 'مستخدم' }}
+                {% else %}
+                    مجهول
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <i class="fas fa-clock me-1"></i>
+                {% if operation.requested_at %}
+                    {{ operation.requested_at.strftime('%m/%d %H:%M') }}
+                {% else %}
+                    {{ operation.created_at.strftime('%m/%d %H:%M') }}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="operation-actions">
+            <a href="{{ url_for('mobile.operation_details', operation_id=operation.id) }}" 
+               class="btn btn-outline-primary">
+                <i class="fas fa-eye me-1"></i>
+                عرض
+            </a>
+            <button class="btn btn-success" 
+                    onclick="quickApprove({{ operation.id }})">
+                <i class="fas fa-check me-1"></i>
+                موافقة
+            </button>
+            <button class="btn btn-danger" 
+                    onclick="quickReject({{ operation.id }})">
+                <i class="fas fa-times me-1"></i>
+                رفض
+            </button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% else %}
+<div class="empty-state">
+    <div class="text-muted mb-3">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    <h5 class="text-muted">لا توجد عمليات معلقة</h5>
+    <p class="text-muted">جميع العمليات تمت مراجعتها</p>
+</div>
+{% endif %}
+
+<!-- زر التحديث العائم -->
+<button class="refresh-btn" onclick="location.reload()">
+    <i class="fas fa-sync-alt"></i>
+</button>
+
+<!-- JavaScript للوظائف التفاعلية -->
+<script>
+let lastOperationCount = {{ stats.pending }};
+
+// تحديث تلقائي كل 30 ثانية
+setInterval(checkForNewOperations, 30000);
+
+function checkForNewOperations() {
+    fetch('/operations/api/count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.pending > lastOperationCount) {
+                showNotificationBanner(data.pending - lastOperationCount);
+                lastOperationCount = data.pending;
+                
+                // تحديث العداد في الصفحة
+                updatePendingCount(data.pending);
+            }
+        })
+        .catch(console.error);
+}
+
+function updatePendingCount(newCount) {
+    // تحديث جميع عدادات العمليات المعلقة في الصفحة
+    const pendingElements = document.querySelectorAll('[data-pending-count]');
+    pendingElements.forEach(el => {
+        el.textContent = newCount;
+    });
+}
+
+function showNotificationBanner(newCount) {
+    // إنشاء إشعار في أعلى الصفحة
+    const banner = document.createElement('div');
+    banner.className = 'alert alert-info alert-dismissible fade show position-fixed';
+    banner.style.cssText = 'top: 20px; left: 20px; right: 20px; z-index: 9999;';
+    banner.innerHTML = `
+        <i class="fas fa-bell me-2"></i>
+        <strong>عملية جديدة!</strong> 
+        ${newCount} عملية جديدة تحتاج مراجعة
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    document.body.appendChild(banner);
+    
+    // إزالة الإشعار بعد 5 ثوان
+    setTimeout(() => {
+        if (banner.parentNode) {
+            banner.remove();
+        }
+    }, 5000);
+}
+
+function quickApprove(operationId) {
+    if (confirm('هل أنت متأكد من الموافقة على هذه العملية؟')) {
+        const formData = new FormData();
+        formData.append('review_notes', 'موافقة سريعة من التطبيق المحمول');
+        
+        fetch(`/operations/${operationId}/approve`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تمت الموافقة بنجاح');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+
+function quickReject(operationId) {
+    const reason = prompt('أدخل سبب الرفض:');
+    if (reason && reason.trim()) {
+        const formData = new FormData();
+        formData.append('review_notes', reason.trim());
+        
+        fetch(`/operations/${operationId}/reject`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('تم رفض العملية');
+                location.reload();
+            } else {
+                alert('حدث خطأ: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ في الشبكة');
+            console.error(error);
+        });
+    }
+}
+
+// تفعيل refresh على swipe down
+let startY = 0;
+document.addEventListener('touchstart', function(e) {
+    startY = e.touches[0].clientY;
+});
+
+document.addEventListener('touchend', function(e) {
+    const endY = e.changedTouches[0].clientY;
+    const diff = endY - startY;
+    
+    // إذا كان التمرير لأسفل أكثر من 100 بكسل وكان في أعلى الصفحة
+    if (diff > 100 && window.scrollY === 0) {
+        location.reload();
+    }
+});
+</script>
+{% endblock %}
