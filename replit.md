@@ -5,7 +5,6 @@
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
-Mobile spacing preferences: Keep existing spacing in /mobile/vehicles/14/handover/create footer code for future reuse.
 
 ## Recent Changes
 - **Landing Page Enhancement (Jan 2025)**: Created comprehensive independent landing page at `/nuzum` route completely separate from main system
