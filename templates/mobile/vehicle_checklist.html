@@ -101,13 +101,6 @@
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
         }
-
-        @media (max-width: 767px) {
-            .action-buttons-container {
-               
-                    margin-bottom: 4.5rem !important; 
-            }
-        }
     </style>
 {% endblock %}
 
@@ -349,8 +342,6 @@
         <input type="hidden" name="driver_signature_data" id="driver-signature-data">
         <input type="hidden" name="damage_diagram_data" id="damage-diagram-data">
 
-        <div class="d-grid mt-3 gap-2 action-buttons-container">
-
         <!-- أزرار الحفظ الديناميكية النهائية -->
         <div class="d-grid mt-3 gap-2">
              {% if is_editing %}
@@ -367,7 +358,6 @@
                 </button>
              {% endif %}
         </div>
-            </div>
     </form>
 
     <!-- قوالب المعاينة المخفية (ضرورية للـ JavaScript) -->
