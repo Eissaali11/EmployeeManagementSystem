@@ -241,17 +241,30 @@ class Permission:
 
 # صلاحيات الأقسام
 class Module(enum.Enum):
-    DASHBOARD = 'dashboard'   # لوحة التحكم
-    EMPLOYEES = 'employees'
-    ATTENDANCE = 'attendance'
-    DEPARTMENTS = 'departments'
-    SALARIES = 'salaries'
-    DOCUMENTS = 'documents'
-    VEHICLES = 'vehicles'
-    USERS = 'users'
-    REPORTS = 'reports'
-    FEES = 'fees'
-    ACCOUNTING = 'accounting'  # النظام المحاسبي
+    DASHBOARD = 'لوحة التحكم'
+    EMPLOYEES = 'الموظفين'
+    ATTENDANCE = 'الحضور والانصراف'
+    DEPARTMENTS = 'الأقسام'
+    SALARIES = 'الرواتب'
+    DOCUMENTS = 'الوثائق'
+    VEHICLES = 'السيارات'
+    USERS = 'المستخدمين'
+    REPORTS = 'التقارير'
+    FEES = 'الرسوم'
+    ACCOUNTING = 'النظام المحاسبي'
+    MOBILE_DEVICES = 'الأجهزة المحمولة'
+    SIM_MANAGEMENT = 'إدارة الشرائح'
+    DEVICE_ASSIGNMENT = 'تخصيص الأجهزة'
+    INTEGRATED_SYSTEM = 'النظام المتكامل'
+    ANALYTICS = 'التحليلات المالية'
+    CHART_OF_ACCOUNTS = 'دليل الحسابات'
+    COST_CENTERS = 'مراكز التكلفة'
+    TRANSACTIONS = 'المعاملات المالية'
+    FISCAL_YEARS = 'السنوات المالية'
+    VENDORS = 'الموردين'
+    CUSTOMERS = 'العملاء'
+    EXTERNAL_SAFETY = 'الفحص الخارجي'
+    LANDING_ADMIN = 'إدارة الصفحة الرئيسية'
 
 class User(UserMixin, db.Model):
     """User model for authentication"""
