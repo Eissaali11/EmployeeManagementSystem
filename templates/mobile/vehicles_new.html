@@ -76,100 +76,135 @@
         background: white;
     }
 
-    /* بطاقات السيارات المضغوطة */
+    /* بطاقات السيارات - تصميم جديد */
     .vehicle-card {
         background: white;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         border: 1px solid #f0f0f5;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         cursor: pointer;
-        width: 100%;
-        min-height: 100px;
+        position: relative;
     }
 
     .vehicle-card:hover {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        transform: translateY(-1px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
     }
 
     .vehicle-header {
         display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 12px;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .vehicle-top-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
     }
 
     .vehicle-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
-        color: white;
+        font-size: 28px;
+        color: #2c3e50;
+        background: #f8f9fa;
         flex-shrink: 0;
     }
 
-    .vehicle-icon.available { background: linear-gradient(135deg, #34C759 0%, #30D158 100%); }
-    .vehicle-icon.rented { background: linear-gradient(135deg, #FF9500 0%, #FF9F0A 100%); }
-    .vehicle-icon.maintenance { background: linear-gradient(135deg, #FF3B30 0%, #FF453A 100%); }
-    .vehicle-icon.workshop { background: linear-gradient(135deg, #8E8E93 0%, #AEAEB2 100%); }
+    .vehicle-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
 
-    .vehicle-info {
-        flex: 1;
-        min-width: 0;
+    .status-available { 
+        background: rgba(52, 199, 89, 0.1); 
+        color: #34C759;
+        border: 1px solid rgba(52, 199, 89, 0.2);
+    }
+    .status-rented { 
+        background: rgba(255, 149, 0, 0.1); 
+        color: #FF9500;
+        border: 1px solid rgba(255, 149, 0, 0.2);
+    }
+    .status-maintenance { 
+        background: rgba(255, 59, 48, 0.1); 
+        color: #FF3B30;
+        border: 1px solid rgba(255, 59, 48, 0.2);
+    }
+    .status-in_workshop { 
+        background: rgba(142, 142, 147, 0.1); 
+        color: #8E8E93;
+        border: 1px solid rgba(142, 142, 147, 0.2);
+    }
+
+    .vehicle-main-info {
+        margin-top: 16px;
     }
 
     .vehicle-name {
-        font-size: 16px;
-        font-weight: 600;
+        font-size: 20px;
+        font-weight: 700;
         color: #1a1a1a;
-        margin-bottom: 4px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        margin-bottom: 8px;
+        text-align: right;
+        line-height: 1.3;
     }
 
     .vehicle-plate {
-        font-size: 14px;
-        color: #8e8e93;
-        font-family: monospace;
-        font-weight: 600;
-        margin-bottom: 6px;
+        font-size: 16px;
+        color: #6c757d;
+        font-family: 'Courier New', monospace;
+        font-weight: 700;
+        text-align: center;
+        background: #f8f9fa;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        margin: 12px 0;
+        letter-spacing: 2px;
     }
 
     .vehicle-details {
         display: flex;
+        flex-direction: column;
         gap: 8px;
-        font-size: 10px;
-        color: #8e8e93;
-        flex-wrap: wrap;
+        margin-top: 16px;
     }
 
     .vehicle-detail {
         display: flex;
         align-items: center;
-        gap: 2px;
+        gap: 8px;
+        font-size: 14px;
+        color: #6c757d;
+        padding: 6px 0;
     }
 
-    .vehicle-status {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 9px;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin-right: auto;
+    .vehicle-detail i {
+        width: 16px;
+        color: #8e8e93;
+        font-size: 14px;
     }
 
-    .status-available { background: rgba(52, 199, 89, 0.1); color: #34C759; }
-    .status-rented { background: rgba(255, 149, 0, 0.1); color: #FF9500; }
-    .status-maintenance { background: rgba(255, 59, 48, 0.1); color: #FF3B30; }
-    .status-workshop { background: rgba(142, 142, 147, 0.1); color: #8E8E93; }
+    .vehicle-detail span {
+        font-weight: 500;
+    }
 
     /* زر الإضافة */
     .fab-button {
@@ -423,7 +458,7 @@
             <button class="filter-btn {% if request.args.get('status') == 'maintenance' %}active{% endif %}" onclick="filterVehicles('maintenance')">
                 صيانة
             </button>
-            <button class="filter-btn {% if request.args.get('status') == 'workshop' %}active{% endif %}" onclick="filterVehicles('workshop')">
+            <button class="filter-btn {% if request.args.get('status') == 'in_workshop' %}active{% endif %}" onclick="filterVehicles('in_workshop')">
                 ورشة
             </button>
         </div>
@@ -438,18 +473,37 @@
     {% if vehicles %}
         {% for vehicle in vehicles %}
         <div class="vehicle-card" onclick="window.location.href='/vehicles/{{ vehicle.id }}'">
+            <div class="vehicle-status status-{{ vehicle.status or 'available' }}">
+                {% if vehicle.status == 'available' %}
+                    <i class="fas fa-check-circle"></i> متاحة
+                {% elif vehicle.status == 'rented' %}
+                    <i class="fas fa-user-circle"></i> مؤجرة
+                {% elif vehicle.status == 'maintenance' %}
+                    <i class="fas fa-wrench"></i> صيانة
+                {% elif vehicle.status == 'in_workshop' %}
+                    <i class="fas fa-tools"></i> ورشة
+                {% else %}
+                    <i class="fas fa-check-circle"></i> متاحة
+                {% endif %}
+            </div>
+            
             <div class="vehicle-header">
-                <div class="vehicle-icon {{ vehicle.status or 'available' }}">
-                    <i class="fas fa-car"></i>
+                <div class="vehicle-top-row">
+                    <div class="vehicle-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
                 </div>
-                <div class="vehicle-info">
+                
+                <div class="vehicle-main-info">
                     <div class="vehicle-name">
                         {{ vehicle.make }} {{ vehicle.model }}
                         {% if vehicle.year %}({{ vehicle.year }}){% endif %}
                     </div>
+                    
                     {% if vehicle.plate_number %}
                     <div class="vehicle-plate">{{ vehicle.plate_number }}</div>
                     {% endif %}
+                    
                     <div class="vehicle-details">
                         {% if vehicle.color %}
                         <div class="vehicle-detail">
@@ -464,14 +518,6 @@
                         </div>
                         {% endif %}
                     </div>
-                </div>
-                <div class="vehicle-status status-{{ vehicle.status or 'available' }}">
-                    {% if vehicle.status == 'available' %}متاحة
-                    {% elif vehicle.status == 'rented' %}مؤجرة
-                    {% elif vehicle.status == 'maintenance' %}صيانة
-                    {% elif vehicle.status == 'workshop' %}ورشة
-                    {% else %}متاحة
-                    {% endif %}
                 </div>
             </div>
         </div>
