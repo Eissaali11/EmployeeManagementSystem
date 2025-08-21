@@ -17,10 +17,11 @@ html {
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
 }
 
-/* حجز مساحة سفلية محسوبة بدقة */
+/* حجز مساحة سفلية كبيرة للتمرير */
 body {
-    padding-bottom: calc(var(--total-bottom-space) + 88px) !important;
+    padding-bottom: 200px !important;
     overflow-y: auto !important;
+    min-height: 100vh !important;
 }
 
 /* إخفاء القائمة السفلية تماماً في هذه الصفحة */
@@ -62,7 +63,7 @@ form {
     box-shadow: 0 6px 25px rgba(0,0,0,0.2);
 }
 
-/* أزرار ثابتة بسيطة وواضحة */
+/* زر الحفظ مع تأثيرات بصرية قوية */
 .fixed-submit-button {
     position: fixed !important;
     bottom: 20px !important;
@@ -71,16 +72,23 @@ form {
     z-index: 9999 !important;
     background: #28a745 !important;
     color: white !important;
-    border: none !important;
-    border-radius: 8px !important;
-    padding: 15px 20px !important;
-    font-size: 16px !important;
+    border: 3px solid #1e7e34 !important;
+    border-radius: 12px !important;
+    padding: 18px 20px !important;
+    font-size: 18px !important;
     font-weight: bold !important;
     text-align: center !important;
     cursor: pointer !important;
     display: block !important;
     width: calc(100% - 40px) !important;
-    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
+    box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6) !important;
+    animation: pulse 2s infinite !important;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6); }
+    50% { box-shadow: 0 8px 35px rgba(40, 167, 69, 0.8); }
+    100% { box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6); }
 }
 
 .fixed-cancel-button {
@@ -268,10 +276,13 @@ form {
             </div>
         </div>
         
-        <!-- مساحة للمحتوى قبل الزر الثابت -->
-        <div style="height: 40px;"></div>
+        <!-- مساحة كبيرة للتمرير -->
+        <div style="height: 300px; background: transparent; width: 100%;"></div>
     </form>
 </div>
+
+<!-- مساحة إضافية خارج النموذج لضمان التمرير -->
+<div style="height: 200px; background: transparent; width: 100%;"></div>
 
 <!-- الأزرار الثابتة أسفل الشاشة -->
 <button type="submit" form="handover-form" class="fixed-submit-button">
