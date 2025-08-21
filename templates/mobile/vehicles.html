@@ -200,6 +200,10 @@
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
+.action-icon.operations {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 .action-label {
     font-size: 0.9rem;
     font-weight: 500;
@@ -700,7 +704,16 @@ body {
                 <i class="fas fa-chart-bar"></i>
             </div>
             <div class="action-label">التقارير والإحصائيات</div>
-
+        </a>
+        
+        {% if current_user.is_authenticated and current_user.role == 'admin' %}
+        <a href="{{ url_for('mobile.operations_dashboard') }}" class="action-card">
+            <div class="action-icon operations">
+                <i class="fas fa-cogs"></i>
+            </div>
+            <div class="action-label">إدارة العمليات</div>
+        </a>
+        {% endif %}
     </div>
 </div>
 

@@ -5739,73 +5739,13 @@ def edit_workshop_mobile(workshop_id):
 
 @mobile_bp.route('/operations')
 @login_required
-def operations():
-    """العمليات العامة للمستخدمين العاديين"""
-    
-    # استلام قيمة البحث من URL
-    search_plate = request.args.get('search_plate', '').strip()
-    
-    # بناء استعلام العمليات 
-    if current_user.role == UserRole.ADMIN:
-        # المدراء يرون جميع العمليات
-        operations_query = OperationRequest.query
-    else:
-        # المستخدمون العاديون يرون عملياتهم فقط
-        operations_query = OperationRequest.query.filter_by(requested_by=current_user.id)
-    
-    # تطبيق فلتر البحث (إذا تم إدخال قيمة)
-    if search_plate:
-        operations_query = operations_query.join(Vehicle, OperationRequest.vehicle_id == Vehicle.id, isouter=True).filter(
-            Vehicle.plate_number.ilike(f"%{search_plate}%")
-        )
-    
-    # الحصول على العمليات مع الترتيب
-    user_operations = operations_query.order_by(OperationRequest.requested_at.desc()).limit(20).all()
-    
-    # إحصائيات شاملة للمستخدم الحالي
-    if current_user.role == UserRole.ADMIN:
-        stats = {
-            'pending': OperationRequest.query.filter_by(status='pending').count(),
-            'under_review': OperationRequest.query.filter_by(status='under_review').count(),
-            'approved': OperationRequest.query.filter_by(status='approved').count(),
-            'rejected': OperationRequest.query.filter_by(status='rejected').count(),
-            'unread_notifications': OperationNotification.query.filter_by(
-                user_id=current_user.id, is_read=False
-            ).count() if hasattr(OperationNotification, 'user_id') else 0
-        }
-    else:
-        stats = {
-            'pending': OperationRequest.query.filter_by(requested_by=current_user.id, status='pending').count(),
-            'under_review': OperationRequest.query.filter_by(requested_by=current_user.id, status='under_review').count(),
-            'approved': OperationRequest.query.filter_by(requested_by=current_user.id, status='approved').count(),
-            'rejected': OperationRequest.query.filter_by(requested_by=current_user.id, status='rejected').count(),
-            'unread_notifications': OperationNotification.query.filter_by(
-                user_id=current_user.id, is_read=False
-            ).count() if hasattr(OperationNotification, 'user_id') else 0
-        }
-    
-    # دعم الطلبات AJAX للتحديث التلقائي
-    if request.args.get('ajax'):
-        return jsonify({
-            'success': True,
-            'new_notifications': stats.get('unread_notifications', 0) > 0,
-            'unread_count': stats.get('unread_notifications', 0),
-            'stats': stats
-        })
-    
-    return render_template('mobile/operations_general.html', 
-                         operations=user_operations, 
-                         stats=stats)
-
-@mobile_bp.route('/operations/dashboard')
-@login_required
 def operations_dashboard():
-    """لوحة إدارة العمليات للمدراء فقط"""
+    """لوحة إدارة العمليات الرئيسية للنسخة المحمولة"""
     
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.index'))
+        return redirect(url_for('mobile.dashboard'))
 
     # استلام قيمة البحث من رابط URL
     search_plate = request.args.get('search_plate', '').strip()
@@ -5837,12 +5777,14 @@ def operations_dashboard():
                          pending_requests=pending_requests)
 
 @mobile_bp.route('/operations/list')
-@login_required  
+@login_required
 def operations_list():
     """قائمة جميع العمليات مع فلترة للنسخة المحمولة"""
     
-    # يمكن للجميع الوصول لقائمة العمليات الخاصة بهم
-    # المدراء يرون جميع العمليات، والمستخدمون العاديون يرون عملياتهم فقط
+    # التحقق من صلاحيات المدير فقط
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('mobile.dashboard'))
     
     # فلترة العمليات
     status_filter = request.args.get('status', 'all')
@@ -5851,38 +5793,6 @@ def operations_list():
     vehicle_search = request.args.get('vehicle_search', '').strip()
     
     query = OperationRequest.query
-    
-    if status_filter != 'all':
-        query = query.filter_by(status=status_filter)
-    
-    if operation_type_filter != 'all':
-        query = query.filter_by(operation_type=operation_type_filter)
-    
-    if priority_filter != 'all':
-        query = query.filter_by(priority=priority_filter)
-    
-    # البحث حسب السيارة أو المحتوى
-    if vehicle_search:
-        query = query.filter(
-            or_(
-                OperationRequest.title.contains(vehicle_search),
-                OperationRequest.description.contains(vehicle_search)
-            )
-        )
-    
-    # ترتيب العمليات
-    operations = query.order_by(
-        OperationRequest.priority.desc(),
-        OperationRequest.requested_at.desc()
-    ).all()
-    
-    # بناء استعلام العمليات
-    if current_user.role == UserRole.ADMIN:
-        # المدراء يرون جميع العمليات
-        query = OperationRequest.query
-    else:
-        # المستخدمون العاديون يرون عملياتهم فقط
-        query = OperationRequest.query.filter_by(requested_by=current_user.id)
     
     if status_filter != 'all':
         query = query.filter_by(status=status_filter)
@@ -5920,15 +5830,12 @@ def operations_list():
 def operation_details(operation_id):
     """عرض تفاصيل العملية للنسخة المحمولة"""
     
-    # الحصول على العملية
+    # التحقق من صلاحيات المدير فقط
+    if current_user.role != UserRole.ADMIN:
+        flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
+        return redirect(url_for('mobile.dashboard'))
+    
     operation = OperationRequest.query.get_or_404(operation_id)
-    
-    # التحقق من الصلاحيات - المدراء يرون جميع العمليات، والمستخدمون يرون عملياتهم فقط
-    if current_user.role != UserRole.ADMIN and operation.requested_by != current_user.id:
-        flash('غير مسموح لك بعرض هذه العملية', 'danger')
-        return redirect(url_for('mobile.operations'))
-    
-    return render_template('mobile/operation_details.html', operation=operation)
     related_record = operation.get_related_record()
     
     # جلب الصور المرتبطة إذا كانت العملية من نوع الورشة
@@ -5966,7 +5873,7 @@ def operations_notifications():
     # التحقق من صلاحيات المدير فقط
     if current_user.role != UserRole.ADMIN:
         flash('غير مسموح لك بالوصول لهذه الصفحة', 'danger')
-        return redirect(url_for('mobile.index'))
+        return redirect(url_for('mobile.dashboard'))
     
     # جلب الإشعارات مرتبة بالتاريخ
     notifications = OperationNotification.query.filter_by(
