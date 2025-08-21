@@ -23,11 +23,9 @@ body {
     overflow-y: auto !important;
 }
 
-/* تحديث ارتفاع القائمة السفلية */
+/* إخفاء القائمة السفلية تماماً في هذه الصفحة */
 .mobile-footer {
-    height: var(--nav-height) !important;
-    bottom: var(--safe-area-bottom) !important;
-    z-index: 100 !important;
+    display: none !important;
 }
 
 /* إزالة مساحات زائدة من المحتوى */
@@ -64,75 +62,43 @@ form {
     box-shadow: 0 6px 25px rgba(0,0,0,0.2);
 }
 
-/* زر الإرسال الثابت أسفل الشاشة */
+/* أزرار ثابتة بسيطة وواضحة */
 .fixed-submit-button {
-    position: fixed;
-    bottom: calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom));
-    left: 16px;
-    right: 16px;
-    z-index: 150 !important; /* أعلى من القائمة السفلية */
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 16px 24px;
-    font-size: 16px;
-    font-weight: 600;
-    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    text-align: center;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 56px;
+    position: fixed !important;
+    bottom: 20px !important;
+    left: 20px !important;
+    right: 20px !important;
+    z-index: 9999 !important;
+    background: #28a745 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 15px 20px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    display: block !important;
+    width: calc(100% - 40px) !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
 }
 
-.fixed-submit-button:hover,
-.fixed-submit-button:focus {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px rgba(76, 175, 80, 0.4);
-    background: linear-gradient(135deg, #45a049, #4CAF50);
-    color: white;
-}
-
-.fixed-submit-button:active {
-    transform: translateY(0);
-}
-
-.fixed-submit-button i {
-    margin-left: 8px;
-}
-
-/* زر الإلغاء الثابت */
 .fixed-cancel-button {
-    position: fixed;
-    bottom: calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom) + 70px);
-    left: 16px;
-    right: 16px;
-    z-index: 149;
-    background: rgba(255, 255, 255, 0.95);
-    color: #666;
-    border: 1px solid #ddd;
-    border-radius: 12px;
-    padding: 14px 24px;
-    font-size: 15px;
-    font-weight: 500;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-    text-align: center;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 48px;
-}
-
-.fixed-cancel-button:hover {
-    background: rgba(248, 249, 250, 0.98);
-    border-color: #999;
-    color: #333;
+    position: fixed !important;
+    bottom: 80px !important;
+    left: 20px !important;
+    right: 20px !important;
+    z-index: 9998 !important;
+    background: #6c757d !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 12px 20px !important;
+    font-size: 14px !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    display: block !important;
+    width: calc(100% - 40px) !important;
 }
 </style>
 <!-- زر عودة ثابت في أعلى الصفحة -->
@@ -318,28 +284,6 @@ form {
     إلغاء
 </a>
 
-<script>
-// تحسين الاستجابة للاتجاه والحجم
-function adjustForOrientation() {
-    const isLandscape = window.innerWidth > window.innerHeight;
-    const submitBtn = document.querySelector('.fixed-submit-button');
-    const cancelBtn = document.querySelector('.fixed-cancel-button');
-    
-    if (isLandscape) {
-        submitBtn.style.bottom = 'calc(var(--nav-height) + 8px + var(--safe-area-bottom))';
-        cancelBtn.style.bottom = 'calc(var(--nav-height) + 66px + var(--safe-area-bottom))';
-    } else {
-        submitBtn.style.bottom = 'calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom))';
-        cancelBtn.style.bottom = 'calc(var(--nav-height) + var(--button-spacing) + var(--safe-area-bottom) + 70px)';
-    }
-}
 
-// تشغيل عند تحميل الصفحة وتغيير الاتجاه
-window.addEventListener('load', adjustForOrientation);
-window.addEventListener('orientationchange', () => {
-    setTimeout(adjustForOrientation, 300);
-});
-window.addEventListener('resize', adjustForOrientation);
-</script>
 
 {% endblock %}
