@@ -89,12 +89,12 @@
     }
 
     /* شريط البحث المخفي */
-    .search-bar {
+    .search-bar, .filters-bar {
         background: rgba(255, 255, 255, 0.95);
         backdrop-filter: blur(10px);
         border-radius: 16px;
         padding: 16px;
-        margin-bottom: 20px;
+        margin: 15px 20px 20px;
         transform: translateY(-20px);
         opacity: 0;
         visibility: hidden;
@@ -102,7 +102,7 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
     }
 
-    .search-bar.show {
+    .search-bar.show, .filters-bar.show {
         transform: translateY(0);
         opacity: 1;
         visibility: visible;
@@ -152,6 +152,47 @@
         color: #00d4ff;
         font-weight: 500;
         margin-right: 8px;
+    }
+
+    /* تحسين أنماط الفلاتر */
+    .filter-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #f0f0f5;
+        border-radius: 12px;
+        font-size: 14px;
+        background: white;
+        transition: all 0.3s ease;
+        outline: none;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+    }
+
+    .filter-select:focus {
+        border-color: #4A90E2;
+        box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    /* تحسين grid السيارات */
+    .vehicles-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        padding: 0 20px;
+        margin-bottom: 100px;
+    }
+
+    @media (min-width: 640px) {
+        .vehicles-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     /* إحصائيات السيارات بتصميم محسّن */
@@ -623,10 +664,10 @@
             <button class="header-btn" onclick="window.location.href='/mobile/dashboard'" title="لوحة التحكم">
                 <i class="fas fa-tachometer-alt"></i>
             </button>
-            <button class="header-btn" onclick="toggleSearch()" title="البحث" id="searchToggle">
+            <button class="header-btn" id="searchToggle" title="البحث">
                 <i class="fas fa-search"></i>
             </button>
-            <button class="header-btn" onclick="toggleFilters()" title="الفلاتر" id="filtersToggle">
+            <button class="header-btn" id="filtersToggle" title="الفلاتر">
                 <i class="fas fa-filter"></i>
             </button>
             <button class="header-btn" onclick="alert('قريباً - إضافة سيارة جديدة')" title="إضافة سيارة">
@@ -909,41 +950,58 @@
         });
     });
 
-    // تبديل عرض شريط البحث
+    // دوال البحث والفلاتر
     function toggleSearch() {
         const searchBar = document.getElementById('searchBar');
         const filtersBar = document.getElementById('filtersBar');
         const searchToggle = document.getElementById('searchToggle');
         const filtersToggle = document.getElementById('filtersToggle');
         
-        searchBar.classList.toggle('show');
-        filtersBar.classList.remove('show');
-        
-        // تحديث حالة الأزرار
-        searchToggle.classList.toggle('active');
-        filtersToggle.classList.remove('active');
-        
-        if (searchBar.classList.contains('show')) {
-            setTimeout(() => {
-                searchBar.querySelector('.search-input').focus();
-            }, 200);
+        if (searchBar && searchToggle) {
+            searchBar.classList.toggle('show');
+            searchToggle.classList.toggle('active');
+            
+            if (filtersBar) filtersBar.classList.remove('show');
+            if (filtersToggle) filtersToggle.classList.remove('active');
+            
+            if (searchBar.classList.contains('show')) {
+                setTimeout(() => {
+                    const searchInput = searchBar.querySelector('.search-input');
+                    if (searchInput) searchInput.focus();
+                }, 200);
+            }
         }
     }
 
-    // تبديل عرض شريط الفلاتر
     function toggleFilters() {
         const filtersBar = document.getElementById('filtersBar');
         const searchBar = document.getElementById('searchBar');
         const searchToggle = document.getElementById('searchToggle');
         const filtersToggle = document.getElementById('filtersToggle');
         
-        filtersBar.classList.toggle('show');
-        searchBar.classList.remove('show');
-        
-        // تحديث حالة الأزرار
-        filtersToggle.classList.toggle('active');
-        searchToggle.classList.remove('active');
+        if (filtersBar && filtersToggle) {
+            filtersBar.classList.toggle('show');
+            filtersToggle.classList.toggle('active');
+            
+            if (searchBar) searchBar.classList.remove('show');
+            if (searchToggle) searchToggle.classList.remove('active');
+        }
     }
+
+    // تأكد من تشغيل الكود بعد تحميل الصفحة
+    document.addEventListener('DOMContentLoaded', function() {
+        // إضافة مستمعات الأحداث
+        const searchToggle = document.getElementById('searchToggle');
+        const filtersToggle = document.getElementById('filtersToggle');
+        
+        if (searchToggle) {
+            searchToggle.addEventListener('click', toggleSearch);
+        }
+        
+        if (filtersToggle) {
+            filtersToggle.addEventListener('click', toggleFilters);
+        }
+    });
 
     // تأثير النقر على البطاقات
     document.querySelectorAll('.vehicle-card').forEach(card => {
