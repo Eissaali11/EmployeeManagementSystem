@@ -101,6 +101,13 @@
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 50%;
         }
+
+        @media (max-width: 767px) {
+            .action-buttons-container {
+
+                    margin-bottom: 4.5rem !important; /* يمكنك تغيير القيمة حسب رغبتك، مثلاً 0 */
+            }
+        }
     </style>
 {% endblock %}
 
@@ -343,6 +350,8 @@
         <input type="hidden" name="damage_diagram_data" id="damage-diagram-data">
 
         <!-- أزرار الحفظ الديناميكية النهائية -->
+        <div class="d-grid mt-3 gap-2 action-buttons-container">
+
         <div class="d-grid mt-3 gap-2">
              {% if is_editing %}
                  <button type="submit" name="action" value="update" class="btn btn-primary btn-lg">
@@ -358,6 +367,8 @@
                 </button>
              {% endif %}
         </div>
+            </div>
+
     </form>
 
     <!-- قوالب المعاينة المخفية (ضرورية للـ JavaScript) -->
