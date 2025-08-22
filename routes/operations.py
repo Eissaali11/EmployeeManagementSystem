@@ -1420,17 +1420,97 @@ def send_operation_email(operation_id):
                     current_app.logger.warning(f"فشل في إنشاء PDF: {str(pdf_error)}")
                     pdf_file_path = None
             
-            # إرسال الإيميل
-            email_service = EmailService()
-            result = email_service.send_vehicle_operation_files(
-                to_email=to_email,
-                to_name=to_name,
-                operation=operation,
-                vehicle_plate=vehicle_plate,
-                driver_name=driver_name,
-                excel_file_path=excel_file_path if include_excel else None,
-                pdf_file_path=pdf_file_path if include_pdf else None
-            )
+            # إرسال الإيميل مع نظام احتياطي
+            # إعداد بيانات العملية للقالب
+            operation_data = {
+                'title': operation.title,
+                'operation_type': operation.operation_type,
+                'status': operation.status,
+                'priority': operation.priority,
+                'requested_at': operation.requested_at.strftime('%Y/%m/%d %H:%M') if operation.requested_at else operation.created_at.strftime('%Y/%m/%d %H:%M'),
+                'requester': operation.requester.username if operation.requester else 'غير محدد',
+                'reviewer': operation.reviewer.username if operation.reviewer else 'لم يتم المراجعة بعد',
+                'description': operation.description
+            }
+            
+            # إعداد المرفقات
+            attachments = []
+            
+            # إضافة ملف Excel
+            if include_excel and excel_file_path and os.path.exists(excel_file_path):
+                with open(excel_file_path, 'rb') as f:
+                    excel_content = f.read()
+                    attachments.append({
+                        'content': excel_content,
+                        'filename': f'operation_{operation.id}_details.xlsx',
+                        'content_type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    })
+            
+            # إضافة ملف PDF إن وجد
+            if include_pdf and pdf_file_path and os.path.exists(pdf_file_path):
+                with open(pdf_file_path, 'rb') as f:
+                    pdf_content = f.read()
+                    attachments.append({
+                        'content': pdf_content,
+                        'filename': f'operation_{operation.id}_document.pdf',
+                        'content_type': 'application/pdf'
+                    })
+            
+            # محاولة إرسال الإيميل باستخدام Resend أولاً
+            result = None
+            try:
+                from services.resend_service import send_email_with_resend, create_operation_email_template
+                
+                html_content = create_operation_email_template(
+                    operation_data=operation_data,
+                    vehicle_plate=vehicle_plate,
+                    driver_name=driver_name
+                )
+                
+                result = send_email_with_resend(
+                    to_email=to_email,
+                    subject=f'تفاصيل العملية: {operation.title} - مركبة {vehicle_plate}',
+                    html_content=html_content,
+                    attachments=attachments if attachments else None
+                )
+                
+                if result.get('success'):
+                    current_app.logger.info(f'تم إرسال الإيميل بنجاح عبر Resend - ID: {result.get("message_id")}')
+                else:
+                    raise Exception(f'فشل Resend: {result.get("error")}')
+                    
+            except Exception as resend_error:
+                current_app.logger.warning(f'فشل إرسال الإيميل عبر Resend: {resend_error}')
+                
+                # استخدام النظام الاحتياطي
+                try:
+                    from services.fallback_email_service import FallbackEmailService, create_operation_email_template_simple
+                    
+                    fallback_service = FallbackEmailService()
+                    html_content = create_operation_email_template_simple(
+                        operation_data=operation_data,
+                        vehicle_plate=vehicle_plate,
+                        driver_name=driver_name
+                    )
+                    
+                    result = fallback_service.send_email(
+                        to_email=to_email,
+                        subject=f'تفاصيل العملية: {operation.title} - مركبة {vehicle_plate}',
+                        html_content=html_content,
+                        attachments=attachments if attachments else None
+                    )
+                    
+                    if result.get('success'):
+                        current_app.logger.info(f'تم حفظ الإيميل محلياً - ID: {result.get("message_id")}')
+                    else:
+                        raise Exception(f'فشل النظام الاحتياطي أيضاً: {result.get("error")}')
+                        
+                except Exception as fallback_error:
+                    current_app.logger.error(f'فشل النظام الاحتياطي: {fallback_error}')
+                    result = {
+                        'success': False,
+                        'message': f'فشل في إرسال الإيميل: {str(fallback_error)}'
+                    }
             
             # تسجيل العملية
             log_audit(
