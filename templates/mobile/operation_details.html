@@ -821,7 +821,7 @@
                     <strong>سيتم إرسال:</strong>
                     <div class="mt-2">
                         • تفاصيل العملية مع رقم المركبة: <strong>{{ operation.vehicle.plate_number if operation.vehicle else 'غير محدد' }}</strong><br>
-                        • اسم السائق: <strong>{{ operation.vehicle.current_driver if operation.vehicle and operation.vehicle.current_driver else 'غير محدد' }}</strong><br>
+                        • اسم السائق: <strong>{{ operation.vehicle.driver_name if operation.vehicle and operation.vehicle.driver_name else 'غير محدد' }}</strong><br>
                         • ملف Excel مع جميع التفاصيل<br>
                         {% if operation.operation_type == 'handover' and operation.related_record_id %}
                         • ملف PDF لنموذج التسليم/الاستلام<br>

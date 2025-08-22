@@ -1330,7 +1330,7 @@ def send_operation_email(operation_id):
             return jsonify({'success': False, 'message': 'لا توجد مركبة مرتبطة بهذه العملية'})
         
         vehicle_plate = vehicle.plate_number
-        driver_name = vehicle.current_driver or 'غير محدد'
+        driver_name = getattr(vehicle, 'driver_name', None) or 'غير محدد'
         
         # مسارات الملفات المؤقتة
         excel_file_path = None
