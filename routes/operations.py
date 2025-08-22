@@ -1382,8 +1382,8 @@ def send_operation_email(operation_id):
                     ('رقم لوحة المركبة', vehicle_plate),
                     ('السائق الحالي', driver_name),
                     ('تاريخ الطلب', operation.requested_at.strftime('%Y/%m/%d %H:%M') if operation.requested_at else operation.created_at.strftime('%Y/%m/%d %H:%M')),
-                    ('طالب العملية', operation.requested_by_user.username if operation.requested_by_user else 'غير محدد'),
-                    ('مراجع العملية', operation.reviewed_by_user.username if operation.reviewed_by_user else 'لم يتم المراجعة بعد'),
+                    ('طالب العملية', operation.requester.username if operation.requester else 'غير محدد'),
+                    ('مراجع العملية', operation.reviewer.username if operation.reviewer else 'لم يتم المراجعة بعد'),
                     ('تاريخ المراجعة', operation.reviewed_at.strftime('%Y/%m/%d %H:%M') if operation.reviewed_at else 'لم يتم المراجعة بعد'),
                 ]
                 
