@@ -435,8 +435,8 @@
             تصدير Excel
         </a>
         
-        {% if operation.operation_type == 'handover' and operation.handover_id %}
-        <a href="{{ url_for('vehicles.handover_pdf_public', id=operation.handover_id) }}" 
+        {% if operation.operation_type == 'handover' and operation.related_record_id %}
+        <a href="{{ url_for('vehicles.handover_pdf_public', id=operation.related_record_id) }}" 
            class="btn btn-outline-primary">
             <i class="fas fa-file-pdf me-2"></i>
             تصدير PDF
