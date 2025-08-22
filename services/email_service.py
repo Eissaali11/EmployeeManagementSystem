@@ -1,7 +1,7 @@
 import os
 import sys
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment
+from sendgrid.helpers.mail import Mail, Email, To, Content, Attachment, MailSettings, SandBoxMode
 import base64
 import mimetypes
 from flask import current_app
@@ -14,7 +14,7 @@ class EmailService:
             return
         self.sg = SendGridAPIClient(self.sendgrid_key)
     
-    def send_vehicle_operation_files(self, to_email, to_name, operation, vehicle_plate, driver_name, excel_file_path=None, pdf_file_path=None, sender_email="noreply@nuzum.com"):
+    def send_vehicle_operation_files(self, to_email, to_name, operation, vehicle_plate, driver_name, excel_file_path=None, pdf_file_path=None, sender_email="noreply@sink.sendgrid.net"):
         """
         إرسال ملفات العملية مع تفاصيل السيارة عبر الإيميل
         """
@@ -260,12 +260,17 @@ class EmailService:
 تم إنشاء هذه الرسالة تلقائياً من النظام
             """
             
-            # إنشاء الرسالة
+            # إنشاء الرسالة مع تفعيل وضع Sandbox للاختبار
             message = Mail(
                 from_email=Email(sender_email, "نظام نُظم"),
                 to_emails=To(to_email, to_name),
                 subject=subject
             )
+            
+            # تفعيل وضع Sandbox لتجنب مشكلة التحقق من المرسل
+            mail_settings = MailSettings()
+            mail_settings.sandbox_mode = SandBoxMode(enable=True)
+            message.mail_settings = mail_settings
             
             message.content = [
                 Content("text/plain", text_content),
