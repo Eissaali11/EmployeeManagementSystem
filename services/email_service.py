@@ -14,7 +14,7 @@ class EmailService:
             return
         self.sg = SendGridAPIClient(self.sendgrid_key)
     
-    def send_vehicle_operation_files(self, to_email, to_name, operation, vehicle_plate, driver_name, excel_file_path=None, pdf_file_path=None, sender_email="noreply@nuzum.com"):
+    def send_vehicle_operation_files(self, to_email, to_name, operation, vehicle_plate, driver_name, excel_file_path=None, pdf_file_path=None, sender_email="test@example.com"):
         """
         إرسال ملفات العملية مع تفاصيل السيارة عبر الإيميل
         """
@@ -321,7 +321,7 @@ class EmailService:
                 "message": f"فشل في إرسال الإيميل: {str(e)}"
             }
     
-    def send_simple_email(self, to_email, subject, content, sender_email="noreply@nuzum.com"):
+    def send_simple_email(self, to_email, subject, content, sender_email="test@example.com"):
         """
         إرسال إيميل بسيط
         """
