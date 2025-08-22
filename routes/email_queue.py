@@ -10,7 +10,6 @@ email_queue_bp = Blueprint('email_queue', __name__, url_prefix='/email-queue')
 
 
 @email_queue_bp.route('/')
-@login_required
 def email_queue_list():
     """عرض قائمة الإيميلات المحفوظة"""
     fallback_service = FallbackEmailService()
@@ -33,7 +32,6 @@ def email_details(email_id):
 
 
 @email_queue_bp.route('/view/<email_id>')
-@login_required
 def view_email_html(email_id):
     """عرض محتوى HTML للإيميل"""
     fallback_service = FallbackEmailService()
@@ -64,7 +62,6 @@ def delete_email(email_id):
 
 
 @email_queue_bp.route('/download-attachment/<email_id>/<int:attachment_index>')
-@login_required
 def download_attachment(email_id, attachment_index):
     """تحميل مرفق من إيميل محدد"""
     fallback_service = FallbackEmailService()
