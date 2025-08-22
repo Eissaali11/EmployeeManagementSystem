@@ -39,6 +39,7 @@ from utils.whatsapp_message_generator import generate_whatsapp_url
 from utils.vehicles_export import export_vehicle_pdf, export_workshop_records_pdf, export_vehicle_excel, export_workshop_records_excel
 from utils.simple_pdf_generator import create_vehicle_handover_pdf as generate_complete_vehicle_report
 from utils.vehicle_excel_report import generate_complete_vehicle_excel_report
+from services.email_service import EmailService
 # from utils.workshop_report import generate_workshop_report_pdf
 # from utils.html_to_pdf import generate_pdf_from_template
 # from utils.fpdf_arabic_report import generate_workshop_report_pdf_fpdf
@@ -1298,3 +1299,175 @@ def get_priority_name(priority):
         'low': 'منخفض'
     }
     return priority_names.get(priority, priority)
+
+
+@operations_bp.route('/<int:operation_id>/send-email', methods=['POST'])
+@login_required
+def send_operation_email(operation_id):
+    """إرسال ملفات العملية عبر الإيميل"""
+    
+    operation = OperationRequest.query.get_or_404(operation_id)
+    
+    try:
+        data = request.get_json()
+        to_email = data.get('email')
+        to_name = data.get('name', '')
+        include_excel = data.get('include_excel', True)
+        include_pdf = data.get('include_pdf', True)
+        
+        if not to_email:
+            return jsonify({'success': False, 'message': 'عنوان الإيميل مطلوب'})
+        
+        # التحقق من صحة الإيميل
+        import re
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, to_email):
+            return jsonify({'success': False, 'message': 'عنوان الإيميل غير صحيح'})
+        
+        # الحصول على معلومات المركبة والسائق
+        vehicle = operation.vehicle
+        if not vehicle:
+            return jsonify({'success': False, 'message': 'لا توجد مركبة مرتبطة بهذه العملية'})
+        
+        vehicle_plate = vehicle.plate_number
+        driver_name = vehicle.current_driver or 'غير محدد'
+        
+        # مسارات الملفات المؤقتة
+        excel_file_path = None
+        pdf_file_path = None
+        
+        try:
+            # إنشاء ملف Excel مؤقت
+            if include_excel:
+                excel_filename = f"operation_{operation_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                excel_file_path = os.path.join('/tmp', excel_filename)
+                
+                # توليد ملف Excel
+                from openpyxl import Workbook
+                from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+                
+                wb = Workbook()
+                ws = wb.active
+                ws.title = 'تفاصيل العملية'
+                
+                # تنسيق الخلايا
+                header_font = Font(name='Arial', size=12, bold=True, color='FFFFFF')
+                header_fill = PatternFill(start_color='4472C4', end_color='4472C4', fill_type='solid')
+                data_font = Font(name='Arial', size=11)
+                alignment = Alignment(horizontal='center', vertical='center')
+                border = Border(
+                    left=Side(border_style='thin'),
+                    right=Side(border_style='thin'),
+                    top=Side(border_style='thin'),
+                    bottom=Side(border_style='thin')
+                )
+                
+                # إضافة البيانات الأساسية
+                headers = ['البيان', 'القيمة']
+                for col_num, header in enumerate(headers, 1):
+                    cell = ws.cell(row=1, column=col_num, value=header)
+                    cell.font = header_font
+                    cell.fill = header_fill
+                    cell.alignment = alignment
+                    cell.border = border
+                    ws.column_dimensions[cell.column_letter].width = 25
+                
+                # البيانات
+                data_rows = [
+                    ('رقم العملية', f"#{operation.id}"),
+                    ('عنوان العملية', operation.title),
+                    ('نوع العملية', get_operation_type_name(operation.operation_type)),
+                    ('حالة العملية', get_status_name(operation.status)),
+                    ('الأولوية', get_priority_name(operation.priority)),
+                    ('رقم لوحة المركبة', vehicle_plate),
+                    ('السائق الحالي', driver_name),
+                    ('تاريخ الطلب', operation.requested_at.strftime('%Y/%m/%d %H:%M') if operation.requested_at else operation.created_at.strftime('%Y/%m/%d %H:%M')),
+                    ('طالب العملية', operation.requested_by_user.username if operation.requested_by_user else 'غير محدد'),
+                    ('مراجع العملية', operation.reviewed_by_user.username if operation.reviewed_by_user else 'لم يتم المراجعة بعد'),
+                    ('تاريخ المراجعة', operation.reviewed_at.strftime('%Y/%m/%d %H:%M') if operation.reviewed_at else 'لم يتم المراجعة بعد'),
+                ]
+                
+                if operation.description:
+                    data_rows.append(('الوصف', operation.description))
+                if operation.review_notes:
+                    data_rows.append(('ملاحظات المراجعة', operation.review_notes))
+                
+                for row_num, (label, value) in enumerate(data_rows, 2):
+                    ws.cell(row=row_num, column=1, value=label).font = Font(name='Arial', size=11, bold=True)
+                    ws.cell(row=row_num, column=1).alignment = alignment
+                    ws.cell(row=row_num, column=1).border = border
+                    
+                    ws.cell(row=row_num, column=2, value=value).font = data_font
+                    ws.cell(row=row_num, column=2).alignment = alignment
+                    ws.cell(row=row_num, column=2).border = border
+                
+                wb.save(excel_file_path)
+            
+            # إنشاء ملف PDF مؤقت (إذا كان متوفراً)
+            if include_pdf and operation.operation_type == 'handover' and operation.related_record_id:
+                pdf_filename = f"operation_{operation_id}_report.pdf"
+                pdf_file_path = os.path.join('/tmp', pdf_filename)
+                
+                # نسخ PDF الموجود إلى مجلد tmp
+                try:
+                    from utils.simple_pdf_generator import create_vehicle_handover_pdf
+                    handover_record = VehicleHandover.query.get(operation.related_record_id)
+                    if handover_record:
+                        pdf_content = create_vehicle_handover_pdf(handover_record.id)
+                        with open(pdf_file_path, 'wb') as f:
+                            f.write(pdf_content)
+                except Exception as pdf_error:
+                    current_app.logger.warning(f"فشل في إنشاء PDF: {str(pdf_error)}")
+                    pdf_file_path = None
+            
+            # إرسال الإيميل
+            email_service = EmailService()
+            result = email_service.send_vehicle_operation_files(
+                to_email=to_email,
+                to_name=to_name,
+                operation=operation,
+                vehicle_plate=vehicle_plate,
+                driver_name=driver_name,
+                excel_file_path=excel_file_path if include_excel else None,
+                pdf_file_path=pdf_file_path if include_pdf else None
+            )
+            
+            # تسجيل العملية
+            log_audit(
+                user_id=current_user.id,
+                action='send_email',
+                entity_type='operation_request',
+                entity_id=operation.id,
+                details=f'إرسال ملفات العملية {operation_id} إلى {to_email}'
+            )
+            
+            return jsonify(result)
+            
+        finally:
+            # حذف الملفات المؤقتة
+            if excel_file_path and os.path.exists(excel_file_path):
+                try:
+                    os.remove(excel_file_path)
+                except:
+                    pass
+            
+            if pdf_file_path and os.path.exists(pdf_file_path):
+                try:
+                    os.remove(pdf_file_path)
+                except:
+                    pass
+                    
+    except Exception as e:
+        current_app.logger.error(f"خطأ في إرسال الإيميل للعملية {operation_id}: {str(e)}")
+        return jsonify({'success': False, 'message': f'حدث خطأ: {str(e)}'})
+
+
+def get_operation_type_name(operation_type):
+    """تحويل نوع العملية إلى النص العربي"""
+    type_names = {
+        'handover': 'تسليم/استلام',
+        'workshop': 'ورشة صيانة',
+        'external_authorization': 'تفويض خارجي',
+        'safety_inspection': 'فحص سلامة'
+    }
+    return type_names.get(operation_type, operation_type)

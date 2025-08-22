@@ -714,6 +714,11 @@
         </a>
         {% endif %}
         
+        <button class="btn-export" style="background: linear-gradient(135deg, #6610f2, #e83e8c); color: white;" onclick="showEmailForm()">
+            <i class="fas fa-envelope"></i>
+            <span>مشاركة عبر الإيميل</span>
+        </button>
+        
         {% if operation.status == 'pending' %}
         <hr class="divider">
         <!-- أزرار الإجراءات -->
@@ -799,6 +804,89 @@
     </div>
 </div>
 
+<!-- Modal لمشاركة الإيميل -->
+<div class="modal fade" id="emailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-envelope me-2"></i>
+                    مشاركة تفاصيل العملية عبر الإيميل
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>سيتم إرسال:</strong>
+                    <div class="mt-2">
+                        • تفاصيل العملية مع رقم المركبة: <strong>{{ operation.vehicle.plate_number if operation.vehicle else 'غير محدد' }}</strong><br>
+                        • اسم السائق: <strong>{{ operation.vehicle.current_driver if operation.vehicle and operation.vehicle.current_driver else 'غير محدد' }}</strong><br>
+                        • ملف Excel مع جميع التفاصيل<br>
+                        {% if operation.operation_type == 'handover' and operation.related_record_id %}
+                        • ملف PDF لنموذج التسليم/الاستلام<br>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <form id="emailForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">عنوان الإيميل <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="recipientEmail" 
+                                       placeholder="example@domain.com" required>
+                                <div class="invalid-feedback">
+                                    يرجى إدخال عنوان إيميل صحيح
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">اسم المستلم</label>
+                                <input type="text" class="form-control" id="recipientName" 
+                                       placeholder="اسم الشخص (اختياري)">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">الملفات المطلوب إرفاقها:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includeExcel" checked>
+                            <label class="form-check-label" for="includeExcel">
+                                <i class="fas fa-file-excel text-success me-1"></i>
+                                ملف Excel (تفاصيل العملية)
+                            </label>
+                        </div>
+                        {% if operation.operation_type == 'handover' and operation.related_record_id %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="includePdf" checked>
+                            <label class="form-check-label" for="includePdf">
+                                <i class="fas fa-file-pdf text-danger me-1"></i>
+                                ملف PDF (نموذج التسليم/الاستلام)
+                            </label>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <small>تأكد من صحة عنوان الإيميل قبل الإرسال. لا يمكن إلغاء العملية بعد الإرسال.</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-success" onclick="sendEmail()" id="sendEmailBtn">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    إرسال الإيميل
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // عرض الصور في Modal
 function openImageModal(src, title, notes) {
@@ -816,6 +904,11 @@ function showApprovalForm() {
 // عرض نموذج الرفض
 function showRejectionForm() {
     new bootstrap.Modal(document.getElementById('rejectionModal')).show();
+}
+
+// عرض نموذج الإيميل
+function showEmailForm() {
+    new bootstrap.Modal(document.getElementById('emailModal')).show();
 }
 
 // تأكيد الموافقة
@@ -898,5 +991,98 @@ function setUnderReview() {
         alert('حدث خطأ في العملية');
     });
 }
+
+// إرسال الإيميل
+function sendEmail() {
+    const email = document.getElementById('recipientEmail').value;
+    const name = document.getElementById('recipientName').value;
+    const includeExcel = document.getElementById('includeExcel').checked;
+    const includePdf = document.getElementById('includePdf') ? document.getElementById('includePdf').checked : false;
+    
+    // التحقق من البيانات
+    if (!email) {
+        alert('يرجى إدخال عنوان الإيميل');
+        return;
+    }
+    
+    // التحقق من صحة الإيميل
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('يرجى إدخال عنوان إيميل صحيح');
+        return;
+    }
+    
+    // التحقق من وجود ملف واحد على الأقل
+    if (!includeExcel && !includePdf) {
+        alert('يرجى اختيار ملف واحد على الأقل للإرسال');
+        return;
+    }
+    
+    // تعطيل الزر وإظهار حالة التحميل
+    const sendBtn = document.getElementById('sendEmailBtn');
+    const originalText = sendBtn.innerHTML;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري الإرسال...';
+    
+    // إرسال الطلب
+    fetch(`/operations/{{ operation.id }}/send-email`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            email: email,
+            name: name,
+            include_excel: includeExcel,
+            include_pdf: includePdf
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // إظهار رسالة النجاح
+            alert('تم إرسال الإيميل بنجاح!');
+            
+            // إغلاق النموذج
+            bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+            
+            // إعادة تعيين النموذج
+            document.getElementById('emailForm').reset();
+            document.getElementById('includeExcel').checked = true;
+            if (document.getElementById('includePdf')) {
+                document.getElementById('includePdf').checked = true;
+            }
+            
+        } else {
+            alert('فشل في إرسال الإيميل: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('حدث خطأ في إرسال الإيميل');
+    })
+    .finally(() => {
+        // إعادة تفعيل الزر
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalText;
+    });
+}
+
+// إضافة مستمع للتحقق من صحة الإيميل فورياً
+document.addEventListener('DOMContentLoaded', function() {
+    const emailInput = document.getElementById('recipientEmail');
+    if (emailInput) {
+        emailInput.addEventListener('input', function() {
+            const email = this.value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email && !emailRegex.test(email)) {
+                this.classList.add('is-invalid');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+    }
+});
 </script>
 {% endblock %}
