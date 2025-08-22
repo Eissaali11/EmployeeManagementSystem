@@ -14,7 +14,7 @@ class EmailService:
             return
         self.sg = SendGridAPIClient(self.sendgrid_key)
     
-    def send_vehicle_operation_files(self, to_email, to_name, operation, vehicle_plate, driver_name, excel_file_path=None, pdf_file_path=None, sender_email="test@example.com"):
+    def send_vehicle_operation_files(self, to_email, to_name, operation, vehicle_plate, driver_name, excel_file_path=None, pdf_file_path=None, sender_email="noreply@nuzum.com"):
         """
         إرسال ملفات العملية مع تفاصيل السيارة عبر الإيميل
         """
@@ -267,11 +267,8 @@ class EmailService:
                 subject=subject
             )
             
-            # تفعيل وضع Sandbox للاختبار الآمن (لا يرسل إيميلات فعلية)
-            # لإرسال إيميلات حقيقية، يُرجى تحديد عنوان بريد متحقق في SendGrid
-            mail_settings = MailSettings()
-            mail_settings.sandbox_mode = SandBoxMode(enable=True)
-            message.mail_settings = mail_settings
+            # إزالة وضع Sandbox للإرسال الفعلي
+            # ملاحظة: قد تحتاج لإعداد Single Sender Verification في SendGrid
             
             message.content = [
                 Content("text/plain", text_content),
@@ -309,13 +306,12 @@ class EmailService:
             # إرسال الرسالة
             response = self.sg.send(message)
             
-            current_app.logger.info(f"Email validated successfully in sandbox mode to {to_email} for operation {operation.id}")
+            current_app.logger.info(f"Email sent successfully to {to_email} for operation {operation.id}")
             
             return {
                 "success": True, 
-                "message": "تم التحقق من الإيميل بنجاح في وضع الاختبار. للإرسال الفعلي، يُرجى إعداد مرسل متحقق في SendGrid",
-                "status_code": response.status_code,
-                "sandbox_mode": True
+                "message": "تم إرسال الإيميل بنجاح",
+                "status_code": response.status_code
             }
             
         except Exception as e:
