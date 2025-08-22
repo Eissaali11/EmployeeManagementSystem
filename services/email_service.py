@@ -318,7 +318,9 @@ class EmailService:
             current_app.logger.error(f"SendGrid error: {str(e)}")
             return {
                 "success": False, 
-                "message": f"فشل في إرسال الإيميل: {str(e)}"
+                "message": "SendGrid يتطلب إعداد Single Sender Verification. يُرجى إعداد مرسل مُتحقق في حساب SendGrid لتفعيل الإرسال الفعلي.",
+                "technical_details": str(e),
+                "solution": "1. دخول حساب SendGrid\n2. Settings → Sender Authentication\n3. إضافة Single Sender مع الإيميل المطلوب\n4. تأكيد الإيميل من صندوق الوارد"
             }
     
     def send_simple_email(self, to_email, subject, content, sender_email="test@sink.sendgrid.net"):

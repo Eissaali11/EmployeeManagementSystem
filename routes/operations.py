@@ -1474,7 +1474,11 @@ def send_operation_email(operation_id):
                 if result.get('success'):
                     current_app.logger.info(f'تم إرسال الإيميل بنجاح عبر SendGrid إلى {to_email}')
                 else:
-                    raise Exception(f'فشل SendGrid: {result.get("message", "خطأ غير معروف")}')
+                    # عرض رسالة تفصيلية عن المشكلة والحل
+                    error_details = result.get('solution', 'يتطلب إعداد مُرسل مُتحقق في SendGrid')
+                    current_app.logger.warning(f'فشل إرسال الإيميل عبر SendGrid: {result.get("message")}')
+                    
+                    raise Exception(f'SendGrid غير مُعد بشكل صحيح: {result.get("message", "خطأ غير معروف")}')
                     
             except Exception as sendgrid_error:
                 current_app.logger.warning(f'فشل إرسال الإيميل عبر SendGrid: {sendgrid_error}')
