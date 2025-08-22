@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الإيميلات المحفوظة{% endblock %}
+
+{% block content %}
+<div class="container mt-4" dir="rtl">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Header -->
+            <div class="card bg-gradient-primary text-white mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h2 class="mb-1">
+                                <i class="fas fa-envelope me-2"></i>
+                                إدارة الإيميلات المحفوظة
+                            </h2>
+                            <p class="mb-0">الإيميلات المحفوظة محلياً في انتظار الإرسال</p>
+                        </div>
+                        <div class="text-end">
+                            <div class="display-4">{{ emails|length }}</div>
+                            <small>إيميل محفوظ</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>معلومة:</strong> هذه الإيميلات تم حفظها محلياً لأن خدمة الإرسال الخارجية تحتاج إعداد إضافي. 
+                يمكنك مراجعة محتوياتها وتحميل المرفقات.
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <!-- Email List -->
+            {% if emails %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            قائمة الإيميلات ({{ emails|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>التاريخ والوقت</th>
+                                        <th>إلى</th>
+                                        <th>الموضوع</th>
+                                        <th>المرفقات</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for email in emails %}
+                                    <tr>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ email.created_at.split('T')[0] }}<br>
+                                                {{ email.created_at.split('T')[1].split('.')[0] }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <strong>{{ email.to_email }}</strong>
+                                        </td>
+                                        <td>
+                                            <span class="text-primary">{{ email.subject }}</span>
+                                        </td>
+                                        <td>
+                                            {% if email.attachments %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-paperclip me-1"></i>
+                                                    {{ email.attachments|length }} ملف
+                                                </span>
+                                            {% else %}
+                                                <span class="text-muted">بدون مرفقات</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('email_queue.view_email_html', email_id=email.id) }}" 
+                                                   class="btn btn-outline-primary" target="_blank"
+                                                   title="عرض المحتوى">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                
+                                                {% if email.attachments %}
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-outline-success dropdown-toggle" 
+                                                            data-bs-toggle="dropdown" title="تحميل المرفقات">
+                                                        <i class="fas fa-download"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        {% for attachment in email.attachments %}
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="{{ url_for('email_queue.download_attachment', 
+                                                                       email_id=email.id, 
+                                                                       attachment_index=loop.index0) }}">
+                                                                <i class="fas fa-file me-2"></i>
+                                                                {{ attachment.filename }}
+                                                                <small class="text-muted">({{ (attachment.size / 1024) | round(1) }} KB)</small>
+                                                            </a>
+                                                        </li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                                {% endif %}
+                                                
+                                                <button class="btn btn-outline-danger" 
+                                                        onclick="deleteEmail('{{ email.id }}')"
+                                                        title="حذف">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">لا توجد إيميلات محفوظة</h4>
+                        <p class="text-muted">عندما يتم حفظ إيميلات محلياً ستظهر هنا</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteEmail(emailId) {
+    if (confirm('هل أنت متأكد من حذف هذا الإيميل؟')) {
+        fetch(`/email-queue/delete/${emailId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('فشل في حذف الإيميل: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('حدث خطأ: ' + error);
+        });
+    }
+}
+</script>
+
+<style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #1e3a5c 0%, #2c5282 100%);
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.btn-group-sm .btn {
+    font-size: 0.8em;
+}
+</style>
+{% endblock %}

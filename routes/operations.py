@@ -1502,6 +1502,8 @@ def send_operation_email(operation_id):
                     
                     if result.get('success'):
                         current_app.logger.info(f'تم حفظ الإيميل محلياً - ID: {result.get("message_id")}')
+                        # تحديث رسالة النجاح لتوضيح أنه تم الحفظ محلياً
+                        result['message'] = f'تم حفظ الإيميل محلياً بنجاح. سيتم إرساله لاحقاً إلى {to_email}. يمكنك مراجعته في <a href="/email-queue/" target="_blank">قائمة الإيميلات المحفوظة</a>.'
                     else:
                         raise Exception(f'فشل النظام الاحتياطي أيضاً: {result.get("error")}')
                         
