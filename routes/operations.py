@@ -1456,31 +1456,28 @@ def send_operation_email(operation_id):
                         'content_type': 'application/pdf'
                     })
             
-            # محاولة إرسال الإيميل باستخدام Resend أولاً
-            result = None
+            # إرسال الإيميل باستخدام SendGrid
             try:
-                from services.resend_service import send_email_with_resend, create_operation_email_template
+                from services.email_service import EmailService
                 
-                html_content = create_operation_email_template(
-                    operation_data=operation_data,
-                    vehicle_plate=vehicle_plate,
-                    driver_name=driver_name
-                )
-                
-                result = send_email_with_resend(
+                email_service = EmailService()
+                result = email_service.send_vehicle_operation_files(
                     to_email=to_email,
-                    subject=f'تفاصيل العملية: {operation.title} - مركبة {vehicle_plate}',
-                    html_content=html_content,
-                    attachments=attachments if attachments else None
+                    to_name=to_name or 'العميل',
+                    operation=operation,
+                    vehicle_plate=vehicle_plate,
+                    driver_name=driver_name,
+                    excel_file_path=excel_file_path if include_excel else None,
+                    pdf_file_path=pdf_file_path if include_pdf else None
                 )
                 
                 if result.get('success'):
-                    current_app.logger.info(f'تم إرسال الإيميل بنجاح عبر Resend - ID: {result.get("message_id")}')
+                    current_app.logger.info(f'تم إرسال الإيميل بنجاح عبر SendGrid إلى {to_email}')
                 else:
-                    raise Exception(f'فشل Resend: {result.get("error")}')
+                    raise Exception(f'فشل SendGrid: {result.get("message", "خطأ غير معروف")}')
                     
-            except Exception as resend_error:
-                current_app.logger.warning(f'فشل إرسال الإيميل عبر Resend: {resend_error}')
+            except Exception as sendgrid_error:
+                current_app.logger.warning(f'فشل إرسال الإيميل عبر SendGrid: {sendgrid_error}')
                 
                 # استخدام النظام الاحتياطي
                 try:
@@ -1502,7 +1499,6 @@ def send_operation_email(operation_id):
                     
                     if result.get('success'):
                         current_app.logger.info(f'تم حفظ الإيميل محلياً - ID: {result.get("message_id")}')
-                        # تحديث رسالة النجاح لتوضيح أنه تم الحفظ محلياً
                         result['message'] = f'تم حفظ الإيميل محلياً بنجاح. سيتم إرساله لاحقاً إلى {to_email}. يمكنك مراجعته في <a href="/email-queue/" target="_blank">قائمة الإيميلات المحفوظة</a>.'
                     else:
                         raise Exception(f'فشل النظام الاحتياطي أيضاً: {result.get("error")}')
