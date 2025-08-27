@@ -142,7 +142,7 @@ if not database_url.startswith("sqlite"):
     app.config["SQLALCHEMY_ENGINE_OPTIONS"]["execution_options"]["isolation_level"] = "READ COMMITTED"
 
 # Provide default values for uploads and other configurations
-app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # Limit uploads to 16MB
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB - Increased for file uploads
 app.config["UPLOAD_FOLDER"] = "uploads"
 
 # Initialize SQLAlchemy with the app

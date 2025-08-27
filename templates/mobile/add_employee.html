@@ -115,11 +115,45 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/image-compression.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   // تعيين تاريخ التوظيف الافتراضي ليكون اليوم
   const today = new Date().toISOString().split('T')[0];
   document.querySelector('input[name="hire_date"]').value = today;
+  
+  // تطبيق ضغط الصور على حقول رفع الملفات
+  applyImageCompression('input[type="file"]', {
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.85,
+      maxFileSize: 1.5 * 1024 * 1024, // 1.5MB للصور الشخصية
+      outputFormat: 'image/jpeg'
+  });
+  
+  // تحسين تجربة إرسال النموذج
+  const form = document.querySelector('form');
+  if (form) {
+      form.addEventListener('submit', function(e) {
+          const submitButton = document.querySelector('button[type="submit"]');
+          if (submitButton) {
+              submitButton.disabled = true;
+              submitButton.innerHTML = `
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="
+                          width: 16px;
+                          height: 16px;
+                          border: 2px solid transparent;
+                          border-top: 2px solid white;
+                          border-radius: 50%;
+                          animation: spin 1s linear infinite;
+                      "></div>
+                      جاري الحفظ...
+                  </div>
+              `;
+          }
+      });
+  }
 });
 </script>
 {% endblock %}
