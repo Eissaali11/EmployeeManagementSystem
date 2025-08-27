@@ -1757,16 +1757,22 @@ def delete_vehicle(vehicle_id):
     try:
         plate_number = vehicle.plate_number
 
+        # حذف البيانات المرتبطة أولاً لتجنب مخالفة Foreign Key
+        # حذف سجلات operation_requests المرتبطة بالسيارة
+        operation_requests = OperationRequest.query.filter_by(vehicle_id=vehicle_id).all()
+        for op_req in operation_requests:
+            db.session.delete(op_req)
+
         # حذف السيارة من قاعدة البيانات
         db.session.delete(vehicle)
         db.session.commit()
 
         # تسجيل العملية في سجل النشاط
         log_activity(
-            user_id=current_user.id,
             action="vehicle_deleted",
-            details=f"تم حذف السيارة {plate_number}",
-            ip_address=request.remote_addr
+            entity_type="vehicle",
+            entity_id=vehicle_id,
+            details=f"تم حذف السيارة {plate_number}"
         )
 
         flash(f'تم حذف السيارة {plate_number} بنجاح', 'success')
@@ -1775,7 +1781,7 @@ def delete_vehicle(vehicle_id):
     except Exception as e:
         db.session.rollback()
         flash(f'حدث خطأ أثناء حذف السيارة: {str(e)}', 'error')
-        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle.id))
+        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
 
 # إضافة سيارة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/add', methods=['GET', 'POST'])
