@@ -701,7 +701,8 @@ body {
                                             data-employee-mobile-type="{{ record.driver_employee.mobile_type if record.driver_employee else '' }}"
                                             data-employee-mobile-imei="{{ record.driver_employee.mobile_imei if record.driver_employee else '' }}"
                                             data-employee-has-custody="{{ record.driver_employee.has_mobile_custody if record.driver_employee else '' }}"
-                                            data-employee-birth-date="{{ record.driver_employee.birthDate.strftime('%Y-%m-%d') if record.driver_employee and record.driver_employee.birthDate else '' }}"
+                                            data-employee-birth-date="{{ record.driver_employee.birth_date.strftime('%Y-%m-%d') if record.driver_employee and record.driver_employee.birth_date else '' }}"
+                                            data-employee-national-id="{{ record.driver_employee.national_id if record.driver_employee and record.driver_employee.national_id else '' }}"
                                             onclick="shareHandoverRecord(this)" title="مشاركة">
                                             <i class="fas fa-share-alt"></i>
                                         </button>
@@ -2754,6 +2755,7 @@ function shareHandoverRecordImproved(button) {
     const employeeDepartments = cleanDataValue(button.getAttribute('data-employee-departments'));
     const employeeMobileImei = cleanDataValue(button.getAttribute('data-employee-mobile-imei'));
     const employeeBirthDate = cleanDataValue(button.getAttribute('data-employee-birth-date'));
+    const employeeNationalId = cleanDataValue(button.getAttribute('data-employee-national-id'));
     const employeeMobileType = cleanDataValue(button.getAttribute('data-employee-mobile-type'));
     const employeeHasCustody = button.getAttribute('data-employee-has-custody');
     
@@ -2780,8 +2782,13 @@ function shareHandoverRecordImproved(button) {
                    `• اسم السائق: ${personName}\n`;
     
     if (employeeBirthDate) shareText += `• تاريخ الميلاد: ${employeeBirthDate}\n`;
-    if (personNationalId) shareText += `• رقم الهوية/الإقامة: ${personNationalId}\n`;
-    if (personPhone) shareText += `• رقم الجوال الشخصي: ${personPhone}\n`;
+    
+    // استخدام البيانات من جدول الموظف أولاً ثم البيانات من سجل التسليم
+    const nationalId = employeeNationalId || personNationalId;
+    if (nationalId) shareText += `• رقم الهوية/الإقامة: ${nationalId}\n`;
+    
+    const personalPhone = employeeMobilePersonal || personPhone;
+    if (personalPhone) shareText += `• رقم الجوال الشخصي: ${personalPhone}\n`;
     
     shareText += `\n═══════════════════════════\n` +
                 `💼 معلومات العمل\n` +
