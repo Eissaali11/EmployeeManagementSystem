@@ -701,6 +701,7 @@ body {
                                             data-employee-mobile-type="{{ record.driver_employee.mobile_type if record.driver_employee else '' }}"
                                             data-employee-mobile-imei="{{ record.driver_employee.mobile_imei if record.driver_employee else '' }}"
                                             data-employee-has-custody="{{ record.driver_employee.has_mobile_custody if record.driver_employee else '' }}"
+                                            data-employee-birth-date="{{ record.driver_employee.birthDate.strftime('%Y-%m-%d') if record.driver_employee and record.driver_employee.birthDate else '' }}"
                                             onclick="shareHandoverRecord(this)" title="مشاركة">
                                             <i class="fas fa-share-alt"></i>
                                         </button>
@@ -2727,6 +2728,90 @@ function shareHandoverRecord(button) {
         fallbackShareHandover(shareText);
     }
 }
+
+// دالة محسنة لتنظيف البيانات وإخفاء القيم الفارغة
+function cleanDataValue(value) {
+    if (!value || value === 'None' || value === 'null' || value.trim() === '') {
+        return null;
+    }
+    return value.trim();
+}
+
+// دالة مشاركة محسنة لسجلات التسليم والاستلام
+function shareHandoverRecordImproved(button) {
+    const handoverId = button.getAttribute('data-handover-id');
+    const handoverType = button.getAttribute('data-handover-type');
+    const personName = cleanDataValue(button.getAttribute('data-person-name')) || 'غير محدد';
+    const personPhone = cleanDataValue(button.getAttribute('data-person-phone'));
+    const personNationalId = cleanDataValue(button.getAttribute('data-person-national-id'));
+    const handoverDate = cleanDataValue(button.getAttribute('data-handover-date'));
+    const notes = cleanDataValue(button.getAttribute('data-notes'));
+    
+    const employeeId = cleanDataValue(button.getAttribute('data-employee-id'));
+    const employeeMobile = cleanDataValue(button.getAttribute('data-employee-mobile'));
+    const employeeDepartments = cleanDataValue(button.getAttribute('data-employee-departments'));
+    const employeeMobileImei = cleanDataValue(button.getAttribute('data-employee-mobile-imei'));
+    const employeeBirthDate = cleanDataValue(button.getAttribute('data-employee-birth-date'));
+    
+    const operationType = handoverType === 'delivery' ? 'تسليم' : 'استلام';
+    const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
+    const detailsUrl = `${window.location.origin}/vehicles/handover/${handoverId}/pdf/public`;
+    
+    const currentDate = new Date();
+    const formattedDateTime = currentDate.toLocaleString('ar-SA', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false
+    });
+    
+    let shareText = `مرحباً 👋\n\n` +
+                   `═══════════════════════════\n` +
+                   `🚙 ${operationType} مركبة\n` +
+                   `═══════════════════════════\n` +
+                   `• رقم السيارة: ${vehicleInfo}\n` +
+                   `• نوع العملية: ${operationType}\n` +
+                   `• تاريخ العملية: ${handoverDate || 'غير محدد'}\n\n` +
+                   `═══════════════════════════\n` +
+                   `👤 بيانات السائق\n` +
+                   `═══════════════════════════\n` +
+                   `• اسم السائق: ${personName}\n`;
+    
+    if (personNationalId) shareText += `• رقم الإقامة: ${personNationalId}\n`;
+    if (employeeId) shareText += `• الرقم الوظيفي: ${employeeId}\n`;
+    if (personPhone) shareText += `• رقم الجوال: ${personPhone}\n`;
+    if (employeeMobile) shareText += `• رقم جوال العمل: ${employeeMobile}\n`;
+    if (employeeDepartments) shareText += `• القسم: ${employeeDepartments}\n`;
+    if (employeeMobileImei) shareText += `• IMEI: ${employeeMobileImei}\n`;
+    if (employeeBirthDate) shareText += `• تاريخ الميلاد: ${employeeBirthDate}\n`;
+    
+    if (notes) {
+        shareText += `\n═══════════════════════════\n` +
+                    `📝 ملاحظات\n` +
+                    `═══════════════════════════\n` +
+                    `${notes}\n`;
+    }
+    
+    shareText += `\n═══════════════════════════\n` +
+                `🔗 رابط النموذج\n` +
+                `═══════════════════════════\n` +
+                `${detailsUrl}\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `📱 نظام نُظم لإدارة المركبات\n` +
+                `📅 ${formattedDateTime}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `${operationType} مركبة - ${vehicleInfo}`,
+            text: shareText
+        }).catch(() => fallbackShareHandover(shareText));
+    } else {
+        fallbackShareHandover(shareText);
+    }
+}
+
+// استبدال الدالة القديمة بالمحسنة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    window.shareHandoverRecord = shareHandoverRecordImproved;
+});
 
 function fallbackShareHandover(text) {
     if (navigator.clipboard && window.isSecureContext) {
