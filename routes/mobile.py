@@ -1808,19 +1808,18 @@ def add_vehicle():
                 return render_template("mobile/add_vehicle.html", departments=Department.query.all())
 
             # إنشاء سيارة جديدة
-            new_vehicle = Vehicle(
-                plate_number=plate_number,
-                make=make,
-                model=model,
-                type_of_car=type_of_car,
-                year=int(year),
-                color=color,
-                driver_name=driver_name if driver_name else None,
-                status=status,
-                project=project if project else None,
-                notes=notes if notes else None,
-                created_at=datetime.utcnow()
-            )
+            new_vehicle = Vehicle()
+            new_vehicle.plate_number = plate_number
+            new_vehicle.make = make
+            new_vehicle.model = model
+            new_vehicle.type_of_car = type_of_car
+            new_vehicle.year = int(year)
+            new_vehicle.color = color
+            new_vehicle.driver_name = driver_name if driver_name else None
+            new_vehicle.status = status
+            new_vehicle.project = project if project else None
+            new_vehicle.notes = notes if notes else None
+            new_vehicle.created_at = datetime.utcnow()
 
             # حفظ السيارة في قاعدة البيانات
             db.session.add(new_vehicle)
@@ -1828,10 +1827,10 @@ def add_vehicle():
 
             # تسجيل العملية في سجل النشاط
             log_activity(
-                user_id=current_user.id,
                 action="vehicle_added",
-                details=f"تم إضافة السيارة {plate_number} - {make} {model}",
-                ip_address=request.remote_addr
+                entity_type="vehicle",
+                entity_id=new_vehicle.id,
+                details=f"تم إضافة السيارة {plate_number} - {make} {model}"
             )
 
             flash(f"تم إضافة السيارة {plate_number} بنجاح", "success")
