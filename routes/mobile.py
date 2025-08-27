@@ -1784,6 +1784,12 @@ def delete_vehicle(vehicle_id):
                 {"vehicle_id": vehicle_id}
             )
             
+            # حذف المعاملات المرتبطة بالسيارة
+            connection.execute(
+                db.text("DELETE FROM transactions WHERE vehicle_id = :vehicle_id"),
+                {"vehicle_id": vehicle_id}
+            )
+            
             # حذف السيارة نفسها
             connection.execute(
                 db.text("DELETE FROM vehicle WHERE id = :vehicle_id"),
