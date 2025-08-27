@@ -1752,41 +1752,45 @@ def edit_vehicle(vehicle_id):
 @login_required
 def delete_vehicle(vehicle_id):
     """حذف السيارة - واجهة الموبايل"""
+    # الحصول على معلومات السيارة أولاً ثم إغلاق session
     vehicle = Vehicle.query.get_or_404(vehicle_id)
+    plate_number = vehicle.plate_number
+    
+    # إغلاق session لتجنب مشاكل ORM
+    db.session.expunge(vehicle)
+    db.session.close()
 
     try:
-        plate_number = vehicle.plate_number
-
-        # حذف جميع البيانات باستخدام SQL مباشر في معاملة واحدة
-        with db.session.begin():
+        # استخدام اتصال قاعدة بيانات جديد للحذف
+        with db.engine.begin() as connection:
             # حذف البيانات المرتبطة أولاً
-            db.session.execute(
+            connection.execute(
                 db.text("DELETE FROM operation_requests WHERE vehicle_id = :vehicle_id"),
                 {"vehicle_id": vehicle_id}
             )
             
-            db.session.execute(
+            connection.execute(
                 db.text("DELETE FROM external_authorization WHERE vehicle_id = :vehicle_id"), 
                 {"vehicle_id": vehicle_id}
             )
             
-            db.session.execute(
+            connection.execute(
                 db.text("DELETE FROM vehicle_handover WHERE vehicle_id = :vehicle_id"),
                 {"vehicle_id": vehicle_id}
             )
             
-            db.session.execute(
+            connection.execute(
                 db.text("DELETE FROM vehicle_workshop WHERE vehicle_id = :vehicle_id"),
                 {"vehicle_id": vehicle_id}
             )
             
             # حذف السيارة نفسها
-            db.session.execute(
+            connection.execute(
                 db.text("DELETE FROM vehicle WHERE id = :vehicle_id"),
                 {"vehicle_id": vehicle_id}
             )
 
-        # تسجيل العملية في سجل النشاط
+        # تسجيل العملية في سجل النشاط مع session جديد
         log_activity(
             action="vehicle_deleted",
             entity_type="vehicle",
@@ -1798,9 +1802,8 @@ def delete_vehicle(vehicle_id):
         return redirect(url_for('mobile.vehicles'))
 
     except Exception as e:
-        db.session.rollback()
         flash(f'حدث خطأ أثناء حذف السيارة: {str(e)}', 'error')
-        return redirect(url_for('mobile.vehicle_details', vehicle_id=vehicle_id))
+        return redirect(url_for('mobile.vehicles'))
 
 # إضافة سيارة جديدة - النسخة المحمولة
 @mobile_bp.route('/vehicles/add', methods=['GET', 'POST'])
