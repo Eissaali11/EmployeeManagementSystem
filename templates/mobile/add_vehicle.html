@@ -3,28 +3,32 @@
 {% block title %}إضافة سيارة جديدة{% endblock %}
 {% block header_title %}إضافة سيارة جديدة{% endblock %}
 
-{% block content %}
-<div class="mobile-section">
-  <div class="mobile-section-header">
-    <h2 class="mobile-section-title">
-      <i class="fas fa-car"></i>
-      إضافة سيارة جديدة
-    </h2>
-    <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
-      <i class="fas fa-arrow-right"></i>
-      عودة
-    </a>
-  </div>
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mobile-add-vehicle-premium.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
 
-  <!-- نموذج إضافة سيارة -->
-  <div class="mobile-card">
-    <div class="mobile-card-body">
+{% block content %}
+<!-- نموذج إضافة سيارة بتصميم مميز -->
+<div class="mobile-card">
+  <div class="mobile-card-header">
+    <h1 class="mobile-card-title">
+      <i class="fas fa-plus-circle" style="margin-left: 8px;"></i>
+      إضافة سيارة جديدة
+    </h1>
+    <p class="mobile-card-subtitle">املأ البيانات أدناه لإضافة سيارة جديدة إلى النظام</p>
+  </div>
+  
+  <div class="mobile-card-body">
       <form method="post" action="{{ url_for('mobile.add_vehicle') }}" enctype="multipart/form-data" id="vehicleForm">
         {{ form.csrf_token if form and form.csrf_token }}
         
         <!-- بيانات السيارة الأساسية -->
         <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">بيانات السيارة الأساسية</h3>
+          <h3 class="mobile-form-section-title">
+            <i class="fas fa-car" style="margin-left: 8px; color: #667eea;"></i>
+            بيانات السيارة الأساسية
+          </h3>
           
           <div class="mobile-form-group">
             <label class="mobile-form-label required">رقم اللوحة</label>
@@ -82,7 +86,10 @@
         
         <!-- حالة السيارة والمشروع -->
         <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">حالة السيارة والمشروع</h3>
+          <h3 class="mobile-form-section-title">
+            <i class="fas fa-cogs" style="margin-left: 8px; color: #764ba2;"></i>
+            حالة السيارة والمشروع
+          </h3>
           
           <div class="mobile-form-row">
             <div class="mobile-form-group">
@@ -111,7 +118,10 @@
         
         <!-- ملاحظات -->
         <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">ملاحظات</h3>
+          <h3 class="mobile-form-section-title">
+            <i class="fas fa-sticky-note" style="margin-left: 8px; color: #f093fb;"></i>
+            ملاحظات
+          </h3>
           
           <div class="mobile-form-group">
             <label class="mobile-form-label">ملاحظات</label>
@@ -124,10 +134,10 @@
             <i class="fas fa-save"></i>
             حفظ السيارة
           </button>
-          <button type="reset" class="mobile-btn mobile-btn-secondary">
-            <i class="fas fa-undo"></i>
-            إعادة تعيين
-          </button>
+          <a href="{{ url_for('mobile.vehicles') }}" class="mobile-btn mobile-btn-secondary">
+            <i class="fas fa-arrow-right"></i>
+            العودة للقائمة
+          </a>
         </div>
       </form>
     </div>

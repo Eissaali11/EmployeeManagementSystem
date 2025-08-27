@@ -1,0 +1,518 @@
+/* تصميم مميز لصفحة إضافة السيارة - النسخة المحمولة */
+
+/* إعدادات عامة متقدمة */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+  direction: rtl;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* خلفية متحركة */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(255,255,255,0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 50%);
+  animation: backgroundFloat 8s ease-in-out infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes backgroundFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(1deg); }
+}
+
+/* تصميم البطاقة المميز */
+.mobile-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 24px;
+  box-shadow: 
+    0 32px 64px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+  animation: cardEntrance 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* رأس البطاقة المتقدم */
+.mobile-card-header {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #4facfe 100%);
+  color: white;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mobile-card-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 50%),
+    conic-gradient(from 0deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: headerShimmer 4s linear infinite;
+}
+
+@keyframes headerShimmer {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+.mobile-card-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #00c9ff, #92fe9d, #ff9a9e, #00c9ff);
+  background-size: 300% 100%;
+  animation: rainbowFlow 3s ease infinite;
+}
+
+@keyframes rainbowFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.mobile-card-title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  background: linear-gradient(45deg, #ffffff, #f0f8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mobile-card-subtitle {
+  font-size: 1.1rem;
+  opacity: 0.95;
+  margin: 12px 0 0;
+  position: relative;
+  z-index: 2;
+  font-weight: 400;
+}
+
+.mobile-card-body {
+  padding: 32px 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
+}
+
+/* تصميم الأقسام المتطور */
+.mobile-form-section {
+  margin-bottom: 32px;
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-form-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.mobile-form-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #667eea);
+  background-size: 300% 100%;
+  animation: sectionGradient 4s ease infinite;
+}
+
+@keyframes sectionGradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.mobile-form-section-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin: 0 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.mobile-form-section-title i {
+  font-size: 1.4rem;
+  padding: 8px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 12px;
+  filter: drop-shadow(0 4px 12px rgba(102, 126, 234, 0.3));
+  animation: iconBounce 2s ease-in-out infinite;
+}
+
+@keyframes iconBounce {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(2deg); }
+}
+
+/* تصميم الحقول المتقدم */
+.mobile-form-group {
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.mobile-form-label {
+  display: block;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 10px;
+  font-size: 1.05rem;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.mobile-form-input,
+.mobile-form-select,
+.mobile-form-textarea {
+  width: 100%;
+  padding: 18px 24px;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 1;
+}
+
+.mobile-form-input:focus,
+.mobile-form-select:focus,
+.mobile-form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.15),
+    0 8px 32px rgba(102, 126, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transform: translateY(-3px);
+}
+
+.mobile-form-input::placeholder,
+.mobile-form-textarea::placeholder {
+  color: #a0aec0;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-form-input:focus::placeholder,
+.mobile-form-textarea:focus::placeholder {
+  opacity: 0.7;
+}
+
+.mobile-form-select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: left 16px center;
+  background-repeat: no-repeat;
+  background-size: 20px 16px;
+  padding-left: 52px;
+  cursor: pointer;
+}
+
+.mobile-form-textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* تخطيط الصفوف المحسن */
+.mobile-form-row {
+  display: flex;
+  gap: 20px;
+}
+
+.mobile-form-row .mobile-form-group {
+  flex: 1;
+}
+
+/* تصميم الحقول المطلوبة */
+.mobile-form-label.required::after {
+  content: '*';
+  color: #e53e3e;
+  margin-left: 0.5rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-shadow: 0 0 4px rgba(229, 62, 62, 0.5);
+  animation: requiredPulse 2s ease-in-out infinite;
+}
+
+@keyframes requiredPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* تصميم الأزرار المتطور */
+.mobile-form-actions {
+  margin-top: 40px;
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+}
+
+.mobile-btn {
+  padding: 20px 32px;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mobile-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.mobile-btn:hover::before {
+  left: 100%;
+}
+
+.mobile-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
+}
+
+.mobile-btn:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+.mobile-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  color: white;
+  box-shadow: 
+    0 12px 40px rgba(102, 126, 234, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.mobile-btn-primary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 20px 60px rgba(102, 126, 234, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.mobile-btn-secondary {
+  background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
+  color: white;
+  box-shadow: 
+    0 12px 40px rgba(100, 116, 139, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.mobile-btn-secondary:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 
+    0 20px 60px rgba(100, 116, 139, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+/* تحسينات للشاشات الصغيرة */
+@media (max-width: 480px) {
+  body {
+    padding: 15px;
+  }
+  
+  .mobile-form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .mobile-card-header {
+    padding: 24px 20px;
+  }
+  
+  .mobile-card-title {
+    font-size: 1.7rem;
+  }
+  
+  .mobile-form-section {
+    padding: 20px;
+  }
+
+  .mobile-form-section-title {
+    font-size: 1.2rem;
+  }
+}
+
+/* تأثيرات التحميل المتقدمة */
+.mobile-form-section {
+  animation: sectionSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.mobile-form-section:nth-child(1) { animation-delay: 0.1s; }
+.mobile-form-section:nth-child(2) { animation-delay: 0.2s; }
+.mobile-form-section:nth-child(3) { animation-delay: 0.3s; }
+.mobile-form-section:nth-child(4) { animation-delay: 0.4s; }
+
+@keyframes sectionSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* تحسينات إضافية للتحقق */
+.mobile-form-input:valid:not(:placeholder-shown) {
+  border-color: #10b981;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.mobile-form-input:invalid:not(:focus):not(:placeholder-shown) {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* أيقونات الحقول المتطورة */
+.mobile-form-group[data-icon] {
+  position: relative;
+}
+
+.mobile-form-group[data-icon]::before {
+  content: attr(data-icon);
+  position: absolute;
+  top: 52px;
+  right: 20px;
+  font-size: 1.3rem;
+  color: #667eea;
+  z-index: 2;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.3));
+}
+
+.mobile-form-group[data-icon]:hover::before {
+  transform: scale(1.1);
+  color: #5a67d8;
+}
+
+.mobile-form-group[data-icon] .mobile-form-input,
+.mobile-form-group[data-icon] .mobile-form-select {
+  padding-right: 60px;
+}
+
+/* تأثيرات جديدة للتفاعل */
+.mobile-form-input:focus + .mobile-form-label,
+.mobile-form-select:focus + .mobile-form-label,
+.mobile-form-textarea:focus + .mobile-form-label {
+  color: #667eea;
+  transform: scale(1.05);
+}
+
+/* تحسينات الأداء والحركة */
+* {
+  will-change: auto;
+}
+
+.mobile-btn,
+.mobile-form-input,
+.mobile-form-select,
+.mobile-form-section {
+  transform: translateZ(0);
+}
+
+/* تأثيرات إضافية للأيقونات */
+.fas {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: all 0.3s ease;
+}
+
+.mobile-btn:hover .fas {
+  transform: scale(1.1);
+}
+
+/* تأثيرات الحركة للرسائل */
+.alert {
+  animation: alertSlide 0.5s ease-out;
+}
+
+@keyframes alertSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
