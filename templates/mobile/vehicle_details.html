@@ -2805,9 +2805,9 @@ function shareHandoverRecordImproved(button) {
     if (employeeMobileImei) shareText += `• IMEI: ${employeeMobileImei}\n`;
     if (employeeMobileType) shareText += `• نوع الجوال: ${employeeMobileType}\n`;
     
-    if (employeeHasCustody === 'True') {
+    if (employeeHasCustody === 'True' || employeeHasCustody === 'true' || employeeHasCustody === 't') {
         shareText += `• حالة عهدة الجوال: مُستلمة ✅\n`;
-    } else if (employeeHasCustody === 'False') {
+    } else if (employeeHasCustody === 'False' || employeeHasCustody === 'false' || employeeHasCustody === 'f') {
         shareText += `• حالة عهدة الجوال: غير مُستلمة ❌\n`;
     }
     
