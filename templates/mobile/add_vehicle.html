@@ -27,125 +27,95 @@
           <h3 class="mobile-form-section-title">بيانات السيارة الأساسية</h3>
           
           <div class="mobile-form-group">
-            <label class="mobile-form-label">نوع السيارة</label>
-            <input type="text" class="mobile-form-input" name="vehicle_type" required placeholder="مثال: تويوتا كامري">
+            <label class="mobile-form-label required">رقم اللوحة</label>
+            <input type="text" class="mobile-form-input" name="plate_number" required placeholder="أدخل رقم لوحة السيارة بالكامل">
           </div>
           
           <div class="mobile-form-group">
-            <label class="mobile-form-label">الموديل</label>
-            <input type="text" class="mobile-form-input" name="model" required placeholder="مثال: 2025">
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">رقم اللوحة</label>
-            <input type="text" class="mobile-form-input" name="plate_number" required placeholder="مثال: أ ب ج ١٢٣٤">
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">اللون</label>
-            <input type="text" class="mobile-form-input" name="color" required placeholder="مثال: أبيض">
+            <label class="mobile-form-label required">الشركة المصنعة</label>
+            <input type="text" class="mobile-form-input" name="make" required placeholder="مثال: تويوتا، هيونداي، نيسان">
           </div>
           
           <div class="mobile-form-row">
             <div class="mobile-form-group">
-              <label class="mobile-form-label">سنة الصنع</label>
-              <input type="number" class="mobile-form-input" name="year" required placeholder="مثال: 2025">
+              <label class="mobile-form-label required">الموديل</label>
+              <input type="text" class="mobile-form-input" name="model" required placeholder="مثال: كامري، كورولا، إلنترا">
             </div>
             
             <div class="mobile-form-group">
-              <label class="mobile-form-label">عداد الكيلومترات</label>
-              <input type="number" class="mobile-form-input" name="odometer" required placeholder="مثال: 1500">
+              <label class="mobile-form-label required">نوع السيارة</label>
+              <select class="mobile-form-select" name="type_of_car" required>
+                <option value="" disabled selected>اختر نوع السيارة</option>
+                <option value="سيدان">سيدان</option>
+                <option value="قاطرة">قاطرة</option>
+                <option value="باص">باص</option>
+                <option value="نقل خفيف">نقل خفيف</option>
+                <option value="نقل ثقيل">نقل ثقيل</option>
+                <option value="شاحنة صغيرة">شاحنة صغيرة</option>
+                <option value="شاحنة كبيرة">شاحنة كبيرة</option>
+                <option value="معدات ثقيلة">معدات ثقيلة</option>
+                <option value="مقطورة">مقطورة</option>
+                <option value="دباب">دباب</option>
+                <option value="كرين">كرين</option>
+                <option value="حفار">حفار</option>
+              </select>
             </div>
-          </div>
-        </div>
-        
-        <!-- بيانات الملكية والتأمين -->
-        <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">بيانات الملكية والتأمين</h3>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">رقم الهيكل (VIN)</label>
-            <input type="text" class="mobile-form-input" name="vin" placeholder="مثال: ABC123XYZ456789">
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">الموظف المسؤول</label>
-            <select class="mobile-form-select" name="employee_id">
-              <option value="" selected disabled>اختر الموظف المسؤول</option>
-              <!-- سيتم تعبئة هذه القائمة بالموظفين من قاعدة البيانات -->
-              <option value="1">موظف 1</option>
-              <option value="2">موظف 2</option>
-            </select>
           </div>
           
           <div class="mobile-form-row">
             <div class="mobile-form-group">
-              <label class="mobile-form-label">تاريخ انتهاء الرخصة</label>
-              <input type="date" class="mobile-form-input" name="license_expiry_date">
+              <label class="mobile-form-label required">سنة الصنع</label>
+              <input type="number" class="mobile-form-input" name="year" min="1990" max="2030" required placeholder="مثال: 2025">
             </div>
             
             <div class="mobile-form-group">
-              <label class="mobile-form-label">تاريخ انتهاء التأمين</label>
-              <input type="date" class="mobile-form-input" name="insurance_expiry_date">
+              <label class="mobile-form-label required">اللون</label>
+              <input type="text" class="mobile-form-input" name="color" required placeholder="مثال: أبيض، أسود، فضي">
             </div>
           </div>
           
           <div class="mobile-form-group">
-            <label class="mobile-form-label">شركة التأمين</label>
-            <input type="text" class="mobile-form-input" name="insurance_company" placeholder="مثال: شركة التأمين التعاونية">
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">رقم بوليصة التأمين</label>
-            <input type="text" class="mobile-form-input" name="insurance_policy_number" placeholder="مثال: INS-12345678">
+            <label class="mobile-form-label">اسم السائق</label>
+            <input type="text" class="mobile-form-input" name="driver_name" placeholder="اختياري - اسم السائق المعين لهذه السيارة">
           </div>
         </div>
         
-        <!-- معلومات إضافية -->
+        <!-- حالة السيارة والمشروع -->
         <div class="mobile-form-section">
-          <h3 class="mobile-form-section-title">معلومات إضافية</h3>
+          <h3 class="mobile-form-section-title">حالة السيارة والمشروع</h3>
           
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">نوع الوقود</label>
-            <select class="mobile-form-select" name="fuel_type">
-              <option value="" selected disabled>اختر نوع الوقود</option>
-              <option value="بنزين 91">بنزين 91</option>
-              <option value="بنزين 95">بنزين 95</option>
-              <option value="ديزل">ديزل</option>
-              <option value="كهرباء">كهرباء</option>
-              <option value="هجين">هجين</option>
-            </select>
+          <div class="mobile-form-row">
+            <div class="mobile-form-group">
+              <label class="mobile-form-label required">الحالة</label>
+              <select class="mobile-form-select" name="status" required>
+                <option value="available">متاحة</option>
+                <option value="rented">مؤجرة</option>
+                <option value="in_project">في المشروع</option>
+                <option value="in_workshop">في الورشة</option>
+                <option value="accident">حادث</option>
+                <option value="out_of_service">خارج الخدمة</option>
+              </select>
+            </div>
+            
+            <div class="mobile-form-group">
+              <label class="mobile-form-label">المشروع</label>
+              <select class="mobile-form-select" name="project">
+                <option value="">اختر المشروع</option>
+                {% for department in departments %}
+                <option value="{{ department.name }}">{{ department.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">سعة خزان الوقود (لتر)</label>
-            <input type="number" class="mobile-form-input" name="fuel_tank_capacity" placeholder="مثال: 60">
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">الحالة</label>
-            <select class="mobile-form-select" name="status">
-              <option value="نشط" selected>نشط</option>
-              <option value="صيانة">في الصيانة</option>
-              <option value="غير نشط">غير نشط</option>
-            </select>
-          </div>
+        </div>
+        
+        <!-- ملاحظات -->
+        <div class="mobile-form-section">
+          <h3 class="mobile-form-section-title">ملاحظات</h3>
           
           <div class="mobile-form-group">
             <label class="mobile-form-label">ملاحظات</label>
-            <textarea class="mobile-form-textarea" name="notes" rows="3" placeholder="أدخل أي ملاحظات إضافية حول السيارة"></textarea>
-          </div>
-          
-          <div class="mobile-form-group">
-            <label class="mobile-form-label">صورة السيارة</label>
-            <div class="mobile-form-file">
-              <input type="file" id="vehicleImage" name="vehicle_image" accept="image/*" class="mobile-form-file-input">
-              <label for="vehicleImage" class="mobile-form-file-label">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <span>اختر صورة</span>
-              </label>
-              <div class="mobile-form-file-preview" id="imagePreview"></div>
-            </div>
+            <textarea class="mobile-form-textarea" name="notes" rows="3" placeholder="أدخل أي ملاحظات إضافية عن السيارة"></textarea>
           </div>
         </div>
         
@@ -246,6 +216,14 @@
   
   .mobile-form-row .mobile-form-group {
     flex: 1;
+  }
+  
+  /* Required field styling */
+  .mobile-form-label.required::after {
+    content: '*';
+    color: #dc3545;
+    margin-left: 0.25rem;
+    font-weight: bold;
   }
 </style>
 {% endblock %}

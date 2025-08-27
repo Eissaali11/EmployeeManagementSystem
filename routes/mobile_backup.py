@@ -1782,70 +1782,8 @@ def delete_vehicle(vehicle_id):
 @login_required
 def add_vehicle():
     """إضافة سيارة جديدة للنسخة المحمولة"""
-    if request.method == "POST":
-        try:
-            # استخراج البيانات من النموذج
-            plate_number = request.form.get("plate_number")
-            make = request.form.get("make")
-            model = request.form.get("model")
-            type_of_car = request.form.get("type_of_car")
-            year = request.form.get("year")
-            color = request.form.get("color")
-            driver_name = request.form.get("driver_name")
-            status = request.form.get("status")
-            project = request.form.get("project")
-            notes = request.form.get("notes")
-
-            # التحقق من صحة البيانات المطلوبة
-            if not all([plate_number, make, model, type_of_car, year, color, status]):
-                flash("جميع الحقول المطلوبة يجب ملؤها", "error")
-                return render_template("mobile/add_vehicle.html", departments=Department.query.all())
-
-            # التحقق من عدم تكرار رقم اللوحة
-            existing_vehicle = Vehicle.query.filter_by(plate_number=plate_number).first()
-            if existing_vehicle:
-                flash("رقم اللوحة موجود مسبقاً في النظام", "error")
-                return render_template("mobile/add_vehicle.html", departments=Department.query.all())
-
-            # إنشاء سيارة جديدة
-            new_vehicle = Vehicle(
-                plate_number=plate_number,
-                make=make,
-                model=model,
-                type_of_car=type_of_car,
-                year=int(year),
-                color=color,
-                driver_name=driver_name if driver_name else None,
-                status=status,
-                project=project if project else None,
-                notes=notes if notes else None,
-                created_at=datetime.utcnow()
-            )
-
-            # حفظ السيارة في قاعدة البيانات
-            db.session.add(new_vehicle)
-            db.session.commit()
-
-            # تسجيل العملية في سجل النشاط
-            log_activity(
-                user_id=current_user.id,
-                action="vehicle_added",
-                details=f"تم إضافة السيارة {plate_number} - {make} {model}",
-                ip_address=request.remote_addr
-            )
-
-            flash(f"تم إضافة السيارة {plate_number} بنجاح", "success")
-            return redirect(url_for("mobile.vehicles"))
-
-        except ValueError as e:
-            flash("يرجى التأكد من صحة البيانات المدخلة", "error")
-        except Exception as e:
-            db.session.rollback()
-            flash(f"حدث خطأ أثناء إضافة السيارة: {str(e)}", "error")
-
-    # جلب قائمة الأقسام للمشاريع
-    departments = Department.query.all()
-    return render_template("mobile/add_vehicle.html", departments=departments)
+    # يمكن تنفيذ هذه الوظيفة لاحقًا
+    return render_template('mobile/add_vehicle.html')
 
 # سجل صيانة السيارات - النسخة المحمولة
 
