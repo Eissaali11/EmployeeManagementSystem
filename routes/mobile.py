@@ -1757,27 +1757,27 @@ def delete_vehicle(vehicle_id):
     try:
         plate_number = vehicle.plate_number
 
-        # حذف البيانات المرتبطة أولاً لتجنب مخالفة Foreign Key
-        # حذف سجلات operation_requests المرتبطة بالسيارة
-        operation_requests = OperationRequest.query.filter_by(vehicle_id=vehicle_id).all()
-        for op_req in operation_requests:
-            db.session.delete(op_req)
-            
-        # حذف سجلات external_authorization المرتبطة بالسيارة
-        external_auths = ExternalAuthorization.query.filter_by(vehicle_id=vehicle_id).all()
-        for ext_auth in external_auths:
-            db.session.delete(ext_auth)
-            
-        # حذف جميع السجلات المرتبطة الأخرى
-        # حذف VehicleHandover
-        handovers = VehicleHandover.query.filter_by(vehicle_id=vehicle_id).all()
-        for handover in handovers:
-            db.session.delete(handover)
-            
-        # حذف VehicleWorkshop  
-        workshops = VehicleWorkshop.query.filter_by(vehicle_id=vehicle_id).all()
-        for workshop in workshops:
-            db.session.delete(workshop)
+        # حذف البيانات المرتبطة باستخدام SQL مباشر لتجنب مشاكل ORM
+        # استخدام execute لحذف البيانات مباشرة
+        db.session.execute(
+            db.text("DELETE FROM operation_requests WHERE vehicle_id = :vehicle_id"),
+            {"vehicle_id": vehicle_id}
+        )
+        
+        db.session.execute(
+            db.text("DELETE FROM external_authorization WHERE vehicle_id = :vehicle_id"), 
+            {"vehicle_id": vehicle_id}
+        )
+        
+        db.session.execute(
+            db.text("DELETE FROM vehicle_handover WHERE vehicle_id = :vehicle_id"),
+            {"vehicle_id": vehicle_id}
+        )
+        
+        db.session.execute(
+            db.text("DELETE FROM vehicle_workshop WHERE vehicle_id = :vehicle_id"),
+            {"vehicle_id": vehicle_id}
+        )
 
         # حذف السيارة من قاعدة البيانات
         db.session.delete(vehicle)
