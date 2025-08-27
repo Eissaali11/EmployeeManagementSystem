@@ -2801,9 +2801,9 @@ function shareHandoverRecordImproved(button) {
                 `📱 معلومات الجوال\n` +
                 `═══════════════════════════\n`;
     
+    if (employeeMobileType) shareText += `• نوع الجوال: ${employeeMobileType}\n`;
     if (employeeMobile) shareText += `• رقم جوال العمل: ${employeeMobile}\n`;
     if (employeeMobileImei) shareText += `• IMEI: ${employeeMobileImei}\n`;
-    if (employeeMobileType) shareText += `• نوع الجوال: ${employeeMobileType}\n`;
     
     if (employeeHasCustody === 'True' || employeeHasCustody === 'true' || employeeHasCustody === 't') {
         shareText += `• حالة عهدة الجوال: مُستلمة ✅\n`;
