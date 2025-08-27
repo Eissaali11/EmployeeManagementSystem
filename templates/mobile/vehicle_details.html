@@ -2747,11 +2747,15 @@ function shareHandoverRecordImproved(button) {
     const handoverDate = cleanDataValue(button.getAttribute('data-handover-date'));
     const notes = cleanDataValue(button.getAttribute('data-notes'));
     
+    // بيانات الموظف الكاملة
     const employeeId = cleanDataValue(button.getAttribute('data-employee-id'));
     const employeeMobile = cleanDataValue(button.getAttribute('data-employee-mobile'));
+    const employeeMobilePersonal = cleanDataValue(button.getAttribute('data-employee-mobile-personal'));
     const employeeDepartments = cleanDataValue(button.getAttribute('data-employee-departments'));
     const employeeMobileImei = cleanDataValue(button.getAttribute('data-employee-mobile-imei'));
     const employeeBirthDate = cleanDataValue(button.getAttribute('data-employee-birth-date'));
+    const employeeMobileType = cleanDataValue(button.getAttribute('data-employee-mobile-type'));
+    const employeeHasCustody = button.getAttribute('data-employee-has-custody');
     
     const operationType = handoverType === 'delivery' ? 'تسليم' : 'استلام';
     const vehicleInfo = "{{ vehicle.plate_number }} - {{ vehicle.make }} {{ vehicle.model }}";
@@ -2771,32 +2775,49 @@ function shareHandoverRecordImproved(button) {
                    `• نوع العملية: ${operationType}\n` +
                    `• تاريخ العملية: ${handoverDate || 'غير محدد'}\n\n` +
                    `═══════════════════════════\n` +
-                   `👤 بيانات السائق\n` +
+                   `👤 معلومات السائق الشخصية\n` +
                    `═══════════════════════════\n` +
                    `• اسم السائق: ${personName}\n`;
     
-    if (personNationalId) shareText += `• رقم الإقامة: ${personNationalId}\n`;
-    if (employeeId) shareText += `• الرقم الوظيفي: ${employeeId}\n`;
-    if (personPhone) shareText += `• رقم الجوال: ${personPhone}\n`;
-    if (employeeMobile) shareText += `• رقم جوال العمل: ${employeeMobile}\n`;
-    if (employeeDepartments) shareText += `• القسم: ${employeeDepartments}\n`;
-    if (employeeMobileImei) shareText += `• IMEI: ${employeeMobileImei}\n`;
     if (employeeBirthDate) shareText += `• تاريخ الميلاد: ${employeeBirthDate}\n`;
+    if (personNationalId) shareText += `• رقم الهوية/الإقامة: ${personNationalId}\n`;
+    if (personPhone) shareText += `• رقم الجوال الشخصي: ${personPhone}\n`;
+    
+    shareText += `\n═══════════════════════════\n` +
+                `💼 معلومات العمل\n` +
+                `═══════════════════════════\n`;
+    
+    if (employeeId) shareText += `• الرقم الوظيفي: ${employeeId}\n`;
+    if (employeeDepartments) shareText += `• القسم: ${employeeDepartments}\n`;
+    
+    shareText += `\n═══════════════════════════\n` +
+                `📱 معلومات الجوال\n` +
+                `═══════════════════════════\n`;
+    
+    if (employeeMobile) shareText += `• رقم جوال العمل: ${employeeMobile}\n`;
+    if (employeeMobileImei) shareText += `• IMEI: ${employeeMobileImei}\n`;
+    if (employeeMobileType) shareText += `• نوع الجوال: ${employeeMobileType}\n`;
+    
+    if (employeeHasCustody === 'True') {
+        shareText += `• حالة عهدة الجوال: مُستلمة ✅\n`;
+    } else if (employeeHasCustody === 'False') {
+        shareText += `• حالة عهدة الجوال: غير مُستلمة ❌\n`;
+    }
     
     if (notes) {
         shareText += `\n═══════════════════════════\n` +
-                    `📝 ملاحظات\n` +
+                    `📝 ملاحظات إضافية\n` +
                     `═══════════════════════════\n` +
                     `${notes}\n`;
     }
     
     shareText += `\n═══════════════════════════\n` +
-                `🔗 رابط النموذج\n` +
+                `🔗 رابط النموذج الكامل\n` +
                 `═══════════════════════════\n` +
-                `${detailsUrl}\n\n` +
+                `📄 ${detailsUrl}\n\n` +
                 `━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
                 `📱 نظام نُظم لإدارة المركبات\n` +
-                `📅 ${formattedDateTime}`;
+                `📅 تاريخ الإرسال: ${formattedDateTime}`;
     
     if (navigator.share) {
         navigator.share({
