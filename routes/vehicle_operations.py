@@ -28,13 +28,31 @@ def vehicle_operations_list():
     # إعداد قوائم العمليات
     operations = []
     
+    # فلترة العمليات حسب القسم المحدد للمستخدم الحالي
+    from models import employee_departments
+    department_filter_ids = None
+    if current_user.assigned_department_id:
+        # الحصول على معرفات الموظفين في القسم المحدد
+        dept_employee_ids = db.session.query(Employee.id).join(
+            employee_departments
+        ).join(Department).filter(
+            Department.id == current_user.assigned_department_id
+        ).all()
+        department_filter_ids = [emp.id for emp in dept_employee_ids]
+    
     # إضافة سجلات للتشخيص
     print(f"فلاتر البحث: vehicle_filter={vehicle_filter}, operation_type={operation_type}")
+    if department_filter_ids:
+        print(f"فلترة القسم: {len(department_filter_ids)} موظف في القسم المحدد")
 
     try:
         # جلب عمليات التسليم والاستلام
         if not operation_type or operation_type == 'handover':
             handover_query = VehicleHandover.query.join(Vehicle, VehicleHandover.vehicle_id == Vehicle.id)
+            
+            # فلترة حسب القسم المحدد للمستخدم
+            if department_filter_ids:
+                handover_query = handover_query.filter(VehicleHandover.employee_id.in_(department_filter_ids))
             
             if vehicle_filter:
                 handover_query = handover_query.filter(Vehicle.plate_number.ilike(f'%{vehicle_filter}%'))
@@ -93,6 +111,19 @@ def vehicle_operations_list():
                 except ValueError:
                     pass
 
+            # فلترة حسب القسم المحدد للمستخدم (المركبات المسلمة لموظفي القسم)
+            if department_filter_ids:
+                # فلترة المركبات التي لها تسليم لموظف في القسم المحدد
+                dept_vehicle_ids = db.session.query(VehicleHandover.vehicle_id).filter(
+                    VehicleHandover.handover_type == 'delivery',
+                    VehicleHandover.employee_id.in_(department_filter_ids)
+                ).distinct().all()
+                dept_vehicle_ids = [v.vehicle_id for v in dept_vehicle_ids]
+                if dept_vehicle_ids:
+                    workshop_query = workshop_query.filter(Vehicle.id.in_(dept_vehicle_ids))
+                else:
+                    workshop_query = workshop_query.filter(Vehicle.id == -1)  # قائمة فارغة
+
             workshops = workshop_query.all()
             print(f"تم العثور على {len(workshops)} سجل ورشة")
             
@@ -132,6 +163,21 @@ def vehicle_operations_list():
 
             if employee_filter:
                 safety_query = safety_query.filter(VehicleExternalSafetyCheck.driver_name.ilike(f'%{employee_filter}%'))
+
+            # فلترة حسب القسم المحدد للمستخدم
+            if department_filter_ids:
+                # فلترة فحوصات السلامة للمركبات المسلمة لموظفي القسم المحدد
+                dept_vehicle_plates = db.session.query(Vehicle.plate_number).join(
+                    VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
+                ).filter(
+                    VehicleHandover.handover_type == 'delivery',
+                    VehicleHandover.employee_id.in_(department_filter_ids)
+                ).distinct().all()
+                dept_vehicle_plates = [v.plate_number for v in dept_vehicle_plates]
+                if dept_vehicle_plates:
+                    safety_query = safety_query.filter(VehicleExternalSafetyCheck.vehicle_plate_number.in_(dept_vehicle_plates))
+                else:
+                    safety_query = safety_query.filter(VehicleExternalSafetyCheck.id == -1)  # قائمة فارغة
 
             safety_checks = safety_query.all()
             print(f"تم العثور على {len(safety_checks)} فحص سلامة")

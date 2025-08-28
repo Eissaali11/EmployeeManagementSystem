@@ -576,6 +576,35 @@ def share_links():
     # قاعدة الاستعلام الأساسية
     query = Vehicle.query
     
+    # فلترة المركبات حسب القسم المحدد للمستخدم الحالي
+    from flask_login import current_user
+    from models import employee_departments
+    if current_user.assigned_department_id:
+        # الحصول على معرفات الموظفين في القسم المحدد
+        dept_employee_ids = db.session.query(Employee.id).join(
+            employee_departments
+        ).join(Department).filter(
+            Department.id == current_user.assigned_department_id
+        ).all()
+        dept_employee_ids = [emp.id for emp in dept_employee_ids]
+        
+        if dept_employee_ids:
+            # فلترة المركبات التي لها تسليم لموظف في القسم المحدد
+            vehicle_ids_with_handovers = db.session.query(
+                VehicleHandover.vehicle_id
+            ).filter(
+                VehicleHandover.handover_type == 'delivery',
+                VehicleHandover.employee_id.in_(dept_employee_ids)
+            ).distinct().all()
+            
+            vehicle_ids = [h.vehicle_id for h in vehicle_ids_with_handovers]
+            if vehicle_ids:
+                query = query.filter(Vehicle.id.in_(vehicle_ids))
+            else:
+                query = query.filter(Vehicle.id == -1)  # قائمة فارغة
+        else:
+            query = query.filter(Vehicle.id == -1)  # قائمة فارغة
+    
     # إضافة التصفية حسب الحالة إذا تم تحديدها
     if status_filter:
         query = query.filter(Vehicle.status == status_filter)
@@ -930,6 +959,34 @@ def admin_external_safety_checks():
     
     # بناء الاستعلام مع الفلاتر
     query = VehicleExternalSafetyCheck.query
+    
+    # فلترة فحوصات السلامة حسب القسم المحدد للمستخدم الحالي
+    from flask_login import current_user
+    from models import employee_departments
+    if current_user.assigned_department_id:
+        # الحصول على معرفات الموظفين في القسم المحدد
+        dept_employee_ids = db.session.query(Employee.id).join(
+            employee_departments
+        ).join(Department).filter(
+            Department.id == current_user.assigned_department_id
+        ).all()
+        dept_employee_ids = [emp.id for emp in dept_employee_ids]
+        
+        if dept_employee_ids:
+            # فلترة فحوصات السلامة للمركبات المسلمة لموظفي القسم المحدد
+            dept_vehicle_plates = db.session.query(Vehicle.plate_number).join(
+                VehicleHandover, Vehicle.id == VehicleHandover.vehicle_id
+            ).filter(
+                VehicleHandover.handover_type == 'delivery',
+                VehicleHandover.employee_id.in_(dept_employee_ids)
+            ).distinct().all()
+            dept_vehicle_plates = [v.plate_number for v in dept_vehicle_plates]
+            if dept_vehicle_plates:
+                query = query.filter(VehicleExternalSafetyCheck.vehicle_plate_number.in_(dept_vehicle_plates))
+            else:
+                query = query.filter(VehicleExternalSafetyCheck.id == -1)  # قائمة فارغة
+        else:
+            query = query.filter(VehicleExternalSafetyCheck.id == -1)  # قائمة فارغة
     
     # فلترة حسب رقم السيارة (من القائمة المنسدلة)
     if vehicle_filter:
