@@ -1138,10 +1138,15 @@ def create():
         projects = db.session.query(Vehicle.project).filter(Vehicle.project.isnot(None)).distinct().all()
         projects = [project[0] for project in projects if project[0]]
         
+        # جلب قائمة الأقسام
+        from models import Department
+        departments = Department.query.all()
+        
         return render_template('vehicles/create.html', 
                              statuses=VEHICLE_STATUS_CHOICES,
                              all_users=all_users,
-                             projects=projects)
+                             projects=projects,
+                             departments=departments)
 
 
 
