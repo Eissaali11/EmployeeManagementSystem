@@ -578,8 +578,8 @@ def share_links():
     
     # فلترة المركبات حسب القسم المحدد للمستخدم الحالي
     from flask_login import current_user
-    from models import employee_departments
-    if current_user.assigned_department_id:
+    from models import employee_departments, Department, Employee, VehicleHandover
+    if current_user.is_authenticated and hasattr(current_user, 'assigned_department_id') and current_user.assigned_department_id:
         # الحصول على معرفات الموظفين في القسم المحدد
         dept_employee_ids = db.session.query(Employee.id).join(
             employee_departments
@@ -962,8 +962,8 @@ def admin_external_safety_checks():
     
     # فلترة فحوصات السلامة حسب القسم المحدد للمستخدم الحالي
     from flask_login import current_user
-    from models import employee_departments
-    if current_user.assigned_department_id:
+    from models import employee_departments, Department, Employee, VehicleHandover, Vehicle
+    if current_user.is_authenticated and hasattr(current_user, 'assigned_department_id') and current_user.assigned_department_id:
         # الحصول على معرفات الموظفين في القسم المحدد
         dept_employee_ids = db.session.query(Employee.id).join(
             employee_departments
