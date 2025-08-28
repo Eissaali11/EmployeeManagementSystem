@@ -947,6 +947,35 @@ def index():
         if search_plate:
                 query = query.filter(Vehicle.plate_number.contains(search_plate))
 
+
+        # فلترة المركبات حسب القسم المحدد للمستخدم الحالي
+        from flask_login import current_user
+        if current_user.assigned_department_id:
+            # الحصول على معرفات الموظفين في القسم المحدد
+            from models import employee_departments
+            dept_employee_ids = db.session.query(Employee.id).join(
+                employee_departments
+            ).join(Department).filter(
+                Department.id == current_user.assigned_department_id
+            ).all()
+            dept_employee_ids = [emp.id for emp in dept_employee_ids]
+            
+            if dept_employee_ids:
+                # فلترة المركبات التي لها تسليم لموظف في القسم المحدد
+                vehicle_ids_with_handovers = db.session.query(
+                    VehicleHandover.vehicle_id
+                ).filter(
+                    VehicleHandover.handover_type == "delivery",
+                    VehicleHandover.employee_id.in_(dept_employee_ids)
+                ).distinct().all()
+                
+                vehicle_ids = [h.vehicle_id for h in vehicle_ids_with_handovers]
+                if vehicle_ids:
+                    query = query.filter(Vehicle.id.in_(vehicle_ids))
+                else:
+                    query = query.filter(Vehicle.id == -1)  # قائمة فارغة
+            else:
+                query = query.filter(Vehicle.id == -1)  # قائمة فارغة
         # الحصول على قائمة بالشركات المصنعة لقائمة التصفية
         makes = db.session.query(Vehicle.make).distinct().all()
         makes = [make[0] for make in makes]
