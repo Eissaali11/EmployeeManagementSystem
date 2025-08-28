@@ -946,6 +946,9 @@ def external_safety_success():
 @external_safety_bp.route('/admin/external-safety-checks')
 def admin_external_safety_checks():
     """عرض جميع طلبات فحص السلامة للإدارة مع الفلاتر"""
+    from flask_login import current_user
+    from models import employee_departments, Department, Employee, VehicleHandover, Vehicle
+    
     # التحقق من صلاحيات الإدارة
     if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
         flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
@@ -961,8 +964,6 @@ def admin_external_safety_checks():
     query = VehicleExternalSafetyCheck.query
     
     # فلترة فحوصات السلامة حسب القسم المحدد للمستخدم الحالي
-    from flask_login import current_user
-    from models import employee_departments, Department, Employee, VehicleHandover, Vehicle
     if current_user.is_authenticated and hasattr(current_user, 'assigned_department_id') and current_user.assigned_department_id:
         # الحصول على معرفات الموظفين في القسم المحدد
         dept_employee_ids = db.session.query(Employee.id).join(
