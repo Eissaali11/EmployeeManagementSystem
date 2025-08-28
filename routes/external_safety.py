@@ -949,10 +949,10 @@ def admin_external_safety_checks():
     from flask_login import current_user
     from models import employee_departments, Department, Employee, VehicleHandover, Vehicle
     
-    # التحقق من صلاحيات الإدارة
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect('/')
+    # التحقق من تسجيل الدخول
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
+        return redirect('/login')
     
     # الحصول على معايير الفلترة من request
     vehicle_filter = request.args.get('vehicle_filter', '').strip()
