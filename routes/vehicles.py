@@ -5065,7 +5065,39 @@ def handovers_list():
         """عرض جميع السيارات مع حالات التسليم والاستلام"""
         try:
                 # الحصول على جميع السيارات مع معلومات التسليم
-                vehicles = Vehicle.query.all()
+                # فلترة المركبات حسب القسم المحدد للمستخدم الحالي
+                from flask_login import current_user
+                from models import employee_departments
+                
+                vehicles_query = Vehicle.query
+                
+                if current_user.is_authenticated and hasattr(current_user, 'assigned_department_id') and current_user.assigned_department_id:
+                        # الحصول على معرفات الموظفين في القسم المحدد
+                        dept_employee_ids = db.session.query(Employee.id).join(
+                                employee_departments
+                        ).join(Department).filter(
+                                Department.id == current_user.assigned_department_id
+                        ).all()
+                        dept_employee_ids = [emp.id for emp in dept_employee_ids]
+                        
+                        if dept_employee_ids:
+                                # فلترة المركبات التي لها تسليم لموظف في القسم المحدد
+                                vehicle_ids_with_handovers = db.session.query(
+                                        VehicleHandover.vehicle_id
+                                ).filter(
+                                        VehicleHandover.handover_type == 'delivery',
+                                        VehicleHandover.employee_id.in_(dept_employee_ids)
+                                ).distinct().all()
+                                
+                                vehicle_ids = [h.vehicle_id for h in vehicle_ids_with_handovers]
+                                if vehicle_ids:
+                                        vehicles_query = vehicles_query.filter(Vehicle.id.in_(vehicle_ids))
+                                else:
+                                        vehicles_query = vehicles_query.filter(Vehicle.id == -1)  # قائمة فارغة
+                        else:
+                                vehicles_query = vehicles_query.filter(Vehicle.id == -1)  # قائمة فارغة
+                
+                vehicles = vehicles_query.all()
 
                 vehicles_data = []
                 for vehicle in vehicles:
