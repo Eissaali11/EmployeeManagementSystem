@@ -1134,10 +1134,14 @@ def create():
         # جلب جميع المستخدمين لإدارة الوصول
         from models import User
         all_users = User.query.filter_by(is_active=True).all()
+        # جلب قائمة المشاريع الموجودة
+        projects = db.session.query(Vehicle.project).filter(Vehicle.project.isnot(None)).distinct().all()
+        projects = [project[0] for project in projects if project[0]]
         
         return render_template('vehicles/create.html', 
                              statuses=VEHICLE_STATUS_CHOICES,
-                             all_users=all_users)
+                             all_users=all_users,
+                             projects=projects)
 
 
 
@@ -1719,7 +1723,8 @@ def edit(id):
                              vehicle=vehicle, 
                              statuses=VEHICLE_STATUS_CHOICES, 
                              departments=departments,
-                             all_users=all_users)
+                             all_users=all_users,
+                             projects=projects)
 
 @vehicles_bp.route('/<int:id>/manage-user-access', methods=['POST'])
 @login_required
