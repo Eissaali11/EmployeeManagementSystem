@@ -62,6 +62,13 @@ def index():
         db.joinedload(Employee.nationality_rel)
     )
     
+    # فلترة الموظفين حسب القسم المحدد للمستخدم الحالي
+    from flask_login import current_user
+    if current_user.assigned_department_id:
+        # إذا كان المستخدم مرتبط بقسم محدد، عرض موظفي ذلك القسم فقط
+        query = query.join(Employee.departments).filter(Department.id == current_user.assigned_department_id)
+    # إذا لم يكن المستخدم مرتبط بقسم، عرض جميع الموظفين (للمديرين العامين)
+    
     # تطبيق فلتر القسم
     if department_filter:
         query = query.join(Employee.departments).filter(Department.id == department_filter)
@@ -105,8 +112,13 @@ def index():
     
     employees = query.all()
     
-    # الحصول على جميع الأقسام للفلتر
-    departments = Department.query.all()
+    # الحصول على الأقسام للفلتر - مفلترة حسب صلاحيات المستخدم
+    if current_user.assigned_department_id:
+        # إذا كان المستخدم مرتبط بقسم محدد، عرض ذلك القسم فقط
+        departments = Department.query.filter(Department.id == current_user.assigned_department_id).all()
+    else:
+        # إذا لم يكن المستخدم مرتبط بقسم، عرض جميع الأقسام (للمديرين العامين)
+        departments = Department.query.all()
     
     # حساب إحصائيات الموظفين متعددي الأقسام
     multi_dept_count = db.session.query(Employee.id)\
