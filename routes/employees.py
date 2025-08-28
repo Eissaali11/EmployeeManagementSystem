@@ -66,12 +66,12 @@ def index():
     from flask_login import current_user
     if current_user.assigned_department_id:
         # إذا كان المستخدم مرتبط بقسم محدد، عرض موظفي ذلك القسم فقط
-        query = query.join(Employee.departments).filter(Department.id == current_user.assigned_department_id)
+        query = query.join(employee_departments).join(Department).filter(Department.id == current_user.assigned_department_id)
     # إذا لم يكن المستخدم مرتبط بقسم، عرض جميع الموظفين (للمديرين العامين)
     
-    # تطبيق فلتر القسم
-    if department_filter:
-        query = query.join(Employee.departments).filter(Department.id == department_filter)
+    # تطبيق فلتر القسم (إضافي للفلترة اليدوية)
+    elif department_filter:
+        query = query.join(employee_departments).join(Department).filter(Department.id == department_filter)
     
     # تطبيق فلتر الحالة
     if status_filter:
