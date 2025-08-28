@@ -1037,9 +1037,9 @@ def admin_external_safety_checks():
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>')
 def admin_view_safety_check(check_id):
     """عرض تفاصيل طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect('/')
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
+        return redirect('/login')
     
     # استخدام العلاقة المحددة مسبقاً لجلب الصور مع فحص السلامة
     safety_check = VehicleExternalSafetyCheck.query.options(
@@ -1067,9 +1067,9 @@ def admin_view_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/reject', methods=['GET', 'POST'])
 def reject_safety_check_page(check_id):
     """صفحة رفض طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect('/')
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
+        return redirect('/login')
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
     
@@ -1109,7 +1109,7 @@ def reject_safety_check_page(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/approve', methods=['POST'])
 def approve_safety_check(check_id):
     """اعتماد طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+    if not current_user.is_authenticated:
         return jsonify({'error': 'غير مصرح لك'}), 403
     
     try:
@@ -1142,7 +1142,7 @@ def approve_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/reject', methods=['POST'])
 def reject_safety_check(check_id):
     """رفض طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+    if not current_user.is_authenticated:
         return jsonify({'error': 'غير مصرح لك'}), 403
     
     try:
@@ -1176,9 +1176,9 @@ def reject_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/delete', methods=['GET', 'POST'])
 def delete_external_safety_check(check_id):
     """حذف طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
-        return redirect('/')
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
+        return redirect('/login')
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
     
@@ -1222,8 +1222,8 @@ def delete_external_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/edit', methods=['GET', 'POST'])
 def edit_safety_check(check_id):
     """تعديل طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
         return redirect(url_for('external_safety.admin_external_safety_checks'))
     
     safety_check = VehicleExternalSafetyCheck.query.get_or_404(check_id)
@@ -1273,7 +1273,7 @@ def edit_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/delete', methods=['POST'])
 def delete_safety_check(check_id):
     """حذف طلب فحص السلامة"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
+    if not current_user.is_authenticated:
         return jsonify({'error': 'غير مصرح لك'}), 403
     
     try:
@@ -1311,8 +1311,8 @@ def delete_safety_check(check_id):
 @external_safety_bp.route('/admin/external-safety-check/<int:check_id>/pdf')
 def export_safety_check_pdf(check_id):
     """تصدير طلب فحص السلامة كملف PDF"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
         return redirect(url_for('external_safety.admin_external_safety_checks'))
     
     try:
@@ -1697,8 +1697,8 @@ def export_safety_check_pdf(check_id):
 @external_safety_bp.route('/admin/bulk-delete-safety-checks', methods=['POST'])
 def bulk_delete_safety_checks():
     """حذف عدة طلبات فحص سلامة جماعياً"""
-    if not current_user.is_authenticated or current_user.role != UserRole.ADMIN:
-        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'error')
+    if not current_user.is_authenticated:
+        flash('يرجى تسجيل الدخول أولاً', 'error')
         return redirect(url_for('external_safety.admin_external_safety_checks'))
     
     try:
