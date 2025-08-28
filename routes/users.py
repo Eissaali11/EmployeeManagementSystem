@@ -41,12 +41,17 @@ def index():
         # سيتم استخدامها في كل النوافذ المنبثقة
         all_departments = Department.query.order_by(Department.name).all()
         
-        # 2. جلب كل المستخدمين مع "التحميل المسبق" (preloading) لعلاقة الأقسام
-        #    options(joinedload(User.departments)) تخبر SQLAlchemy بأن يقوم بعمل JOIN
-        #    لجلب كل المستخدمين وأقسامهم في استعلام واحد كبير، مما يمنع مشكلة N+1
-        all_users = User.query.options(
+        # 2. جلب المستخدمين مع فلترة حسب القسم المحدد للمستخدم الحالي
+        user_query = User.query.options(
             joinedload(User.departments)
-        ).order_by(User.name).all()
+        )
+        
+        # فلترة المستخدمين حسب القسم المحدد للمستخدم الحالي
+        if current_user.assigned_department_id:
+            # إذا كان المستخدم مرتبط بقسم محدد، عرض المستخدمين المرتبطين بنفس القسم فقط
+            user_query = user_query.filter(User.assigned_department_id == current_user.assigned_department_id)
+        
+        all_users = user_query.order_by(User.name).all()
         
     except Exception as e:
         flash('حدث خطأ أثناء جلب البيانات من قاعدة البيانات.', 'danger')

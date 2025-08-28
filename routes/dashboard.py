@@ -132,15 +132,34 @@ def index():
 @login_required
 @module_access_required(Module.DASHBOARD)
 def employee_stats():
-    """عرض إحصائيات الموظفين حسب القسم والحالة"""
-    # إحصائيات الموظفين حسب القسم
-    department_stats = db.session.query(
-        Department.id,
-        Department.name,
-        func.count(Employee.id).label('employee_count')
-    ).outerjoin(
-        Employee, Department.id == Employee.department_id
-    ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
+    """عرض إحصائيات الموظفين حسب القسم والحالة مع فلترة حسب قسم المستخدم"""
+    # فلترة الإحصائيات حسب القسم المحدد للمستخدم الحالي
+    from models import employee_departments
+    
+    if current_user.assigned_department_id:
+        # إذا كان المستخدم مرتبط بقسم محدد، عرض إحصائيات ذلك القسم فقط
+        department_stats = db.session.query(
+            Department.id,
+            Department.name,
+            func.count(Employee.id).label('employee_count')
+        ).outerjoin(
+            employee_departments, Department.id == employee_departments.c.department_id
+        ).outerjoin(
+            Employee, employee_departments.c.employee_id == Employee.id
+        ).filter(
+            Department.id == current_user.assigned_department_id
+        ).group_by(Department.id).all()
+    else:
+        # إذا لم يكن المستخدم مرتبط بقسم، عرض جميع الأقسام (للمديرين العامين)
+        department_stats = db.session.query(
+            Department.id,
+            Department.name,
+            func.count(Employee.id).label('employee_count')
+        ).outerjoin(
+            employee_departments, Department.id == employee_departments.c.department_id
+        ).outerjoin(
+            Employee, employee_departments.c.employee_id == Employee.id
+        ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
     
     # إحصائيات الموظفين حسب الحالة
     status_stats = db.session.query(
@@ -161,21 +180,107 @@ def employee_stats():
         for stat in status_stats
     ]
     
-    # إحصائيات الموظفين حسب القسم والحالة
+    # إحصائيات الموظفين حسب القسم والحالة مع فلترة القسم
     detailed_stats = []
     
-    for dept in Department.query.all():
-        dept_stats = {
-            'department_id': dept.id,
-            'department_name': dept.name,
-            'active': Employee.query.filter_by(department_id=dept.id, status='active').count(),
-            'inactive': Employee.query.filter_by(department_id=dept.id, status='inactive').count(),
-            'on_leave': Employee.query.filter_by(department_id=dept.id, status='on_leave').count(),
-            'terminated': Employee.query.filter_by(department_id=dept.id, status='terminated').count(),
-            'total': Employee.query.filter_by(department_id=dept.id).count(),
-            'total_active': Employee.query.filter_by(department_id=dept.id, status='active').count(),
-        }
-        detailed_stats.append(dept_stats)
+    if current_user.assigned_department_id:
+        # عرض إحصائيات القسم المحدد فقط
+        dept = Department.query.get(current_user.assigned_department_id)
+        if dept:
+            # حساب عدد الموظفين في القسم حسب الحالة
+            active_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'active'
+            ).count()
+            
+            inactive_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'inactive'
+            ).count()
+            
+            on_leave_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'on_leave'
+            ).count()
+            
+            terminated_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'terminated'
+            ).count()
+            
+            total_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id
+            ).count()
+            
+            dept_stats = {
+                'department_id': dept.id,
+                'department_name': dept.name,
+                'active': active_count,
+                'inactive': inactive_count,
+                'on_leave': on_leave_count,
+                'terminated': terminated_count,
+                'total': total_count,
+                'total_active': active_count,
+            }
+            detailed_stats.append(dept_stats)
+    else:
+        # عرض جميع الأقسام (للمديرين العامين)
+        for dept in Department.query.all():
+            active_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'active'
+            ).count()
+            
+            inactive_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'inactive'
+            ).count()
+            
+            on_leave_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'on_leave'
+            ).count()
+            
+            terminated_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id,
+                Employee.status == 'terminated'
+            ).count()
+            
+            total_count = db.session.query(Employee.id).join(
+                employee_departments, Employee.id == employee_departments.c.employee_id
+            ).filter(
+                employee_departments.c.department_id == dept.id
+            ).count()
+            
+            dept_stats = {
+                'department_id': dept.id,
+                'department_name': dept.name,
+                'active': active_count,
+                'inactive': inactive_count,
+                'on_leave': on_leave_count,
+                'terminated': terminated_count,
+                'total': total_count,
+                'total_active': active_count,
+            }
+            detailed_stats.append(dept_stats)
     
     # ترتيب الإحصائيات حسب العدد الإجمالي للموظفين
     detailed_stats.sort(key=lambda x: x['total'], reverse=True)
