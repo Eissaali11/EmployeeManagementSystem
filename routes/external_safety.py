@@ -451,7 +451,7 @@ def handle_safety_check_submission(vehicle):
         
         if camera_images:
             # إنشاء مجلد الصور إذا لم يكن موجوداً
-            upload_dir = os.path.join(current_app.static_folder or 'static', 'uploads', 'safety_checks')
+            upload_dir = os.path.join('uploads', 'safety_checks')
             os.makedirs(upload_dir, exist_ok=True)
             
             import base64
@@ -491,7 +491,7 @@ def handle_safety_check_submission(vehicle):
                         
                         safety_image = VehicleSafetyImage()
                         safety_image.safety_check_id = safety_check.id
-                        safety_image.image_path = f'static/uploads/safety_checks/{filename}'
+                        safety_image.image_path = f'uploads/safety_checks/{filename}'
                         safety_image.image_description = description
                         
                         db.session.add(safety_image)
