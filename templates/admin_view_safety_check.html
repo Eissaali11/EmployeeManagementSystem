@@ -380,12 +380,14 @@
                                         {% for image in safety_check.safety_images %}
                                         <div class="col-md-3 mb-3">
                                             <div class="card">
-                                                {% if image.image_path.startswith('static/') %}
+                                                {% if image.image_path.startswith('static/uploads/') %}
                                                     {% set image_url = '/' + image.image_path %}
                                                 {% elif image.image_path.startswith('uploads/') %}
                                                     {% set image_url = '/' + image.image_path %}
+                                                {% elif image.image_path.startswith('static/') %}
+                                                    {% set image_url = '/' + image.image_path %}
                                                 {% else %}
-                                                    {% set image_url = '/static/' + image.image_path %}
+                                                    {% set image_url = '/uploads/' + image.image_path %}
                                                 {% endif %}
                                                 <img src="{{ image_url }}" 
                                                      class="card-img-top" 
