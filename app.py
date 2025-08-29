@@ -429,7 +429,32 @@ with app.app_context():
     @app.route('/uploads/<path:filename>')
     def uploaded_file(filename):
         from flask import send_from_directory
-        return send_from_directory('uploads', filename)
+        from flask import send_from_directory, abort
+        import os
+        
+        # البحث أولاً في uploads
+        file_path = os.path.join("uploads", filename)
+        if os.path.exists(file_path):
+            dir_parts = filename.split("/")
+            if len(dir_parts) > 1:
+                subdir = "/".join(dir_parts[:-1])
+                file_name = dir_parts[-1]
+                return send_from_directory(f"uploads/{subdir}", file_name)
+            else:
+                return send_from_directory("uploads", filename)
+        
+        # البحث في static/uploads كنسخة احتياطية
+        static_file_path = os.path.join("static", "uploads", filename)
+        if os.path.exists(static_file_path):
+            dir_parts = filename.split("/")
+            if len(dir_parts) > 1:
+                subdir = "/".join(dir_parts[:-1])
+                file_name = dir_parts[-1]
+                return send_from_directory(f"static/uploads/{subdir}", file_name)
+            else:
+                return send_from_directory("static/uploads", filename)
+        
+        abort(404)
 
     # مسار إضافي لخدمة صور static/uploads مع معالجة الأخطاء
     @app.route('/static/uploads/<path:filename>')
