@@ -431,6 +431,12 @@ with app.app_context():
         from flask import send_from_directory
         return send_from_directory('uploads', filename)
 
+    # إضافة route لخدمة الصور من static/uploads
+    @app.route('/static/uploads/<path:filename>')
+    def static_uploaded_file(filename):
+        from flask import send_from_directory
+        return send_from_directory('uploads', filename)
+
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access
 
