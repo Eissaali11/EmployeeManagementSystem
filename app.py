@@ -431,6 +431,26 @@ with app.app_context():
         from flask import send_from_directory
         return send_from_directory('uploads', filename)
 
+    # مسار إضافي لخدمة صور static/uploads مع معالجة الأخطاء
+    @app.route('/static/uploads/<path:filename>')
+    def static_uploaded_file(filename):
+        from flask import send_from_directory, abort
+        import os
+        
+        # البحث في static/uploads
+        file_path = os.path.join('static', 'uploads', filename)
+        if os.path.exists(file_path):
+            # استخراج اسم الملف والمجلد
+            dir_parts = filename.split('/')
+            if len(dir_parts) > 1:
+                subdir = '/'.join(dir_parts[:-1])
+                file_name = dir_parts[-1]
+                return send_from_directory(f'static/uploads/{subdir}', file_name)
+            else:
+                return send_from_directory('static/uploads', filename)
+        
+        abort(404)
+
     # إضافة دوال مساعدة لقوالب Jinja
     from utils.user_helpers import get_role_display_name, get_module_display_name, format_permissions, check_module_access
 
