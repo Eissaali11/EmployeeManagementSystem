@@ -6233,3 +6233,32 @@ def edit_vehicle_documents(id):
         return redirect(url_for('vehicles.valid_documents'))
     
     return render_template('vehicles/edit_documents.html', vehicle=vehicle)
+
+
+# مسار عرض الصورة في صفحة منفصلة
+@vehicles_bp.route('/workshop-image/<int:image_id>')
+@login_required
+def view_workshop_image(image_id):
+        """عرض صورة الورشة في صفحة منفصلة"""
+        # الحصول على الصورة
+        image = VehicleWorkshopImage.query.get_or_404(image_id)
+        
+        # الحصول على سجل الورشة والسيارة
+        workshop = VehicleWorkshop.query.get_or_404(image.workshop_record_id)
+        vehicle = Vehicle.query.get_or_404(workshop.vehicle_id)
+        
+        # تنسيق التواريخ
+        workshop.formatted_entry_date = format_date_arabic(workshop.entry_date)
+        if workshop.exit_date:
+                workshop.formatted_exit_date = format_date_arabic(workshop.exit_date)
+        
+        # تحديد نوع الصورة
+        image_type_arabic = 'قبل الإصلاح' if image.image_type == 'before' else 'بعد الإصلاح'
+        
+        return render_template(
+                'vehicles/workshop_image_view.html',
+                image=image,
+                workshop=workshop,
+                vehicle=vehicle,
+                image_type_arabic=image_type_arabic
+        )

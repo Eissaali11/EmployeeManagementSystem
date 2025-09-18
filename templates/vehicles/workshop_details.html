@@ -471,7 +471,7 @@
             <div class="images-section">
                 <div class="images-grid">
                     {% for image in record.images %}
-                    <div class="image-card" onclick="showImageModal('/static/{{ image.image_path }}', '{{ image.notes or 'صورة من الورشة' }}')">
+                    <div class="image-card" onclick="window.location.href='{{ url_for('vehicles.view_workshop_image', image_id=image.id) }}'">
                         <div style="position: relative;">
                             <img src="/static/{{ image.image_path }}" alt="{{ image.notes or 'صورة من الورشة' }}">
                             {% if image.image_type %}
@@ -525,105 +525,12 @@
     </div>
 </div>
 
-<!-- نافذة عرض الصور -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content" style="z-index: 10000;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title">
-                    <i class="fas fa-image me-2"></i>
-                    عرض الصورة
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="إغلاق"></button>
-            </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" alt="" class="img-fluid rounded shadow" style="max-height: 60vh; max-width: 100%;">
-                <p id="modalImageCaption" class="mt-3 mb-0 text-muted"></p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>
-                    إغلاق
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
-// عرض الصور في نافذة منبثقة محسنة
-function showImageModal(imageSrc, caption) {
-    console.log('عرض الصورة:', imageSrc);
-    
-    const modalImage = document.getElementById('modalImage');
-    const modalImageCaption = document.getElementById('modalImageCaption');
-    const imageModal = document.getElementById('imageModal');
-    
-    if (!modalImage || !modalImageCaption || !imageModal) {
-        console.error('عناصر النافذة المنبثقة غير موجودة');
-        alert('حدث خطأ في عرض النافذة المنبثقة');
-        return;
-    }
-    
-    // تنظيف مسار الصورة
-    let cleanImageSrc = imageSrc;
-    if (imageSrc.startsWith('/static/static/')) {
-        cleanImageSrc = imageSrc.replace('/static/static/', '/static/');
-    } else if (imageSrc.startsWith('static/')) {
-        cleanImageSrc = '/' + imageSrc;
-    }
-    
-    // إعداد الصورة والنص
-    modalImage.src = cleanImageSrc;
-    modalImageCaption.textContent = caption || 'صورة من الورشة';
-    
-    // إضافة معالج للخطأ
-    modalImage.onerror = function() {
-        console.error('فشل تحميل الصورة:', cleanImageSrc);
-        modalImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NzU4MyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtmE2YUg2YrYqtmFINin2YTYudir2YjYsSDYudmE2Ykg2KfZhNi12YjYsdipPC90ZXh0Pjwvc3ZnPg==';
-        modalImageCaption.textContent = 'لم يتم العثور على الصورة';
-    };
-    
-    // إضافة معالج للنجاح
-    modalImage.onload = function() {
-        console.log('تم تحميل الصورة بنجاح:', cleanImageSrc);
-    };
-    
-    // فتح النافذة المنبثقة مع معالجة محسنة
-    try {
-        // إزالة أي نافذة مفتوحة مسبقاً
-        const existingModal = bootstrap.Modal.getInstance(imageModal);
-        if (existingModal) {
-            existingModal.dispose();
-        }
-        
-        // إنشاء نافذة جديدة
-        const modal = new bootstrap.Modal(imageModal, {
-            backdrop: true,
-            keyboard: true,
-            focus: true
-        });
-        
-        modal.show();
-        console.log('تم فتح النافذة المنبثقة بنجاح');
-        
-        // التأكد من أن النافذة أمام كل شيء
-        setTimeout(() => {
-            imageModal.style.zIndex = '9999';
-            const backdrop = document.querySelector('.modal-backdrop');
-            if (backdrop) {
-                backdrop.style.zIndex = '9998';
-            }
-        }, 100);
-        
-    } catch (error) {
-        console.error('خطأ في فتح النافذة المنبثقة:', error);
-        alert('حدث خطأ في فتح النافذة المنبثقة');
-    }
-}
+// تم إزالة كود النافذة المنبثقة - الصور تفتح الآن في صفحة منفصلة
 
 // مشاركة تفاصيل الورشة مع الصور
 async function shareWorkshopDetails() {

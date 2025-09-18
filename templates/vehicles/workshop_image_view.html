@@ -1,0 +1,296 @@
+{% extends 'layout.html' %}
+
+{% block title %}عرض صورة الورشة - {{ vehicle.plate_number }}{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<style>
+.image-view-container {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    font-family: 'Tajawal', sans-serif;
+    padding: 20px 0;
+}
+
+.page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px 0;
+    margin-bottom: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.page-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.1"><circle cx="30" cy="30" r="4"/></g></svg>') repeat;
+    opacity: 0.3;
+}
+
+.page-header .content {
+    position: relative;
+    z-index: 1;
+}
+
+.info-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    margin-bottom: 25px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-header-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border: none;
+}
+
+.card-header-gradient h5 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.image-display-area {
+    padding: 30px;
+    text-align: center;
+    background: #f8f9fa;
+}
+
+.main-image {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.main-image:hover {
+    transform: scale(1.05);
+}
+
+.image-type-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.badge-before {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: white;
+}
+
+.badge-after {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    padding: 25px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    color: #6c757d;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.info-value {
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.action-buttons {
+    text-align: center;
+    padding: 30px;
+}
+
+.action-btn {
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-primary-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.btn-secondary-gradient {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.btn-secondary-gradient:hover {
+    transform: translateY(-2px);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .action-btn {
+        display: block;
+        margin: 10px 0;
+    }
+    
+    .main-image {
+        max-height: 60vh;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="image-view-container">
+    <div class="container">
+        <!-- رأس الصفحة -->
+        <div class="page-header">
+            <div class="content">
+                <div class="text-center">
+                    <h1 class="mb-3">
+                        <i class="fas fa-image me-3"></i>
+                        عرض صورة الورشة
+                    </h1>
+                    <p class="lead mb-0">
+                        صورة {{ image_type_arabic }} للسيارة {{ vehicle.plate_number }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- عرض الصورة -->
+        <div class="info-card">
+            <div class="card-header-gradient">
+                <h5>
+                    <i class="fas fa-image"></i>
+                    {{ image_type_arabic }}
+                </h5>
+            </div>
+            <div class="image-display-area">
+                <div class="image-type-badge {% if image.image_type == 'before' %}badge-before{% else %}badge-after{% endif %}">
+                    {{ image_type_arabic }}
+                </div>
+                <div>
+                    <img src="{{ url_for('static', filename=image.image_path) }}" 
+                         alt="{{ image_type_arabic }}" 
+                         class="main-image"
+                         onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NzU4MyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtmE2YUg2YrYqtmFINin2YTYudir2YjYsSDYudmE2Ykg2KfZhNi12YjYsdipPC90ZXh0Pjwvc3ZnPg==';">
+                </div>
+                {% if image.notes %}
+                <p class="mt-3 text-muted">{{ image.notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- معلومات السيارة -->
+        <div class="info-card">
+            <div class="card-header-gradient">
+                <h5>
+                    <i class="fas fa-car"></i>
+                    معلومات السيارة
+                </h5>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">رقم اللوحة</span>
+                    <span class="info-value">{{ vehicle.plate_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">الماركة</span>
+                    <span class="info-value">{{ vehicle.make }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">الموديل</span>
+                    <span class="info-value">{{ vehicle.model }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">السنة</span>
+                    <span class="info-value">{{ vehicle.year }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- معلومات الورشة -->
+        <div class="info-card">
+            <div class="card-header-gradient">
+                <h5>
+                    <i class="fas fa-wrench"></i>
+                    معلومات الورشة
+                </h5>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">اسم الورشة</span>
+                    <span class="info-value">{{ workshop.workshop_name or 'غير محدد' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">تاريخ الدخول</span>
+                    <span class="info-value">{{ workshop.formatted_entry_date or 'غير محدد' }}</span>
+                </div>
+                {% if workshop.exit_date %}
+                <div class="info-item">
+                    <span class="info-label">تاريخ الخروج</span>
+                    <span class="info-value">{{ workshop.formatted_exit_date }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <span class="info-label">الفني المسؤول</span>
+                    <span class="info-value">{{ workshop.technician_name or 'غير محدد' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- أزرار الإجراءات -->
+        <div class="action-buttons">
+            <a href="{{ url_for('vehicles.workshop_details', workshop_id=workshop.id) }}" class="action-btn btn-primary-gradient">
+                <i class="fas fa-arrow-left me-2"></i>
+                العودة لتفاصيل الورشة
+            </a>
+            <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="action-btn btn-secondary-gradient">
+                <i class="fas fa-car me-2"></i>
+                عرض تفاصيل السيارة
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
