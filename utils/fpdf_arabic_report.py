@@ -113,17 +113,18 @@ class ProfessionalArabicPDF(FPDF):
         
         # إضافة نمط هندسي خفيف
         self.set_draw_color(255, 255, 255)
-        self.set_line_width(0.5)
+        self.set_line_width(0.3)
         
-        # رسم خطوط قطرية خفيفة
-        for i in range(0, 220, 20):
-            self.line(i, 0, i+20, 60)
+        # رسم خطوط قطرية خفيفة بدلاً من الشفافية
+        for i in range(0, 220, 30):
+            self.line(i, 0, i+15, 60)
             
-        # إضافة تأثير الشفافية بمستطيل أبيض شفاف
+        # إضافة تأثير بصري بدلاً من الشفافية
         self.set_fill_color(255, 255, 255)
-        self.set_alpha(0.1)
-        self.rect(0, 0, 210, 60, 'F')
-        self.set_alpha(1.0)
+        # رسم مستطيلات صغيرة كنقاط زخرفية
+        for x in range(20, 200, 40):
+            for y in range(10, 50, 20):
+                self.rect(x, y, 2, 2, 'F')
     
     def add_decorative_border(self, x, y, w, h, color='primary'):
         """إضافة حدود زخرفية ملونة"""
@@ -557,7 +558,7 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     pdf.set_y(-35)
     
     # خط فاصل
-    pdf.set_draw_color_custom('primary')
+    pdf.set_draw_color(41, 128, 185)  # اللون الأساسي
     pdf.set_line_width(1)
     pdf.line(15, pdf.get_y(), 195, pdf.get_y())
     
