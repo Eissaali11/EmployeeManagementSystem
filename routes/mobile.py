@@ -2603,6 +2603,28 @@ def edit_handover_mobile(handover_id):
             new_movement_sig = request.form.get('movement_officer_signature_data')
             if new_movement_sig: existing_handover.movement_officer_signature_path = save_base64_image(new_movement_sig, 'signatures')
 
+            # معالجة رفع الملفات الجديدة
+            files = request.files.getlist('files')
+            for file in files:
+                if file and file.filename:
+                    try:
+                        file_path, file_type = save_file(file, 'handover')
+                        if file_path:
+                            file_description = request.form.get(f'description_{file.filename}', '')
+                            file_record = VehicleHandoverImage(
+                                handover_record_id=existing_handover.id, 
+                                image_path=file_path,
+                                image_description=file_description,
+                                file_path=file_path, 
+                                file_type=file_type,
+                                file_description=file_description
+                            )
+                            db.session.add(file_record)
+                    except Exception as e:
+                        import logging
+                        logging.error(f"خطأ في حفظ الملف {file.filename}: {str(e)}")
+                        flash(f'خطأ في حفظ الملف {file.filename}', 'warning')
+
             db.session.commit()
             log_activity('update', 'vehicle_handover', existing_handover.id, f"تعديل نموذج {existing_handover.handover_type} للمركبة {vehicle.plate_number} عبر الجوال")
 

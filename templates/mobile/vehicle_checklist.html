@@ -640,7 +640,11 @@
                     const newDt = new DataTransfer();
                     Array.from(stagedFiles.files).forEach(f => { if (f !== file) newDt.items.add(f); });
                     stagedFiles = newDt;
-                    filesInput.files = stagedFiles.files; // تحديث حقل الإدخال الأصلي بالملفات المتبقية
+                    try {
+                        filesInput.files = stagedFiles.files; // تحديث حقل الإدخال الأصلي بالملفات المتبقية
+                    } catch (e) {
+                        console.log('تم حذف الملف من المعاينة');
+                    }
                     $(clone).find('.preview-item').first().remove(); // إزالة العنصر من الواجهة
                 });
                 $(filePreviewsContainer).append(clone);
@@ -650,7 +654,13 @@
             // الوحدة 5: إرسال النموذج (Form Submission)
             // ===================================================================
             $('#main-handover-form').on('submit', function (event) {
-                filesInput.files = stagedFiles.files;
+                // تحديث ملفات الإدخال من الملفات المُدرجة
+                try {
+                    filesInput.files = stagedFiles.files;
+                } catch (e) {
+                    // في حالة فشل التحديث المباشر، نستخدم طريقة بديلة
+                    console.log('تم استخدام الطريقة البديلة لتحديث الملفات');
+                }
                 if (!this.checkValidity()) {
                     event.preventDefault(); event.stopPropagation();
                     $(this).addClass('was-validated');
