@@ -318,11 +318,21 @@
                 return false;
             }
             
+            // فحص الملفات المرفقة قبل الإرسال
+            const beforeImagesInput = document.getElementById('before_images');
+            const afterImagesInput = document.getElementById('after_images');
+            console.log('صور قبل الإصلاح - عدد الملفات:', beforeImagesInput.files.length);
+            console.log('صور بعد الإصلاح - عدد الملفات:', afterImagesInput.files.length);
+            
             // جمع بيانات النموذج للتصحيح
             const formData = new FormData(form);
             console.log('بيانات النموذج:');
             for (let [key, value] of formData.entries()) {
-                console.log(`${key}: ${value}`);
+                if (value instanceof File) {
+                    console.log(`${key}: ${value.name} (${value.size} bytes)`);
+                } else {
+                    console.log(`${key}: ${value}`);
+                }
             }
             
             // تعطيل زر الحفظ وتغيير النص
@@ -348,14 +358,16 @@
             console.log('الوصف:', formData.get('description'));
             console.log('حالة الإصلاح:', formData.get('repair_status'));
             
+            // فحص الملفات المرفقة
+            const beforeImages = document.getElementById('before_images').files;
+            const afterImages = document.getElementById('after_images').files;
+            console.log('صور قبل الإصلاح:', beforeImages.length);
+            console.log('صور بعد الإصلاح:', afterImages.length);
+            
             // تأكيد إرسال النموذج
             console.log('سيتم إرسال النموذج الآن...');
             
-            // اختبار إرسال النموذج يدوياً إذا لم يرسل تلقائياً
-            setTimeout(() => {
-                console.log('إرسال النموذج يدوياً...');
-                form.submit();
-            }, 100);
+            // لا نرسل النموذج يدوياً - نتركه يُرسل بشكل طبيعي
         });
     });
 </script>
