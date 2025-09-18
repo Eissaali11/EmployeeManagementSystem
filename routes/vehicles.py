@@ -2132,6 +2132,8 @@ def edit_workshop(id):
             cost_str = request.form.get('cost', '0')
             workshop_name = request.form.get('workshop_name')
             technician_name = request.form.get('technician_name')
+            delivery_link = request.form.get('delivery_link')
+            reception_link = request.form.get('reception_link')
             notes = request.form.get('notes')
 
             # تحويل البيانات
@@ -2148,9 +2150,100 @@ def edit_workshop(id):
             workshop.cost = new_cost
             workshop.workshop_name = workshop_name
             workshop.technician_name = technician_name
+            workshop.delivery_link = delivery_link
+            workshop.reception_link = reception_link
             workshop.notes = notes
             workshop.updated_at = datetime.utcnow()
-            # (يمكن إضافة باقي الحقول مثل الروابط والصور بنفس الطريقة)
+
+            # --- 3.1. معالجة ملفات الإيصالات ---
+            # معالجة إيصال التسليم
+            if 'delivery_receipt' in request.files:
+                delivery_receipt_file = request.files['delivery_receipt']
+                if delivery_receipt_file and delivery_receipt_file.filename:
+                    # حذف الإيصال القديم إذا وجد
+                    if workshop.delivery_receipt:
+                        old_file_path = os.path.join(current_app.static_folder, workshop.delivery_receipt)
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    
+                    # حفظ الإيصال الجديد
+                    receipt_path, _ = save_file(delivery_receipt_file, 'workshop')
+                    if receipt_path:
+                        workshop.delivery_receipt = receipt_path
+            
+            # معالجة إيصال الاستلام
+            if 'pickup_receipt' in request.files:
+                pickup_receipt_file = request.files['pickup_receipt']
+                if pickup_receipt_file and pickup_receipt_file.filename:
+                    # حذف الإيصال القديم إذا وجد
+                    if workshop.pickup_receipt:
+                        old_file_path = os.path.join(current_app.static_folder, workshop.pickup_receipt)
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    
+                    # حفظ الإيصال الجديد
+                    receipt_path, _ = save_file(pickup_receipt_file, 'workshop')
+                    if receipt_path:
+                        workshop.pickup_receipt = receipt_path
+
+            # --- 3.2. معالجة الصور ---
+            # معالجة صور "قبل الإصلاح"
+            before_images = request.files.getlist('before_images')
+            if before_images and any(img.filename for img in before_images):
+                # حذف الصور القديمة من نوع "before"
+                old_before_images = VehicleWorkshopImage.query.filter_by(
+                    workshop_record_id=workshop.id, 
+                    image_type='before'
+                ).all()
+                for old_image in old_before_images:
+                    # حذف الملف من النظام
+                    if old_image.image_path:
+                        old_file_path = os.path.join(current_app.static_folder, old_image.image_path)
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    # حذف السجل من قاعدة البيانات
+                    db.session.delete(old_image)
+                
+                # إضافة الصور الجديدة
+                for image in before_images:
+                    if image and image.filename:
+                        image_path = save_image(image, 'workshop')
+                        if image_path:
+                            image_record = VehicleWorkshopImage(
+                                workshop_record_id=workshop.id,
+                                image_type='before',
+                                image_path=image_path
+                            )
+                            db.session.add(image_record)
+
+            # معالجة صور "بعد الإصلاح"
+            after_images = request.files.getlist('after_images')
+            if after_images and any(img.filename for img in after_images):
+                # حذف الصور القديمة من نوع "after"
+                old_after_images = VehicleWorkshopImage.query.filter_by(
+                    workshop_record_id=workshop.id, 
+                    image_type='after'
+                ).all()
+                for old_image in old_after_images:
+                    # حذف الملف من النظام
+                    if old_image.image_path:
+                        old_file_path = os.path.join(current_app.static_folder, old_image.image_path)
+                        if os.path.exists(old_file_path):
+                            os.remove(old_file_path)
+                    # حذف السجل من قاعدة البيانات
+                    db.session.delete(old_image)
+                
+                # إضافة الصور الجديدة
+                for image in after_images:
+                    if image and image.filename:
+                        image_path = save_image(image, 'workshop')
+                        if image_path:
+                            image_record = VehicleWorkshopImage(
+                                workshop_record_id=workshop.id,
+                                image_type='after',
+                                image_path=image_path
+                            )
+                            db.session.add(image_record)
 
             db.session.commit()
 
