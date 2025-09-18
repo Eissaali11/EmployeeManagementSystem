@@ -344,31 +344,8 @@
             return true;
         });
         
-        // إضافة مستمع للنقر على زر الحفظ
-        saveButton.addEventListener('click', function(event) {
-            console.log('تم النقر على زر الحفظ');
-            
-            // اختبار بسيط للتأكد من أن النموذج يعمل
-            const formData = new FormData(form);
-            console.log('اختبار النموذج - عدد الحقول:', formData.entries().length);
-            
-            // عرض بعض البيانات للتأكد
-            console.log('تاريخ الدخول:', formData.get('entry_date'));
-            console.log('السبب:', formData.get('reason'));
-            console.log('الوصف:', formData.get('description'));
-            console.log('حالة الإصلاح:', formData.get('repair_status'));
-            
-            // فحص الملفات المرفقة
-            const beforeImages = document.getElementById('before_images').files;
-            const afterImages = document.getElementById('after_images').files;
-            console.log('صور قبل الإصلاح:', beforeImages.length);
-            console.log('صور بعد الإصلاح:', afterImages.length);
-            
-            // تأكيد إرسال النموذج
-            console.log('سيتم إرسال النموذج الآن...');
-            
-            // لا نرسل النموذج يدوياً - نتركه يُرسل بشكل طبيعي
-        });
+        // إضافة معالج تشخيصي للنقر على زر الحفظ (لا يتداخل مع السلوك الافتراضي)
+        console.log('تم تحديد معالج submit للنموذج');
     });
 </script>
 {% endblock %}
