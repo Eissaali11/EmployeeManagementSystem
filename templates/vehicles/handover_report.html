@@ -754,7 +754,8 @@
         <!-- ============================================= -->
 <!-- == القسم 8: المرفقات (بأبعاد ثابتة) == -->
 <!-- ============================================= -->
-{% if handover.images and handover.images|length > 0 %}
+{% set handover_images = handover.get_images %}
+{% if handover_images and handover_images|length > 0 %}
   <div style="page-break-before: always;"></div>
 
   <section style="direction: rtl; font-family: 'beIN-Normal' , beIN-Normal, Tahoma, sans-serif;">
@@ -767,7 +768,7 @@
       grid-template-columns: repeat(2, 1fr); /* فقط صورتان في كل صف */
       gap: 20px;
     ">
-      {% for image in handover.images %}
+      {% for image in handover_images %}
       <div style="
         border: 1px solid #dee2e6;
         border-radius: 6px;

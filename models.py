@@ -790,6 +790,13 @@ class VehicleHandover(db.Model):
     # نعدل علاقة المركبة لتكون أبسط
     images = db.relationship('VehicleHandoverImage', back_populates='handover_record', cascade='all, delete-orphan')
     vehicle = db.relationship('Vehicle', back_populates='handover_records')
+    
+    @property
+    def get_images(self):
+        """Property to ensure images are always loaded for PDF generation"""
+        if not hasattr(self, '_cached_images') or not self._cached_images:
+            self._cached_images = VehicleHandoverImage.query.filter_by(handover_record_id=self.id).all()
+        return self._cached_images
 
     driver_employee = db.relationship(
         'Employee', 

@@ -2176,7 +2176,7 @@ def save_file(file, folder):
     if not file:
         return None, None
     if not file.filename:
-        folder='vehicles'
+        return None, None
 
     # إنشاء اسم فريد للملف
     filename = secure_filename(file.filename)
