@@ -2187,8 +2187,16 @@ def edit_workshop(id):
                         workshop.pickup_receipt = receipt_path
 
             # --- 3.2. معالجة الصور ---
+            # إضافة سجلات تشخيص
+            current_app.logger.info(f"معالجة الصور لسجل الورشة {workshop.id}")
+            current_app.logger.info(f"طلب الملفات: {list(request.files.keys())}")
+            
             # معالجة صور "قبل الإصلاح"
             before_images = request.files.getlist('before_images')
+            current_app.logger.info(f"صور قبل الإصلاح: {len(before_images)} صورة")
+            for i, img in enumerate(before_images):
+                current_app.logger.info(f"صورة قبل {i+1}: {img.filename}")
+            
             if before_images and any(img.filename for img in before_images):
                 # حذف الصور القديمة من نوع "before"
                 old_before_images = VehicleWorkshopImage.query.filter_by(
@@ -2218,6 +2226,10 @@ def edit_workshop(id):
 
             # معالجة صور "بعد الإصلاح"
             after_images = request.files.getlist('after_images')
+            current_app.logger.info(f"صور بعد الإصلاح: {len(after_images)} صورة")
+            for i, img in enumerate(after_images):
+                current_app.logger.info(f"صورة بعد {i+1}: {img.filename}")
+            
             if after_images and any(img.filename for img in after_images):
                 # حذف الصور القديمة من نوع "after"
                 old_after_images = VehicleWorkshopImage.query.filter_by(
