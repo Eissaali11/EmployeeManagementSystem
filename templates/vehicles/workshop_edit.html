@@ -360,6 +360,22 @@
             console.log('تم إعادة تفعيل زر الحفظ عند تحميل الصفحة');
         }
         
+        // إضافة معالج مباشر لزر الحفظ للتشخيص
+        saveButton.addEventListener('click', function(event) {
+            console.log('تم النقر على زر الحفظ مباشرة!');
+            console.log('نوع الزر:', saveButton.type);
+            console.log('معطل؟', saveButton.disabled);
+            console.log('النموذج الأب:', saveButton.form);
+            
+            // التأكد من أن النموذج يُرسل
+            if (saveButton.form) {
+                console.log('محاولة إرسال النموذج يدوياً...');
+                saveButton.form.submit();
+            } else {
+                console.error('الزر ليس داخل نموذج!');
+            }
+        });
+        
         // إضافة معالج تشخيصي للنقر على زر الحفظ (لا يتداخل مع السلوك الافتراضي)
         console.log('تم تحديد معالج submit للنموذج');
     });
