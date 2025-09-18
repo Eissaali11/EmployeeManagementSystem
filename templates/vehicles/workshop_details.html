@@ -247,6 +247,35 @@
         margin: 10px 0;
     }
 }
+
+/* تحسين النافذة المنبثقة */
+#imageModal {
+    z-index: 9999 !important;
+}
+
+#imageModal .modal-backdrop {
+    z-index: 9998 !important;
+}
+
+#imageModal .modal-dialog {
+    z-index: 10000 !important;
+}
+
+#imageModal .modal-content {
+    z-index: 10001 !important;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+#imageModal .modal-body {
+    padding: 2rem;
+}
+
+#modalImage {
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
 </style>
 {% endblock %}
 
@@ -497,9 +526,9 @@
 </div>
 
 <!-- نافذة عرض الصور -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true" style="z-index: 9999;">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
+        <div class="modal-content" style="z-index: 10000;">
             <div class="modal-header border-0 pb-0">
                 <h5 class="modal-title">
                     <i class="fas fa-image me-2"></i>
@@ -525,7 +554,7 @@
 {% block scripts %}
 {{ super() }}
 <script>
-// عرض الصور في نافذة منبثقة
+// عرض الصور في نافذة منبثقة محسنة
 function showImageModal(imageSrc, caption) {
     console.log('عرض الصورة:', imageSrc);
     
@@ -539,45 +568,23 @@ function showImageModal(imageSrc, caption) {
         return;
     }
     
-    // تنظيف مسار الصورة من التكرار
+    // تنظيف مسار الصورة
     let cleanImageSrc = imageSrc;
     if (imageSrc.startsWith('/static/static/')) {
         cleanImageSrc = imageSrc.replace('/static/static/', '/static/');
-        console.log('تنظيف مسار مكرر:', cleanImageSrc);
     } else if (imageSrc.startsWith('static/')) {
         cleanImageSrc = '/' + imageSrc;
-        console.log('إضافة / للمسار:', cleanImageSrc);
     }
+    
+    // إعداد الصورة والنص
+    modalImage.src = cleanImageSrc;
+    modalImageCaption.textContent = caption || 'صورة من الورشة';
     
     // إضافة معالج للخطأ
     modalImage.onerror = function() {
         console.error('فشل تحميل الصورة:', cleanImageSrc);
-        // محاولة مسارات بديلة
-        const alternatePaths = [
-            cleanImageSrc,
-            cleanImageSrc.replace('/static/', '/uploads/'),
-            '/static/uploads/' + cleanImageSrc.split('/').pop(),
-            '/uploads/' + cleanImageSrc.split('/').pop()
-        ];
-        
-        let tried = 0;
-        function tryNextPath() {
-            if (tried < alternatePaths.length) {
-                console.log('محاولة مسار بديل:', alternatePaths[tried]);
-                modalImage.src = alternatePaths[tried];
-                tried++;
-            } else {
-                console.error('فشل تحميل الصورة من جميع المسارات');
-                modalImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtio2YjZjdin2YfYp9iqINiv2YPZhNi52YfYsdqM2Yc8L3RleHQ+PC9zdmc+';
-                modalImageCaption.textContent = 'لم يتم العثور على الصورة: ' + (caption || 'صورة من الورشة');
-            }
-        }
-        
-        modalImage.onerror = function() {
-            tryNextPath();
-        };
-        
-        tryNextPath();
+        modalImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjhmOWZhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzY2NzU4MyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtmE2YUg2YrYqtmFINin2YTYudir2YjYsSDYudmE2Ykg2KfZhNi12YjYsdipPC90ZXh0Pjwvc3ZnPg==';
+        modalImageCaption.textContent = 'لم يتم العثور على الصورة';
     };
     
     // إضافة معالج للنجاح
@@ -585,13 +592,33 @@ function showImageModal(imageSrc, caption) {
         console.log('تم تحميل الصورة بنجاح:', cleanImageSrc);
     };
     
-    modalImage.src = cleanImageSrc;
-    modalImageCaption.textContent = caption || 'صورة من الورشة';
-    
+    // فتح النافذة المنبثقة مع معالجة محسنة
     try {
-        var modal = new bootstrap.Modal(imageModal);
+        // إزالة أي نافذة مفتوحة مسبقاً
+        const existingModal = bootstrap.Modal.getInstance(imageModal);
+        if (existingModal) {
+            existingModal.dispose();
+        }
+        
+        // إنشاء نافذة جديدة
+        const modal = new bootstrap.Modal(imageModal, {
+            backdrop: true,
+            keyboard: true,
+            focus: true
+        });
+        
         modal.show();
         console.log('تم فتح النافذة المنبثقة بنجاح');
+        
+        // التأكد من أن النافذة أمام كل شيء
+        setTimeout(() => {
+            imageModal.style.zIndex = '9999';
+            const backdrop = document.querySelector('.modal-backdrop');
+            if (backdrop) {
+                backdrop.style.zIndex = '9998';
+            }
+        }, 100);
+        
     } catch (error) {
         console.error('خطأ في فتح النافذة المنبثقة:', error);
         alert('حدث خطأ في فتح النافذة المنبثقة');
