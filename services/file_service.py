@@ -5,6 +5,10 @@ import os
 import uuid
 from werkzeug.utils import secure_filename
 from PIL import Image
+from pillow_heif import register_heif_opener
+
+# تسجيل plugin الـ HEIC/HEIF للتعامل مع صور الآيفون
+register_heif_opener()
 from flask import current_app
 from utils.audit_logger import log_activity
 from flask_login import current_user
@@ -12,8 +16,8 @@ from flask_login import current_user
 class FileService:
     """خدمة إدارة الملفات والمرفقات"""
     
-    # أنواع الملفات المسموحة
-    ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+    # أنواع الملفات المسموحة (مع دعم HEIC من الآيفون)
+    ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'heif', 'webp'}
     ALLOWED_DOCUMENT_EXTENSIONS = {'pdf', 'doc', 'docx', 'xlsx', 'xls'}
     ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS.union(ALLOWED_DOCUMENT_EXTENSIONS)
     
@@ -95,24 +99,38 @@ class FileService:
     
     @staticmethod
     def resize_image(image_path, max_width=800, max_height=600):
-        """تغيير حجم الصورة"""
+        """تغيير حجم الصورة مع دعم HEIC وتحويل إلى JPEG"""
         try:
+            # تحديد المسار الجديد مع امتداد .jpg
+            path_without_ext = os.path.splitext(image_path)[0]
+            new_image_path = f"{path_without_ext}.jpg"
+            
             with Image.open(image_path) as img:
-                # تحويل RGBA إلى RGB إذا لزم الأمر
-                if img.mode == 'RGBA':
-                    background = Image.new('RGB', img.size, (255, 255, 255))
-                    background.paste(img, mask=img.split()[-1])
-                    img = background
+                # تحويل أي تنسيق إلى RGB
+                if img.mode != 'RGB':
+                    if img.mode == 'RGBA':
+                        background = Image.new('RGB', img.size, (255, 255, 255))
+                        background.paste(img, mask=img.split()[-1])
+                        img = background
+                    else:
+                        img = img.convert('RGB')
                 
                 # حساب الحجم الجديد مع الحفاظ على النسبة
                 img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
                 
-                # حفظ الصورة المحسنة
-                img.save(image_path, 'JPEG', quality=85, optimize=True)
+                # حفظ الصورة المحسنة كـ JPEG
+                img.save(new_image_path, 'JPEG', quality=85, optimize=True)
                 
-                return True
+                # حذف الملف الأصلي إذا كان مختلف عن الجديد
+                if image_path != new_image_path:
+                    try:
+                        os.remove(image_path)
+                    except:
+                        pass  # تجاهل الخطأ في حذف الملف الأصلي
+                
+                return new_image_path
         except Exception as e:
-            return False
+            return None
     
     @staticmethod
     def delete_file(file_path):

@@ -4,6 +4,10 @@ import os
 import uuid
 from datetime import datetime
 from PIL import Image
+from pillow_heif import register_heif_opener
+
+# تسجيل plugin الـ HEIC/HEIF للتعامل مع صور الآيفون
+register_heif_opener()
 from models import VehicleExternalSafetyCheck, VehicleSafetyImage, Vehicle, Employee, User, UserRole, VehicleHandover
 from app import db
 from utils.audit_logger import log_audit
@@ -21,13 +25,12 @@ from whatsapp_client import WhatsAppWrapper # <-- استيراد الكلاس
 # قم بتحميل المتغيرات من ملف .env
 load_dotenv()
 # قم بإعداد مفتاح Resend مرة واحدة عند بدء التطبيق
-resend.api_key ='re_cpc614o6_3gXQp3waSQLWDzrMMVmAfTbj'
-# os.environ.get("RESEND_API_KEY")
+resend.api_key = os.environ.get("RESEND_API_KEY")
 supervisor_email = os.environ.get("SAFETY_CHECK_SUPERVISOR_EMAIL")
 company_name = os.environ.get("COMPANY_NAME")
 external_safety_bp = Blueprint('external_safety', __name__)
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'heic', 'heif'}
 
 def get_all_current_driversWithEmil():
     """
@@ -200,11 +203,15 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def compress_image(image_path, max_size=1200, quality=85):
-    """ضغط الصورة لتقليل حجمها"""
+    """ضغط الصورة لتقليل حجمها مع دعم HEIC من الآيفون"""
     try:
         with Image.open(image_path) as img:
-            # تحويل RGBA إلى RGB إذا لزم الأمر
+            # تحويل RGBA أو أي تنسيق آخر إلى RGB
             if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            # تحويل HEIC إلى RGB وضغطها
+            if img.mode != 'RGB':
                 img = img.convert('RGB')
             
             # تغيير حجم الصورة إذا كانت أكبر من الحد المسموح
@@ -467,13 +474,19 @@ def handle_safety_check_submission(vehicle):
                         header, data = image_data.split(',', 1)
                         image_bytes = base64.b64decode(data)
                         
-                        # تحديد امتداد الملف من header
+                        # تحديد التنسيق المصدر وتحويل إلى JPEG للتوافق
+                        source_format = 'jpg'  # افتراضي
                         if 'png' in header:
-                            ext = 'png'
+                            source_format = 'png'
                         elif 'jpeg' in header or 'jpg' in header:
-                            ext = 'jpg'
-                        else:
-                            ext = 'jpg'  # افتراضي
+                            source_format = 'jpg'
+                        elif 'heic' in header or 'heif' in header:
+                            source_format = 'heic'
+                        elif 'webp' in header:
+                            source_format = 'webp'
+                        
+                        # دائماً حفظ كـ JPEG للتوافق مع جميع المتصفحات
+                        ext = 'jpg'
                         
                         # إنشاء اسم ملف آمن
                         filename = f"{uuid.uuid4()}.{ext}"
@@ -483,8 +496,12 @@ def handle_safety_check_submission(vehicle):
                         with open(image_path, 'wb') as f:
                             f.write(image_bytes)
                         
-                        # ضغط الصورة
-                        compress_image(image_path)
+                        # ضغط الصورة وتحويلها إلى JPEG
+                        success = compress_image(image_path)
+                        if not success:
+                            current_app.logger.warning(f"فشل ضغط الصورة {filename}")
+                        else:
+                            current_app.logger.info(f"تم تحويل صورة {source_format} إلى JPEG: {filename}")
                         
                         # حفظ معلومات الصورة في قاعدة البيانات
                         description = notes_list[i] if i < len(notes_list) else None
