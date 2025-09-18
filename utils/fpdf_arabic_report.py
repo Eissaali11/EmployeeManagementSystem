@@ -58,44 +58,35 @@ class ProfessionalArabicPDF(FPDF):
         if txt is None or txt == '':
             return ''
         
-        # تحويل إلى نص
-        txt_str = str(txt)
+        # تخطي المعالجة لغير النصوص
+        if not isinstance(txt, str):
+            return str(txt)
         
-        # تخطي معالجة الأرقام فقط
-        if txt_str.replace('.', '').replace(',', '').replace('-', '').replace(' ', '').isdigit():
-            return txt_str
+        # تخطي معالجة الأرقام والتواريخ والأحرف الإنجليزية فقط
+        if txt.replace('.', '', 1).replace(',', '', 1).replace('-', '', 1).isdigit() or all(c.isdigit() or c in '/-:. ' for c in txt):
+            return txt
         
-        # فحص إذا كان النص يحتوي على أحرف عربية
-        has_arabic = any('\u0600' <= c <= '\u06FF' or '\u0750' <= c <= '\u077F' or '\uFB50' <= c <= '\uFDFF' or '\uFE70' <= c <= '\uFEFF' for c in txt_str)
-        
-        if not has_arabic:
-            return txt_str
+        # إذا كان النص إنجليزي فقط، لا نحتاج معالجة
+        if all(ord(c) < 256 for c in txt):
+            return txt
         
         try:
-            # تطبيق reshaper مع إعدادات محسنة
-            reshaped_text = arabic_reshaper.reshape(
-                txt_str,
-                delete_harakat=False,  # الاحتفاظ بالتشكيل
-                support_zwj=True,      # دعم الزخارف
-                delete_tatweel=False   # الاحتفاظ بالتطويل
-            )
-            
-            # تطبيق خوارزمية الاتجاه الثنائي
-            bidi_text = get_display(reshaped_text, base_dir='R')
-            
+            # إعادة تشكيل النص العربي وتحويله إلى النمط المناسب للعرض
+            reshaped_text = arabic_reshaper.reshape(txt)
+            bidi_text = get_display(reshaped_text)
             return bidi_text
         except Exception as e:
-            print(f"خطأ في معالجة النص العربي '{txt_str}': {e}")
-            return txt_str
+            print(f"خطأ في معالجة النص العربي: {e}")
+            return txt
     
-    def cell(self, w=0, h=0, text='', border=0, ln=0, align='', fill=False, link=''):
+    def cell(self, w=0, h=0, txt='', border=0, ln=0, align='', fill=False, link=''):
         """تجاوز دالة الخلية لدعم النص العربي"""
-        arabic_txt = self.arabic_text(text)
+        arabic_txt = self.arabic_text(txt)
         super().cell(w, h, arabic_txt, border, ln, align, fill, link)
     
-    def multi_cell(self, w=0, h=0, text='', border=0, align='', fill=False):
+    def multi_cell(self, w=0, h=0, txt='', border=0, align='', fill=False):
         """تجاوز دالة الخلايا المتعددة لدعم النص العربي"""
-        arabic_txt = self.arabic_text(text)
+        arabic_txt = self.arabic_text(txt)
         super().multi_cell(w, h, arabic_txt, border, align, fill)
     
     def set_color(self, color_name):
@@ -297,7 +288,7 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     pdf.set_y(70)
     
     # ===== معلومات المركبة =====
-    pdf.add_section_header('معلومات المركبة', '■')
+    pdf.add_section_header('معلومات المركبة', '🚗')
     
     # جدول معلومات المركبة مع تصميم احترافي
     vehicle_info = [
@@ -354,7 +345,7 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
     pdf.ln(10)
     
     # ===== سجلات الورشة =====
-    pdf.add_section_header('سجلات الورشة', '■')
+    pdf.add_section_header('سجلات الورشة', '🔧')
     
     # التحقق من وجود سجلات
     if not workshop_records or len(workshop_records) == 0:
@@ -370,7 +361,7 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
             pdf.set_font('Arial', 'B', 14)
         pdf.set_color('text_light')
         pdf.set_y(pdf.get_y() + 12)
-        pdf.cell(0, 6, 'لا توجد سجلات ورشة لهذه المركبة', 0, 1, 'C')
+        pdf.cell(0, 6, '⚠️ لا توجد سجلات ورشة لهذه المركبة', 0, 1, 'C')
         
         pdf.ln(15)
     else:
@@ -397,23 +388,23 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         
         # توزيع الإحصائيات على ثلاثة أعمدة
         pdf.set_xy(20, stats_y + 5)
-        pdf.cell(56, 6, f'عدد السجلات: {total_records}', 0, 0, 'R')
+        pdf.cell(56, 6, f'📊 عدد السجلات: {total_records}', 0, 0, 'R')
         
         pdf.set_xy(76, stats_y + 5)
-        pdf.cell(58, 6, f'إجمالي التكلفة: {total_cost:,.0f} ريال', 0, 0, 'C')
+        pdf.cell(58, 6, f'💰 إجمالي التكلفة: {total_cost:,.0f} ريال', 0, 0, 'C')
         
         pdf.set_xy(134, stats_y + 5)
-        pdf.cell(56, 6, f'إجمالي الأيام: {total_days} يوم', 0, 0, 'L')
+        pdf.cell(56, 6, f'📅 إجمالي الأيام: {total_days} يوم', 0, 0, 'L')
         
         # متوسطات
         avg_cost = total_cost / total_records if total_records > 0 else 0
         avg_days = total_days / total_records if total_records > 0 else 0
         
         pdf.set_xy(20, stats_y + 14)
-        pdf.cell(80, 6, f'متوسط التكلفة: {avg_cost:,.0f} ريال', 0, 0, 'R')
+        pdf.cell(80, 6, f'📈 متوسط التكلفة: {avg_cost:,.0f} ريال', 0, 0, 'R')
         
         pdf.set_xy(110, stats_y + 14)
-        pdf.cell(70, 6, f'متوسط المدة: {avg_days:.1f} يوم', 0, 0, 'L')
+        pdf.cell(70, 6, f'⏱️ متوسط المدة: {avg_days:.1f} يوم', 0, 0, 'L')
         
         pdf.set_y(stats_y + 30)
         pdf.set_text_color(0, 0, 0)
@@ -451,16 +442,16 @@ def generate_workshop_report_pdf_fpdf(vehicle, workshop_records):
         # بيانات الجدول
         pdf.set_text_color(0, 0, 0)
         
-        # ترجمة القيم بدون رموز تعبيرية
+        # ترجمة القيم
         reason_map = {
-            'maintenance': 'صيانة دورية', 
-            'breakdown': 'عطل', 
-            'accident': 'حادث'
+            'maintenance': '🔧 صيانة دورية', 
+            'breakdown': '⚠️ عطل', 
+            'accident': '🚗 حادث'
         }
         status_map = {
-            'in_progress': 'قيد التنفيذ', 
-            'completed': 'تم الإصلاح', 
-            'pending_approval': 'بانتظار الموافقة'
+            'in_progress': '🔄 قيد التنفيذ', 
+            'completed': '✅ تم الإصلاح', 
+            'pending_approval': '⏳ بانتظار الموافقة'
         }
         
         # تحديد ألوان الصفوف المتناوبة
