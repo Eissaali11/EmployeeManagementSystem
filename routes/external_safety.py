@@ -580,6 +580,11 @@ def check_status(safety_check_id):
 
 
 
+@external_safety_bp.route('/')
+def external_safety_index():
+    """الصفحة الرئيسية لنظام فحص السلامة الخارجية"""
+    return redirect(url_for('external_safety.share_links'))
+
 @external_safety_bp.route('/share-links')
 def share_links():
     """صفحة مشاركة روابط النماذج الخارجية لجميع السيارات مع الفلاتر"""
