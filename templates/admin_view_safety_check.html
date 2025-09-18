@@ -380,28 +380,37 @@
                                         {% for image in safety_check.safety_images %}
                                         <div class="col-md-3 mb-3">
                                             <div class="card">
-                                                {% if image.image_path.startswith('static/uploads/') %}
-                                                    {% set image_url = '/' + image.image_path %}
-                                                {% elif image.image_path.startswith('uploads/') %}
-                                                    {% set image_url = '/' + image.image_path %}
+                                                {% if image.image_path.startswith('/') %}
+                                                    {% set image_url = image.image_path %}
                                                 {% elif image.image_path.startswith('static/') %}
                                                     {% set image_url = '/' + image.image_path %}
+                                                {% elif image.image_path.startswith('uploads/') %}
+                                                    {% set image_url = '/static/' + image.image_path %}
                                                 {% else %}
-                                                    {% set image_url = '/uploads/' + image.image_path %}
+                                                    {% set image_url = '/static/uploads/safety_checks/' + image.image_path %}
                                                 {% endif %}
                                                 <img src="{{ image_url }}" 
                                                      class="card-img-top" 
                                                      alt="صورة فحص السلامة" 
                                                      style="height: 200px; object-fit: cover; cursor: pointer;"
-                                                     onclick="showImageModal('{{ image_url }}', '{{ image.image_description or 'بدون وصف' }}')">
+                                                     onclick="showImageModal('{{ image_url }}', '{{ image.image_description or 'بدون وصف' }}')"
+                                                     onerror="this.style.display='none'; this.parentElement.querySelector('.image-error').style.display='block';">
+                                                <div class="image-error" style="display: none; text-align: center; padding: 20px; background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px;">
+                                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                                    <p class="text-muted small mb-0">خطأ في تحميل الصورة</p>
+                                                    <small class="text-muted">المسار: {{ image.image_path }}</small>
+                                                </div>
                                                 <div class="card-body p-2">
                                                     <!-- أزرار عرض الصورة -->
                                                     <div class="btn-group btn-group-sm w-100 mb-2">
                                                         <button type="button" class="btn btn-primary btn-sm" 
                                                                 onclick="showImageModal('{{ image_url }}', '{{ image.image_description or 'بدون وصف' }}')">
-                                                            <i class="fas fa-external-link-alt"></i> عرض في تبويب جديد
+                                                            <i class="fas fa-search-plus"></i> عرض مكبر
                                                         </button>
                                                         <a href="{{ image_url }}" target="_blank" class="btn btn-info btn-sm">
+                                                            <i class="fas fa-external-link-alt"></i> فتح في تبويب جديد
+                                                        </a>
+                                                        <a href="{{ image_url }}" download class="btn btn-success btn-sm">
                                                             <i class="fas fa-download"></i> تنزيل
                                                         </a>
                                                     </div>
@@ -585,12 +594,59 @@
         // التحقق من وجود مسار الصورة
         if (!imageSrc) {
             console.error('No image source provided');
+            alert('خطأ: لا يوجد مسار للصورة');
             return;
         }
         
-        // فتح الصورة في تبويب جديد مباشرة - حل أكثر استقراراً
-        window.open(imageSrc, '_blank');
-        return;
+        // تحقق من وجود العناصر المطلوبة
+        const modalImageElement = document.getElementById('modalImage');
+        const modalDescElement = document.getElementById('modalDescription');
+        const modalElement = document.getElementById('imageModal');
+        
+        console.log('Modal elements found:', {
+            modalImage: !!modalImageElement,
+            modalDescription: !!modalDescElement,
+            modal: !!modalElement
+        });
+        
+        if (!modalImageElement || !modalDescElement || !modalElement) {
+            console.error('Modal elements not found, opening in new tab as fallback');
+            window.open(imageSrc, '_blank');
+            return;
+        }
+        
+        // إعداد الصورة والوصف
+        modalImageElement.src = imageSrc;
+        modalImageElement.onload = function() {
+            console.log('Image loaded successfully');
+        };
+        modalImageElement.onerror = function() {
+            console.error('Error loading image:', imageSrc);
+            modalDescElement.innerHTML = '<span class="text-danger">خطأ في تحميل الصورة: ' + imageSrc + '</span>';
+        };
+        modalDescElement.textContent = description || 'بدون وصف';
+        resetZoom();
+        
+        // عرض النافذة المنبثقة
+        try {
+            if (typeof $ !== 'undefined' && $('#imageModal').length > 0) {
+                console.log('Using jQuery Bootstrap modal');
+                $('#imageModal').modal('show');
+            } else if (typeof bootstrap !== 'undefined') {
+                console.log('Using Bootstrap 5 modal');
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                console.log('Bootstrap not available, using fallback');
+                modalElement.style.display = 'block';
+                modalElement.classList.add('show');
+                modalElement.style.backgroundColor = 'rgba(0,0,0,0.5)';
+                document.body.classList.add('modal-open');
+            }
+        } catch (error) {
+            console.error('Error showing modal:', error);
+            window.open(imageSrc, '_blank');
+        }
         
         // الكود القديم للنافذة المنبثقة محفوظ للاستخدام لاحقاً
         /* 
