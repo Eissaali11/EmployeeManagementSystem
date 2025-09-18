@@ -2,11 +2,6 @@
  * Main JavaScript for Arabic Employee Management System
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize tooltips
-
-    // أضف هذا التعريف في أعلى ملف main.js أو قبل استدعائه
-
 /**
  * Initializes all elements with the class 'select2-employee-dropdown'
  * as a Select2 dropdown with a custom template.
@@ -65,93 +60,14 @@ function formatEmployeeForDropdown(employee) {
 
     return $container;
 }
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Initialize popovers
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
-    });
-
-    // Initialize DataTables if they exist
-    if (typeof $.fn.DataTable !== 'undefined') {
-        initializeDataTables();
-    }
-    
-    // Initialize Select2 for employee dropdowns if they exist
-    if (typeof $.fn.select2 !== 'undefined') {
-        initializeSelect2EmployeeDropdowns();
-    }
-
-    // Initialize counter animations for dashboard
-    animateCounters();
-
-    // Initialize department charts if they exist
-    initializeDepartmentCharts();
-
-    // Add event listeners for document expiry date validation
-    setupExpiryDateValidation();
-
-    // Set up confirmation dialogs for delete actions
-    setupDeleteConfirmations();
-
-    // Initialize calendar toggling between Hijri and Gregorian
-    setupCalendarToggle();
-});
-
-/**
- * Initialize DataTables with common configurations
- */
-function initializeDataTables() {
-    // تهيئة الجداول العادية
-    $('table.datatable').each(function() {
-        $(this).DataTable({
-            language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
-            },
-            responsive: true,
-            dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
-                 '<"row"<"col-sm-12"tr>>' +
-                 '<"row"<"col-sm-5"i><"col-sm-7"p>>',
-            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "الكل"]],
-            order: []  // Disable initial sorting
-        });
-    });
-
-    // Special configuration for employee table
-    var employeeTable = $('#employeesTable');
-    if (employeeTable.length > 0) {
-        employeeTable.DataTable({
-            language: {
-                search: "بحث:",
-                lengthMenu: "عرض _MENU_ سجلات",
-                info: "عرض _START_ إلى _END_ من _TOTAL_ سجل",
-                paginate: {
-                    first: "الأول",
-                    previous: "السابق",
-                    next: "التالي",
-                    last: "الأخير"
-                }
-            },
-            responsive: true,
-            columnDefs: [
-                { orderable: false, targets: -1 } // Disable sorting on action column
-            ],
-        dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
-             '<"row"<"col-sm-12"tr>>' +
-             '<"row"<"col-sm-5"i><"col-sm-7"p>>',
-        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "الكل"]],
-    });
-}
 
 /**
  * Animate counter elements on dashboard
  */
 function animateCounters() {
     const counters = document.querySelectorAll('.counter-value');
+    if (counters.length === 0) return;
+    
     const speed = 200;  // The lower the faster
 
     counters.forEach(counter => {
@@ -332,6 +248,24 @@ function initializeDepartmentCharts() {
 }
 
 /**
+ * Show image in modal for preview
+ */
+function showImageModal(imageUrl, description) {
+    const modal = document.getElementById('imageModal');
+    if (modal) {
+        const modalImg = modal.querySelector('#modalImage');
+        const modalDescription = modal.querySelector('#modalDescription');
+        
+        if (modalImg) modalImg.src = imageUrl;
+        if (modalDescription) modalDescription.textContent = description || 'بدون وصف';
+        
+        // Use Bootstrap modal API
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+    }
+}
+
+/**
  * Setup validation for document expiry dates
  */
 function setupExpiryDateValidation() {
@@ -358,11 +292,13 @@ function setupDeleteConfirmations() {
     const deleteButtons = document.querySelectorAll('.delete-confirm');
     
     deleteButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (!confirm('هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.')) {
-                e.preventDefault();
-            }
-        });
+        if (button) {
+            button.addEventListener('click', function(e) {
+                if (!confirm('هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                    e.preventDefault();
+                }
+            });
+        }
     });
 }
 
@@ -390,6 +326,91 @@ function setupCalendarToggle() {
         });
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverList = popoverTriggerList.map(function(popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+    });
+
+    // Initialize DataTables if they exist
+    if (typeof $.fn.DataTable !== 'undefined') {
+        initializeDataTables();
+    }
+    
+    // Initialize Select2 for employee dropdowns if they exist
+    if (typeof $.fn.select2 !== 'undefined') {
+        initializeSelect2EmployeeDropdowns();
+    }
+
+    // Initialize counter animations for dashboard
+    animateCounters();
+
+    // Initialize department charts if they exist
+    initializeDepartmentCharts();
+
+    // Add event listeners for document expiry date validation
+    setupExpiryDateValidation();
+
+    // Set up confirmation dialogs for delete actions
+    setupDeleteConfirmations();
+
+    // Initialize calendar toggling between Hijri and Gregorian
+    setupCalendarToggle();
+});
+
+/**
+ * Initialize DataTables with common configurations
+ */
+function initializeDataTables() {
+    // تهيئة الجداول العادية
+    $('table.datatable').each(function() {
+        $(this).DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/ar.json'
+            },
+            responsive: true,
+            dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-5"i><"col-sm-7"p>>',
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "الكل"]],
+            order: []  // Disable initial sorting
+        });
+    });
+
+    // Special configuration for employee table
+    var employeeTable = $('#employeesTable');
+    if (employeeTable.length > 0) {
+        employeeTable.DataTable({
+            language: {
+                search: "بحث:",
+                lengthMenu: "عرض _MENU_ سجلات",
+                info: "عرض _START_ إلى _END_ من _TOTAL_ سجل",
+                paginate: {
+                    first: "الأول",
+                    previous: "السابق",
+                    next: "التالي",
+                    last: "الأخير"
+                }
+            },
+            responsive: true,
+            columnDefs: [
+                { orderable: false, targets: -1 } // Disable sorting on action column
+            ],
+        dom: '<"row"<"col-sm-6"l><"col-sm-6"f>>' +
+             '<"row"<"col-sm-12"tr>>' +
+             '<"row"<"col-sm-5"i><"col-sm-7"p>>',
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "الكل"]],
+    });
+}
+
 
 /**
  * Calculate net salary based on form inputs
