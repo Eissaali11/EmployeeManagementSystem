@@ -365,14 +365,17 @@
             console.log('تم النقر على زر الحفظ مباشرة!');
             console.log('نوع الزر:', saveButton.type);
             console.log('معطل؟', saveButton.disabled);
-            console.log('النموذج الأب:', saveButton.form);
+            
+            // العثور على النموذج مباشرة
+            const formElement = document.getElementById('workshop-edit-form');
+            console.log('العثور على النموذج:', formElement);
             
             // التأكد من أن النموذج يُرسل
-            if (saveButton.form) {
+            if (formElement) {
                 console.log('محاولة إرسال النموذج يدوياً...');
-                saveButton.form.submit();
+                formElement.submit();
             } else {
-                console.error('الزر ليس داخل نموذج!');
+                console.error('لم يتم العثور على النموذج!');
             }
         });
         
