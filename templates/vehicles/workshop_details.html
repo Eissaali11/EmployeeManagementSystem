@@ -518,11 +518,75 @@
 <script>
 // عرض الصور في نافذة منبثقة
 function showImageModal(imageSrc, caption) {
-    document.getElementById('modalImage').src = imageSrc;
-    document.getElementById('modalImageCaption').textContent = caption || 'صورة من الورشة';
+    console.log('عرض الصورة:', imageSrc);
     
-    var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
-    imageModal.show();
+    const modalImage = document.getElementById('modalImage');
+    const modalImageCaption = document.getElementById('modalImageCaption');
+    const imageModal = document.getElementById('imageModal');
+    
+    if (!modalImage || !modalImageCaption || !imageModal) {
+        console.error('عناصر النافذة المنبثقة غير موجودة');
+        alert('حدث خطأ في عرض النافذة المنبثقة');
+        return;
+    }
+    
+    // تنظيف مسار الصورة من التكرار
+    let cleanImageSrc = imageSrc;
+    if (imageSrc.startsWith('/static/static/')) {
+        cleanImageSrc = imageSrc.replace('/static/static/', '/static/');
+        console.log('تنظيف مسار مكرر:', cleanImageSrc);
+    } else if (imageSrc.startsWith('static/')) {
+        cleanImageSrc = '/' + imageSrc;
+        console.log('إضافة / للمسار:', cleanImageSrc);
+    }
+    
+    // إضافة معالج للخطأ
+    modalImage.onerror = function() {
+        console.error('فشل تحميل الصورة:', cleanImageSrc);
+        // محاولة مسارات بديلة
+        const alternatePaths = [
+            cleanImageSrc,
+            cleanImageSrc.replace('/static/', '/uploads/'),
+            '/static/uploads/' + cleanImageSrc.split('/').pop(),
+            '/uploads/' + cleanImageSrc.split('/').pop()
+        ];
+        
+        let tried = 0;
+        function tryNextPath() {
+            if (tried < alternatePaths.length) {
+                console.log('محاولة مسار بديل:', alternatePaths[tried]);
+                modalImage.src = alternatePaths[tried];
+                tried++;
+            } else {
+                console.error('فشل تحميل الصورة من جميع المسارات');
+                modalImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPtio2YjZjdin2YfYp9iqINiv2YPZhNi52YfYsdqM2Yc8L3RleHQ+PC9zdmc+';
+                modalImageCaption.textContent = 'لم يتم العثور على الصورة: ' + (caption || 'صورة من الورشة');
+            }
+        }
+        
+        modalImage.onerror = function() {
+            tryNextPath();
+        };
+        
+        tryNextPath();
+    };
+    
+    // إضافة معالج للنجاح
+    modalImage.onload = function() {
+        console.log('تم تحميل الصورة بنجاح:', cleanImageSrc);
+    };
+    
+    modalImage.src = cleanImageSrc;
+    modalImageCaption.textContent = caption || 'صورة من الورشة';
+    
+    try {
+        var modal = new bootstrap.Modal(imageModal);
+        modal.show();
+        console.log('تم فتح النافذة المنبثقة بنجاح');
+    } catch (error) {
+        console.error('خطأ في فتح النافذة المنبثقة:', error);
+        alert('حدث خطأ في فتح النافذة المنبثقة');
+    }
 }
 
 // مشاركة تفاصيل الورشة مع الصور
