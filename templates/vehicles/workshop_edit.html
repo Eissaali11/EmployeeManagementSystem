@@ -339,10 +339,26 @@
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
             
+            // إعادة تفعيل الزر بعد فترة لمنع التعطيل الدائم
+            setTimeout(() => {
+                if (saveButton.disabled) {
+                    saveButton.disabled = false;
+                    saveButton.innerHTML = '<i class="fas fa-save ms-1"></i> حفظ التعديلات';
+                    console.log('تم إعادة تفعيل زر الحفظ');
+                }
+            }, 10000); // 10 ثوان
+            
             console.log('تم قبول النموذج وإرساله...');
             // لا تمنع السلوك الافتراضي - دع النموذج يرسل
             return true;
         });
+        
+        // التأكد من أن زر الحفظ مفعل عند تحميل الصفحة
+        if (saveButton.disabled) {
+            saveButton.disabled = false;
+            saveButton.innerHTML = '<i class="fas fa-save ms-1"></i> حفظ التعديلات';
+            console.log('تم إعادة تفعيل زر الحفظ عند تحميل الصفحة');
+        }
         
         // إضافة معالج تشخيصي للنقر على زر الحفظ (لا يتداخل مع السلوك الافتراضي)
         console.log('تم تحديد معالج submit للنموذج');
