@@ -1729,7 +1729,7 @@ def edit(id):
                              statuses=VEHICLE_STATUS_CHOICES, 
                              departments=departments,
                              all_users=all_users,
-                             projects=projects)
+                             )
 
 @vehicles_bp.route('/<int:id>/manage-user-access', methods=['POST'])
 @login_required
