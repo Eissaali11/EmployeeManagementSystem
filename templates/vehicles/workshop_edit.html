@@ -282,22 +282,13 @@
             return;
         }
         
-        // إضافة معالج للنقر على زر الحفظ
-        saveButton.addEventListener('click', function(event) {
-            console.log('تم النقر على زر الحفظ');
-            
-            // التحقق من صحة النموذج
-            if (!form.checkValidity()) {
-                console.log('النموذج غير صحيح');
-                return;
-            }
+        // إضافة معالج submit للنموذج
+        form.addEventListener('submit', function(event) {
+            console.log('تم إرسال النموذج');
             
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
-            
-            // السماح للنموذج بالإرسال
-            console.log('إرسال النموذج...');
         });
         
         // التأكد من أن زر الحفظ مفعل عند تحميل الصفحة
