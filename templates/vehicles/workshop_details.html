@@ -420,6 +420,16 @@ body {
     box-shadow: 0 10px 30px rgba(67, 67, 67, 0.3);
 }
 
+.btn-danger-modern {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+}
+
+.btn-danger-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+}
+
 /* No Images Placeholder */
 .no-images-modern {
     text-align: center;
@@ -857,6 +867,10 @@ body {
                         <i class="fas fa-share-alt"></i>
                         مشاركة التفاصيل
                     </button>
+                    <a href="{{ url_for('vehicles.confirm_delete_workshop', id=record.id) }}" class="action-btn-modern btn-danger-modern" onclick="return confirm('هل أنت متأكد من رغبتك في حذف هذا السجل؟')">
+                        <i class="fas fa-trash-alt"></i>
+                        حذف السجل
+                    </a>
                     <a href="{{ url_for('vehicles.view', id=vehicle.id) }}" class="action-btn-modern btn-secondary-modern">
                         <i class="fas fa-arrow-left"></i>
                         العودة للسيارة
