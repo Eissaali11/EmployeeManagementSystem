@@ -282,7 +282,7 @@
             return;
         }
         
-        // عند تقديم النموذج
+        // عند تقديم النموذج - تبسيط المعالجة
         form.addEventListener('submit', function(event) {
             console.log('تم إرسال النموذج...');
             
@@ -318,39 +318,11 @@
                 return false;
             }
             
-            // فحص الملفات المرفقة قبل الإرسال
-            const beforeImagesInput = document.getElementById('before_images');
-            const afterImagesInput = document.getElementById('after_images');
-            console.log('صور قبل الإصلاح - عدد الملفات:', beforeImagesInput.files.length);
-            console.log('صور بعد الإصلاح - عدد الملفات:', afterImagesInput.files.length);
-            
-            // جمع بيانات النموذج للتصحيح
-            const formData = new FormData(form);
-            console.log('بيانات النموذج:');
-            for (let [key, value] of formData.entries()) {
-                if (value instanceof File) {
-                    console.log(`${key}: ${value.name} (${value.size} bytes)`);
-                } else {
-                    console.log(`${key}: ${value}`);
-                }
-            }
-            
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
             
-            // إعادة تفعيل الزر بعد فترة لمنع التعطيل الدائم
-            setTimeout(() => {
-                if (saveButton.disabled) {
-                    saveButton.disabled = false;
-                    saveButton.innerHTML = '<i class="fas fa-save ms-1"></i> حفظ التعديلات';
-                    console.log('تم إعادة تفعيل زر الحفظ');
-                }
-            }, 10000); // 10 ثوان
-            
-            console.log('تم قبول النموذج وإرساله...');
-            // لا تمنع السلوك الافتراضي - دع النموذج يرسل
-            return true;
+            // السماح للنموذج بالإرسال الطبيعي
         });
         
         // التأكد من أن زر الحفظ مفعل عند تحميل الصفحة
@@ -360,24 +332,8 @@
             console.log('تم إعادة تفعيل زر الحفظ عند تحميل الصفحة');
         }
         
-        // إضافة معالج مباشر لزر الحفظ للتشخيص
-        saveButton.addEventListener('click', function(event) {
-            console.log('تم النقر على زر الحفظ مباشرة!');
-            console.log('نوع الزر:', saveButton.type);
-            console.log('معطل؟', saveButton.disabled);
-            
-            // العثور على النموذج مباشرة
-            const formElement = document.getElementById('workshop-edit-form');
-            console.log('العثور على النموذج:', formElement);
-            
-            // التأكد من أن النموذج يُرسل
-            if (formElement) {
-                console.log('محاولة إرسال النموذج يدوياً...');
-                formElement.submit();
-            } else {
-                console.error('لم يتم العثور على النموذج!');
-            }
-        });
+        // إزالة المعالج المباشر المتداخل لزر الحفظ
+        // السماح للنموذج بالإرسال بالطريقة الطبيعية
         
         // إضافة معالج تشخيصي للنقر على زر الحفظ (لا يتداخل مع السلوك الافتراضي)
         console.log('تم تحديد معالج submit للنموذج');
