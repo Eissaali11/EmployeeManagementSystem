@@ -282,8 +282,9 @@
             return;
         }
         
-        // إضافة معالج submit للنموذج
+        // إضافة معالج submit للنموذج بإرسال AJAX يدوي
         form.addEventListener('submit', function(event) {
+            event.preventDefault(); // منع الإرسال الافتراضي
             console.log('تم إرسال النموذج');
             
             // التحقق من الملفات المرفقة قبل الإرسال
@@ -304,6 +305,49 @@
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
+            
+            // إنشاء FormData يدوياً
+            const formData = new FormData();
+            
+            // إضافة جميع البيانات من النموذج
+            const formElements = form.elements;
+            for (let i = 0; i < formElements.length; i++) {
+                const element = formElements[i];
+                if (element.name && element.type !== 'file') {
+                    formData.append(element.name, element.value);
+                }
+            }
+            
+            // إضافة الملفات يدوياً
+            for (let i = 0; i < beforeImages.length; i++) {
+                formData.append('before_images', beforeImages[i]);
+                console.log('تم إضافة صورة قبل:', beforeImages[i].name);
+            }
+            for (let i = 0; i < afterImages.length; i++) {
+                formData.append('after_images', afterImages[i]);
+                console.log('تم إضافة صورة بعد:', afterImages[i].name);
+            }
+            
+            // إرسال البيانات عبر fetch
+            fetch(form.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // الانتقال للصفحة التالية
+                    window.location.href = response.url;
+                } else {
+                    throw new Error('خطأ في الخادم');
+                }
+            })
+            .catch(error => {
+                console.error('خطأ:', error);
+                alert('حدث خطأ أثناء حفظ البيانات');
+                // إعادة تفعيل الزر
+                saveButton.disabled = false;
+                saveButton.innerHTML = '<i class="fas fa-save ms-1"></i> حفظ التعديلات';
+            });
         });
         
         // التأكد من أن زر الحفظ مفعل عند تحميل الصفحة
