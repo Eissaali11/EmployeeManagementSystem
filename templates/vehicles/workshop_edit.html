@@ -225,7 +225,7 @@
                         </div>
                         
                         <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary px-5" id="save-button">
+                            <button type="submit" class="btn btn-primary px-5" id="save-button" form="workshop-edit-form">
                                 <i class="fas fa-save ms-1"></i>
                                 حفظ التعديلات
                             </button>
@@ -282,47 +282,22 @@
             return;
         }
         
-        // عند تقديم النموذج - تبسيط المعالجة
-        form.addEventListener('submit', function(event) {
-            console.log('تم إرسال النموذج...');
+        // إضافة معالج للنقر على زر الحفظ
+        saveButton.addEventListener('click', function(event) {
+            console.log('تم النقر على زر الحفظ');
             
-            // التحقق من الملفات المرفقة
-            const beforeImages = document.getElementById('before_images').files;
-            const afterImages = document.getElementById('after_images').files;
-            
-            console.log('صور قبل الإصلاح:', beforeImages.length);
-            console.log('صور بعد الإصلاح:', afterImages.length);
-            
-            // التحقق من حجم الملفات
-            const maxFileSize = 5 * 1024 * 1024; // 5MB
-            let hasLargeFile = false;
-            
-            for (let file of beforeImages) {
-                if (file.size > maxFileSize) {
-                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 5MB`);
-                    hasLargeFile = true;
-                    break;
-                }
-            }
-            
-            for (let file of afterImages) {
-                if (file.size > maxFileSize) {
-                    alert(`الملف ${file.name} كبير جداً. الحد الأقصى 5MB`);
-                    hasLargeFile = true;
-                    break;
-                }
-            }
-            
-            if (hasLargeFile) {
-                event.preventDefault();
-                return false;
+            // التحقق من صحة النموذج
+            if (!form.checkValidity()) {
+                console.log('النموذج غير صحيح');
+                return;
             }
             
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
             
-            // السماح للنموذج بالإرسال الطبيعي
+            // السماح للنموذج بالإرسال
+            console.log('إرسال النموذج...');
         });
         
         // التأكد من أن زر الحفظ مفعل عند تحميل الصفحة
