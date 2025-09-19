@@ -1788,11 +1788,25 @@ def delete(id):
         plate_number = vehicle.plate_number
         log_audit('delete', 'vehicle', id, f'تم حذف السيارة: {plate_number}')
 
-        db.session.delete(vehicle)
-        db.session.commit()
+        try:
+            # حذف السجلات المرتبطة يدوياً لتجنب مشاكل Foreign Key
+            from models import OperationRequest
+            
+            # حذف طلبات العمليات المرتبطة بهذه المركبة
+            operation_requests = OperationRequest.query.filter_by(vehicle_id=id).all()
+            for operation_request in operation_requests:
+                db.session.delete(operation_request)
+            
+            # حذف المركبة
+            db.session.delete(vehicle)
+            db.session.commit()
 
-        flash('تم حذف السيارة ومعلوماتها بنجاح!', 'success')
-        return redirect(url_for('vehicles.index'))
+            flash('تم حذف السيارة ومعلوماتها بنجاح!', 'success')
+            return redirect(url_for('vehicles.index'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"حدث خطأ أثناء حذف السيارة: {str(e)}", "danger")
+            return redirect(url_for("vehicles.confirm_delete", id=id))
 
 # مسارات إدارة الحوادث المرورية
 @vehicles_bp.route('/<int:id>/accident/create', methods=['GET', 'POST'])
