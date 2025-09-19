@@ -286,6 +286,21 @@
         form.addEventListener('submit', function(event) {
             console.log('تم إرسال النموذج');
             
+            // التحقق من الملفات المرفقة قبل الإرسال
+            const beforeImages = document.getElementById('before_images').files;
+            const afterImages = document.getElementById('after_images').files;
+            
+            console.log('صور قبل الإصلاح:', beforeImages.length);
+            console.log('صور بعد الإصلاح:', afterImages.length);
+            
+            // عرض تفاصيل الملفات
+            for (let i = 0; i < beforeImages.length; i++) {
+                console.log(`صورة قبل ${i+1}: ${beforeImages[i].name} (${beforeImages[i].size} bytes)`);
+            }
+            for (let i = 0; i < afterImages.length; i++) {
+                console.log(`صورة بعد ${i+1}: ${afterImages[i].name} (${afterImages[i].size} bytes)`);
+            }
+            
             // تعطيل زر الحفظ وتغيير النص
             saveButton.disabled = true;
             saveButton.innerHTML = '<i class="fas fa-spinner fa-spin ms-1"></i> جاري الحفظ...';
