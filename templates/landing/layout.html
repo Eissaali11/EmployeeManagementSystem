@@ -3,347 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="نُظم - نظام إدارة شامل للموظفين والمركبات والحضور والتقارير للشركات في المملكة العربية السعودية">
+    <meta name="keywords" content="نظام إدارة الموظفين, إدارة المركبات, نظام الحضور, تقارير الشركات, نُظم">
+    <meta name="author" content="نُظم للتقنية">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block title %}نُظم - نظام إدارة شامل{% endblock %}">
+    <meta property="og:description" content="حل شامل ومتكامل لإدارة العمليات الداخلية للشركات والمؤسسات">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    
     <title>{% block title %}نُظم - نظام إدارة شامل{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- خطوط عربية محسنة -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Tajawal:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- خطوط عربية -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- أيقونات Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     
-    <style>
-        body {
-            font-family: 'Cairo', Arial, sans-serif;
-            direction: rtl;
-            text-align: right;
-            background: #ffffff;
-        }
-        
-        .navbar-brand {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1e3a5c !important;
-            letter-spacing: 1px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-        
-        .navbar-brand:hover {
-            color: #2c5282 !important;
-            transform: scale(1.05);
-        }
-        
-        .navbar {
-            background: rgba(255, 255, 255, 0.98) !important;
-            backdrop-filter: blur(15px);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.08);
-            border-bottom: 1px solid rgba(30, 58, 92, 0.1);
-        }
-        
-        .navbar-nav .nav-link {
-            color: #1e3a5c !important;
-            font-weight: 600;
-            margin: 0 15px;
-            padding: 10px 20px !important;
-            border-radius: 30px;
-            transition: all 0.3s ease;
-            position: relative;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
-        }
-        
-        .navbar-nav .nav-link:hover {
-            color: #2c5282 !important;
-            background: rgba(30, 58, 92, 0.08);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(30, 58, 92, 0.15);
-        }
-        
-        .navbar-nav .nav-link.active {
-            color: white !important;
-            background: linear-gradient(135deg, #1e3a5c, #2c5282);
-            box-shadow: 0 4px 20px rgba(30, 58, 92, 0.3);
-            transform: translateY(-1px);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #1e3a5c, #2c5282);
-            border: none;
-            border-radius: 25px;
-            padding: 10px 25px;
-            font-weight: 600;
-        }
-        
-        .btn-outline-primary {
-            border: 2px solid #1e3a5c;
-            color: #1e3a5c;
-            border-radius: 25px;
-            padding: 10px 25px;
-            font-weight: 600;
-        }
-        
-        .btn-outline-primary:hover {
-            background: #1e3a5c;
-            border-color: #1e3a5c;
-        }
-        
-        footer {
-            background: #1e3a5c;
-            color: white;
-            padding: 40px 0 20px;
-        }
-        
-        footer .footer-links a {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            margin: 0 15px;
-            transition: color 0.3s ease;
-        }
-        
-        footer .footer-links a:hover {
-            color: white;
-        }
-        
-        .social-links a {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.5rem;
-            margin: 0 10px;
-            transition: color 0.3s ease;
-        }
-        
-        .social-links a:hover {
-            color: #28a745;
-        }
-        
-        /* تحسينات الاستجابة */
-        @media (max-width: 768px) {
-            .navbar-brand {
-                font-size: 1.6rem;
-            }
-            
-            .navbar-nav {
-                text-align: center;
-                margin-top: 25px;
-                gap: 15px;
-                padding: 0 20px;
-            }
-            
-            .navbar-nav .nav-link {
-                margin: 8px 0;
-                font-size: 1.1rem;
-                padding: 15px 30px !important;
-                border-radius: 35px;
-                width: 100%;
-                justify-content: center;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-                background: rgba(255,255,255,0.8);
-            }
-            
-            .navbar-nav .nav-link:hover,
-            .navbar-nav .nav-link.active {
-                transform: scale(1.02);
-            }
-            
-            .navbar-toggler {
-                border: none;
-                padding: 10px;
-                border-radius: 8px;
-                background: rgba(30, 58, 92, 0.1);
-            }
-            
-            .navbar-toggler:focus {
-                box-shadow: 0 0 0 3px rgba(30, 58, 92, 0.2);
-            }
-            
-            .navbar-collapse {
-                background: rgba(255, 255, 255, 0.95);
-                backdrop-filter: blur(10px);
-                margin-top: 15px;
-                border-radius: 20px;
-                padding: 20px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .navbar-brand {
-                font-size: 1.4rem;
-            }
-            
-            .navbar-nav .nav-link {
-                font-size: 1rem;
-                padding: 12px 25px !important;
-            }
-            
-
-        }
+    <!-- أنماط التصميم الجديدة -->
+    <link href="{{ url_for('static', filename='css/landing.css') }}" rel="stylesheet">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    
     </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <!-- شريط التنقل -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container">
+    <!-- شريط التنقل العصري -->
+    <nav class="modern-navbar">
+        <div class="navbar-container">
             <a class="navbar-brand" href="/nuzum">
+                <i class="fas fa-cubes"></i>
                 نُظم
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/nuzum#home">
+                        <span>الرئيسية</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/nuzum/features">
+                        <span>الميزات</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/nuzum/demo">
+                        <span>عرض توضيحي</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/nuzum/pricing">
+                        <span>الأسعار</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/nuzum/contact">
+                        <span>تواصل معنا</span>
+                    </a>
+                </li>
+            </ul>
             
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nuzum">
-                            الرئيسية
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nuzum/features">
-                            الميزات
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nuzum/demo">
-                            عرض توضيحي
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nuzum/pricing">
-                            الأسعار
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/nuzum/contact">
-                            تواصل معنا
-                        </a>
-                    </li>
-                </ul>
-                
-                <!-- إخفاء أزرار تسجيل الدخول والتجربة المجانية -->
-                <!-- 
-                <div class="d-flex">
-                    <a href="/login" class="btn btn-outline-primary me-2">تسجيل الدخول</a>
-                    <a href="/nuzum/demo" class="btn btn-primary">تجربة مجانية</a>
-                </div>
-                -->
+            <div class="navbar-actions">
+                <a href="/nuzum/login" class="btn-nav btn-outline">
+                    <i class="fas fa-sign-in-alt"></i>
+                    دخول
+                </a>
+                <a href="/nuzum/demo" class="btn-nav btn-primary">
+                    <i class="fas fa-play"></i>
+                    جرب الآن
+                </a>
             </div>
+            
+            <button class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
     
     <!-- المحتوى الرئيسي -->
-    <main style="margin-top: 80px;">
+    <main>
         {% block content %}{% endblock %}
     </main>
     
-    <!-- تذييل الصفحة -->
-    <footer class="mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-4 mb-4">
-                    <h5 class="fw-bold mb-3">نُظم</h5>
-                    <p class="text-light opacity-75">
-                        الحل المتكامل لإدارة الموارد البشرية وأسطول المركبات مع واجهة عربية احترافية.
-                    </p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-linkedin"></i></a>
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
+    <!-- تذييل الصفحة العصري -->
+    <footer class="modern-footer section">
+        <div class="section-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="brand-info">
+                        <h3 class="brand-title">
+                            <i class="fas fa-cubes"></i>
+                            نُظم
+                        </h3>
+                        <p class="brand-description">
+                            الحل الشامل والمتكامل لإدارة العمليات الداخلية للشركات والمؤسسات في المملكة العربية السعودية
+                        </p>
+                        <div class="social-links">
+                            <a href="#" class="social-link" aria-label="تويتر">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="لينكدإن">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="فيسبوك">
+                                <i class="fab fa-facebook"></i>
+                            </a>
+                            <a href="#" class="social-link" aria-label="إنستغرام">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="col-lg-2 mb-4">
-                    <h6 class="fw-bold mb-3">المنتج</h6>
-                    <div class="footer-links">
-                        <a href="/nuzum/features" class="d-block mb-2">الميزات</a>
-                        <a href="/nuzum/demo" class="d-block mb-2">عرض توضيحي</a>
-                        <a href="/nuzum/pricing" class="d-block mb-2">الأسعار</a>
-                        <a href="/nuzum/contact" class="d-block mb-2">تواصل معنا</a>
+                <div class="footer-links">
+                    <div class="link-column">
+                        <h4 class="column-title">المنتج</h4>
+                        <ul class="link-list">
+                            <li><a href="/nuzum/features">الميزات</a></li>
+                            <li><a href="/nuzum/demo">عرض توضيحي</a></li>
+                            <li><a href="/nuzum/pricing">الأسعار</a></li>
+                            <li><a href="/nuzum/contact">تواصل معنا</a></li>
+                        </ul>
                     </div>
-                </div>
-                
-                <div class="col-lg-2 mb-4">
-                    <h6 class="fw-bold mb-3">الدعم</h6>
-                    <div class="footer-links">
-                        <a href="/nuzum/contact" class="d-block mb-2">تواصل معنا</a>
-                        <a href="#" class="d-block mb-2">المساعدة</a>
-                        <a href="#" class="d-block mb-2">الدليل</a>
+                    
+                    <div class="link-column">
+                        <h4 class="column-title">الحلول</h4>
+                        <ul class="link-list">
+                            <li><a href="#">إدارة الموظفين</a></li>
+                            <li><a href="#">إدارة المركبات</a></li>
+                            <li><a href="#">نظام الحضور</a></li>
+                            <li><a href="#">التقارير</a></li>
+                        </ul>
                     </div>
-                </div>
-                
-                <div class="col-lg-2 mb-4">
-                    <h6 class="fw-bold mb-3">الشركة</h6>
-                    <div class="footer-links">
-                        <a href="#" class="d-block mb-2">من نحن</a>
-                        <a href="#" class="d-block mb-2">الأخبار</a>
-                        <a href="#" class="d-block mb-2">الوظائف</a>
+                    
+                    <div class="link-column">
+                        <h4 class="column-title">الدعم</h4>
+                        <ul class="link-list">
+                            <li><a href="/nuzum/contact">اتصل بنا</a></li>
+                            <li><a href="#">المساعدة</a></li>
+                            <li><a href="#">الدليل</a></li>
+                            <li><a href="#">أسئلة شائعة</a></li>
+                        </ul>
                     </div>
-                </div>
-                
-                <div class="col-lg-2 mb-4">
-                    <h6 class="fw-bold mb-3">قانونية</h6>
-                    <div class="footer-links">
-                        <a href="#" class="d-block mb-2">سياسة الخصوصية</a>
-                        <a href="#" class="d-block mb-2">شروط الاستخدام</a>
-                        <a href="#" class="d-block mb-2">ملفات تعريف الارتباط</a>
+                    
+                    <div class="link-column">
+                        <h4 class="column-title">الشركة</h4>
+                        <ul class="link-list">
+                            <li><a href="#">من نحن</a></li>
+                            <li><a href="#">الأخبار</a></li>
+                            <li><a href="#">الوظائف</a></li>
+                            <li><a href="#">شركاؤنا</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
             
-            <hr class="my-4 opacity-25">
-            
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <p class="text-light opacity-75 mb-0">
-                        © 2024 نُظم. جميع الحقوق محفوظة.
-                    </p>
+            <div class="footer-bottom">
+                <div class="copyright">
+                    <p>&copy; 2025 نُظم للتقنية. جميع الحقوق محفوظة.</p>
                 </div>
-                <div class="col-md-6 text-end">
-                    <span class="text-light opacity-75">
-                        صُنع بـ ❤️ في المملكة العربية السعودية
-                    </span>
+                <div class="legal-links">
+                    <a href="#">سياسة الخصوصية</a>
+                    <a href="#">شروط الاستخدام</a>
+                    <a href="#">ملفات تعريف الارتباط</a>
                 </div>
             </div>
         </div>
     </footer>
     
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript الأساسي -->
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     
-    <script>
-        // إضافة الكلاس النشط للصفحة الحالية
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentPath = window.location.pathname;
-            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
-            
-            navLinks.forEach(link => {
-                const href = link.getAttribute('href');
-                if (currentPath === href || 
-                    (currentPath === '/nuzum/' && href === '/nuzum') ||
-                    (currentPath.startsWith('/nuzum') && href.includes(currentPath.split('/')[2]))) {
-                    link.classList.add('active');
-                }
-            });
-            
-            // إضافة تأثير انزلاق للقائمة في الهاتف
-            const navbarToggler = document.querySelector('.navbar-toggler');
-            const navbarCollapse = document.querySelector('.navbar-collapse');
-            
-            if (navbarToggler && navbarCollapse) {
-                navbarToggler.addEventListener('click', function() {
-                    setTimeout(() => {
-                        navbarCollapse.classList.add('show');
-                    }, 100);
-                });
-            }
-        });
-    </script>
-    
-    {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
 </body>
 </html>
