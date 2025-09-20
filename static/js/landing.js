@@ -119,6 +119,20 @@ class NuzumLanding {
   }
 
   /**
+   * إعداد تأثيرات التمرير
+   */
+  setupScrollEffects() {
+    if (this.reducedMotion) return;
+    
+    // إعداد المتغيرات للتأثيرات
+    this.lastScrollY = 0;
+    this.scrollDirection = 'down';
+    
+    // إعداد تأثيرات النبرة (parallax) البسيطة
+    this.parallaxElements = document.querySelectorAll('[data-parallax]');
+  }
+
+  /**
    * معالجة التمرير مع تحسين الأداء
    */
   handleScroll() {
