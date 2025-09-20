@@ -14,7 +14,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     
-    <title>{% block title %}نُظم - نظام إدارة شامل{% endblock %}</title>
+    <title>{{ self.title() }}</title>
     
     <!-- خطوط عربية محسنة -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +30,6 @@
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     
-    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
