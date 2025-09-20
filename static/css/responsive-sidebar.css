@@ -1,0 +1,121 @@
+/* ===== RESPONSIVE SIDEBAR FIXES ===== */
+
+/* Fix for Bootstrap column behavior on mobile */
+@media (max-width: 767.98px) {
+    /* Force content to use full width */
+    .col-lg-10, .col-md-9 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Hide sidebar columns completely on mobile */
+    .col-lg-2, .col-md-3 {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        width: 100% !important;
+        margin-right: 0 !important;
+        padding: 15px !important;
+    }
+    
+    .container-fluid {
+        padding: 0 !important;
+    }
+    
+    .row {
+        margin: 0 !important;
+    }
+    
+    /* Ensure body and html are full width on mobile */
+    body, html {
+        overflow-x: hidden !important;
+        width: 100% !important;
+    }
+    
+    /* Fix specific page layouts */
+    .page-header {
+        margin: 10px !important;
+        padding: 15px !important;
+    }
+    
+    /* Fix table responsiveness */
+    .table-responsive {
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+    
+    /* Fix action buttons */
+    .action-buttons {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    
+    .action-buttons .btn {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+    }
+    
+    /* Fix filter sections */
+    .filter-section {
+        padding: 10px !important;
+        margin: 0 !important;
+    }
+    
+    /* Fix main card */
+    .main-card {
+        margin: 0 !important;
+        border-radius: 0 !important;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .content-wrapper {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+}
+
+/* Large screens - ensure proper spacing */
+@media (min-width: 1200px) {
+    .content-wrapper {
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+}
+
+/* Additional mobile fixes */
+@media (max-width: 575.98px) {
+    .container-fluid {
+        padding-left: 5px !important;
+        padding-right: 5px !important;
+    }
+    
+    .content-wrapper {
+        padding: 5px !important;
+    }
+    
+    .card {
+        margin: 5px 0 !important;
+        border-radius: 8px !important;
+    }
+    
+    .btn {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+    
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.3rem !important;
+    }
+    
+    h3 {
+        font-size: 1.2rem !important;
+    }
+}

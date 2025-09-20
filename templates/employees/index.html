@@ -1087,6 +1087,78 @@
 }
 
 /* تحسين container الجدول لعرض جميع الموظفين */
+
+/* ===== إصلاح نهائي للـ responsive design ===== */
+@media (max-width: 767.98px) {
+    /* إخفاء القائمة الجانبية تماماً على الجوال */
+    .col-lg-2, .col-md-3 {
+        display: none !important;
+    }
+    
+    /* جعل المحتوى يأخذ العرض الكامل */
+    .col-lg-10, .col-md-9 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .content-wrapper {
+        width: 100% !important;
+        padding: 10px !important;
+        margin: 0 !important;
+    }
+    
+    .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .row {
+        margin: 0 !important;
+    }
+    
+    /* تحسين العناصر للجوال */
+    .page-header {
+        margin: 5px !important;
+        padding: 10px !important;
+    }
+    
+    .main-card {
+        margin: 5px !important;
+        border-radius: 8px !important;
+    }
+    
+    .filter-section {
+        padding: 10px !important;
+    }
+    
+    /* تحسين الأزرار */
+    .action-buttons {
+        flex-direction: column !important;
+        gap: 5px !important;
+    }
+    
+    .action-buttons .btn {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+    }
+}
+
+/* للشاشات الصغيرة جداً */
+@media (max-width: 575.98px) {
+    .container-fluid {
+        padding: 5px !important;
+    }
+    
+    .content-wrapper {
+        padding: 5px !important;
+    }
+    
+    .card {
+        margin: 2px 0 !important;
+    }
+}
 .table-responsive.table-horizontal-scroll {
     max-height: 75vh !important;
     min-height: 500px !important;
