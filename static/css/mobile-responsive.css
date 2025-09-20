@@ -51,16 +51,34 @@
         transition: left 0.3s ease !important;
         background: linear-gradient(135deg, #1e3a5c 0%, #2c5aa0 100%) !important;
         overflow-y: auto !important;
+        display: block !important; /* إجبار الظهور */
+        visibility: visible !important; /* إجبار الرؤية */
     }
     
     .sidebar.show {
         left: 0 !important;
     }
     
-    /* إخفاء أعمدة القائمة الجانبية */
-    .col-lg-2, 
-    .col-md-3 {
+    /* إصلاح مشكلة إخفاء الـ sidebar */
+    .col-lg-2.sidebar, 
+    .col-md-3.sidebar {
+        display: block !important; /* إجبار الظهور للقائمة */
+    }
+    
+    /* إخفاء أعمدة القائمة الجانبية العادية (ليس التي تحتوي على sidebar) */
+    .col-lg-2:not(.sidebar), 
+    .col-md-3:not(.sidebar) {
         display: none !important;
+    }
+    
+    /* إخفاء العرض العادي للسايدبار والاعتماد على fixed position فقط */
+    .col-lg-2.sidebar, 
+    .col-md-3.sidebar {
+        position: static !important;
+        width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        opacity: 0 !important;
     }
     
     /* إضافة overlay خلف القائمة */
