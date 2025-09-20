@@ -2629,3 +2629,145 @@ document.addEventListener('DOMContentLoaded', function() {
     updateDeleteButtonState();
 });
 </script>
+
+<style>
+/* ===== تحسينات responsive design لصفحة عرض المركبة ===== */
+@media (max-width: 767.98px) {
+    /* إخفاء القائمة الجانبية تماماً على الجوال */
+    .col-lg-2, .col-md-3 {
+        display: none !important;
+    }
+    
+    /* جعل المحتوى يأخذ العرض الكامل */
+    .col-lg-10, .col-md-9 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .content-wrapper {
+        width: 100% !important;
+        padding: 10px !important;
+        margin: 0 !important;
+    }
+    
+    .container-fluid {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .row {
+        margin: 0 !important;
+    }
+    
+    /* تحسين العناصر للجوال */
+    .vehicle-header {
+        margin: 5px !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+    }
+    
+    .vehicle-header h2 {
+        font-size: 1.8rem !important;
+        text-align: center !important;
+    }
+    
+    /* تحسين الأزرار */
+    .action-btn-group {
+        flex-direction: column !important;
+        gap: 8px !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .btn-vehicle-action {
+        width: 100% !important;
+        margin-bottom: 5px !important;
+        padding: 12px !important;
+        font-size: 14px !important;
+        min-width: auto !important;
+    }
+    
+    /* تحسين البطاقات */
+    .card {
+        margin: 5px !important;
+        border-radius: 8px !important;
+    }
+    
+    .card-body {
+        padding: 15px 10px !important;
+    }
+    
+    .card-header {
+        padding: 10px !important;
+        font-size: 1.1rem !important;
+    }
+    
+    /* تحسين الجداول للجوال */
+    .table-responsive {
+        margin: 5px !important;
+        border-radius: 8px !important;
+    }
+    
+    .table {
+        font-size: 12px !important;
+    }
+    
+    .table th {
+        padding: 8px 4px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+    }
+    
+    .table td {
+        padding: 8px 4px !important;
+        font-size: 12px !important;
+        vertical-align: middle !important;
+    }
+    
+    /* تحسين أزرار الإجراءات */
+    .btn-group {
+        display: flex !important;
+        justify-content: center !important;
+        gap: 2px !important;
+    }
+    
+    .btn-group .btn {
+        flex: 1 !important;
+        max-width: 35px !important;
+        padding: 6px 4px !important;
+        border-radius: 4px !important;
+        font-size: 10px !important;
+    }
+}
+
+/* للشاشات الصغيرة جداً */
+@media (max-width: 575.98px) {
+    .vehicle-header h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    .btn-vehicle-action {
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+    
+    .table {
+        font-size: 11px !important;
+    }
+    
+    .table th, .table td {
+        padding: 6px 3px !important;
+        font-size: 10px !important;
+    }
+    
+    .card-header {
+        font-size: 1rem !important;
+        padding: 8px !important;
+    }
+    
+    .card-body {
+        padding: 10px 8px !important;
+    }
+}
+</style>
