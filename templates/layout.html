@@ -160,20 +160,8 @@
         {% block styles %} {% endblock %}
 
         {% block extra_css%} {% endblock%}
-        <!-- Mobile Responsive CSS - يجب أن يكون آخر ملف CSS للتطبيق بشكل صحيح -->
-        <link
-            href="{{ url_for('static', filename='css/mobile-responsive.css') }}?v={{ now.timestamp()|int }}"
-            rel="stylesheet"
-        />
     </head>
     <body>
-        <!-- زر القائمة للجوال -->
-        <button class="mobile-menu-btn" id="mobileMenuBtn" type="button">
-            <i class="fas fa-bars"></i>
-        </button>
-        
-        <!-- Overlay للقائمة على الجوال -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
         <div class="container-fluid">
             <div class="row">
                 <!-- Sidebar -->
@@ -735,61 +723,5 @@
 
         <!-- مكان لتضمين النصوص البرمجية الإضافية من القوالب الخاصة -->
         {% block scripts %}{% endblock %}
-        
-        <!-- Mobile Menu JavaScript -->
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            
-            console.log('Mobile menu elements:', { mobileMenuBtn, sidebar, overlay });
-            
-            if (mobileMenuBtn && sidebar && overlay) {
-                console.log('تم تحميل نظام التحكم في القائمة الجانبية للجوال');
-                
-                // فتح القائمة
-                mobileMenuBtn.addEventListener('click', function() {
-                    console.log('تم النقر على زر القائمة');
-                    sidebar.classList.add('show');
-                    overlay.classList.add('show');
-                    document.body.style.overflow = 'hidden';
-                });
-                
-                // إغلاق القائمة عند الضغط على overlay
-                overlay.addEventListener('click', function() {
-                    console.log('تم النقر على overlay');
-                    sidebar.classList.remove('show');
-                    overlay.classList.remove('show');
-                    document.body.style.overflow = 'auto';
-                });
-                
-                // إغلاق القائمة عند تغيير حجم الشاشة
-                window.addEventListener('resize', function() {
-                    if (window.innerWidth > 768) {
-                        sidebar.classList.remove('show');
-                        overlay.classList.remove('show');
-                        document.body.style.overflow = 'auto';
-                    }
-                });
-                
-                // إغلاق القائمة عند الضغط على أي رابط
-                const sidebarLinks = sidebar.querySelectorAll('a');
-                sidebarLinks.forEach(link => {
-                    link.addEventListener('click', function() {
-                        if (window.innerWidth <= 768) {
-                            setTimeout(() => {
-                                sidebar.classList.remove('show');
-                                overlay.classList.remove('show');
-                                document.body.style.overflow = 'auto';
-                            }, 100);
-                        }
-                    });
-                });
-            } else {
-                console.error('بعض عناصر القائمة الجانبية غير موجودة');
-            }
-        });
-        </script>
     </body>
 </html>
