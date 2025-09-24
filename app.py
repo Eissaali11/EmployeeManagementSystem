@@ -454,6 +454,10 @@ with app.app_context():
             else:
                 return send_from_directory("static/uploads", filename)
         
+        # في حالة عدم وجود الصورة، إرجاع صورة بديلة
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            return send_from_directory('static/images', 'image-not-found.svg')
+        
         abort(404)
 
     # مسار إضافي لخدمة صور static/uploads مع معالجة الأخطاء
@@ -473,6 +477,10 @@ with app.app_context():
                 return send_from_directory(f'static/uploads/{subdir}', file_name)
             else:
                 return send_from_directory('static/uploads', filename)
+        
+        # في حالة عدم وجود الصورة، إرجاع صورة بديلة
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+            return send_from_directory('static/images', 'image-not-found.svg')
         
         abort(404)
 
