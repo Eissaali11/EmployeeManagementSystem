@@ -1786,7 +1786,7 @@ def delete(id):
 
         # تسجيل الإجراء قبل الحذف
         plate_number = vehicle.plate_number
-        log_audit('delete', 'vehicle', id, f'تم حذف السيارة: {plate_number}')
+        # سيتم تسجيل العملية بعد النجاح
 
         try:
             # حذف السجلات المرتبطة يدوياً لتجنب مشاكل Foreign Key
@@ -1807,6 +1807,10 @@ def delete(id):
             db.session.delete(vehicle)
             db.session.commit()
 
+            # تسجيل الإجراء بعد نجاح العملية
+            log_audit('delete', 'vehicle', id, f'تم حذف السيارة: {plate_number}')
+            current_app.logger.info(f"تم حذف السيارة {plate_number} بنجاح")
+            
             flash('تم حذف السيارة ومعلوماتها بنجاح!', 'success')
             return redirect(url_for('vehicles.index'))
         except Exception as e:
