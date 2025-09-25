@@ -1790,11 +1790,17 @@ def delete(id):
 
         try:
             # حذف السجلات المرتبطة يدوياً لتجنب مشاكل Foreign Key
-            from models import OperationRequest
+            from models import OperationRequest, OperationNotification
             
             # حذف طلبات العمليات المرتبطة بهذه المركبة
             operation_requests = OperationRequest.query.filter_by(vehicle_id=id).all()
             for operation_request in operation_requests:
+                # حذف الإشعارات المرتبطة بطلب العملية أولاً
+                notifications = OperationNotification.query.filter_by(operation_request_id=operation_request.id).all()
+                for notification in notifications:
+                    db.session.delete(notification)
+                
+                # ثم حذف طلب العملية
                 db.session.delete(operation_request)
             
             # حذف المركبة
