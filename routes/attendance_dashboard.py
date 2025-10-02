@@ -530,6 +530,61 @@ def export_excel():
     # إنشاء DataFrame للداشبورد
     dashboard_df = pd.DataFrame(dashboard_data)
     
+    # إنشاء بيانات تقرير الحضور حسب التاريخ والمشروع والموقع
+    overview_query = db.session.query(
+        Attendance.date.label('date'),
+        Employee.project.label('project'),
+        Employee.location.label('location'),
+        func.count(func.distinct(Employee.id)).label('total_emp'),
+        func.sum(func.case((Attendance.status == 'present', 1), else_=0)).label('attend'),
+        func.sum(func.case((Attendance.status == 'leave', 1), else_=0)).label('day_off'),
+        func.sum(func.case((Attendance.status == 'absent', 1), else_=0)).label('absent')
+    ).join(
+        Employee, Employee.id == Attendance.employee_id
+    ).filter(
+        Attendance.date == selected_date,
+        Employee.status == 'active'
+    ).group_by(
+        Attendance.date,
+        Employee.project,
+        Employee.location
+    ).order_by(
+        Attendance.date,
+        Employee.project,
+        Employee.location
+    )
+    
+    # إضافة فلتر القسم إذا تم تحديده
+    if department_id:
+        overview_query = overview_query.join(
+            employee_departments, employee_departments.c.employee_id == Employee.id
+        ).filter(
+            employee_departments.c.department_id == department_id
+        )
+    
+    overview_results = overview_query.all()
+    
+    # تحويل النتائج إلى قائمة
+    overview_data = []
+    for row in overview_results:
+        total = row.total_emp
+        attend = row.attend or 0
+        percentage = round((attend / total * 100), 0) if total > 0 else 0
+        
+        overview_data.append({
+            'DATE': row.date.strftime('%d-%b-%Y') if row.date else '-',
+            'PROJECT': row.project or '-',
+            'LOCATION': row.location or '-',
+            'TOTAL EMP': total,
+            'ATTEND': attend,
+            'DAY OFF': row.day_off or 0,
+            'ABSENT': row.absent or 0,
+            'PERCENTAGE': f"{int(percentage)}%"
+        })
+    
+    # إنشاء DataFrame للتقرير الإجمالي
+    overview_df = pd.DataFrame(overview_data)
+    
     # تحديد اسم الملف
     date_str = selected_date.strftime('%Y-%m-%d')
     filename = f"تقرير_الحضور_{date_str}.xlsx"
@@ -540,6 +595,10 @@ def export_excel():
         with pd.ExcelWriter(temp_file.name, engine='openpyxl') as writer:
             # إضافة ورقة داشبورد
             dashboard_df.to_excel(writer, sheet_name='لوحة الإحصائيات', index=False)
+            
+            # إضافة ورقة تقرير الحضور التفصيلي
+            if not overview_df.empty:
+                overview_df.to_excel(writer, sheet_name='Attendance Overview', index=False)
             
             # الوصول إلى الكائن workbook
             workbook = writer.book
@@ -601,6 +660,33 @@ def export_excel():
                     present_cell.fill = PatternFill(start_color='FFEB9C', end_color='FFEB9C', fill_type='solid')
                 else:
                     present_cell.fill = PatternFill(start_color='FFC7CE', end_color='FFC7CE', fill_type='solid')
+            
+            # تنسيق ورقة Attendance Overview
+            if not overview_df.empty and 'Attendance Overview' in writer.sheets:
+                overview_sheet = writer.sheets['Attendance Overview']
+                
+                # تنسيق العناوين - لون سماوي مثل الصورة
+                for col_num in range(1, len(overview_df.columns) + 1):
+                    cell = overview_sheet.cell(row=1, column=col_num)
+                    cell.fill = PatternFill(start_color='17C5BC', end_color='17C5BC', fill_type='solid')
+                    cell.font = Font(color='FFFFFF', bold=True, size=11)
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                
+                # ضبط عرض الأعمدة
+                overview_sheet.column_dimensions['A'].width = 15  # DATE
+                overview_sheet.column_dimensions['B'].width = 15  # PROJECT
+                overview_sheet.column_dimensions['C'].width = 15  # LOCATION
+                overview_sheet.column_dimensions['D'].width = 12  # TOTAL EMP
+                overview_sheet.column_dimensions['E'].width = 12  # ATTEND
+                overview_sheet.column_dimensions['F'].width = 12  # DAY OFF
+                overview_sheet.column_dimensions['G'].width = 12  # ABSENT
+                overview_sheet.column_dimensions['H'].width = 15  # PERCENTAGE
+                
+                # محاذاة البيانات في الوسط
+                for row_num in range(2, len(overview_df) + 2):
+                    for col_num in range(1, len(overview_df.columns) + 1):
+                        cell = overview_sheet.cell(row=row_num, column=col_num)
+                        cell.alignment = Alignment(horizontal='center', vertical='center')
             
             # إنشاء مخطط شريطي (Bar Chart)
             chart = BarChart()
