@@ -263,7 +263,7 @@
                     <div class="mb-3 p-3 bg-light rounded">
                         <div class="row">
                             <div class="col-12 mb-2">
-                                <strong><i class="fas fa-filter me-1"></i> تحديد الأقسام المعروضة:</strong>
+                                <strong class="text-dark"><i class="fas fa-filter me-1"></i> تحديد الأقسام المعروضة:</strong>
                             </div>
                             <div class="col-12">
                                 <div class="row g-2">
@@ -276,8 +276,8 @@
                                                    id="dept-check-{{ dept.id }}"
                                                    checked
                                                    onchange="filterDepartments()">
-                                            <label class="form-check-label" for="dept-check-{{ dept.id }}">
-                                                {{ dept.name }} <small class="text-muted">({{ dept.employees_count }})</small>
+                                            <label class="form-check-label text-dark" for="dept-check-{{ dept.id }}">
+                                                {{ dept.name }} <small class="text-secondary">({{ dept.employees_count }})</small>
                                             </label>
                                         </div>
                                     </div>
