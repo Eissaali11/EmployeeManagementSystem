@@ -3,7 +3,7 @@ from flask_login import login_required
 from sqlalchemy import func, extract
 from datetime import datetime, time, timedelta, date
 from app import db
-from models import Attendance, Employee, Department, SystemAudit, VehicleProject, Module, Permission
+from models import Attendance, Employee, Department, SystemAudit, VehicleProject, Module, Permission, employee_departments
 from utils.date_converter import parse_date, format_date_hijri, format_date_gregorian
 from utils.excel import export_attendance_by_department
 from utils.user_helpers import check_module_access
@@ -1293,13 +1293,16 @@ def dashboard():
             if total_days > 0:
                 daily_attendance_rate = round((daily_stats_dict['present'] / total_days) * 100)
             
-            # حساب إجمالي الموظفين النشطين
+            # حساب إجمالي الموظفين النشطين - استخدام علاقة many-to-many الصحيحة
             if employee_ids:
                 active_employees_count = len(employee_ids)
             else:
-                active_employees_count = db.session.query(func.count(Employee.id)).filter(
+                # عد الموظفين النشطين المرتبطين بأقسام عبر علاقة many-to-many
+                active_employees_count = db.session.query(func.count(func.distinct(Employee.id))).join(
+                    employee_departments, Employee.id == employee_departments.c.employee_id
+                ).filter(
                     Employee.status == 'active'
-                ).scalar()
+                ).scalar() or 0
             
             # حساب كامل الأسبوع (7 أيام) × عدد الموظفين النشطين
             # حساب عدد الأيام في الأسبوع (من بداية الأسبوع إلى نهايته)
