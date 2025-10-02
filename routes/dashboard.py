@@ -145,25 +145,25 @@ def employee_stats():
         department_stats = db.session.query(
             Department.id,
             Department.name,
-            func.count(Employee.id).label('employee_count')
+            func.count(func.distinct(Employee.id)).label('employee_count')
         ).outerjoin(
             employee_departments, Department.id == employee_departments.c.department_id
         ).outerjoin(
             Employee, employee_departments.c.employee_id == Employee.id
         ).filter(
             Department.id == current_user.assigned_department_id
-        ).group_by(Department.id).all()
+        ).group_by(Department.id, Department.name).all()
     else:
         # إذا لم يكن المستخدم مرتبط بقسم، عرض جميع الأقسام (للمديرين العامين)
         department_stats = db.session.query(
             Department.id,
             Department.name,
-            func.count(Employee.id).label('employee_count')
+            func.count(func.distinct(Employee.id)).label('employee_count')
         ).outerjoin(
             employee_departments, Department.id == employee_departments.c.department_id
         ).outerjoin(
             Employee, employee_departments.c.employee_id == Employee.id
-        ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
+        ).group_by(Department.id, Department.name).order_by(func.count(func.distinct(Employee.id)).desc()).all()
     
     # إحصائيات الموظفين حسب الحالة
     status_stats = db.session.query(
