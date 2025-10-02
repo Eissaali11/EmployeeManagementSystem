@@ -1016,9 +1016,11 @@ def get_department_employees(department_id):
                 'id': employee.id,
                 'name': employee.name,
                 'employee_id': employee.employee_id,
+                'job_title': employee.job_title or 'غير محدد',
                 'status': employee.status
             })
         
+        logger.info(f"تم جلب {len(employee_data)} موظف نشط من القسم {department_id}")
         return jsonify(employee_data)
     
     except Exception as e:
