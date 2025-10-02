@@ -6,7 +6,7 @@
 
 from datetime import datetime, timedelta
 import pandas as pd
-from sqlalchemy import func
+from sqlalchemy import func, case
 from flask import Blueprint, render_template, request, jsonify, send_file
 from flask_login import login_required, current_user
 import io
@@ -536,9 +536,9 @@ def export_excel():
         Employee.project.label('project'),
         Employee.location.label('location'),
         func.count(func.distinct(Employee.id)).label('total_emp'),
-        func.sum(func.case((Attendance.status == 'present', 1), else_=0)).label('attend'),
-        func.sum(func.case((Attendance.status == 'leave', 1), else_=0)).label('day_off'),
-        func.sum(func.case((Attendance.status == 'absent', 1), else_=0)).label('absent')
+        func.sum(case((Attendance.status == 'present', 1), else_=0)).label('attend'),
+        func.sum(case((Attendance.status == 'leave', 1), else_=0)).label('day_off'),
+        func.sum(case((Attendance.status == 'absent', 1), else_=0)).label('absent')
     ).join(
         Employee, Employee.id == Attendance.employee_id
     ).filter(
