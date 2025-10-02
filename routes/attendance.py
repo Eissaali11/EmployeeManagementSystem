@@ -1040,6 +1040,9 @@ def dashboard():
     
     while retry_count < max_retries:
         try:
+            # إعادة تحميل جميع البيانات من قاعدة البيانات للتأكد من أن البيانات محدثة
+            db.session.expire_all()
+            
             # 1. الحصول على المشروع المحدد (إذا وجد)
             project_name = request.args.get('project', None)
             
