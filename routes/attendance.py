@@ -1498,17 +1498,13 @@ def department_stats():
     department_stats = []
     
     for dept in departments:
-        # جلب الموظفين النشطين في القسم
-        employees_query = Employee.query.filter_by(
-            department_id=dept.id,
-            status='active'
-        )
+        # جلب الموظفين النشطين في القسم - استخدام علاقة many-to-many
+        employees = [emp for emp in dept.employees if emp.status == 'active']
         
         # فلترة حسب المشروع إذا تم تحديده
         if project_name:
-            employees_query = employees_query.filter_by(project=project_name)
+            employees = [emp for emp in employees if emp.project == project_name]
         
-        employees = employees_query.all()
         total_employees = len(employees)
         
         # عرض جميع الأقسام حتى لو كانت فارغة لضمان الشمولية
