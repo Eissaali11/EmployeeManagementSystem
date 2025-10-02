@@ -16,7 +16,7 @@ import openpyxl
 from openpyxl.chart import BarChart, Reference
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from models import Department, Employee, Attendance, Module
+from models import Department, Employee, Attendance, Module, employee_departments
 from app import db
 from utils.decorators import module_access_required
 from utils.date_converter import format_date_hijri, format_date_gregorian
@@ -420,7 +420,9 @@ def export_excel():
     ).join(
         Employee, Employee.id == Attendance.employee_id
     ).join(
-        Department, Department.id == Employee.department_id
+        employee_departments, employee_departments.c.employee_id == Employee.id
+    ).join(
+        Department, Department.id == employee_departments.c.department_id
     ).filter(
         Attendance.date == selected_date,
         Employee.status == 'active'
@@ -465,51 +467,38 @@ def export_excel():
     
     # حساب الإحصائيات لكل قسم
     for dept in departments:
-        # عدد الموظفين في القسم
-        employees_count = Employee.query.filter_by(
-            department_id=dept.id, 
-            status='active'
-        ).count()
+        # عدد الموظفين في القسم - استخدام علاقة many-to-many
+        active_employees = [emp for emp in dept.employees if emp.status == 'active']
+        employees_count = len(active_employees)
+        employee_ids = [emp.id for emp in active_employees]
         
         # عدد الحاضرين
-        present_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
+        present_count = db.session.query(func.count(Attendance.id)).filter(
+            Attendance.employee_id.in_(employee_ids),
             Attendance.date == selected_date,
             Attendance.status == 'present'
-        ).scalar() or 0
+        ).scalar() or 0 if employee_ids else 0
         
         # عدد الغائبين
-        absent_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
+        absent_count = db.session.query(func.count(Attendance.id)).filter(
+            Attendance.employee_id.in_(employee_ids),
             Attendance.date == selected_date,
             Attendance.status == 'absent'
-        ).scalar() or 0
+        ).scalar() or 0 if employee_ids else 0
         
         # عدد الإجازات
-        leave_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
+        leave_count = db.session.query(func.count(Attendance.id)).filter(
+            Attendance.employee_id.in_(employee_ids),
             Attendance.date == selected_date,
             Attendance.status == 'leave'
-        ).scalar() or 0
+        ).scalar() or 0 if employee_ids else 0
         
         # عدد المرضي
-        sick_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
+        sick_count = db.session.query(func.count(Attendance.id)).filter(
+            Attendance.employee_id.in_(employee_ids),
             Attendance.date == selected_date,
             Attendance.status == 'sick'
-        ).scalar() or 0
+        ).scalar() or 0 if employee_ids else 0
         
         # غير مسجلين
         total_records = present_count + absent_count + leave_count + sick_count
