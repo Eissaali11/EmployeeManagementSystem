@@ -948,14 +948,17 @@ def export_excel():
             flash('القسم غير موجود', 'danger')
             return redirect(url_for('attendance.export_page'))
         
-        # الحصول على موظفي القسم
-        employees = Employee.query.filter_by(department_id=department.id).all()
+        # الحصول على موظفي القسم - استخدام علاقة many-to-many
+        employees = department.employees
         
         # الحصول على سجلات الحضور خلال الفترة المحددة
-        attendances = Attendance.query.filter(
-            Attendance.date.between(start_date, end_date),
-            Attendance.employee_id.in_([emp.id for emp in employees])
-        ).all()
+        if employees:
+            attendances = Attendance.query.filter(
+                Attendance.date.between(start_date, end_date),
+                Attendance.employee_id.in_([emp.id for emp in employees])
+            ).all()
+        else:
+            attendances = []
         
         # إنشاء ملف Excel وتحميله
         excel_file = export_attendance_by_department(employees, attendances, start_date, end_date)
@@ -1927,16 +1930,13 @@ def export_excel_department():
             date_range.append(current)
             current += timedelta(days=1)
         
-        # جلب الموظفين والبيانات
-        employees_query = Employee.query.filter_by(
-            department_id=department.id,
-            status='active'
-        )
+        # جلب الموظفين والبيانات - استخدام علاقة many-to-many
+        all_employees = [emp for emp in department.employees if emp.status == 'active']
         
         if selected_project and selected_project != 'None' and selected_project.strip():
-            employees_query = employees_query.filter_by(project=selected_project)
-        
-        employees = employees_query.all()
+            employees = [emp for emp in all_employees if emp.project == selected_project]
+        else:
+            employees = all_employees
         
         # إنشاء ملف Excel
         wb = Workbook()
