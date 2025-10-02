@@ -248,11 +248,9 @@ def department_attendance():
             # Parse date
             date = parse_date(date_str)
             
-            # Get all employees in the department
-            employees = Employee.query.filter_by(
-                department_id=department_id,
-                status='active'
-            ).all()
+            # Get all employees in the department using many-to-many relationship
+            department = Department.query.get_or_404(department_id)
+            employees = [emp for emp in department.employees if emp.status == 'active']
             
             count = 0
             for employee in employees:
@@ -1005,10 +1003,11 @@ def export_page():
 def get_department_employees(department_id):
     """API endpoint to get all employees in a department"""
     try:
-        employees = Employee.query.filter_by(
-            department_id=department_id,
-            status='active'
-        ).all()
+        # الحصول على القسم أولاً
+        department = Department.query.get_or_404(department_id)
+        
+        # استخدام العلاقة many-to-many للحصول على جميع الموظفين النشطين
+        employees = [emp for emp in department.employees if emp.status == 'active']
         
         employee_data = []
         for employee in employees:
@@ -1020,10 +1019,11 @@ def get_department_employees(department_id):
                 'status': employee.status
             })
         
-        logger.info(f"تم جلب {len(employee_data)} موظف نشط من القسم {department_id}")
+        logger.info(f"تم جلب {len(employee_data)} موظف نشط من القسم {department_id} ({department.name})")
         return jsonify(employee_data)
     
     except Exception as e:
+        logger.error(f"خطأ في جلب موظفي القسم {department_id}: {str(e)}")
         return jsonify({'error': str(e)}), 500
         
 @attendance_bp.route('/dashboard')
