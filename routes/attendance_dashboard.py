@@ -88,51 +88,50 @@ def index():
     
     # جمع إحصائيات كل قسم
     for dept in departments:
-        # عدد الموظفين في القسم
-        employees_count = Employee.query.filter_by(
-            department_id=dept.id, 
-            status='active'
-        ).count()
+        # عدد الموظفين في القسم باستخدام علاقة many-to-many
+        active_employees = [emp for emp in dept.employees if emp.status == 'active']
+        employees_count = len(active_employees)
+        employee_ids = [emp.id for emp in active_employees]
         
         # عدد الحاضرين
-        present_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
-            Attendance.date == selected_date,
-            Attendance.status == 'present'
-        ).scalar() or 0
+        if employee_ids:
+            present_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.employee_id.in_(employee_ids),
+                Attendance.date == selected_date,
+                Attendance.status == 'present'
+            ).scalar() or 0
+        else:
+            present_count = 0
         
         # عدد الغائبين
-        absent_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
-            Attendance.date == selected_date,
-            Attendance.status == 'absent'
-        ).scalar() or 0
+        if employee_ids:
+            absent_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.employee_id.in_(employee_ids),
+                Attendance.date == selected_date,
+                Attendance.status == 'absent'
+            ).scalar() or 0
+        else:
+            absent_count = 0
         
         # عدد الإجازات
-        leave_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
-            Attendance.date == selected_date,
-            Attendance.status == 'leave'
-        ).scalar() or 0
+        if employee_ids:
+            leave_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.employee_id.in_(employee_ids),
+                Attendance.date == selected_date,
+                Attendance.status == 'leave'
+            ).scalar() or 0
+        else:
+            leave_count = 0
         
         # عدد المرضي
-        sick_count = db.session.query(func.count(Attendance.id)).join(
-            Employee, Employee.id == Attendance.employee_id
-        ).filter(
-            Employee.department_id == dept.id,
-            Employee.status == 'active',
-            Attendance.date == selected_date,
-            Attendance.status == 'sick'
-        ).scalar() or 0
+        if employee_ids:
+            sick_count = db.session.query(func.count(Attendance.id)).filter(
+                Attendance.employee_id.in_(employee_ids),
+                Attendance.date == selected_date,
+                Attendance.status == 'sick'
+            ).scalar() or 0
+        else:
+            sick_count = 0
         
         # إجمالي السجلات
         total_records = present_count + absent_count + leave_count + sick_count
@@ -167,39 +166,61 @@ def index():
     # الموظفون الغائبون
     absent_employees = []
     
-    # إذا تم تحديد قسم معين
+    # إذا تم تحديد قسم معين، احصل على معرفات الموظفين النشطين في ذلك القسم
     if department_id:
-        filter_conditions = [
-            Employee.status == 'active',
-            Employee.department_id == department_id
-        ]
+        selected_dept = Department.query.get(int(department_id))
+        if selected_dept:
+            dept_employee_ids = [emp.id for emp in selected_dept.employees if emp.status == 'active']
+            
+            # استعلام الموظفين الغائبين في القسم المحدد فقط
+            absent_records = db.session.query(Attendance, Employee).join(
+                Employee, Employee.id == Attendance.employee_id
+            ).filter(
+                Attendance.date == selected_date,
+                Attendance.status.in_(['absent', 'leave', 'sick']),
+                Attendance.employee_id.in_(dept_employee_ids)
+            ).all()
+            
+            # تجهيز بيانات الموظفين الغائبين
+            for attendance, employee in absent_records:
+                # الحصول على أول قسم للموظف لعرضه
+                emp_dept = employee.departments[0] if employee.departments else None
+                if emp_dept:
+                    absent_employees.append({
+                        'id': employee.id,
+                        'name': employee.name,
+                        'employee_id': employee.employee_id,
+                        'department': emp_dept.name,
+                        'department_id': emp_dept.id,
+                        'status': attendance.status,
+                        'notes': attendance.notes
+                    })
+        else:
+            absent_records = []
     else:
-        filter_conditions = [Employee.status == 'active']
-    
-    # استعلام الموظفين الغائبين
-    absent_records = db.session.query(
-        Attendance, Employee, Department
-    ).join(
-        Employee, Employee.id == Attendance.employee_id
-    ).join(
-        Department, Department.id == Employee.department_id
-    ).filter(
-        Attendance.date == selected_date,
-        Attendance.status.in_(['absent', 'leave', 'sick']),
-        *filter_conditions
-    ).all()
-    
-    # تجهيز بيانات الموظفين الغائبين
-    for attendance, employee, department in absent_records:
-        absent_employees.append({
-            'id': employee.id,
-            'name': employee.name,
-            'employee_id': employee.employee_id,
-            'department': department.name,
-            'department_id': department.id,
-            'status': attendance.status,
-            'notes': attendance.notes
-        })
+        # استعلام جميع الموظفين الغائبين النشطين
+        absent_records = db.session.query(Attendance, Employee).join(
+            Employee, Employee.id == Attendance.employee_id
+        ).filter(
+            Attendance.date == selected_date,
+            Attendance.status.in_(['absent', 'leave', 'sick']),
+            Employee.status == 'active'
+        ).all()
+        
+        # تجهيز بيانات الموظفين الغائبين
+        for attendance, employee in absent_records:
+            # الحصول على أول قسم للموظف لعرضه
+            emp_dept = employee.departments[0] if employee.departments else None
+            if emp_dept:
+                absent_employees.append({
+                    'id': employee.id,
+                    'name': employee.name,
+                    'employee_id': employee.employee_id,
+                    'department': emp_dept.name,
+                    'department_id': emp_dept.id,
+                    'status': attendance.status,
+                    'notes': attendance.notes
+                })
     
     # تجهيز المعلومات حسب القسم
     absent_by_department = {}
