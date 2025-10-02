@@ -289,28 +289,82 @@ def employee_stats():
     # ترتيب الإحصائيات حسب العدد الإجمالي للموظفين
     detailed_stats.sort(key=lambda x: x['total'], reverse=True)
     
-    return render_template('employee_stats.html',
-                           department_stats=department_stats,
-                           status_stats=status_data,
-                           detailed_stats=detailed_stats)
-
-@dashboard_bp.route('/api/department-employee-stats')
-@login_required
-@module_access_required(Module.DASHBOARD)
-def department_employee_stats_api():
-    """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
-    from models import employee_departments
+    # تحضير بيانات المخطط للموظفين النشطين فقط
+    chart_labels = []
+    chart_data = []
+    chart_dept_ids = []
+    chart_percentages = []
     
-    # إحصائيات الموظفين حسب القسم (فقط الموظفون النشطون) باستخدام علاقة many-to-many
-    department_stats = db.session.query(
+    # الحصول على بيانات الموظفين النشطين فقط لكل قسم
+    active_dept_stats = db.session.query(
         Department.id,
         Department.name,
-        func.count(Employee.id).label('employee_count')
+        func.count(func.distinct(Employee.id)).label('employee_count')
     ).outerjoin(
         employee_departments, Department.id == employee_departments.c.department_id
     ).outerjoin(
         Employee, (employee_departments.c.employee_id == Employee.id) & (Employee.status == 'active')
-    ).group_by(Department.id, Department.name).order_by(func.count(Employee.id).desc()).all()
+    ).group_by(Department.id, Department.name).order_by(func.count(func.distinct(Employee.id)).desc()).all()
+    
+    total_active = sum(stat.employee_count for stat in active_dept_stats)
+    
+    for stat in active_dept_stats:
+        chart_labels.append(stat.name)
+        chart_data.append(stat.employee_count)
+        chart_dept_ids.append(stat.id)
+        percentage = round((stat.employee_count / total_active * 100), 1) if total_active > 0 else 0
+        chart_percentages.append(percentage)
+    
+    # قائمة بالألوان للمخطط
+    chart_colors = [
+        'rgba(24, 144, 255, 0.85)', 'rgba(47, 194, 91, 0.85)', 'rgba(250, 173, 20, 0.85)',
+        'rgba(245, 34, 45, 0.85)', 'rgba(114, 46, 209, 0.85)', 'rgba(19, 194, 194, 0.85)',
+        'rgba(82, 196, 26, 0.85)', 'rgba(144, 19, 254, 0.85)', 'rgba(240, 72, 68, 0.85)',
+        'rgba(250, 140, 22, 0.85)'
+    ]
+    
+    return render_template('employee_stats.html',
+                           department_stats=department_stats,
+                           status_stats=status_data,
+                           detailed_stats=detailed_stats,
+                           chart_labels=chart_labels,
+                           chart_data=chart_data,
+                           chart_dept_ids=chart_dept_ids,
+                           chart_percentages=chart_percentages,
+                           chart_colors=chart_colors,
+                           total_active_employees=total_active)
+
+@dashboard_bp.route('/api/department-employee-stats')
+@login_required
+def department_employee_stats_api():
+    """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
+    try:
+        from models import employee_departments
+        
+        # إحصائيات الموظفين حسب القسم (فقط الموظفون النشطون) باستخدام علاقة many-to-many
+        department_stats = db.session.query(
+            Department.id,
+            Department.name,
+            func.count(func.distinct(Employee.id)).label('employee_count')
+        ).outerjoin(
+            employee_departments, Department.id == employee_departments.c.department_id
+        ).outerjoin(
+            Employee, (employee_departments.c.employee_id == Employee.id) & (Employee.status == 'active')
+        ).group_by(Department.id, Department.name).order_by(func.count(func.distinct(Employee.id)).desc()).all()
+    except Exception as e:
+        import traceback
+        print(f"Error in department_employee_stats_api: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            'labels': [],
+            'data': [],
+            'backgroundColor': [],
+            'hoverBackgroundColor': [],
+            'departmentIds': [],
+            'percentages': [],
+            'total': 0,
+            'error': str(e)
+        }), 200
     
     # قائمة بالألوان الجميلة المتناسقة للمخطط
     gradient_colors = [

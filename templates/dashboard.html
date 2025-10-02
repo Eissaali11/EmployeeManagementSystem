@@ -297,14 +297,14 @@ document.addEventListener('DOMContentLoaded', function() {
             initializeDepartmentChart();
             console.log('تم تهيئة مخطط الأقسام');
         } catch(e) {
-            console.error('خطأ في مخطط الأقسام:', e);
+            console.error('خطأ في مخطط الأقسام:', e.message || e.toString());
         }
         
         try {
             initializeSalaryChart();
             console.log('تم تهيئة مخطط الرواتب');
         } catch(e) {
-            console.error('خطأ في مخطط الرواتب:', e);
+            console.error('خطأ في مخطط الرواتب:', e.message || e.toString());
         }
         
         try {
