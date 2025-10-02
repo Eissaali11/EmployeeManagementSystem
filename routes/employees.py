@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required
 from app import db
-from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments, MobileDevice
+from models import Employee, Department, SystemAudit, Document, Attendance, Salary, Module, Permission, Vehicle, VehicleHandover,User,Nationality, employee_departments, MobileDevice, DeviceAssignment
 from sqlalchemy import func, or_
 from utils.excel import parse_employee_excel, generate_employee_excel, export_employee_attendance_to_excel
 from utils.date_converter import parse_date
@@ -825,17 +825,14 @@ def delete(id):
         return redirect(url_for('employees.view', id=id))
     
     try:
+        # حذف جميع تعيينات الأجهزة المرتبطة بالموظف
+        DeviceAssignment.query.filter_by(employee_id=id).delete()
+        
         db.session.delete(employee)
+        db.session.commit()
         
         # Log the action
-        audit = SystemAudit(
-            action='delete',
-            entity_type='employee',
-            entity_id=id,
-            details=f'تم حذف الموظف: {name}'
-        )
-        db.session.add(audit)
-        db.session.commit()
+        log_activity('delete', 'Employee', id, f'تم حذف الموظف: {name}')
         
         flash('تم حذف الموظف بنجاح', 'success')
     except Exception as e:
