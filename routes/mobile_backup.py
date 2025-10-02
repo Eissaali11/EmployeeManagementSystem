@@ -334,6 +334,10 @@ def forgot_password():
 @login_required
 def employees():
     """صفحة الموظفين للنسخة المحمولة"""
+    
+    # إعادة تحميل البيانات من قاعدة البيانات لضمان الحصول على أحدث التحديثات
+    db.session.expire_all()
+    
     page = request.args.get('page', 1, type=int)
     per_page = 20  # عدد العناصر في الصفحة الواحدة
 
@@ -349,8 +353,18 @@ def employees():
             (Employee.job_title.like(search_term))
         )
 
+    # فلترة حسب القسم - استخدام العلاقة many-to-many
     if request.args.get('department_id'):
-        query = query.filter_by(department_id=request.args.get('department_id'))
+        department_id = int(request.args.get('department_id'))
+        department = Department.query.get(department_id)
+        if department:
+            # الحصول على IDs الموظفين في القسم باستخدام العلاقة many-to-many
+            employee_ids = [emp.id for emp in department.employees]
+            if employee_ids:
+                query = query.filter(Employee.id.in_(employee_ids))
+            else:
+                # إذا لم يكن هناك موظفين في القسم، إرجاع نتيجة فارغة
+                query = query.filter(Employee.id == -1)
 
     # ترتيب النتائج حسب الاسم
     query = query.order_by(Employee.name)
@@ -366,6 +380,7 @@ def employees():
                            employees=employees,
                            pagination=pagination,
                            departments=departments)
+
 
 # صفحة إضافة موظف جديد - النسخة المحمولة
 @mobile_bp.route('/employees/add', methods=['GET', 'POST'])
