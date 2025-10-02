@@ -541,10 +541,6 @@ def export_excel():
             # إضافة ورقة داشبورد
             dashboard_df.to_excel(writer, sheet_name='لوحة الإحصائيات', index=False)
             
-            # إضافة ورقة البيانات التفصيلية
-            if not detailed_df.empty:
-                detailed_df.to_excel(writer, sheet_name='بيانات الحضور', index=False)
-            
             # الوصول إلى الكائن workbook
             workbook = writer.book
             
