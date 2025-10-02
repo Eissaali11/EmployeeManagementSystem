@@ -19,6 +19,7 @@ from openpyxl.styles import Font, PatternFill, Alignment
 from models import Department, Employee, Attendance, Module
 from app import db
 from utils.decorators import module_access_required
+from utils.date_converter import format_date_hijri, format_date_gregorian
 
 # إنشاء blueprint للوحة معلومات الحضور
 attendance_dashboard_bp = Blueprint('attendance_dashboard', __name__)
@@ -233,10 +234,16 @@ def index():
             }
         absent_by_department[dept_id]['employees'].append(emp)
     
+    # تنسيق التواريخ
+    hijri_date = format_date_hijri(selected_date)
+    gregorian_date = format_date_gregorian(selected_date)
+    
     # تقديم الصفحة
     return render_template(
         'attendance/enhanced_dashboard.html',
         selected_date=selected_date,
+        hijri_date=hijri_date,
+        gregorian_date=gregorian_date,
         departments=departments,
         selected_department_id=int(department_id) if department_id else None,
         total_employees=total_employees,

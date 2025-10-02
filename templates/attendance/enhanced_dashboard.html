@@ -3,11 +3,23 @@
 {% block content %}
 <div class="container-fluid py-3">
     <!-- عنوان الصفحة والأزرار -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">
-            <i class="fas fa-chart-bar me-2"></i>
-            لوحة معلومات الحضور المحسنة
-        </h1>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">
+                <i class="fas fa-chart-bar me-2"></i>
+                إحصائيات الحضور حسب الأقسام
+            </h1>
+            <div class="text-muted d-flex gap-3">
+                <span>
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    <strong>ميلادي:</strong> {{ gregorian_date }}
+                </span>
+                <span>
+                    <i class="fas fa-moon me-1"></i>
+                    <strong>هجري:</strong> {{ hijri_date }}
+                </span>
+            </div>
+        </div>
         <div class="btn-group">
             <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
                 <i class="fas fa-list me-1"></i>
@@ -229,14 +241,54 @@
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-table me-2"></i>
-                        إحصائيات الحضور حسب الأقسام
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-table me-2"></i>
+                            إحصائيات الحضور حسب الأقسام
+                        </h5>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-light" onclick="toggleAllDepartments(true)">
+                                <i class="fas fa-check-square me-1"></i>
+                                عرض الكل
+                            </button>
+                            <button type="button" class="btn btn-light" onclick="toggleAllDepartments(false)">
+                                <i class="fas fa-square me-1"></i>
+                                إخفاء الكل
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
+                    <!-- خيارات تحديد الأقسام -->
+                    <div class="mb-3 p-3 bg-light rounded">
+                        <div class="row">
+                            <div class="col-12 mb-2">
+                                <strong><i class="fas fa-filter me-1"></i> تحديد الأقسام المعروضة:</strong>
+                            </div>
+                            <div class="col-12">
+                                <div class="row g-2">
+                                    {% for dept in department_stats %}
+                                    <div class="col-md-3 col-sm-4 col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input dept-checkbox" 
+                                                   type="checkbox" 
+                                                   value="{{ dept.id }}" 
+                                                   id="dept-check-{{ dept.id }}"
+                                                   checked
+                                                   onchange="filterDepartments()">
+                                            <label class="form-check-label" for="dept-check-{{ dept.id }}">
+                                                {{ dept.name }} <small class="text-muted">({{ dept.employees_count }})</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover" id="departments-table">
                             <thead class="table-dark">
                                 <tr>
                                     <th>القسم</th>
@@ -251,27 +303,27 @@
                             </thead>
                             <tbody>
                                 {% for dept in department_stats %}
-                                <tr>
-                                    <td>{{ dept.name }}</td>
-                                    <td>{{ dept.employees_count }}</td>
+                                <tr class="dept-row" data-dept-id="{{ dept.id }}">
+                                    <td><strong>{{ dept.name }}</strong></td>
+                                    <td><span class="badge bg-primary">{{ dept.employees_count }}</span></td>
                                     <td class="text-center">
-                                        <span class="badge bg-success px-2 py-1">{{ dept.present_count }}</span>
+                                        <span class="badge bg-success px-3 py-2">{{ dept.present_count }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-danger px-2 py-1">{{ dept.absent_count }}</span>
+                                        <span class="badge bg-danger px-3 py-2">{{ dept.absent_count }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-warning px-2 py-1">{{ dept.leave_count }}</span>
+                                        <span class="badge bg-warning text-dark px-3 py-2">{{ dept.leave_count }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-info px-2 py-1">{{ dept.sick_count }}</span>
+                                        <span class="badge bg-info px-3 py-2">{{ dept.sick_count }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge bg-secondary px-2 py-1">{{ dept.missing_count }}</span>
+                                        <span class="badge bg-secondary px-3 py-2">{{ dept.missing_count }}</span>
                                     </td>
                                     <td class="text-center">
-                                        <div class="progress" style="height: 20px;">
-                                            <div class="progress-bar bg-success" 
+                                        <div class="progress" style="height: 25px;">
+                                            <div class="progress-bar bg-success fw-bold" 
                                                 role="progressbar" 
                                                 style="width: {{ dept.present_percentage }}%;" 
                                                 aria-valuenow="{{ dept.present_percentage }}" 
@@ -455,5 +507,42 @@
                 });
             });
     });
+    
+    // دالة لإظهار/إخفاء جميع الأقسام
+    function toggleAllDepartments(show) {
+        const checkboxes = document.querySelectorAll('.dept-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = show;
+        });
+        filterDepartments();
+    }
+    
+    // دالة لتصفية الأقسام المعروضة
+    function filterDepartments() {
+        const checkboxes = document.querySelectorAll('.dept-checkbox');
+        const checkedIds = [];
+        
+        checkboxes.forEach(checkbox => {
+            if (checkbox.checked) {
+                checkedIds.push(checkbox.value);
+            }
+        });
+        
+        // إظهار أو إخفاء الصفوف حسب الاختيار
+        const rows = document.querySelectorAll('.dept-row');
+        rows.forEach(row => {
+            const deptId = row.getAttribute('data-dept-id');
+            if (checkedIds.includes(deptId)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // تحديث عدد الأقسام المعروضة
+        const visibleCount = checkedIds.length;
+        const totalCount = checkboxes.length;
+        console.log(`عرض ${visibleCount} من ${totalCount} قسم`);
+    }
 </script>
 {% endblock %}
