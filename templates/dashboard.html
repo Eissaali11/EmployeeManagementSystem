@@ -283,22 +283,48 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('بدء تحميل لوحة المعلومات...');
+    
     // Initialize tooltips
     initializeTooltips();
+    console.log('تم تهيئة التلميحات');
     
     // Initialize charts
+    console.log('Chart متوفر:', typeof Chart !== 'undefined');
     if (typeof Chart !== 'undefined') {
-        initializeDepartmentChart();
-        initializeSalaryChart();
-        initializeDocumentChart();
+        console.log('بدء تهيئة المخططات...');
+        try {
+            initializeDepartmentChart();
+            console.log('تم تهيئة مخطط الأقسام');
+        } catch(e) {
+            console.error('خطأ في مخطط الأقسام:', e);
+        }
+        
+        try {
+            initializeSalaryChart();
+            console.log('تم تهيئة مخطط الرواتب');
+        } catch(e) {
+            console.error('خطأ في مخطط الرواتب:', e);
+        }
+        
+        try {
+            initializeDocumentChart();
+            console.log('تم تهيئة مخطط الوثائق');
+        } catch(e) {
+            console.error('خطأ في مخطط الوثائق:', e);
+        }
+    } else {
+        console.error('Chart.js غير محمّل!');
     }
     
     // Display current date
     displayCurrentDate();
+    console.log('تم عرض التاريخ');
     
     // Animate counters with delay
     setTimeout(function() {
         animateCounters();
+        console.log('تم تحريك العدادات');
     }, 800);
     
     // Add loading complete log
@@ -364,10 +390,19 @@ function animateCounters() {
 
 function initializeDepartmentChart() {
     const departmentChartElement = document.getElementById('departmentChart');
-    if (!departmentChartElement) return;
+    if (!departmentChartElement) {
+        console.log('عنصر مخطط الأقسام غير موجود');
+        return;
+    }
+    
+    console.log('data-labels:', departmentChartElement.getAttribute('data-labels'));
+    console.log('data-values:', departmentChartElement.getAttribute('data-values'));
     
     const labels = JSON.parse(departmentChartElement.getAttribute('data-labels') || '[]');
     const values = JSON.parse(departmentChartElement.getAttribute('data-values') || '[]');
+    
+    console.log('تسميات الأقسام:', labels);
+    console.log('قيم الأقسام:', values);
     
     const colors = [
         '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
@@ -563,13 +598,19 @@ function initializeSalaryChart() {
 
 function initializeDocumentChart() {
     const documentChartElement = document.getElementById('documentChart');
-    if (!documentChartElement) return;
+    if (!documentChartElement) {
+        console.log('عنصر مخطط الوثائق غير موجود');
+        return;
+    }
     
     const validCount = parseInt(documentChartElement.getAttribute('data-valid')) || 0;
     const expiringCount = parseInt(documentChartElement.getAttribute('data-expiring')) || 0;
     const expiredCount = parseInt(documentChartElement.getAttribute('data-expired')) || 0;
     
+    console.log('إحصائيات الوثائق:', { validCount, expiringCount, expiredCount });
+    
     if (validCount === 0 && expiringCount === 0 && expiredCount === 0) {
+        console.log('لا توجد بيانات وثائق - عرض رسم افتراضي');
         new Chart(documentChartElement, {
             type: 'doughnut',
             data: {
