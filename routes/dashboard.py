@@ -57,13 +57,17 @@ def index():
         'no_expiry': no_expiry_documents
     }
     
-    # Get department statistics - only count active employees
+    # Get department statistics - only count active employees using many-to-many relationship
+    from models import employee_departments
+    
     departments = db.session.query(
         Department.name,
         func.count(Employee.id).label('employee_count')
     ).outerjoin(
-        Employee, (Department.id == Employee.department_id) & (Employee.status == 'active')
-    ).group_by(Department.id).all()
+        employee_departments, Department.id == employee_departments.c.department_id
+    ).outerjoin(
+        Employee, (employee_departments.c.employee_id == Employee.id) & (Employee.status == 'active')
+    ).group_by(Department.id, Department.name).all()
     
     # Get recent activity
     recent_employees = Employee.query.order_by(Employee.created_at.desc()).limit(5).all()
@@ -295,14 +299,18 @@ def employee_stats():
 @module_access_required(Module.DASHBOARD)
 def department_employee_stats_api():
     """واجهة برمجة لإحصائيات الموظفين حسب القسم للرسوم البيانية"""
-    # إحصائيات الموظفين حسب القسم (فقط الموظفون النشطون)
+    from models import employee_departments
+    
+    # إحصائيات الموظفين حسب القسم (فقط الموظفون النشطون) باستخدام علاقة many-to-many
     department_stats = db.session.query(
         Department.id,
         Department.name,
         func.count(Employee.id).label('employee_count')
     ).outerjoin(
-        Employee, (Department.id == Employee.department_id) & (Employee.status == 'active')
-    ).group_by(Department.id).order_by(func.count(Employee.id).desc()).all()
+        employee_departments, Department.id == employee_departments.c.department_id
+    ).outerjoin(
+        Employee, (employee_departments.c.employee_id == Employee.id) & (Employee.status == 'active')
+    ).group_by(Department.id, Department.name).order_by(func.count(Employee.id).desc()).all()
     
     # قائمة بالألوان الجميلة المتناسقة للمخطط
     gradient_colors = [
