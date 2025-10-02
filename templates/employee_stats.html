@@ -536,7 +536,16 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update chart info with animation
             updateChartInfo(data);
             
-            const ctx = document.getElementById('departmentChart').getContext('2d');
+            const canvas = document.getElementById('departmentChart');
+            
+            // Destroy any existing chart on this canvas
+            const existingChart = Chart.getChart(canvas);
+            if (existingChart) {
+                console.log('Destroying existing chart');
+                existingChart.destroy();
+            }
+            
+            const ctx = canvas.getContext('2d');
             
             // Enhanced chart configuration
             const chart = new Chart(ctx, {
