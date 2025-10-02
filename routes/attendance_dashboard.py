@@ -6,7 +6,7 @@
 
 from datetime import datetime, timedelta
 import pandas as pd
-from sqlalchemy import func, case
+from sqlalchemy import func, case, literal
 from flask import Blueprint, render_template, request, jsonify, send_file
 from flask_login import login_required, current_user
 import io
@@ -530,35 +530,38 @@ def export_excel():
     # إنشاء DataFrame للداشبورد
     dashboard_df = pd.DataFrame(dashboard_data)
     
-    # إنشاء بيانات تقرير الحضور حسب التاريخ والمشروع والموقع
+    # إنشاء قاموس لعدد الموظفين في كل قسم (من dashboard_data)
+    dept_employee_counts = {}
+    for row in dashboard_data:
+        dept_employee_counts[row['القسم']] = row['عدد الموظفين']
+    
+    # إنشاء بيانات تقرير الحضور حسب التاريخ والقسم
     overview_query = db.session.query(
         Attendance.date.label('date'),
-        Employee.project.label('project'),
-        Employee.location.label('location'),
-        func.count(func.distinct(Employee.id)).label('total_emp'),
+        Department.name.label('department'),
         func.sum(case((Attendance.status == 'present', 1), else_=0)).label('attend'),
         func.sum(case((Attendance.status == 'leave', 1), else_=0)).label('day_off'),
         func.sum(case((Attendance.status == 'absent', 1), else_=0)).label('absent')
     ).join(
         Employee, Employee.id == Attendance.employee_id
+    ).join(
+        employee_departments, employee_departments.c.employee_id == Employee.id
+    ).join(
+        Department, Department.id == employee_departments.c.department_id
     ).filter(
         Attendance.date == selected_date,
         Employee.status == 'active'
     ).group_by(
         Attendance.date,
-        Employee.project,
-        Employee.location
+        Department.name
     ).order_by(
         Attendance.date,
-        Employee.project,
-        Employee.location
+        Department.name
     )
     
     # إضافة فلتر القسم إذا تم تحديده
     if department_id:
-        overview_query = overview_query.join(
-            employee_departments, employee_departments.c.employee_id == Employee.id
-        ).filter(
+        overview_query = overview_query.filter(
             employee_departments.c.department_id == department_id
         )
     
@@ -567,14 +570,15 @@ def export_excel():
     # تحويل النتائج إلى قائمة
     overview_data = []
     for row in overview_results:
-        total = row.total_emp
+        dept_name = row.department
+        total = dept_employee_counts.get(dept_name, 0)
         attend = row.attend or 0
         percentage = round((attend / total * 100), 0) if total > 0 else 0
         
         overview_data.append({
             'DATE': row.date.strftime('%d-%b-%Y') if row.date else '-',
-            'PROJECT': row.project or '-',
-            'LOCATION': row.location or '-',
+            'PROJECT': dept_name,
+            'LOCATION': 'qassim',
             'TOTAL EMP': total,
             'ATTEND': attend,
             'DAY OFF': row.day_off or 0,
