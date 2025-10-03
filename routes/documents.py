@@ -1430,10 +1430,16 @@ def export_employee_documents_pdf(employee_id):
     # تسجيل الخط العربي
     try:
         # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
-        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Arial.ttf'))
-    except:
-        # إذا كان هناك خطأ، نستخدم الخط الافتراضي
-        pass
+        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Cairo.ttf'))
+        arabic_font_name = 'Arabic'
+    except Exception as e:
+        # إذا كان هناك خطأ، نستخدم خط بديل
+        try:
+            pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Amiri-Regular.ttf'))
+            arabic_font_name = 'Arabic'
+        except:
+            # آخر خيار: استخدام الخط الافتراضي
+            arabic_font_name = 'Helvetica'
     
     # تعيين أبعاد الصفحة واتجاهها
     doc = SimpleDocTemplate(
@@ -1451,7 +1457,7 @@ def export_employee_documents_pdf(employee_id):
     arabic_style = ParagraphStyle(
         name='Arabic',
         parent=styles['Normal'],
-        fontName='Arabic',
+        fontName=arabic_font_name,
         fontSize=10,
         alignment=2, # يمين (RTL)
         textColor=colors.black
@@ -1461,7 +1467,7 @@ def export_employee_documents_pdf(employee_id):
     title_style = ParagraphStyle(
         name='Title',
         parent=styles['Title'],
-        fontName='Arabic',
+        fontName=arabic_font_name,
         fontSize=16,
         alignment=1, # وسط
         textColor=colors.black
@@ -1471,7 +1477,7 @@ def export_employee_documents_pdf(employee_id):
     subtitle_style = ParagraphStyle(
         name='Subtitle',
         parent=styles['Heading2'],
-        fontName='Arabic',
+        fontName=arabic_font_name,
         fontSize=14,
         alignment=2, # يمين (RTL)
         textColor=colors.blue
@@ -1522,7 +1528,7 @@ def export_employee_documents_pdf(employee_id):
         ('BACKGROUND', (0, 0), (1, 0), colors.lightblue),
         ('BACKGROUND', (2, 0), (3, 0), colors.lightblue),
         ('TEXTCOLOR', (0, 0), (3, 0), colors.black),
-        ('FONTNAME', (0, 0), (3, 0), 'Arabic'),
+        ('FONTNAME', (0, 0), (3, 4), arabic_font_name),
         ('FONTSIZE', (0, 0), (3, 0), 12),
         ('SPAN', (0, 0), (1, 0)),
         ('SPAN', (2, 0), (3, 0)),
@@ -1602,7 +1608,7 @@ def export_employee_documents_pdf(employee_id):
             ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, -1), 'Arabic'),
+            ('FONTNAME', (0, 0), (-1, -1), arabic_font_name),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
