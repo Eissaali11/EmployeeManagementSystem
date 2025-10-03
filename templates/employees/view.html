@@ -985,6 +985,28 @@ document.addEventListener('DOMContentLoaded', function() {
                             <p class="fs-5">{{ employee.bank_iban }}</p>
                             {% endif %}
                         </div>
+                        
+                        <!-- معلومات السكن -->
+                        {% if employee.residence_details or employee.residence_location_url %}
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted"><i class="fas fa-home me-1"></i>تفاصيل السكن</p>
+                            <p class="fs-6">{{ employee.residence_details or '-' }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1 text-muted"><i class="fas fa-map-marker-alt me-1"></i>موقع السكن</p>
+                            {% if employee.residence_location_url %}
+                            <p class="fs-6">
+                                <a href="{{ employee.residence_location_url }}" target="_blank" 
+                                   class="btn btn-sm btn-success rounded-pill"
+                                   style="padding: 0.4rem 1rem;">
+                                    <i class="fas fa-map-marked-alt me-1"></i>فتح الموقع على الخريطة
+                                </a>
+                            </p>
+                            {% else %}
+                            <p class="fs-6">-</p>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                       
                         
                         <!-- {% if mobile_devices %}

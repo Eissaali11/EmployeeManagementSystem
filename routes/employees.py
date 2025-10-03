@@ -198,6 +198,10 @@ def create():
             sponsorship_status = request.form.get('sponsorship_status', 'inside')
             current_sponsor_name = request.form.get('current_sponsor_name', '')
             
+            # معلومات السكن
+            residence_details = request.form.get('residence_details', '').strip() or None
+            residence_location_url = request.form.get('residence_location_url', '').strip() or None
+            
             selected_dept_ids = {int(dept_id) for dept_id in request.form.getlist('department_ids')}
             
             # Convert empty department_id to None
@@ -227,7 +231,9 @@ def create():
                 mobile_type=mobile_type,
                 mobile_imei=mobile_imei,
                 sponsorship_status=sponsorship_status,
-                current_sponsor_name=current_sponsor_name
+                current_sponsor_name=current_sponsor_name,
+                residence_details=residence_details,
+                residence_location_url=residence_location_url
             )
             if selected_dept_ids:
                 departments_to_assign = Department.query.filter(Department.id.in_(selected_dept_ids)).all()
@@ -350,6 +356,10 @@ def edit(id):
             
             # تحديث حقول المعلومات البنكية
             employee.bank_iban = request.form.get('bank_iban', '').strip() or None
+            
+            # تحديث معلومات السكن
+            employee.residence_details = request.form.get('residence_details', '').strip() or None
+            employee.residence_location_url = request.form.get('residence_location_url', '').strip() or None
             
             # معالجة رفع صورة شهادة الإيبان
             bank_iban_image_file = request.files.get('bank_iban_image')

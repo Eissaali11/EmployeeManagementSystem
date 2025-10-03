@@ -104,6 +104,10 @@ class Employee(db.Model):
     # حقول المعلومات البنكية
     bank_iban = db.Column(db.String(50), nullable=True)  # رقم الإيبان البنكي
     bank_iban_image = db.Column(db.String(255), nullable=True)  # صورة الإيبان البنكي
+    
+    # معلومات السكن
+    residence_details = db.Column(db.String(500), nullable=True)  # تفاصيل السكن (العنوان أو الوصف)
+    residence_location_url = db.Column(db.String(500), nullable=True)  # رابط موقع السكن على خرائط Google
 
 
     def to_dict(self):
