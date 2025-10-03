@@ -1427,19 +1427,22 @@ def export_employee_documents_pdf(employee_id):
     # إنشاء ملف PDF
     buffer = BytesIO()
     
-    # تسجيل الخط العربي
+    # تسجيل الخط العربي - استخدام خط Amiri لأنه يدعم الربط العربي بشكل ممتاز
     try:
-        # محاولة تسجيل الخط العربي إذا لم يكن مسجلاً مسبقًا
-        pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Cairo.ttf'))
-        arabic_font_name = 'Arabic'
+        pdfmetrics.registerFont(TTFont('ArabicFont', 'static/fonts/Amiri-Regular.ttf'))
+        pdfmetrics.registerFont(TTFont('ArabicFontBold', 'static/fonts/Amiri-Bold.ttf'))
+        arabic_font_name = 'ArabicFont'
+        arabic_font_bold = 'ArabicFontBold'
     except Exception as e:
         # إذا كان هناك خطأ، نستخدم خط بديل
         try:
-            pdfmetrics.registerFont(TTFont('Arabic', 'static/fonts/Amiri-Regular.ttf'))
-            arabic_font_name = 'Arabic'
+            pdfmetrics.registerFont(TTFont('ArabicFont', 'static/fonts/Cairo.ttf'))
+            arabic_font_name = 'ArabicFont'
+            arabic_font_bold = 'ArabicFont'
         except:
             # آخر خيار: استخدام الخط الافتراضي
             arabic_font_name = 'Helvetica'
+            arabic_font_bold = 'Helvetica-Bold'
     
     # تعيين أبعاد الصفحة واتجاهها
     doc = SimpleDocTemplate(
@@ -1467,20 +1470,22 @@ def export_employee_documents_pdf(employee_id):
     title_style = ParagraphStyle(
         name='Title',
         parent=styles['Title'],
-        fontName=arabic_font_name,
-        fontSize=16,
+        fontName=arabic_font_bold,
+        fontSize=18,
         alignment=1, # وسط
-        textColor=colors.black
+        textColor=colors.HexColor('#1e3a5c'),
+        spaceAfter=12
     )
     
     # إنشاء نمط للعناوين الفرعية
     subtitle_style = ParagraphStyle(
         name='Subtitle',
         parent=styles['Heading2'],
-        fontName=arabic_font_name,
+        fontName=arabic_font_bold,
         fontSize=14,
         alignment=2, # يمين (RTL)
-        textColor=colors.blue
+        textColor=colors.HexColor('#2563eb'),
+        spaceAfter=8
     )
     
     # إعداد المحتوى
@@ -1525,18 +1530,25 @@ def export_employee_documents_pdf(employee_id):
     # إنشاء جدول بيانات الموظف
     employee_table = Table(employee_data, colWidths=[3*cm, 5*cm, 3*cm, 5*cm])
     employee_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (1, 0), colors.lightblue),
-        ('BACKGROUND', (2, 0), (3, 0), colors.lightblue),
+        ('BACKGROUND', (0, 0), (1, 0), colors.HexColor('#93c5fd')),
+        ('BACKGROUND', (2, 0), (3, 0), colors.HexColor('#93c5fd')),
         ('TEXTCOLOR', (0, 0), (3, 0), colors.black),
-        ('FONTNAME', (0, 0), (3, 4), arabic_font_name),
-        ('FONTSIZE', (0, 0), (3, 0), 12),
+        ('FONTNAME', (0, 0), (3, 0), arabic_font_bold),
+        ('FONTNAME', (0, 1), (3, 4), arabic_font_name),
+        ('FONTSIZE', (0, 0), (3, 0), 11),
+        ('FONTSIZE', (0, 1), (3, 4), 10),
         ('SPAN', (0, 0), (1, 0)),
         ('SPAN', (2, 0), (3, 0)),
         ('ALIGN', (0, 0), (3, 0), 'CENTER'),
+        ('ALIGN', (0, 1), (0, 4), 'RIGHT'),
+        ('ALIGN', (2, 1), (2, 4), 'RIGHT'),
         ('VALIGN', (0, 0), (3, 4), 'MIDDLE'),
-        ('GRID', (0, 0), (3, 4), 0.5, colors.grey),
-        ('BOX', (0, 0), (1, 4), 1, colors.black),
-        ('BOX', (2, 0), (3, 4), 1, colors.black),
+        ('GRID', (0, 0), (3, 4), 1, colors.grey),
+        ('BOX', (0, 0), (3, 4), 2, colors.HexColor('#1e3a5c')),
+        ('LEFTPADDING', (0, 0), (3, 4), 8),
+        ('RIGHTPADDING', (0, 0), (3, 4), 8),
+        ('TOPPADDING', (0, 0), (3, 4), 6),
+        ('BOTTOMPADDING', (0, 0), (3, 4), 6),
     ]))
     elements.append(employee_table)
     elements.append(Spacer(1, 20))
@@ -1605,13 +1617,20 @@ def export_employee_documents_pdf(employee_id):
         
         # تنسيق الجدول
         table_style = TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightblue),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#93c5fd')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, -1), arabic_font_name),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTNAME', (0, 0), (-1, 0), arabic_font_bold),
+            ('FONTNAME', (0, 1), (-1, -1), arabic_font_name),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('BOX', (0, 0), (-1, -1), 2, colors.HexColor('#1e3a5c')),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ])
         
