@@ -832,6 +832,63 @@
         const submitButton = document.getElementById('submit-btn');
         const massForm = document.getElementById('mass-attendance-form');
         
+        // تعريف الدوال أولاً
+        function updateEmployeeCount() {
+            let totalEmployees = 0;
+            const checkedDepartments = [...departmentCheckboxes].filter(c => c.checked);
+            
+            checkedDepartments.forEach(checkbox => {
+                const card = checkbox.closest('.department-card');
+                if (card) {
+                    const badge = card.querySelector('.employee-count-number');
+                    if (badge) {
+                        totalEmployees += parseInt(badge.textContent, 10) || 0;
+                    }
+                }
+            });
+            
+            return totalEmployees;
+        }
+        
+        function getSelectedStatus() {
+            const radioButtons = document.querySelectorAll('input[name="status"]');
+            for (const radio of radioButtons) {
+                if (radio.checked) {
+                    return radio.value;
+                }
+            }
+            return 'present';
+        }
+        
+        function updateSelectedStatusBadges(activeStatus) {
+            const employeesCount = updateEmployeeCount();
+            
+            const badges = ['present', 'absent', 'leave', 'sick'];
+            badges.forEach(status => {
+                const badge = document.getElementById('badge-' + status);
+                if (badge) {
+                    badge.textContent = '0';
+                }
+            });
+            
+            const activeBadge = document.getElementById('badge-' + activeStatus);
+            if (activeBadge) {
+                activeBadge.textContent = employeesCount;
+                activeBadge.classList.add('badge-pulse');
+                setTimeout(() => {
+                    activeBadge.classList.remove('badge-pulse');
+                }, 500);
+            }
+        }
+        
+        function validateForm() {
+            const anyDepartmentChecked = [...departmentCheckboxes].some(c => c.checked);
+            submitButton.disabled = !anyDepartmentChecked;
+            updateSelectedStatusBadges(getSelectedStatus());
+            updateMainCounter();
+        }
+        
+        // الآن نستدعي الدوال بعد تعريفها
         updateSelectedStatusBadges('present');
         
         selectAllCheckbox.addEventListener('change', function() {
@@ -867,56 +924,6 @@
                 validateForm();
             });
         });
-        
-        function validateForm() {
-            const anyDepartmentChecked = [...departmentCheckboxes].some(c => c.checked);
-            submitButton.disabled = !anyDepartmentChecked;
-            updateEmployeeCount();
-            updateSelectedStatusBadges(getSelectedStatus());
-            updateMainCounter();
-        }
-        
-        function updateEmployeeCount() {
-            let totalEmployees = 0;
-            const checkedDepartments = [...departmentCheckboxes].filter(c => c.checked);
-            
-            checkedDepartments.forEach(checkbox => {
-                const labelText = checkbox.nextElementSibling.textContent;
-                const match = labelText.match(/(\d+)/);
-                if (match && match[1]) {
-                    totalEmployees += parseInt(match[1], 10);
-                }
-            });
-            
-            return totalEmployees;
-        }
-        
-        function getSelectedStatus() {
-            const radioButtons = document.querySelectorAll('input[name="status"]');
-            for (const radio of radioButtons) {
-                if (radio.checked) {
-                    return radio.value;
-                }
-            }
-            return 'present';
-        }
-        
-        window.updateSelectedStatusBadges = function(activeStatus) {
-            const employeesCount = updateEmployeeCount();
-            
-            document.getElementById('badge-present').textContent = '0';
-            document.getElementById('badge-absent').textContent = '0';
-            document.getElementById('badge-leave').textContent = '0';
-            document.getElementById('badge-sick').textContent = '0';
-            
-            document.getElementById('badge-' + activeStatus).textContent = employeesCount;
-            
-            const activeBadge = document.getElementById('badge-' + activeStatus);
-            activeBadge.classList.add('badge-pulse');
-            setTimeout(() => {
-                activeBadge.classList.remove('badge-pulse');
-            }, 500);
-        }
         
         // تحديث العداد الرئيسي
         function updateMainCounter() {
