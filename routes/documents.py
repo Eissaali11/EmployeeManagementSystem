@@ -1566,12 +1566,12 @@ def export_employee_documents_pdf(employee_id):
         'annual_leave': 'الإجازة السنوية'
     }
     
-    for doc in documents:
+    for doc_item in documents:
         # الحصول على نوع الوثيقة بالعربية
-        doc_type_ar = document_types_map.get(doc.document_type, doc.document_type)
+        doc_type_ar = document_types_map.get(doc_item.document_type, doc_item.document_type)
         
         # التحقق من حالة انتهاء الصلاحية
-        days_to_expiry = (doc.expiry_date - today).days
+        days_to_expiry = (doc_item.expiry_date - today).days
         if days_to_expiry < 0:
             status_text = "منتهية"
         elif days_to_expiry < 30:
@@ -1582,11 +1582,11 @@ def export_employee_documents_pdf(employee_id):
         # إضافة صف للجدول
         row = [
             get_display(arabic_reshaper.reshape(doc_type_ar)),
-            doc.document_number,
-            format_date_gregorian(doc.issue_date),
-            format_date_gregorian(doc.expiry_date),
+            doc_item.document_number,
+            format_date_gregorian(doc_item.issue_date),
+            format_date_gregorian(doc_item.expiry_date),
             get_display(arabic_reshaper.reshape(status_text)),
-            get_display(arabic_reshaper.reshape(doc.notes or '-'))
+            get_display(arabic_reshaper.reshape(doc_item.notes or '-'))
         ]
         data.append(row)
     
