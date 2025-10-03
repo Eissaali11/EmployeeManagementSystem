@@ -2,180 +2,538 @@
 
 {% block styles %}
 <style>
-    /* تأثير نبض للشارات */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --danger-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --info-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    }
+    
+    /* صفحة الحضور الجماعي - تصميم حديث */
+    .page-header-modern {
+        background: var(--primary-gradient);
+        border-radius: 20px;
+        padding: 2.5rem;
+        color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header-modern::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+    
+    .page-header-modern h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .page-header-modern p {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+    }
+    
+    /* بطاقات محسنة */
+    .card-enhanced {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .card-enhanced:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+    }
+    
+    .card-header-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1.5rem 2rem;
+        border: none;
+    }
+    
+    .card-header-gradient h5 {
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    
+    /* أزرار الحالة المحسنة */
+    .status-option {
+        position: relative;
+        border: 3px solid transparent;
+        border-radius: 15px;
+        padding: 1rem 1.5rem;
+        margin: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .status-option:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .status-option input[type="radio"]:checked + label {
+        font-weight: bold;
+    }
+    
+    .status-option input[type="radio"]:checked ~ .status-badge {
+        transform: scale(1.1);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .status-badge-present {
+        background: var(--success-gradient);
+        color: white;
+    }
+    
+    .status-badge-absent {
+        background: var(--danger-gradient);
+        color: white;
+    }
+    
+    .status-badge-leave {
+        background: var(--warning-gradient);
+        color: white;
+    }
+    
+    .status-badge-sick {
+        background: var(--info-gradient);
+        color: white;
+    }
+    
+    .employee-count-badge {
+        background: rgba(255, 255, 255, 0.95);
+        color: #1a1a1a;
+        padding: 0.4rem 0.8rem;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    /* تحسين حقول التاريخ */
+    .date-input-wrapper {
+        position: relative;
+    }
+    
+    .date-input-wrapper input[type="date"] {
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 0.875rem 1.25rem;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+    }
+    
+    .date-input-wrapper input[type="date"]:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        outline: none;
+    }
+    
+    /* بطاقة الأقسام */
+    .departments-card {
+        border: 2px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+        background: white;
+    }
+    
+    .departments-header {
+        background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .departments-body {
+        padding: 2rem;
+        max-height: 450px;
+        overflow-y: auto;
+    }
+    
+    /* تحسين checkboxes */
+    .department-item {
+        padding: 1rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        margin-bottom: 0.5rem;
+    }
+    
+    .department-item:hover {
+        background: #f8fafc;
+        border-color: #667eea;
+    }
+    
+    .department-item input[type="checkbox"]:checked ~ label {
+        color: #667eea;
+        font-weight: 600;
+    }
+    
+    .form-check-input {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-top: 0;
+        cursor: pointer;
+        border: 2px solid #cbd5e0;
+    }
+    
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+    
+    .employee-count-text {
+        color: #64748b;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    /* أزرار محسنة */
+    .btn-enhanced {
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1.05rem;
+        transition: all 0.3s ease;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-primary-enhanced {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-primary-enhanced:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary-enhanced:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .btn-secondary-enhanced {
+        background: #f1f5f9;
+        color: #475569;
+    }
+    
+    .btn-secondary-enhanced:hover {
+        background: #e2e8f0;
+        transform: translateY(-2px);
+    }
+    
+    /* تأثير نبض للعدادات */
     .badge-pulse {
         animation: pulse 0.5s ease-in-out;
     }
     
     @keyframes pulse {
         0% { transform: scale(1); }
-        50% { transform: scale(1.2); }
+        50% { transform: scale(1.15); }
         100% { transform: scale(1); }
+    }
+    
+    /* تنبيهات محسنة */
+    .alert-enhanced {
+        border: none;
+        border-radius: 15px;
+        padding: 1.25rem 1.5rem;
+        border-left: 5px solid;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    }
+    
+    .alert-info-enhanced {
+        background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%);
+        border-left-color: #3b82f6;
+        color: #1e3a8a;
+    }
+    
+    /* تحسينات responsive */
+    @media (max-width: 768px) {
+        .page-header-modern {
+            padding: 1.5rem;
+        }
+        
+        .page-header-modern h1 {
+            font-size: 1.5rem;
+        }
+        
+        .status-option {
+            margin: 0.25rem;
+            padding: 0.75rem 1rem;
+        }
+        
+        .status-badge {
+            font-size: 0.95rem;
+            padding: 0.6rem 1rem;
+        }
+        
+        .departments-body {
+            max-height: 350px;
+        }
+    }
+    
+    /* scrollbar مخصص */
+    .departments-body::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .departments-body::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+    
+    .departments-body::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 10px;
+    }
+    
+    .departments-body::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">تسجيل حضور جماعي للأقسام</h1>
-        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-right me-1"></i> العودة للقائمة
-        </a>
+<div class="container-fluid py-4">
+    <!-- Header محسّن -->
+    <div class="page-header-modern">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1>
+                    <i class="fas fa-users-cog me-2"></i>
+                    تسجيل حضور جماعي للأقسام
+                </h1>
+                <p class="mb-0">سجّل حضور متعدد لأقسام مختلفة خلال فترة زمنية محددة</p>
+            </div>
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-light btn-lg rounded-pill">
+                <i class="fas fa-arrow-right me-2"></i> رجوع
+            </a>
+        </div>
     </div>
     
-    <!-- بطاقة الإدخال -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white py-3">
-            <h5 class="mb-0">
-                <i class="fas fa-users-cog me-2"></i>
-                تسجيل حضور لعدة أقسام لفترة زمنية محددة
-            </h5>
-        </div>
-        <div class="card-body">
+    <!-- بطاقة النموذج -->
+    <div class="card card-enhanced mb-4">
+        <div class="card-body p-4">
             <!-- رسائل النظام -->
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
                         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="إغلاق"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     {% endfor %}
                 {% endif %}
             {% endwith %}
             
-            <!-- إذا حدث خطأ -->
             {% if error %}
-                <div class="alert alert-danger">
-                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> حدث خطأ</h5>
-                    <p>{{ error }}</p>
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>حدث خطأ</h5>
+                    <p class="mb-0">{{ error }}</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endif %}
             
             <!-- نموذج الإدخال -->
             <form action="{{ url_for('mass.departments') }}" method="post" id="mass-attendance-form">
+                <!-- التواريخ -->
                 <div class="row mb-4">
-                    <!-- تاريخ البداية -->
                     <div class="col-md-6 mb-3">
-                        <label for="start_date" class="form-label fw-bold">تاريخ البداية</label>
-                        <input type="date" class="form-control form-control-lg" 
-                               id="start_date" name="start_date" 
-                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                        <label for="start_date" class="form-label fw-bold mb-2">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>تاريخ البداية
+                        </label>
+                        <div class="date-input-wrapper">
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ today.strftime('%Y-%m-%d') }}" required>
+                        </div>
                     </div>
                     
-                    <!-- تاريخ النهاية -->
                     <div class="col-md-6 mb-3">
-                        <label for="end_date" class="form-label fw-bold">تاريخ النهاية</label>
-                        <input type="date" class="form-control form-control-lg" 
-                               id="end_date" name="end_date" 
-                               value="{{ today.strftime('%Y-%m-%d') }}" required>
+                        <label for="end_date" class="form-label fw-bold mb-2">
+                            <i class="fas fa-calendar-check me-2 text-primary"></i>تاريخ النهاية
+                        </label>
+                        <div class="date-input-wrapper">
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ today.strftime('%Y-%m-%d') }}" required>
+                        </div>
                     </div>
                 </div>
                 
                 <!-- حالة الحضور -->
                 <div class="mb-4">
-                    <label class="form-label fw-bold">حالة الحضور</label>
-                    <div class="d-flex flex-wrap">
-                        <div class="form-check form-check-inline me-4">
-                            <input class="form-check-input" type="radio" name="status" 
-                                   id="status_present" value="present" checked onchange="updateSelectedStatusBadges('present')">
-                            <label class="form-check-label" for="status_present">
-                                <span class="badge bg-success py-2 px-3">حاضر
-                                    <span id="badge-present" class="badge bg-white text-success ms-1">0</span>
-                                </span>
-                            </label>
+                    <label class="form-label fw-bold mb-3">
+                        <i class="fas fa-clipboard-check me-2 text-primary"></i>حالة الحضور
+                    </label>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-6">
+                            <div class="status-option">
+                                <input class="form-check-input d-none" type="radio" name="status" 
+                                       id="status_present" value="present" checked 
+                                       onchange="updateSelectedStatusBadges('present')">
+                                <label class="form-check-label w-100 cursor-pointer" for="status_present">
+                                    <div class="status-badge status-badge-present">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>حاضر</span>
+                                        <span class="employee-count-badge" id="badge-present">0</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check form-check-inline me-4">
-                            <input class="form-check-input" type="radio" name="status" 
-                                   id="status_absent" value="absent" onchange="updateSelectedStatusBadges('absent')">
-                            <label class="form-check-label" for="status_absent">
-                                <span class="badge bg-danger py-2 px-3">غائب
-                                    <span id="badge-absent" class="badge bg-white text-danger ms-1">0</span>
-                                </span>
-                            </label>
+                        
+                        <div class="col-md-3 col-6">
+                            <div class="status-option">
+                                <input class="form-check-input d-none" type="radio" name="status" 
+                                       id="status_absent" value="absent" 
+                                       onchange="updateSelectedStatusBadges('absent')">
+                                <label class="form-check-label w-100 cursor-pointer" for="status_absent">
+                                    <div class="status-badge status-badge-absent">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>غائب</span>
+                                        <span class="employee-count-badge" id="badge-absent">0</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check form-check-inline me-4">
-                            <input class="form-check-input" type="radio" name="status" 
-                                   id="status_leave" value="leave" onchange="updateSelectedStatusBadges('leave')">
-                            <label class="form-check-label" for="status_leave">
-                                <span class="badge bg-warning py-2 px-3">إجازة
-                                    <span id="badge-leave" class="badge bg-white text-warning ms-1">0</span>
-                                </span>
-                            </label>
+                        
+                        <div class="col-md-3 col-6">
+                            <div class="status-option">
+                                <input class="form-check-input d-none" type="radio" name="status" 
+                                       id="status_leave" value="leave" 
+                                       onchange="updateSelectedStatusBadges('leave')">
+                                <label class="form-check-label w-100 cursor-pointer" for="status_leave">
+                                    <div class="status-badge status-badge-leave">
+                                        <i class="fas fa-umbrella-beach"></i>
+                                        <span>إجازة</span>
+                                        <span class="employee-count-badge" id="badge-leave">0</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <div class="form-check form-check-inline me-4">
-                            <input class="form-check-input" type="radio" name="status" 
-                                   id="status_sick" value="sick" onchange="updateSelectedStatusBadges('sick')">
-                            <label class="form-check-label" for="status_sick">
-                                <span class="badge bg-info py-2 px-3">مرضي
-                                    <span id="badge-sick" class="badge bg-white text-info ms-1">0</span>
-                                </span>
-                            </label>
+                        
+                        <div class="col-md-3 col-6">
+                            <div class="status-option">
+                                <input class="form-check-input d-none" type="radio" name="status" 
+                                       id="status_sick" value="sick" 
+                                       onchange="updateSelectedStatusBadges('sick')">
+                                <label class="form-check-label w-100 cursor-pointer" for="status_sick">
+                                    <div class="status-badge status-badge-sick">
+                                        <i class="fas fa-notes-medical"></i>
+                                        <span>مرضي</span>
+                                        <span class="employee-count-badge" id="badge-sick">0</span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <!-- توضيح حول عدد الموظفين المتأثرين -->
-                    <div class="mt-2 text-muted small">
+                    <div class="mt-3 text-muted">
                         <i class="fas fa-info-circle me-1"></i>
                         الأرقام تمثل عدد الموظفين الذين سيتم تسجيلهم بالحالة المحددة
                     </div>
                 </div>
                 
                 <!-- الأقسام -->
-                <div class="card mb-4 border">
-                    <div class="card-header bg-light">
+                <div class="departments-card mb-4">
+                    <div class="departments-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0 fw-bold">اختر الأقسام المطلوبة</h5>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="select-all">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-building me-2"></i>اختر الأقسام المطلوبة
+                            </h5>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="select-all" 
+                                       style="width: 3rem; height: 1.5rem; cursor: pointer;">
                                 <label class="form-check-label fw-bold" for="select-all">
                                     تحديد الكل
                                 </label>
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% if departments %}
+                    <div class="departments-body">
+                        {% if departments %}
+                            <div class="row g-2">
                                 {% for department in departments %}
-                                <div class="col-md-4 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input department-checkbox" 
-                                               type="checkbox" name="department_ids" 
-                                               value="{{ department.id }}" 
-                                               id="dept-{{ department.id }}">
-                                        <label class="form-check-label" for="dept-{{ department.id }}">
-                                            {{ department.name }}
-                                            <span class="text-muted">
-                                                ({{ department.employees|selectattr('status', 'equalto', 'active')|list|length }} موظف)
-                                            </span>
-                                        </label>
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="department-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input department-checkbox" 
+                                                   type="checkbox" name="department_ids" 
+                                                   value="{{ department.id }}" 
+                                                   id="dept-{{ department.id }}">
+                                            <label class="form-check-label cursor-pointer" for="dept-{{ department.id }}">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="fw-semibold">{{ department.name }}</span>
+                                                    <span class="employee-count-text">
+                                                        <i class="fas fa-users me-1"></i>
+                                                        {{ department.employees|selectattr('status', 'equalto', 'active')|list|length }}
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        </div>
                                     </div>
                                 </div>
                                 {% endfor %}
-                            {% else %}
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    لا توجد أقسام متاحة حالياً
-                                </div>
-                            {% endif %}
-                        </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info-enhanced text-center">
+                                <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                <p class="mb-0 fw-semibold">لا توجد أقسام متاحة حالياً</p>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 
                 <!-- ملاحظة توضيحية -->
-                <div class="alert alert-info mb-4">
-                    <i class="fas fa-info-circle me-2"></i>
+                <div class="alert alert-info-enhanced mb-4">
+                    <i class="fas fa-lightbulb me-2"></i>
                     <strong>ملاحظة:</strong> سيتم تطبيق حالة الحضور المحددة على جميع موظفي الأقسام المختارة خلال الفترة الزمنية المحددة.
                 </div>
                 
                 <!-- أزرار التحكم -->
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                <div class="d-flex justify-content-between flex-wrap gap-3">
+                    <button type="submit" class="btn btn-primary-enhanced btn-enhanced" id="submit-btn">
                         <i class="fas fa-save me-2"></i> تسجيل الحضور
                     </button>
-                    <button type="reset" class="btn btn-secondary">
-                        <i class="fas fa-undo me-1"></i> إعادة تعيين
+                    <button type="reset" class="btn btn-secondary-enhanced btn-enhanced">
+                        <i class="fas fa-undo me-2"></i> إعادة تعيين
                     </button>
                 </div>
             </form>
@@ -187,16 +545,13 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // العناصر
         const selectAllCheckbox = document.getElementById('select-all');
         const departmentCheckboxes = document.querySelectorAll('.department-checkbox');
         const submitButton = document.getElementById('submit-btn');
         const massForm = document.getElementById('mass-attendance-form');
         
-        // التحديث الأولي لعدادات الحالات
         updateSelectedStatusBadges('present');
         
-        // تحديد/إلغاء تحديد جميع الأقسام
         selectAllCheckbox.addEventListener('change', function() {
             departmentCheckboxes.forEach(checkbox => {
                 checkbox.checked = selectAllCheckbox.checked;
@@ -204,7 +559,6 @@
             validateForm();
         });
         
-        // تحديث زر "تحديد الكل" عند تغيير أي قسم
         departmentCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 const allChecked = [...departmentCheckboxes].every(c => c.checked);
@@ -213,27 +567,20 @@
             });
         });
         
-        // التحقق من صحة النموذج قبل الإرسال
         function validateForm() {
             const anyDepartmentChecked = [...departmentCheckboxes].some(c => c.checked);
             submitButton.disabled = !anyDepartmentChecked;
-            
-            // تحديث عداد الموظفين
             updateEmployeeCount();
-            
-            // تحديث العدادات في أزرار الحالات
             updateSelectedStatusBadges(getSelectedStatus());
         }
         
-        // وظيفة لحساب عدد الموظفين في الأقسام المحددة
         function updateEmployeeCount() {
             let totalEmployees = 0;
             const checkedDepartments = [...departmentCheckboxes].filter(c => c.checked);
             
             checkedDepartments.forEach(checkbox => {
-                // الحصول على عدد الموظفين من النص داخل label
                 const labelText = checkbox.nextElementSibling.textContent;
-                const match = labelText.match(/\((\d+)\)/);
+                const match = labelText.match(/(\d+)/);
                 if (match && match[1]) {
                     totalEmployees += parseInt(match[1], 10);
                 }
@@ -242,7 +589,6 @@
             return totalEmployees;
         }
         
-        // الحصول على الحالة المحددة
         function getSelectedStatus() {
             const radioButtons = document.querySelectorAll('input[name="status"]');
             for (const radio of radioButtons) {
@@ -250,23 +596,19 @@
                     return radio.value;
                 }
             }
-            return 'present'; // الافتراضي
+            return 'present';
         }
         
-        // تحديث عدادات الحالة المحددة
-        function updateSelectedStatusBadges(activeStatus) {
+        window.updateSelectedStatusBadges = function(activeStatus) {
             const employeesCount = updateEmployeeCount();
             
-            // إعادة تعيين جميع العدادات إلى صفر
             document.getElementById('badge-present').textContent = '0';
             document.getElementById('badge-absent').textContent = '0';
             document.getElementById('badge-leave').textContent = '0';
             document.getElementById('badge-sick').textContent = '0';
             
-            // تحديث العداد للحالة النشطة
             document.getElementById('badge-' + activeStatus).textContent = employeesCount;
             
-            // إضافة تأثير للعداد المحدث
             const activeBadge = document.getElementById('badge-' + activeStatus);
             activeBadge.classList.add('badge-pulse');
             setTimeout(() => {
@@ -274,10 +616,8 @@
             }, 500);
         }
         
-        // التحقق عند تحميل الصفحة
         validateForm();
         
-        // التحقق من صحة النموذج قبل الإرسال
         massForm.addEventListener('submit', function(e) {
             const startDate = document.getElementById('start_date').value;
             const endDate = document.getElementById('end_date').value;
@@ -295,7 +635,6 @@
                 return false;
             }
             
-            // مقارنة التواريخ
             const start = new Date(startDate);
             const end = new Date(endDate);
             
@@ -304,6 +643,9 @@
                 alert('تاريخ النهاية يجب أن يكون بعد تاريخ البداية أو مساوياً له');
                 return false;
             }
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>جاري التسجيل...';
             
             return true;
         });

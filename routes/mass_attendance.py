@@ -62,11 +62,8 @@ def departments():
                 
                 dept_count += 1
                 
-                # الحصول على الموظفين النشطين في القسم
-                employees = Employee.query.filter_by(
-                    department_id=dept_id,
-                    status='active'
-                ).all()
+                # الحصول على الموظفين النشطين في القسم باستخدام علاقة many-to-many
+                employees = [emp for emp in department.employees if emp.status == 'active']
                 
                 dept_emp_count = len(employees)
                 emp_count += dept_emp_count
