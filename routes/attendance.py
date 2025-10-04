@@ -35,10 +35,11 @@ def index():
     query = Attendance.query.filter(Attendance.date == date)
     base_query = query  # Save the base query for statistics
     
-    # Apply filters for the main query
+    # Apply filters for the main query - استخدام علاقة many-to-many
     if department_id and department_id != '':
-        query = query.join(Employee).filter(Employee.department_id == department_id)
-        base_query = base_query.join(Employee).filter(Employee.department_id == department_id)
+        # استخدام العلاقة many-to-many بين الموظفين والأقسام
+        query = query.join(Employee).join(employee_departments).filter(employee_departments.c.department_id == int(department_id))
+        base_query = base_query.join(Employee).join(employee_departments).filter(employee_departments.c.department_id == int(department_id))
     
     if status and status != '':
         query = query.filter(Attendance.status == status)
@@ -52,11 +53,11 @@ def index():
     if current_user.is_authenticated:
         departments = current_user.get_accessible_departments()
         
-        # إذا كان لدى المستخدم قسم مخصص، فلتر البيانات تلقائياً لهذا القسم
+        # إذا كان لدى المستخدم قسم مخصص، فلتر البيانات تلقائياً لهذا القسم - استخدام many-to-many
         if current_user.assigned_department_id and not department_id:
             department_id = str(current_user.assigned_department_id)
-            query = query.join(Employee).filter(Employee.department_id == current_user.assigned_department_id)
-            base_query = base_query.join(Employee).filter(Employee.department_id == current_user.assigned_department_id)
+            query = query.join(Employee).join(employee_departments).filter(employee_departments.c.department_id == current_user.assigned_department_id)
+            base_query = base_query.join(Employee).join(employee_departments).filter(employee_departments.c.department_id == current_user.assigned_department_id)
             attendances = query.all()
     else:
         departments = Department.query.all()
