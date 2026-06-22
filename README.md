@@ -1,177 +1,204 @@
-# نُظم - Arabic Employee Management System
+<div align="center">
 
+# 👔 نُظم — نظام إدارة الموظفين العربي
+### Arabic Employee Management System with Full REST API
 
-## clone it -> make env file -> activate it ->  config the .env like the following -> run create_test_data.py -> run project 
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.1-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
 
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=flat-square)
+![Language](https://img.shields.io/badge/Language-Arabic%20RTL-orange?style=flat-square)
+![API](https://img.shields.io/badge/API-RESTful%2025%2B%20Endpoints-blue?style=flat-square)
 
-## env file 
-```
-# متغيرات قاعدة البيانات
-# ملاحظة: يبدو أن الاستضافة تستخدم MySQL وليس PostgreSQL
-# صيغة الاتصال بـ MySQL مع ترميز الرموز الخاصة في كلمة المرور
-DATABASE_URL="mysql://username:password@localhost:3306/u800258840_eissa"
-
-# مفتاح سري للتطبيق (مطلوب لـ Flask)
-SECRET_KEY=1234567890987654321
-
-# إعدادات تويليو للإشعارات عبر الرسائل النصية 
-TWILIO_ACCOUNT_SID=your_twilio_account_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token  
-TWILIO_PHONE_NUMBER=your_twilio_phone_number
-
-# إعدادات Firebase للمصادقة
-FIREBASE_API_KEY=AIzaSyCUATPbRt7hMivQwtDkMNg7G1skrOVuBSA
-FIREBASE_PROJECT_ID=tesstapfir-1adc0
-FIREBASE_APP_ID=1:120689771242:web:d9984d7affe482717f8d93
-FIREBASE_AUTH_DOMAIN=tesstapfir-1adc0.firebaseapp.com
-FIREBASE_STORAGE_BUCKET=tesstapfir-1adc0.firebasestorage.app
-FIREBASE_MESSAGING_SENDER_ID=120689771242
-
-# إعدادات التطبيق
-FLASK_ENV=production
-FLASK_DEBUG=False
-
-# المنطقة الزمنية (مهم للتواريخ الهجرية)
-TZ=Asia/Riyadh
-
-# إعدادات إضافية للنشر على استضافة مشتركة
-SERVER_NAME=eissa.site
-APPLICATION_ROOT=/
-PREFERRED_URL_SCHEME=https
-```
-
-## Overview
-
-نُظم is a comprehensive Arabic employee management system with a complete RESTful API. The system provides employee lifecycle management, vehicle tracking, attendance monitoring, and detailed reporting capabilities with full Arabic language support.
-
-## 🚀 Quick Start
-
-### API Testing
-1. Import `NUZUM_API_Collection.postman_collection.json` into Postman
-2. Import `NUZUM_Environment.postman_environment.json` as environment
-3. Start testing with the health check: `GET /api/v1/health`
-
-### Login Credentials
-- **Email**: admin@nuzum.sa
-- **Password**: admin123
-
-## 📊 API Endpoints
-
-### Core Features
-- **Authentication**: User login with JWT tokens
-- **Employee Management**: Complete CRUD operations
-- **Vehicle Management**: Vehicle tracking and handovers
-- **Attendance System**: Time tracking and reporting
-- **Salary Management**: Payroll processing
-- **Dashboard Statistics**: Real-time analytics
-- **Advanced Search**: Cross-system search capabilities
-
-### Health Check
-```
-GET /api/v1/health
-```
-
-### API Information
-```
-GET /api/v1/info
-```
-
-## 📋 Features
-
-### ✅ RESTful API (25+ endpoints)
-- Employee management (CRUD)
-- Vehicle management and tracking
-- Attendance system with status tracking
-- Salary management and reporting
-- Department management
-- Advanced search functionality
-- Dashboard statistics
-- Notification system
-
-### ✅ Security Features
-- JWT Authentication
-- Bearer token authorization
-- Input validation
-- Error handling with Arabic messages
-
-### ✅ Data Management
-- Pagination support
-- Advanced filtering
-- Sorting capabilities
-- Search functionality
-
-## 📚 Documentation
-
-### Available Files
-- `API_DOCUMENTATION.md` - Complete API reference
-- `POSTMAN_TESTING_GUIDE.md` - Step-by-step testing guide
-- `API_SUMMARY.md` - Project overview and features
-- `NUZUM_API_Collection.postman_collection.json` - Postman collection
-- `NUZUM_Environment.postman_environment.json` - Environment variables
-
-## 🏗️ Project Structure
-
-```
-├── routes/
-│   └── restful_api.py          # All API endpoints
-├── templates/                  # HTML templates
-├── static/                     # Static assets
-├── models.py                   # Database models
-├── app.py                      # Flask application
-├── main.py                     # Application entry point
-└── README.md                   # This file
-```
-
-## 🔧 Technology Stack
-
-- **Backend**: Python Flask 3.1.0
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Authentication**: Flask-Login + JWT
-- **API**: RESTful design with JSON responses
-- **Documentation**: Comprehensive Postman collection
-
-## 🧪 Testing
-
-### Using Postman
-1. Import the collection and environment files
-2. Run "Health Check" to verify system status
-3. Use "Login" to get authentication token
-4. Test any endpoint with automatic token management
-
-### Quick API Test
-```bash
-curl -X GET http://localhost:5000/api/v1/health
-```
-
-## 📱 Use Cases
-
-### For Developers
-- Mobile app backend
-- Third-party integrations
-- Automated testing
-- Data synchronization
-
-### For Businesses
-- Employee management
-- Vehicle fleet tracking
-- Attendance monitoring
-- Payroll processing
-
-## 🔒 Security
-
-- JWT tokens with 24-hour expiration
-- Secure password hashing
-- Input validation and sanitization
-- Proper error handling without sensitive data exposure
-
-## 🚀 Deployment
-
-The system is ready for deployment on any platform supporting Python Flask applications. All dependencies are managed and the database schema is automatically created.
-
-## 📞 Support
-
-For technical support or questions about the API, refer to the comprehensive documentation files included in this project.
+</div>
 
 ---
 
-**نُظم** - Building the future of Arabic employee management systems 🇸🇦
+## 📌 نظرة عامة
+
+**نُظم** هو نظام متكامل لإدارة الموظفين مبني بـ **Python Flask** مع **REST API** شاملة تضم أكثر من 25 endpoint. يدعم إدارة دورة حياة الموظف الكاملة، تتبع المركبات، نظام الحضور، إدارة الرواتب، وتقارير متقدمة — كل ذلك بدعم كامل للغة العربية.
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║                   👔 نُظم SYSTEM                                 ║
+║                                                                  ║
+║  ┌─────────────┐  ┌──────────────┐  ┌────────────────────────┐  ║
+║  │ 👤 الموظفون │  │ 🚗 المركبات  │  │ ⏰ الحضور والانصراف   │  ║
+║  │  إدارة كاملة│  │  تتبع وتسليم │  │  تتبع الوقت والتقارير  │  ║
+║  └─────────────┘  └──────────────┘  └────────────────────────┘  ║
+║                                                                  ║
+║  ┌─────────────┐  ┌──────────────┐  ┌────────────────────────┐  ║
+║  │ 💰 الرواتب  │  │ 🏢 الأقسام   │  │  📊 التقارير والإحصاء │  ║
+║  │  معالجة كشف │  │  هيكل المنظمة│  │  لوحة تحكم شاملة      │  ║
+║  └─────────────┘  └──────────────┘  └────────────────────────┘  ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+---
+
+## ✨ المميزات الرئيسية
+
+| الميزة | الوصف |
+|--------|-------|
+| 👤 **إدارة الموظفين** | CRUD كامل — إضافة، تعديل، أرشفة، بحث |
+| 🚗 **تتبع المركبات** | إدارة الأسطول وتسجيل التسليم والاستلام |
+| ⏰ **نظام الحضور** | تتبع الوقت مع حالات متعددة |
+| 💰 **إدارة الرواتب** | معالجة كشوف الرواتب والتقارير |
+| 🏢 **إدارة الأقسام** | هيكل تنظيمي كامل |
+| 🔍 **بحث متقدم** | بحث شامل عبر جميع الأقسام |
+| 📊 **لوحة الإحصائيات** | تحليلات مباشرة في الوقت الفعلي |
+| 🔔 **الإشعارات** | نظام إشعارات داخلي |
+| 🔐 **JWT Auth** | مصادقة آمنة بـ JWT Token |
+| 📱 **SMS (Twilio)** | إشعارات عبر الرسائل النصية |
+| 🔥 **Firebase** | مصادقة ومزامنة Firebase |
+
+---
+
+## 🛠️ التقنيات المستخدمة
+
+```
+┌────────────────────────────────────────────────────┐
+│                   TECH STACK                        │
+├───────────────────┬────────────────────────────────┤
+│  Backend          │  Python Flask 3.1.0             │
+│  Database         │  MySQL + SQLAlchemy ORM         │
+│  Authentication   │  Flask-Login + JWT + Firebase   │
+│  SMS              │  Twilio API                     │
+│  API Design       │  RESTful JSON API               │
+│  Security         │  bcrypt + Input Validation      │
+│  Timezone         │  Asia/Riyadh (توقيت السعودية)  │
+└───────────────────┴────────────────────────────────┘
+```
+
+---
+
+## 📁 هيكل المشروع
+
+```
+EmployeeManagementSystem/
+├── 📄 app.py                    ← تطبيق Flask الرئيسي
+├── 📄 main.py                   ← نقطة الدخول
+├── 📄 models.py                 ← نماذج قاعدة البيانات
+├── 📁 routes/
+│   └── restful_api.py           ← جميع API Endpoints (25+)
+├── 📁 templates/                ← قوالب HTML
+├── 📁 static/                   ← ملفات ثابتة
+├── 📄 NUZUM_API_Collection.json ← مجموعة Postman
+├── 📄 NUZUM_Environment.json    ← متغيرات Postman
+├── 📄 API_DOCUMENTATION.md      ← توثيق API كامل
+└── 📄 requirements.txt          ← التبعيات
+```
+
+---
+
+## ⚙️ إعداد وتشغيل المشروع
+
+### 1️⃣ استنساخ المستودع
+```bash
+git clone https://github.com/Eissaali11/EmployeeManagementSystem.git
+cd EmployeeManagementSystem
+```
+
+### 2️⃣ إنشاء بيئة افتراضية
+```bash
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate   # Windows
+```
+
+### 3️⃣ تثبيت التبعيات
+```bash
+pip install -r requirements.txt
+```
+
+### 4️⃣ إعداد ملف .env
+```env
+DATABASE_URL="mysql://username:password@localhost:3306/nuzum_db"
+SECRET_KEY=your_secret_key_here
+
+# Twilio (اختياري)
+TWILIO_ACCOUNT_SID=your_sid
+TWILIO_AUTH_TOKEN=your_token
+TWILIO_PHONE_NUMBER=+1234567890
+
+# Firebase (اختياري)
+FIREBASE_API_KEY=your_api_key
+FIREBASE_PROJECT_ID=your_project_id
+
+# إعدادات التطبيق
+FLASK_ENV=development
+TZ=Asia/Riyadh
+```
+
+### 5️⃣ تهيئة البيانات التجريبية
+```bash
+python create_test_data.py
+```
+
+### 6️⃣ تشغيل المشروع
+```bash
+python main.py
+# يعمل على: http://localhost:5000
+```
+
+---
+
+## 🔌 API Endpoints الرئيسية
+
+| Method | Endpoint | الوصف |
+|--------|----------|-------|
+| `GET` | `/api/v1/health` | فحص صحة النظام |
+| `POST` | `/api/v1/auth/login` | تسجيل الدخول |
+| `GET` | `/api/v1/employees` | قائمة الموظفين |
+| `POST` | `/api/v1/employees` | إضافة موظف |
+| `GET` | `/api/v1/vehicles` | قائمة المركبات |
+| `GET` | `/api/v1/attendance` | سجلات الحضور |
+| `GET` | `/api/v1/salaries` | كشوف الرواتب |
+| `GET` | `/api/v1/departments` | الأقسام |
+| `GET` | `/api/v1/dashboard/stats` | إحصائيات لوحة التحكم |
+| `GET` | `/api/v1/search` | بحث شامل |
+
+---
+
+## 🧪 اختبار API مع Postman
+
+```bash
+# 1. افتح Postman
+# 2. استورد: NUZUM_API_Collection.postman_collection.json
+# 3. استورد البيئة: NUZUM_Environment.postman_environment.json
+# 4. ابدأ بـ Health Check: GET /api/v1/health
+# 5. سجل الدخول للحصول على Token
+```
+
+**بيانات الدخول الافتراضية:**
+- Email: admin@nuzum.sa
+- Password: admin123
+
+---
+
+## 🔐 الأمان
+
+- ✅ JWT tokens بصلاحية 24 ساعة
+- ✅ تشفير كلمات المرور (bcrypt)
+- ✅ التحقق من المدخلات وتنقيتها
+- ✅ حماية من SQL Injection
+- ✅ رسائل خطأ بدون كشف بيانات حساسة
+
+---
+
+## 📜 الترخيص
+
+MIT License — مفتوح المصدر للاستخدام التجاري والشخصي
+
+---
+
+<div align="center">
+
+**نظام إدارة موظفين عربي متكامل — مبني بـ Python Flask 🐍**
+
+[![Python](https://img.shields.io/badge/Built%20with-Python%20Flask-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://github.com/Eissaali11)
+
+</div>
